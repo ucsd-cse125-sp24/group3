@@ -1,5 +1,4 @@
-#ifndef SERVER_HPP_
-#define SERVER_HPP_
+#pragma once
 
 class Server {
 public:
@@ -7,5 +6,3 @@ public:
 private:
 
 };
-
-#endif  // SERVER_HPP_

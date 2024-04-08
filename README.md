@@ -16,6 +16,8 @@ TODO: Game description here, with screenshots.
 
 ### Linux / Mac
 
+Note: If you work locally this way, you should make sure that before you merge anything into main that it also compiles on a lab computer running Visual Studio. There might be some small differences between how the microsoft compiler handles things, and how `g++` handles things, and we always want to make sure it compiles on a lab computer.
+
 1. Download these dependencies:
 	1. `cmake`
 		- Minimum version 3.13
@@ -55,6 +57,8 @@ TODO: Game description here, with screenshots.
 ### Windows (Without Visual Studio)
 
 I'm keeping this more for legacy reasons since this doesn't work on the lab computers, but if you want to use windows but don't want to use the Visual Studio IDE, then this is one way you can get it to work.
+
+This also has the same caveat as above, in that before merging anything in you should verify it compiles on a lab computer running Visual Studio.
 
 This also is relatively janky. On my Desktop computer, for some reason if you try and compile a C++ program using g++ from Powershell it works fine, but if you try and do it from Git Bash it seg faults (even in a simple Hello World program).
 

@@ -1,5 +1,4 @@
-#ifndef CLIENT_CLIENT_HPP_
-#define CLIENT_CLIENT_HPP_
+#pragma once
 
 class Client {
 public:
@@ -8,4 +7,3 @@ private:
 
 };
 
-#endif  // CLIENT_CLIENT_HPP_

@@ -1,5 +1,4 @@
-#ifndef SHARED_GAME_GAMESTATE_HPP_
-#define SHARED_GAME_GAMESTATE_HPP_
+#pragma once
 
 #include "shared/utilities/serializable.hpp"
 
@@ -13,5 +12,3 @@ public:
 private:
 
 };
-
-#endif  // SHARED_GAMESTATE_HPP_

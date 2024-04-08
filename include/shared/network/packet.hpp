@@ -1,6 +1,3 @@
-#ifndef SHARED_NETWORK_PACKET_HPP_
-#define SHARED_NETWORK_PACKET_HPP_
+#pragma once
 
 // TODO: define packet structs for protocol
-
-#endif  // SHARED_NETWORK_PACKET_HPP_

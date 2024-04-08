@@ -1,5 +1,4 @@
-#ifndef SHARED_UTILITIES_SERIALIZABLE_HPP_
-#define SHARED_UTILITIES_SERIALIZABLE_HPP_
+#pragma once
 
 #include <string>
 
@@ -13,4 +12,3 @@ public:
     virtual std::string serialize() const = 0;
 };
 
-#endif  // SHARED_UTILITIES_SERIALIZABLE_HPP_
