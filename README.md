@@ -6,13 +6,22 @@ TODO: Game description here, with screenshots.
 
 ### Dependencies
 
-1. CMake
+1. `cmake`
     - Minimum version 3.13
     - [Install Instructions](https://cgold.readthedocs.io/en/latest/first-step/installation.html)
-2. g++ / Mingw64
+2. `g++`
     - Should be new enough support C++20 features
-    - [Install Instructions]()
-3. OpenGL
+    - Windows: follow [this](https://www.freecodecamp.org/news/how-to-install-c-and-cpp-compiler-on-windows/) tutorial.
+    - Mac: [here](https://formulae.brew.sh/formula/gcc)
+    - Linux: use your favorite package managr, if it isn't already installed.
+3. `make`
+    - Windows: 
+        - Inside of the `msys2 MINGW64` terminal (search for this in your windows search bar), enter `pacman -S make`.
+        - Then, go back to your environment variable settings and add `C:\msys64\usr\bin` to your system path.
+            - (This is at `View Advanced System Settings` > `Environment Variables` > Double Click on System Path at the bottom)
+    - Mac: [here](https://formulae.brew.sh/formula/make).
+    - Linux: it probably is already installed on your system, but if not use your favorite package manager.
+4. OpenGL
     - TODO: decide on version
     - TODO: link install instructions here
 
@@ -20,6 +29,9 @@ TODO: Game description here, with screenshots.
 
 1. Install Dependencies
 2. Create a directory called `build`
+    ```sh
+    mkdir build
+    ```
 3. From inside the `build` directory, run `cmake` like so:
     ```sh
     cmake ..
