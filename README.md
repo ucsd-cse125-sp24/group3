@@ -19,6 +19,7 @@ TODO: Game description here, with screenshots.
         - Inside of the `msys2 MINGW64` terminal (search for this in your windows search bar), enter `pacman -S make`.
         - Then, go back to your environment variable settings and add `C:\msys64\usr\bin` to your system path.
             - (This is at `View Advanced System Settings` > `Environment Variables` > Double Click on System Path at the bottom)
+        - Make sure that in powershell if you type in `make` it recognizes the command. That is how you know it is installed correctly.
     - Mac: [here](https://formulae.brew.sh/formula/make).
     - Linux: it probably is already installed on your system, but if not use your favorite package manager.
 4. OpenGL
@@ -35,6 +36,10 @@ TODO: Game description here, with screenshots.
 3. From inside the `build` directory, run `cmake` like so:
     ```sh
     cmake ..
+    ```
+    If you are on windows, however, you will have to run it like this:
+    ```
+    cmake -G "Unix Makefiles" ..
     ```
 4. Then, you can build the `server` and `client` executables with these commands:
     ```sh
