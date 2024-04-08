@@ -1,3 +1,4 @@
 build/
 assets/*
-.vscode
+.vscode/
+.vs/
