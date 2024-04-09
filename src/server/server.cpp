@@ -1,5 +1,7 @@
 #include "server/server.hpp"
 
-Server::Server() {
+#include "shared/utilities/test.hpp"
 
+Server::Server() {
+	test();
 }
