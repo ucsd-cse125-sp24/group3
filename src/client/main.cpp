@@ -10,4 +10,6 @@ int main() {
 
     // Test that shared lib is linked correctly
     std::cout << "Random number: " << randomInt(0, 100) << "\n";
+
+    client.start();
 }
