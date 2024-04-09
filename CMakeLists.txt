@@ -23,11 +23,12 @@ SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_LINK_FLAGS}")
 
 project(game VERSION 1.0)
 
-
-
-
 # Custom Variables
 SET(INCLUDE_DIRECTORY ${PROJECT_SOURCE_DIR}/include)
+
+# Dependencies
+
+add_subdirectory(deps/boost) # include boost libraries that we use
 
 add_subdirectory(src/shared) # define game_shared_lib
 add_subdirectory(src/client) # create client executable

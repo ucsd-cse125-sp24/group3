@@ -1,7 +1,9 @@
 #include "server/server.hpp"
 
-#include "shared/utilities/test.hpp"
+#include <boost/asio/io_context.hpp>
+#include <iostream>
 
 Server::Server() {
-	test();
+	boost::asio::io_context io_context(1);
+	std::cout << "test successful yipieeee!\n";
 }
