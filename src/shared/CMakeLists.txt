@@ -19,4 +19,5 @@ target_link_libraries(${LIB_NAME}
   Boost::filesystem
   Boost::thread
   Boost::program_options
+  Boost::serialization
 )
