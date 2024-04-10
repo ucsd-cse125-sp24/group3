@@ -1,4 +1,7 @@
 #pragma once
+#include <glm/glm.hpp>
+#include <vector>
+
 #define NUM_PLAYERS 4
 #define MAX_ENTITIES 1000
 #define MAX_COMPONENTS 32
