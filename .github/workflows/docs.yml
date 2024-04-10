@@ -25,3 +25,4 @@ jobs:
           port: ${{ secrets.SITE_PORT }}
           source: docs
           target: /var/www/html/class/cse125/www/cse125/2024/cse125g3/site/
+          overwrite: true
