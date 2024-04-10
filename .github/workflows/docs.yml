@@ -20,7 +20,7 @@ jobs:
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SITE_HOST }}
-          username: ${{ secrets.SITE_USERNAME }}
+          username: ${{ secrets.SITE_USER }}
           key: ${{ secrets.SITE_KEY }}
           port: ${{ secrets.SITE_PORT }}
           source: docs/*
