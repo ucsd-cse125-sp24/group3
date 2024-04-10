@@ -23,5 +23,5 @@ jobs:
           username: ${{ secrets.SITE_USER }}
           key: ${{ secrets.SITE_KEY }}
           port: ${{ secrets.SITE_PORT }}
-          source: docs/*
-          target: /var/www/html/class/cse125/www/cse125/2024/cse125g3/site/docs
+          source: docs
+          target: /var/www/html/class/cse125/www/cse125/2024/cse125g3/site/
