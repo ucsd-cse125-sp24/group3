@@ -171,10 +171,10 @@ struct ClientLobbyAction {
  */
 template<class Packet>
 std::string serialize(Packet packet) {
-	std::ostringstream archive_stream;
-	boost::archive::text_oarchive archive(archive_stream);
-	archive << packet;
-	return archive_stream.str();
+    std::ostringstream archive_stream;
+    boost::archive::text_oarchive archive(archive_stream);
+    archive << packet;
+    return archive_stream.str();
 }
 
 /**

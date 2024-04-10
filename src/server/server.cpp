@@ -17,7 +17,7 @@ using namespace std::chrono_literals;
 using namespace boost::asio::ip;
 
 Server::Server(boost::asio::io_context& io_context)
-	:lobby_broadcaster(io_context, // TODO: put in actual lobby info here?
-		packet::ServerLobbyBroadcast {.lobby_name="My Lobby", .slots_taken=0, .slots_avail=4})
+    :lobby_broadcaster(io_context, // TODO: put in actual lobby info here?
+        packet::ServerLobbyBroadcast {.lobby_name="My Lobby", .slots_taken=0, .slots_avail=4})
 {
 }
