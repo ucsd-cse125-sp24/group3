@@ -1,28 +1,39 @@
 #include "client/client.hpp"
 
 #include <boost/asio/io_context.hpp>
+#include <boost/archive/text_iarchive.hpp>
 #include <iostream>
 #include <thread>
+#include <sstream>
 
 #include "shared/network/constants.hpp"
+#include "shared/network/packet.hpp"
+
 
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
 Client::Client(boost::asio::io_context& io_context)
-	:lobby_discovery_socket(io_context, udp::endpoint(udp::v4(), PORT))
+    :lobby_discovery_socket(io_context, udp::endpoint(udp::v4(), PORT))
 {
-	std::string in_data;
-	udp::endpoint server_endpoint;
+    this->lobby_discovery_socket.async_receive_from(
+        boost::asio::buffer(this->lobby_info_buf), this->endpoint_buf,
+        [this](const boost::system::error_code& ec, std::size_t bytes) {
+            std::string packet(this->lobby_info_buf.begin(), this->lobby_info_buf.end());
+            std::cout << bytes << "\n";
+            std::cout << packet.size() << "\n";
+            packet.resize(bytes);
+            std::cout << "packet: " << packet << "\n";
+            std::cout << packet.size() << "\n";
+            packet::ServerLobbyBroadcast parsed_info;
+            std::istringstream stream(packet);
+            boost::archive::text_iarchive archive(stream);
+            archive >> parsed_info;
 
-	this->lobby_discovery_socket.async_receive_from(
-		boost::asio::buffer(in_data), server_endpoint,
-		[&in_data, &server_endpoint](const boost::system::error_code& ec, std::size_t bytes) {
-			std::cout << "Packet received: {" << in_data << "}\n";
-			std::cout << "Server endpoint: " << server_endpoint << "\n";
-		});
-	
-	// This dummy example is bad, because these local variables will go out of scope once this function
-	// ends, and the socket could still be listening, but it works for this simple test
-	std::this_thread::sleep_for(10s);
+            std::cout << "Packet received\n";
+            std::cout << parsed_info.lobby_name << "\n";
+            std::cout << parsed_info.slots_avail << "\n";
+            std::cout << parsed_info.slots_taken << "\n";
+            std::cout << "Server endpoint: " << this->endpoint_buf << "\n";
+        });
 }

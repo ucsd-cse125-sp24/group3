@@ -21,7 +21,7 @@ Server::Server(boost::asio::io_context& io_context)
 	 keep_broadcasting_lobby(true),
 	 lobby_broadcast_thread(&Server::_broadcastLobbyWorker, this)
 {
-	std::this_thread::sleep_for(10s);
+	std::this_thread::sleep_for(100s);
 	this->keep_broadcasting_lobby = false;
 	this->lobby_broadcast_thread.join();
 }

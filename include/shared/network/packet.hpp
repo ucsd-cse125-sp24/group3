@@ -86,14 +86,12 @@ struct ServerLobbyBroadcast {
     /// @brief Name of the server lobby
     std::string lobby_name;
     /// @brief How many clients are already in this lobby
-    uint8_t slots_taken;
+    int slots_taken;
     /// @brief How many more clients can join this lobby
-    uint8_t slots_avail;
+    int slots_avail;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        for (int i = 0; i < MAX_NAME_LEN; i++) {
-            ar & this->lobby_name[i];
-        }
+        ar & this->lobby_name;
         ar & this->slots_taken;
         ar & this->slots_avail;
     }
@@ -133,7 +131,7 @@ struct ServerLobbyInfo {
     /// @brief Contains (Entity ID, name, ready_status) information for each player
     std::vector<std::tuple<EntityID, std::string, bool>> players;
     /// @brief How many more spots there are available in the lobby
-    uint8_t slots_avail;
+    int slots_avail;
     
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar & players;
@@ -144,7 +142,7 @@ struct ServerLobbyInfo {
 /**
  * Different actions that the clients can do while inside of a lobby
  */
-enum class LobbyActionType : uint8_t {
+enum class LobbyActionType {
     Leave = 0,
     SetReady,
     SetNotReady

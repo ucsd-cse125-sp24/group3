@@ -6,4 +6,5 @@
 int main() {
     boost::asio::io_context context(1);
     Client client(context);
+    context.run();
 }
