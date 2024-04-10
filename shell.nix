@@ -8,5 +8,7 @@ mkShell {
     cmake
     gnumake
     gcc13
+
+    doxygen
   ];
 }
