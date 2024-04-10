@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - dev
-      # NOTE: temporariliy deploying docs on this branch for testing
-      - chore/doxygen
 
 jobs:
   build-and-deploy-docs:
