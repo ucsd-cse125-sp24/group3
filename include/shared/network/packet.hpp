@@ -46,7 +46,7 @@ enum class Type: uint16_t {
  * Header for any arbitrary packet on the network sent by our game.
  */
 struct Header {
-    /// @brief Size (in bytes) of the packet (including the header)
+    /// @brief Size (in bytes) of the packet data (not including the header)
     uint16_t size;
     /// @brief What kind of packet this is, according to the Type enum class
     Type type;
