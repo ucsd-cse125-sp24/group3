@@ -4,10 +4,14 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <ostream>
 
+#include <boost/asio.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/utility.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 #include "shared/network/constants.hpp"
 
@@ -29,7 +33,7 @@ namespace packet {
  */
 enum class Type: uint16_t {
     // Lobby Setup
-    ServerLobbyOpen = 0, ///< Sent by the server via UDP broadcast saying it has a server open
+    ServerLobbyBroadcast = 0, ///< Sent by the server via UDP broadcast saying it has a server open
     ClientDeclareInfo,   ///< Sent by the client after TCP handshake 
     ServerAssignEID,     ///< Sent by the server after TCP handshake, giving client its EID
     ServerLobbyInfo,     ///< Sent periodically to all clients in lobby telling lobby info
@@ -44,24 +48,41 @@ enum class Type: uint16_t {
 
 /**
  * Header for any arbitrary packet on the network sent by our game.
+ * Headers are sent as POD (plain-old-data), so the recipient can always
+ * read exactly sizeof(Header), get the relevant information of the packet,
+ * and then use boost::serialization to deserialize the more complicated
+ * Packet types below.
  */
 struct Header {
+    /**
+     * Constructor which makes a Header with values in network byte order
+     */
+    Header(uint16_t size, Type type) {
+        this->size = htons(size);
+        this->type = static_cast<Type>(htons(static_cast<uint16_t>(type))); 
+    }
+
+    /**
+     * Constructor which takes a buffer received over the network and constructs
+     * a Header object from it.
+     */
+    Header(void* buffer) {
+        Header* buf_hdr = static_cast<Header*>(buffer);
+        this->size = ntohs(buf_hdr->size);
+        this->type = static_cast<Type>(ntohs(static_cast<uint16_t>(buf_hdr->type)));
+    }
+
     /// @brief Size (in bytes) of the packet data (not including the header)
     uint16_t size;
     /// @brief What kind of packet this is, according to the Type enum class
     Type type;
-
-    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & this->size;
-        ar & this->type;
-    }
 };
 
 /**
  * Packet sent by the server via UDP broadcast, announcing that there is a lobby available for
  * players to join.
  */
-struct ServerLobbyOpen {
+struct ServerLobbyBroadcast {
     /// @brief Name of the server lobby
     std::string lobby_name;
     /// @brief How many clients are already in this lobby
@@ -143,4 +164,17 @@ struct ClientLobbyAction {
 // TODO: packets for the actual game itself
 // https://docs.google.com/document/d/1gkvuVnrpik86YUdQWANHn61yHgOpOSGWT6aXjq7orYg/edit
 
+}
+
+/**
+ * Helper function to easily serialize a header and corresponding packet data into a string
+ * to send over the network. The caller does not have to worry about setting the size value
+ * in the passed in header.
+ */
+template<class PacketType>
+std::string serialize(PacketType packet) {
+	std::ostringstream archive_stream;
+	boost::archive::text_oarchive archive(archive_stream);
+	archive << packet;
+	return archive_stream.str();
 }

@@ -4,10 +4,6 @@
 #include "shared/utilities/rng.hpp"
 
 int main() {
-    Client client;
-
-    std::cout << "I am a client!\n"; 
-
-    // Test that shared lib is linked correctly
-    std::cout << "Random number: " << randomInt(0, 100) << "\n";
+    boost::asio::io_context context(1);
+    Client client(context);
 }
