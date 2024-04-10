@@ -3,6 +3,7 @@ set(TARGET_NAME client)
 set(FILES
     main.cpp
     client.cpp
+    lobbyfinder.cpp
 )
 
 add_executable(${TARGET_NAME} ${FILES})

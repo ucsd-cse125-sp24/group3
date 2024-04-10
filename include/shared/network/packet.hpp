@@ -5,6 +5,7 @@
 #include <vector>
 #include <utility>
 #include <ostream>
+#include <sstream>
 
 #include <boost/asio.hpp>
 #include <boost/serialization/access.hpp>
@@ -165,14 +166,26 @@ struct ClientLobbyAction {
 }
 
 /**
- * Helper function to easily serialize a header and corresponding packet data into a string
- * to send over the network. The caller does not have to worry about setting the size value
- * in the passed in header.
+ * Helper function to easily serialize a packet's data into a string
+ * to send over the network.
  */
-template<class PacketType>
-std::string serialize(PacketType packet) {
+template<class Packet>
+std::string serialize(Packet packet) {
 	std::ostringstream archive_stream;
 	boost::archive::text_oarchive archive(archive_stream);
 	archive << packet;
 	return archive_stream.str();
+}
+
+/**
+ * Helper function to easily deserialize a string received over the network into
+ * a packet.
+ */
+template <class Packet>
+Packet deserialize(std::string data) {
+    Packet parsed_info;
+    std::istringstream stream(data);
+    boost::archive::text_iarchive archive(stream);
+    archive >> parsed_info;
+    return parsed_info;
 }
