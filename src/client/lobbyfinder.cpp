@@ -17,22 +17,28 @@ LobbyFinder::LobbyFinder(boost::asio::io_context& io_context)
 }
 
 LobbyFinder::~LobbyFinder() {
-    if (this->keep_searching) {
-        this->stopSearching();
-    }
+    this->stopSearching();
 }
 
 void LobbyFinder::stopSearching() {
-    this->keep_searching = false;
-    try {
-        this->lobby_discovery_socket.close(); // this might throw an exception
-        // Only try and join if the close call is successful.
-        // It is preferable to potentially have a dangling thread in the background
-        // than to completely block the application on this line, if closing the
-        // socket messed up somehow.
+    if (this->keep_searching) {
+        this->keep_searching = false;
+        boost::system::error_code ec;
+        this->lobby_discovery_socket.shutdown(udp::socket::shutdown_receive, ec);
+        if (ec) {
+            std::cerr << "Error shutting down the LobbyFinder socket: " << ec << std::endl;
+            return;
+        }
+        this->lobby_discovery_socket.close(ec);
+        if (ec) {
+            std::cerr << "Error closing the LobbyFinder socket: " << ec << std::endl;
+            return;
+        }
+
+        // Only do this if we are certain that the socket was successfuly closed
+        // It is preferable to have a dangling thread that is forever blocked on receive_from
+        // instead of being blocked here indefinitely.
         this->worker_thread.join();
-    } catch (boost::system::system_error e) {
-        std::cerr << "Error closing LobbyFinder socket: " << e.what() << std::endl;
     }
 }
 

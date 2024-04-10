@@ -3,6 +3,7 @@ set(TARGET_NAME server)
 set(FILES
     main.cpp
     server.cpp
+    lobbybroadcaster.cpp
 )
 
 add_executable(${TARGET_NAME} ${FILES})
