@@ -14,7 +14,7 @@ using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
 Client::Client(boost::asio::io_context& io_context)
-    :lobby_discovery_socket(io_context, udp::endpoint(udp::v4(), PORT))
+    :lobby_discovery_socket(io_context, udp::endpoint(address_v4::any(), PORT))
 {
     this->lobby_discovery_socket.async_receive_from(
         boost::asio::buffer(this->lobby_info_buf), this->endpoint_buf,
