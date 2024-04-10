@@ -1,6 +1,10 @@
 set(BOOST_INCLUDE_LIBRARIES thread filesystem system program_options asio date_time serialization)
 set(BOOST_ENABLE_CMAKE ON)
 
+IF(MSVC)
+    ADD_DEFINITIONS("/EHsc")
+ENDIF(MSVC)
+
 include(FetchContent)
 FetchContent_Declare(
     Boost
