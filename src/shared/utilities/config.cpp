@@ -26,7 +26,7 @@ nlohmann::json parseConfig(int argc, char** argv) {
     }
 
     try {
-        std::fstream stream(filepath);
+        std::fstream stream(filepath.c_str());
         return nlohmann::json::parse(stream);
     } catch (std::exception ex) {
         std::cerr << "Failed to parse config file, aborting.\n";
