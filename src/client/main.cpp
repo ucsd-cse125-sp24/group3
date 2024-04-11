@@ -1,11 +1,14 @@
 #include <iostream>
 
 #include "client/client.hpp"
+#include "shared/utilities/config.hpp"
 #include "shared/utilities/rng.hpp"
 
 using namespace std::chrono_literals;
 
-int main() {
+int main(int argc, char** argv) {
+    nlohmann::json config = parseConfig(argc, argv);
+
     boost::asio::io_context context(1);
     LobbyFinder lobby_finder(context);
     Client client(context);

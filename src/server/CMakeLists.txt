@@ -13,10 +13,11 @@ target_link_libraries(${TARGET_NAME} PRIVATE game_shared_lib)
 
 target_include_directories(${TARGET_NAME} PRIVATE ${BOOST_LIBRARY_INCLUDES})
 target_link_libraries(${TARGET_NAME} 
-  PRIVATE 
-  Boost::asio
-  Boost::filesystem
-  Boost::thread
-  Boost::program_options
-  Boost::serialization
+    PRIVATE 
+    Boost::asio
+    Boost::filesystem
+    Boost::thread
+    Boost::program_options
+    Boost::serialization
+    nlohmann_json::nlohmann_json
 )

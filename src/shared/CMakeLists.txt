@@ -6,6 +6,7 @@ set(FILES
     network/packet.cpp
 
     utilities/rng.cpp
+    utilities/config.cpp
 )
 
 
@@ -14,10 +15,11 @@ add_library(${LIB_NAME} STATIC ${FILES})
 target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIRECTORY})
 target_include_directories(${LIB_NAME} PUBLIC ${BOOST_LIBRARY_INCLUDES})
 target_link_libraries(${LIB_NAME}
-  PRIVATE 
-  Boost::asio
-  Boost::filesystem
-  Boost::thread
-  Boost::program_options
-  Boost::serialization
+    PRIVATE 
+    Boost::asio
+    Boost::filesystem
+    Boost::thread
+    Boost::program_options
+    Boost::serialization
+    nlohmann_json::nlohmann_json
 )
