@@ -4,9 +4,9 @@ set(FILES
     main.cpp
     server.cpp
     lobbybroadcaster.cpp
-)
+    )
 
-add_executable(${TARGET_NAME} ${FILES})
+add_executable(${TARGET_NAME} ${FILES} "session.cpp")
 
 target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORY})
 target_link_libraries(${TARGET_NAME} PRIVATE game_shared_lib)

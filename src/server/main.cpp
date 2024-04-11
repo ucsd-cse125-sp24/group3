@@ -11,8 +11,16 @@ int main(int argc, char** argv) {
     boost::asio::io_context context(1);
     Server server(context);
 
-    while (true) {
-        // server is handling broadcasting in the background,
-        // next step is getting it to simulatously accept tcp connections
+    // server is handling broadcasting in the background,
+    // next step is getting it to simulatously accept tcp connections
+
+    try
+    {
+        // run the context
+        context.run();
+    }
+    catch (std::exception& e)
+    {
+        std::cerr << "Exception: " << e.what() << "\n";
     }
 }
