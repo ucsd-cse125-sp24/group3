@@ -4,6 +4,10 @@ Client::Client() {
 
 }
 
+Client::~Client() {
+
+}
+
 // Remember to do error message output for later
 int Client::start() {
     GLFWwindow *window;
@@ -23,30 +27,40 @@ int Client::start() {
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+    // std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+
+    /* Load shader programs */
+    GLuint shaderProgram = LoadShaders("../src/client/shaders/shader.vert", "../src/client/shaders/shader.frag");
+
+    // Check the shader program.
+    if (!shaderProgram) {
+        std::cerr << "Failed to initialize shader program" << std::endl;
+        return false;
+    }
+
     /* Initialize GLAD */
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         return -1;
 
-    /* Vector Math */
-    glm::vec3 v1(1.0, 2.0, 3.0);
-    glm::vec3 v2(10.0, 11.0, 2.0);
-    glm::vec3 v = v1 + v2;
-    std::cout << "Vector Result: " << v.x << " " << v.y << " " << v.z << std::endl;
+    Cube* c = new Cube();
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
+        c->draw(shaderProgram);
 
         /* Poll for and process events */
         glfwPollEvents();
     }
 
     glfwTerminate();
+
+    glDeleteProgram(shaderProgram);
     return 0;
 }

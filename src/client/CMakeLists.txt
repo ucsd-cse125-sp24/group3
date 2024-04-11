@@ -3,6 +3,8 @@ set(TARGET_NAME client)
 set(FILES
     main.cpp
     client.cpp
+    cube.cpp
+    util.cpp
 )
 
 # Subprojects
