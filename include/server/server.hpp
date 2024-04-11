@@ -5,8 +5,11 @@
 
 #include <thread>
 #include <atomic>
+#include <unordered_map>
+#include <memory>
 
 #include "server/lobbybroadcaster.hpp"
+#include "server/session.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -17,6 +20,9 @@ public:
 
 private:
     LobbyBroadcaster lobby_broadcaster;
-    tcp::acceptor acceptor_;
-    tcp::socket socket_;
+
+    tcp::acceptor acceptor;
+    tcp::socket socket;
+
+    std::unordered_map<EntityID, std::shared_ptr<Session>> sessions;
 };

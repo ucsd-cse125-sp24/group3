@@ -189,3 +189,22 @@ Packet deserialize(std::string data) {
     archive >> parsed_info;
     return parsed_info;
 }
+
+using PacketBuffer = std::array<boost::asio::const_buffer, 2>;
+
+/**
+ * Helper function that packages a packet as a collection of boost buffers, which can
+ * then be sent into a write socket call.
+ */
+template <class Packet>
+PacketBuffer packagePacket(packet::Type type, Packet packet) {
+    std::string data = serialize<Packet>(packet);
+    packet::Header hdr(data.size(), type);
+
+    PacketBuffer bufs = {
+        boost::asio::buffer(&hdr, sizeof(packet::Header)),
+        boost::asio::buffer(data)
+    };
+
+    return bufs;
+}
