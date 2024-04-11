@@ -1,9 +1,10 @@
 #include "shared/utilities/config.hpp"
 
+#include <boost/dll/runtime_symbol_info.hpp>
+
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <fstream>
-#include <filesystem>
 
 nlohmann::json parseConfig(int argc, char** argv) {
     if (argc > 2) {
@@ -15,11 +16,11 @@ nlohmann::json parseConfig(int argc, char** argv) {
         exit(1);
     }
 
-    // With the cmake setup we know the executables are two directories down from the root of the
+    // With the cmake setup we know the executables are three directories down from the root of the
     // repository, where the config file lives
-    std::filesystem::path root_path = std::filesystem::current_path().parent_path().parent_path();
+    boost::filesystem::path root_path = boost::dll::program_location().parent_path().parent_path().parent_path();
 
-    std::filesystem::path filepath = root_path / "config.json";
+    boost::filesystem::path filepath = root_path / "config.json";
     if (argc == 2) {
         filepath = argv[1];
     }
@@ -31,7 +32,7 @@ nlohmann::json parseConfig(int argc, char** argv) {
         std::cerr << "Failed to parse config file, aborting.\n";
         std::cerr << "Most likely, you need specify the filepath to the config like so:\n";
         std::cerr << "    " << argv[0] << " [path_to_config]\n";
-        std::cerr << "Alternatively, you should verify that the executable is two directories below the config file,\n";
+        std::cerr << "Alternatively, you can verify that the executable is three directories below the config file,\n";
         std::cerr << "since those are the locations the program expects if you do not specify a config file path." << std::endl;
         exit(1);
     }

@@ -21,5 +21,6 @@ target_link_libraries(${LIB_NAME}
     Boost::thread
     Boost::program_options
     Boost::serialization
+    Boost::dll
     nlohmann_json::nlohmann_json
 )
