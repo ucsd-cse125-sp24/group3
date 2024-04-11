@@ -26,6 +26,10 @@ Server::Server(boost::asio::io_context& io_context)
     do_accept(); // start asynchronously accepting
 }
 
+EntityID Server::genNewEID() {
+    
+}
+
 
 void Server::do_accept()
 {

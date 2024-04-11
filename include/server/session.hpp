@@ -5,6 +5,7 @@
 #include <memory>
 #include <queue>
 #include <mutex>
+#include <thread>
 
 #include "shared/network/packet.hpp"
 
@@ -16,13 +17,13 @@ public:
     Session(tcp::socket socket, EntityID eid);
     ~Session();
 
-    void do_write(PacketBuffer buf);
+    void send(PacketBuffer buf);
 
-    std::vector<std::pair<packet::Type, std::string>> do_read();
+    std::vector<std::pair<packet::Type, std::string>> receive();
 
 private:
     tcp::socket socket;
-    enum { max_length = 1024 };
+    enum { max_length = 2048 }; // might need to increase this depending on size of game state serialization
     char data[max_length];
 
     /// @brief eid of the player that this session is associated with.
@@ -31,5 +32,6 @@ private:
     std::mutex mut;
     std::queue<std::pair<packet::Type, std::string>> incoming_packets;
 
-    void do_read_background();
+    void _receiveHdr();
+    void _receiveData(packet::Header hdr);
 };

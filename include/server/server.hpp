@@ -18,6 +18,8 @@ public:
     Server(boost::asio::io_context& io_context);
     void do_accept();
 
+    static EntityID genNewEID();
+
 private:
     LobbyBroadcaster lobby_broadcaster;
 

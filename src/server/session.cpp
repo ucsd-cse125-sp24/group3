@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <mutex>
 
 #include "shared/network/packet.hpp"
 
@@ -14,16 +15,15 @@ Session::Session(tcp::socket socket, EntityID eid)
     :socket(std::move(socket)),
      eid(eid)
 {
-    this->do_read_background();
+    this->_receiveHdr();
 
-    this->do_write(packagePacket(packet::Type::ServerAssignEID, packet::ServerAssignEID { .eid=eid }));
+    this->send(packagePacket(packet::Type::ServerAssignEID, packet::ServerAssignEID { .eid=eid }));
 }
 
 Session::~Session() {
-
 }
 
-void Session::do_write(PacketBuffer buf) {
+void Session::send(PacketBuffer buf) {
     // make sure current instance of Session remains alive if pending async ops
     auto self(shared_from_this());
     boost::asio::write(this->socket, buf,
@@ -35,17 +35,38 @@ void Session::do_write(PacketBuffer buf) {
         });
 }
 
-void Session::do_read_background() {
-    // make sure current instance of Session remains alive if pending async ops
+void Session::_receiveHdr() {
     auto self(shared_from_this());
-    this->socket.async_read_some(boost::asio::buffer(this->data, max_length),
-        [this, self](boost::system::error_code ec, std::size_t length)
-        {
+    boost::asio::async_read(this->socket, boost::asio::buffer(this->data),
+        boost::asio::transfer_exactly(sizeof(packet::Header)),
+        [this, self](boost::system::error_code ec, std::size_t length) {
             if (ec) {
-                std::cerr << "Error reading packet from client " << this->eid
-                    << ": " << ec << std::endl;
+                std::cerr << "Error reading header from client " << this->eid
+                    << ": " << ec << "\n";
+                this->_receiveHdr();
+            } else {
+                packet::Header hdr(static_cast<void*>(&this->data[0]));
+                std::cout << "Session " << this->eid << " received packet hdr: {"
+                    << hdr.size << "," << static_cast<int>(hdr.type) << "}" << std::endl;
+                this->_receiveData(hdr);
             }
+        });
+}
 
-            this->do_read_background(); // read again
+void Session::_receiveData(packet::Header hdr) {
+    auto self(shared_from_this());
+    boost::asio::async_read(this->socket, boost::asio::buffer(this->data),
+        boost::asio::transfer_exactly(hdr.size),
+        [this, self, hdr](boost::system::error_code ec, std::size_t length) {
+            if (ec) {
+                std::cerr << "Error reading data from client " << this->eid
+                    << ": " << ec << "\n";
+                this->_receiveData(hdr);
+            } else {
+                std::string data(this->data, hdr.size);
+                std::unique_lock<std::mutex> lock(this->mut);
+                this->incoming_packets.push({hdr.type, data});
+                this->_receiveHdr();
+            }
         });
 }
