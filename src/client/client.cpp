@@ -28,7 +28,12 @@ int Client::start() {
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    // std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+    /* Initialize GLAD */
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+        return -1;
+
+    std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+    std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
 
     /* Load shader programs */
     std::cout << "loading shader" << std::endl;
@@ -39,10 +44,6 @@ int Client::start() {
         std::cerr << "Failed to initialize shader program" << std::endl;
         return false;
     }
-
-    /* Initialize GLAD */
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        return -1;
 
     Cube* c = new Cube();
 
