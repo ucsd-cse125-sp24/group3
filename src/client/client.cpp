@@ -17,6 +17,7 @@ int Client::start() {
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
     if (!window)
     {
@@ -30,6 +31,7 @@ int Client::start() {
     // std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
     /* Load shader programs */
+    std::cout << "loading shader" << std::endl;
     GLuint shaderProgram = LoadShaders("../src/client/shaders/shader.vert", "../src/client/shaders/shader.frag");
 
     // Check the shader program.
