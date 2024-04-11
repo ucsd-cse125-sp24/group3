@@ -17,7 +17,8 @@ int Client::start() {
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
     if (!window)
     {
@@ -28,9 +29,9 @@ int Client::start() {
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    /* Initialize GLAD */
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        return -1;
+    ///* Initialize GLAD */
+    //if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    //    return -1;
 
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
