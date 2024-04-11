@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 nlohmann::json parseConfig(int argc, char** argv) {
     if (argc > 2) {
@@ -14,7 +15,11 @@ nlohmann::json parseConfig(int argc, char** argv) {
         exit(1);
     }
 
-    std::string filepath = "config.json";
+    // With the cmake setup we know the executables are two directories down from the root of the
+    // repository, where the config file lives
+    std::filesystem::path root_path = std::filesystem::current_path().parent_path().parent_path();
+
+    std::filesystem::path filepath = root_path / "config.json";
     if (argc == 2) {
         filepath = argv[1];
     }
@@ -25,9 +30,9 @@ nlohmann::json parseConfig(int argc, char** argv) {
     } catch (std::exception ex) {
         std::cerr << "Failed to parse config file, aborting.\n";
         std::cerr << "Most likely, you need specify the filepath to the config like so:\n";
-        std::cerr << "    ./" << argv[0] << " [path_to_config]\n";
-        std::cerr << "Alternatively, you can run the binaries from the directory\n";
-        std::cerr << "in which the config file resides." << std::endl;
+        std::cerr << "    " << argv[0] << " [path_to_config]\n";
+        std::cerr << "Alternatively, you should verify that the executable is two directories below the config file,\n";
+        std::cerr << "since those are the locations the program expects if you do not specify a config file path." << std::endl;
         exit(1);
     }
 }
