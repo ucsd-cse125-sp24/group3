@@ -8,7 +8,7 @@
 
 int main(int argc, char** argv) {
     nlohmann::json config = parseConfig(argc, argv);
-    boost::asio::io_context context(1);
+    boost::asio::io_context context;
     Server server(context);
 
     // server is handling broadcasting in the background,
