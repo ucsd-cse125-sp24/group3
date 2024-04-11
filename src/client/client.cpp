@@ -4,24 +4,19 @@ Client::Client() {
 
 }
 
+// Remember to do error message output for later
 int Client::start() {
     GLFWwindow *window;
 
     /* Initialize the library */
-    if (glfwInit() == GLFW_FALSE) {
-        const char* description;
-        int code = glfwGetError(&description);
- 
-        std::cerr << "glfw init failed. Reason: " << description << std::endl;
+    if (!glfwInit())
         return -1;
-    }
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
-        std::cerr << "glfw window could not be created" << std::endl;
         return -1;
     }
 
@@ -29,10 +24,14 @@ int Client::start() {
     glfwMakeContextCurrent(window);
 
     /* Initialize GLAD */
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "GLAD could not be loaded" << std::endl;
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         return -1;
-    }
+
+    /* Vector Math */
+    glm::vec3 v1(1.0, 2.0, 3.0);
+    glm::vec3 v2(10.0, 11.0, 2.0);
+    glm::vec3 v = v1 + v2;
+    std::cout << "Vector Result: " << v.x << " " << v.y << " " << v.z << std::endl;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
