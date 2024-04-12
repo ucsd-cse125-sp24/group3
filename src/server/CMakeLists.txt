@@ -1,10 +1,11 @@
 set(TARGET_NAME server)
 
 set(FILES
+    lobbybroadcaster.cpp
     main.cpp
     server.cpp
-    lobbybroadcaster.cpp
-    )
+    session.cpp
+)
 
 add_executable(${TARGET_NAME} ${FILES} "session.cpp")
 

@@ -31,6 +31,9 @@ namespace packet {
  * Enumeration for all of the different packet types that can be sent.
  * 
  * Server or Client prefix specifies which side sends that type of packet
+ * 
+ * Note: you need to update the below function validateType whenever you add a new
+ * packet type!!!!!!!!!
  */
 enum class Type: uint16_t {
     // Lobby Setup
@@ -46,6 +49,14 @@ enum class Type: uint16_t {
     ClientRequestEvent = 2000, ///< Client requesting server to perform specific input
     ServerDoEvent,             ///< Server telling clients what events have occurred.
 };
+
+/**
+ * Function that checks if the type is valid or not.
+ * 
+ * @param type The type integer value to validate (most likely received from the network)
+ * @return true if the packet is valid, false otherwise
+ */
+bool validateType(Type type);
 
 /**
  * Header for any arbitrary packet on the network sent by our game.
