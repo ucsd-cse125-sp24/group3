@@ -1,8 +1,10 @@
 #include "shared/network/socket.hpp"
 
 #include <boost/asio/ip/tcp.hpp>
+#include <string>
 
 #include "shared/network/session.hpp"
+#include "shared/network/packet.hpp"
 
 void sendPacketAsync(tcp::socket& socket, std::shared_ptr<PackagedPacket> packet) {
     // pass packet shared ptr into closure capture list to keep it alive until written to buffer
@@ -23,10 +25,12 @@ void sendPacketAsync(tcp::socket& socket, std::shared_ptr<PackagedPacket> packet
 
 void receivePacketAsync(tcp::socket& socket, std::shared_ptr<Session> session) {
     const std::size_t BUF_SIZE = 10000;
-    std::shared_ptr<char[BUF_SIZE]> buf;
-    boost::asio::async_read(socket, boost::asio::buffer(buf.get(), BUF_SIZE),
+    auto buf = std::make_shared<std::array<char, BUF_SIZE>>();
+
+    boost::asio::async_read(socket, boost::asio::buffer(&buf.get()[0], BUF_SIZE),
         boost::asio::transfer_exactly(sizeof(packet::Header)),
         [buf, &socket, session](boost::system::error_code ec, std::size_t length) {
+
             switch (_classifySocketError(ec, "receiving header")) {
                 case SocketError::NONE:
                     break;
@@ -51,7 +55,7 @@ void receivePacketAsync(tcp::socket& socket, std::shared_ptr<Session> session) {
                     }
                     std::cout << "bytes read: " << length << std::endl;
 
-                    std::string data(buf.get(), hdr.size);
+                    std::string data(buf->begin(), buf->begin() + hdr.size);
                     session->addReceivedPacket(hdr.type, data);
                     std::cout << "received full packet data" << std::endl;
                     receivePacketAsync(socket, session);

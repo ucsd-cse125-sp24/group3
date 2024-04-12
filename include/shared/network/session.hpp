@@ -6,15 +6,18 @@
 #include <queue>
 #include <mutex>
 #include <thread>
+#include <string>
 
 #include "shared/network/packet.hpp"
 
 using boost::asio::ip::tcp;
 
-class Session : std::enable_shared_from_this<Session> {
+class Session : public std::enable_shared_from_this<Session> {
 public:
     Session(tcp::socket socket, EntityID eid);
     ~Session();
+
+    void startListen();
 
     void addReceivedPacket(packet::Type type, std::string data);
 

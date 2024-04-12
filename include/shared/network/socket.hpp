@@ -5,12 +5,13 @@
 #include <memory>
 
 #include "shared/network/packet.hpp"
+#include "shared/network/session.hpp"
 
 using namespace boost::asio::ip;
 
 // TODO: Javadocs
 void sendPacketAsync(tcp::socket& socket, std::shared_ptr<PackagedPacket> packet);
-void receivePacketAsync(tcp::socket& socket, std::shared_ptr<PackagedPacket> packet);
+void receivePacketAsync(tcp::socket& socket, std::shared_ptr<Session> session);
 
 enum SocketError {
     NONE,

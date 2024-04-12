@@ -37,6 +37,7 @@ void Server::doAccept() {
             if (!ec) {
                 EntityID eid = Server::genNewEID();
                 auto session = std::make_shared<Session>(std::move(this->socket), eid);
+                session->startListen();
                 this->sessions.insert({eid, session});
             } else {
                 std::cerr << "Error accepting tcp connection: " << ec << std::endl;
@@ -44,4 +45,8 @@ void Server::doAccept() {
 
             doAccept();
         });
+}
+
+const std::unordered_map<EntityID, std::shared_ptr<Session>>& Server::getSessions() {
+    return this->sessions;
 }

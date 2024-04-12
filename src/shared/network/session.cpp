@@ -23,3 +23,20 @@ Session::Session(tcp::socket socket, EntityID eid)
 
 Session::~Session() {
 }
+
+void Session::startListen() {
+    // This starts a chain that will continue on and on
+    receivePacketAsync(this->socket, shared_from_this());
+}
+
+void Session::addReceivedPacket(packet::Type type, std::string data) {
+    this->received_packets.push_back({type, data});
+}
+
+std::vector<std::pair<packet::Type, std::string>> Session::getAllReceivedPackets() {
+    std::vector<std::pair<packet::Type, std::string>> vec;
+
+    std::swap(vec, this->received_packets);
+
+    return vec;
+}
