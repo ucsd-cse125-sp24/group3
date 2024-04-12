@@ -12,8 +12,8 @@
 
 using boost::asio::ip::tcp;
 
-Session::Session(GameSocket&& gsocket, EntityID eid)
-    :gsocket(std::move(gsocket)),
+Session::Session(GameSocket gsocket, EntityID eid)
+    :gsocket(gsocket),
      eid(eid)
 {
     std::cout << "New Client Session Established (eid=" << eid << ")" << std::endl;

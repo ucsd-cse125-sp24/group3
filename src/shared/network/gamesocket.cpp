@@ -7,26 +7,20 @@
 
 using namespace boost::asio::ip;
 
-GameSocket::GameSocket(tcp::socket&& socket, int identifier)
-    :socket(std::move(socket)),
+GameSocket::GameSocket(std::shared_ptr<tcp::socket> socket, int identifier)
+    :socket(socket),
      identifier(identifier),
      last_error(error_type::OKAY)
 {
-    // std::cout << "c1" << std::endl;
     this->_receiveHdr();
 }
 
-GameSocket::GameSocket(GameSocket&& other)
-    :socket(std::move(other.socket)),
-     incoming_packets(std::move(other.incoming_packets)),
-     identifier(std::move(other.identifier)),
-     last_error(std::move(other.last_error))
+GameSocket::GameSocket(GameSocket& other)
+    :socket(other.socket),
+     incoming_packets(other.incoming_packets),
+     identifier(other.identifier),
+     last_error(other.last_error)
 {
-    // std::cout << "c2" << std::endl;
-}
-
-GameSocket::~GameSocket() {
-    // std::cout << "d1" << std::endl;
 }
 
 Packets GameSocket::receive() {
@@ -38,14 +32,15 @@ Packets GameSocket::receive() {
     return result;
 }
 
-void GameSocket::send(PacketBuffer buf) {
+void GameSocket::send(std::shared_ptr<PackagedPacket> packet) {
     if (this->last_error == FATAL) {
         std::cerr << "GS" << this->identifier << " cannot send because of prev FATAL error" << std::endl;
         return;
     }
 
-    boost::asio::async_write(this->socket, buf,
-        [this](boost::system::error_code ec, std::size_t /*length*/) {
+    // pass packet shared ptr into closure capture list to keep it alive until written to buffer
+    boost::asio::async_write(*this->socket, packet->toBuffer(),
+        [this, packet](boost::system::error_code ec, std::size_t /*length*/) {
             switch (this->_classifyError(ec, "sending packet")) {
                 case error_type::OKAY:
                     std::cout << "GS" << this->identifier << " sent packet." << std::endl;
@@ -60,7 +55,7 @@ void GameSocket::send(PacketBuffer buf) {
 }
 
 void GameSocket::_receiveHdr() {
-    boost::asio::async_read(this->socket, boost::asio::buffer(this->data),
+    boost::asio::async_read(*this->socket, boost::asio::buffer(this->data),
         boost::asio::transfer_exactly(sizeof(packet::Header)),
         [this](boost::system::error_code ec, std::size_t length) {
             switch (this->_classifyError(ec, "receiving header")) {
@@ -82,14 +77,8 @@ void GameSocket::_receiveHdr() {
 }
 
 void GameSocket::_receiveData(packet::Header hdr) {
-    std::cout << "c1" << std::endl;
-    // if (hdr.size > max_length) {
-    //     std::cout << "ERROR: cannot read packet longer than " << max_length << std::endl;
-    //     this->_receiveHdr();
-    // }
-
-    boost::asio::async_read(this->socket, boost::asio::buffer(this->data),
-        boost::asio::transfer_exactly(hdr.size),
+    boost::asio::async_read(*this->socket, boost::asio::buffer(this->data),
+        // boost::asio::transfer_exactly(hdr.size),
         [this, hdr](boost::system::error_code ec, std::size_t length) {
             switch (this->_classifyError(ec, "receiving data")) {
                 case error_type::OKAY:
@@ -100,6 +89,7 @@ void GameSocket::_receiveData(packet::Header hdr) {
                     this->_receiveData(hdr);
                     return;
             }
+            std::cout << "BYTES READ: " << length << std::endl;
 
             std::string data(this->data, hdr.size);
             std::unique_lock<std::mutex> lock(this->mut);

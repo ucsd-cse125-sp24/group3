@@ -15,7 +15,7 @@ using boost::asio::ip::tcp;
 class Session
 {
 public:
-    Session(GameSocket&& gsocket, EntityID eid);
+    Session(GameSocket gsocket, EntityID eid);
     ~Session();
 
 private:

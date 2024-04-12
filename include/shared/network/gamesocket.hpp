@@ -3,6 +3,7 @@
 #include <boost/asio/ip/tcp.hpp>
 
 #include <string>
+#include <memory>
 
 #include "shared/network/packet.hpp"
 
@@ -10,30 +11,23 @@ using namespace boost::asio::ip;
 
 using Packets = std::vector<std::pair<packet::Type, std::string>>;
 
-/**
- * Class which wraps around a tcp socket and manages writing/reading packets
- * with header information. I don't know if this class is safely managing error
- * cases right now. I forsee some debugging to make it actually handle errors
- * correctly.
- */
 class GameSocket {
 public:
-    GameSocket(tcp::socket&& socket, int identifier);
-    GameSocket(GameSocket&& other);
-    ~GameSocket();
+    GameSocket(std::shared_ptr<tcp::socket> socket, int identifier);
+    GameSocket(GameSocket& other);
 
-    void send(PacketBuffer buf);
+    void send(std::shared_ptr<PackagedPacket> packet);
 
     Packets receive();
 
 private:
     int identifier;
 
-    tcp::socket socket;
+    std::shared_ptr<tcp::socket> socket;
     enum { max_length = 4096 }; // might need to increase this depending on size of game state serialization
     char data[max_length];
 
-    std::mutex mut;
+    std::mutex mut; // might be able to remove this
     Packets incoming_packets;
 
     void _receiveHdr();

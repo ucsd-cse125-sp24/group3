@@ -24,7 +24,9 @@ private:
     LobbyBroadcaster lobby_broadcaster;
 
     tcp::acceptor acceptor;
-    tcp::socket socket;
+    void _handleAccept(boost::system::error_code ec, std::shared_ptr<tcp::socket> socket);
+
+    std::shared_ptr<tcp::socket> socket;
 
     std::unordered_map<EntityID, std::shared_ptr<Session>> sessions;
 };

@@ -6,6 +6,7 @@
 #include <utility>
 #include <ostream>
 #include <sstream>
+#include <iostream>
 
 #include <boost/asio.hpp>
 #include <boost/serialization/access.hpp>
@@ -67,10 +68,11 @@ bool validateType(Type type);
  */
 struct Header {
     /**
-     * Constructor which makes a Header with values in network byte order
+     * Constructor which makes a Header normally
      */
     Header(uint16_t size, Type type): size{size}, type{type} {}
 
+    // TODO:
     void to_network() {
         this->size = htons(this->size);
         this->type = static_cast<Type>(htons(static_cast<uint16_t>(this->type))); 
@@ -203,22 +205,39 @@ Packet deserialize(std::string data) {
     return parsed_info;
 }
 
-using PackagedPacket = std::shared_ptr<std::pair<packet::Header, std::string>>;
+// TODO javadocs and move to src file
+class PackagedPacket { 
+public:
+    PackagedPacket(packet::Header hdr, std::string data)
+        :hdr(hdr), data(data)
+    {
+        this->hdr.to_network();
+    }
+
+    std::array<boost::asio::const_buffer, 2> toBuffer() {
+        return {
+            boost::asio::buffer(&this->hdr, sizeof(packet::Header)),
+            boost::asio::buffer(this->data)
+        };
+    }
+private:
+    packet::Header hdr;
+    std::string data;
+};
 
 /**
  * Helper function that packages a packet as a collection of boost buffers, which can
  * then be sent into a write socket call.
  * 
- * TODO: explain ref param
+ * TODO: explain params and shared pointers
  */
 template <class Packet>
-PackagedPacket packagePacket(packet::Type type, Packet packet) {
+std::shared_ptr<PackagedPacket> packagePacket(packet::Type type, Packet packet) {
     std::string data = serialize<Packet>(packet);
 
     packet::Header hdr(data.size(), type);
-    hdr.to_network();
 
-    auto pkt = std::make_shared<PackagedPacket>({hdr, data});
+    auto pkt = std::make_shared<PackagedPacket>(hdr, data);
 
     return pkt;
 }
