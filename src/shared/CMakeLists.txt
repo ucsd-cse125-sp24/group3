@@ -3,8 +3,9 @@ set(LIB_NAME game_shared_lib)
 set(FILES
     game/gamestate.cpp
 
-    network/gamesocket.cpp
     network/packet.cpp
+    network/socket.cpp
+    network/session.cpp
 
     utilities/config.cpp
     utilities/rng.cpp

@@ -9,14 +9,14 @@
 #include <memory>
 
 #include "server/lobbybroadcaster.hpp"
-#include "server/session.hpp"
+#include "shared/network/session.hpp"
 
 using boost::asio::ip::tcp;
 
 class Server {
 public:
     Server(boost::asio::io_context& io_context);
-    void do_accept();
+    void doAccept();
 
     static EntityID genNewEID();
 
@@ -24,9 +24,7 @@ private:
     LobbyBroadcaster lobby_broadcaster;
 
     tcp::acceptor acceptor;
-    void _handleAccept(boost::system::error_code ec, std::shared_ptr<tcp::socket> socket);
-
-    std::shared_ptr<tcp::socket> socket;
+    tcp::socket socket;
 
     std::unordered_map<EntityID, std::shared_ptr<Session>> sessions;
 };

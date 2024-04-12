@@ -1,4 +1,4 @@
-#include "server/session.hpp"
+#include "shared/network/session.hpp"
 
 #include <boost/asio.hpp>
 
@@ -8,16 +8,17 @@
 #include <mutex>
 
 #include "shared/network/packet.hpp"
-#include "shared/network/gamesocket.hpp"
+#include "shared/network/socket.hpp"
 
 using boost::asio::ip::tcp;
 
-Session::Session(GameSocket gsocket, EntityID eid)
-    :gsocket(gsocket),
+Session::Session(tcp::socket socket, EntityID eid)
+    :socket(std::move(socket)),
      eid(eid)
 {
     std::cout << "New Client Session Established (eid=" << eid << ")" << std::endl;
-    this->gsocket.send(packagePacket(packet::Type::ServerAssignEID, packet::ServerAssignEID { .eid=eid }));
+    sendPacketAsync(this->socket,
+        packagePacket(packet::Type::ServerAssignEID, packet::ServerAssignEID { .eid=eid }));
 }
 
 Session::~Session() {
