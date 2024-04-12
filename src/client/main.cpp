@@ -37,7 +37,8 @@ int main(int argc, char* argv[])
             // std::string message = "i am client " + client_name + " and I talking to the server!";
             // std::getline(std::cin, message);
 
-            auto packet = packagePacket(packet::Type::ClientDeclareInfo,
+            packet::Header hdr(0, packet::Type::ClientDeclareInfo);
+            auto packet = packagePacket(hdr,
                 packet::ClientDeclareInfo {.player_name="Test Name"});
 
             boost::asio::write(socket, packet);

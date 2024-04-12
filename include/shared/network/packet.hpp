@@ -69,9 +69,11 @@ struct Header {
     /**
      * Constructor which makes a Header with values in network byte order
      */
-    Header(uint16_t size, Type type) {
-        this->size = htons(size);
-        this->type = static_cast<Type>(htons(static_cast<uint16_t>(type))); 
+    Header(uint16_t size, Type type): size{size}, type{type} {}
+
+    void to_network() {
+        this->size = htons(this->size);
+        this->type = static_cast<Type>(htons(static_cast<uint16_t>(this->type))); 
     }
 
     /**
@@ -206,11 +208,15 @@ using PacketBuffer = std::array<boost::asio::const_buffer, 2>;
 /**
  * Helper function that packages a packet as a collection of boost buffers, which can
  * then be sent into a write socket call.
+ * 
+ * TODO: explain ref param
  */
 template <class Packet>
-PacketBuffer packagePacket(packet::Type type, Packet packet) {
+PacketBuffer packagePacket(packet::Header& hdr, Packet packet) {
     std::string data = serialize<Packet>(packet);
-    packet::Header hdr(data.size(), type);
+
+    hdr.size = data.size();
+    hdr.to_network();
 
     PacketBuffer bufs = {
         boost::asio::buffer(&hdr, sizeof(packet::Header)),
