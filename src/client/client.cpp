@@ -18,7 +18,7 @@ int Client::start() {
 
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
     if (!window)
     {
@@ -28,6 +28,14 @@ int Client::start() {
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+
+// https://stackoverflow.com/questions/12329082/glcreateshader-is-crashing#comment43358404_23541855
+#ifndef __APPLE__ // GLew not needed on OSX systems
+  GLenum err = glewInit() ; 
+  if (GLEW_OK != err) { 
+    std::cerr << "Error: " << glewGetString(err) << std::endl; 
+  } 
+#endif
 
     ///* Initialize GLAD */
     //if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))

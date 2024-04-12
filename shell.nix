@@ -8,6 +8,7 @@ mkShell {
     cmake
     gnumake
     gcc13
+    gdb
 
     wayland
     wayland-scanner
@@ -23,10 +24,14 @@ mkShell {
     glm
 
     clang-tools_13
+
+    freeglut
+    libGLU
   ];
   nativeBuildInputs = with pkgs; [
         pkg-config
   ];
+  LD_LIBRARY_PATH = with pkgs; "${freeglut}/lib:${libGLU}/lib";
   shellHook = ''
       LD_LIBRARY_PATH="/run/opengl-driver/lib:/run/opengl-driver-32/lib";
   '';
