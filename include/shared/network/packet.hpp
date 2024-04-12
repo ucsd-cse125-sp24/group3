@@ -203,7 +203,7 @@ Packet deserialize(std::string data) {
     return parsed_info;
 }
 
-using PacketBuffer = std::array<boost::asio::const_buffer, 2>;
+using PackagedPacket = std::shared_ptr<std::pair<packet::Header, std::string>>;
 
 /**
  * Helper function that packages a packet as a collection of boost buffers, which can
@@ -212,16 +212,13 @@ using PacketBuffer = std::array<boost::asio::const_buffer, 2>;
  * TODO: explain ref param
  */
 template <class Packet>
-PacketBuffer packagePacket(packet::Header& hdr, Packet packet) {
+PackagedPacket packagePacket(packet::Type type, Packet packet) {
     std::string data = serialize<Packet>(packet);
 
-    hdr.size = data.size();
+    packet::Header hdr(data.size(), type);
     hdr.to_network();
 
-    PacketBuffer bufs = {
-        boost::asio::buffer(&hdr, sizeof(packet::Header)),
-        boost::asio::buffer(data)
-    };
+    auto pkt = std::make_shared<PackagedPacket>({hdr, data});
 
-    return bufs;
+    return pkt;
 }
