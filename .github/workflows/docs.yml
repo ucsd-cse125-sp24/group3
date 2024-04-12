@@ -1,0 +1,27 @@
+name: Docs
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build-and-deploy-docs:
+    name: Build and Deploy Documentation 
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build docs with Doxygen
+        uses: mattnotmitt/doxygen-action@v1.9.5
+      - name: Deploy to server 
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SITE_HOST }}
+          username: ${{ secrets.SITE_USER }}
+          key: ${{ secrets.SITE_KEY }}
+          port: ${{ secrets.SITE_PORT }}
+          source: docs/*
+          target: /var/www/html/class/cse125/www/cse125/2024/cse125g3/site/docs/
+          rm: true
+          strip_components: 1

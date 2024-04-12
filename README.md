@@ -1,5 +1,7 @@
 ## Game Name Here
 
+![Docs](https://github.com/ucsd-cse125-sp24/group3/actions/workflows/docs.yml/badge.svg)
+
 TODO: Game description here, with screenshots.
 
 ## Setup
@@ -124,3 +126,14 @@ Depending on where you need to link the library (client, server, shared), you wi
 
 - [C++ Intellisense](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools)
 - [General Productivity](https://marketplace.visualstudio.com/items?itemName=jirkavrba.subway-surfers)
+
+## Documentation
+
+View deployed documentation [here](https://cse125.ucsd.edu/2024/cse125g3/site/docs/html/)
+
+### Build Docs Locally 
+
+1. We are using Doxygen which you can install locally from [here](https://www.doxygen.nl/download.html)
+2. Run `doxygen` from the root of the directory
+3. Open the `html` files in the `docs` directory of the repo
+
