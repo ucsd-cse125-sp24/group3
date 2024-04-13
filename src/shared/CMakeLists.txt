@@ -10,3 +10,5 @@ set(FILES
 
 add_library(${LIB_NAME} STATIC ${FILES})
 target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIRECTORY})
+
+add_subdirectory(tests) # define shared unit tests

@@ -14,6 +14,12 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 
+# Generate a "compile_commands.json" file for clang-tidy and VScode to use 
+set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+
+# Add google test to CMake
+add_subdirectory(dependencies/google-test)
+
 # If we need any compiler / linker flags, add them here
 SET(GCC_COMPILE_FLAGS "")
 SET(GCC_LINK_FLAGS    "")
