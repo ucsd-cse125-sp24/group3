@@ -37,8 +37,12 @@ void Server::doAccept() {
             if (!ec) {
                 EntityID eid = Server::genNewEID();
                 auto session = std::make_shared<Session>(std::move(this->socket), eid);
+
                 session->startListen();
+
                 this->sessions.insert({eid, session});
+
+                session->sendPacketAsync(packagePacket(packet::Type::ServerAssignEID, packet::ServerAssignEID{ .eid = eid }));
             } else {
                 std::cerr << "Error accepting tcp connection: " << ec << std::endl;
             }

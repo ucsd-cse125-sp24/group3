@@ -12,6 +12,12 @@
 
 using boost::asio::ip::tcp;
 
+enum SocketError {
+    NONE,
+    FATAL,
+    RETRY,
+};
+
 class Session : public std::enable_shared_from_this<Session> {
 public:
     Session(tcp::socket socket, EntityID eid);
@@ -22,6 +28,10 @@ public:
     void addReceivedPacket(packet::Type type, std::string data);
 
     std::vector<std::pair<packet::Type, std::string>> getAllReceivedPackets();
+
+    void sendPacketAsync(std::shared_ptr<PackagedPacket> packet);
+
+    void receivePacketAsync();
 
 private:
     tcp::socket socket;
@@ -34,4 +44,6 @@ private:
 
     /// @brief eid of the player that this session is associated with.
     EntityID eid;
+
+    SocketError _classifySocketError(boost::system::error_code ec, const char* where);
 };

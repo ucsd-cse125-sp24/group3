@@ -4,7 +4,6 @@ set(FILES
     game/gamestate.cpp
 
     network/packet.cpp
-    network/socket.cpp
     network/session.cpp
 
     utilities/config.cpp
