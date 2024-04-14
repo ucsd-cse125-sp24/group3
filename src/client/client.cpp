@@ -13,10 +13,13 @@
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
-Client::Client(boost::asio::io_context& io_context)
+Client::Client(boost::asio::io_context& io_context, std::string ip_addr):
+    resolver(io_context),
+    socket(io_context)
 {
+    this->endpoints = resolver.resolve(ip_addr, std::to_string(PORT));
 }
 
-void Client::connect(tcp::endpoint server) {
-
+void Client::connect() {
+    boost::asio::connect(this->socket, this->endpoints);
 }
