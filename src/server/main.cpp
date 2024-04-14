@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 
 #include <boost/asio/io_context.hpp>
 
@@ -6,21 +7,22 @@
 #include "shared/utilities/rng.hpp"
 #include "shared/utilities/config.hpp"
 
+using namespace std::chrono_literals;
+
 int main(int argc, char** argv) {
     nlohmann::json config = parseConfig(argc, argv);
     boost::asio::io_context context;
     Server server(context);
 
-    // server is handling broadcasting in the background,
-    // next step is getting it to simulatously accept tcp connections
+    while (true) {
+        context.run_for(1s);
 
-    try
-    {
-        // run the context
-        context.run();
-    }
-    catch (std::exception& e)
-    {
-        std::cerr << "Exception: " << e.what() << "\n";
+        for (const auto& [eid, session] : server.getSessions()) {
+            std::cout << "Session " << eid << "\n";
+            for (const auto& [type, data] : session->getAllReceivedPackets()) {
+                std::cout << "Recevied packet type " << static_cast<int>(type) << "\n";
+                std::cout << "Recevied packet data " << data << "\n";
+            }
+        }
     }
 }
