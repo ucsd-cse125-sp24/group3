@@ -23,10 +23,10 @@ Session::~Session() {
 
 void Session::startListen() {
     // This starts a chain that will continue on and on
-    receivePacketAsync();
+    _receivePacketAsync();
 }
 
-void Session::addReceivedPacket(packet::Type type, std::string data) {
+void Session::_addReceivedPacket(packet::Type type, std::string data) {
     this->received_packets.push_back({type, data});
 }
 
@@ -55,7 +55,7 @@ void Session::sendPacketAsync(std::shared_ptr<PackagedPacket> packet) {
         });
 }
 
-void Session::receivePacketAsync() {
+void Session::_receivePacketAsync() {
     auto self(shared_from_this());
     const std::size_t BUF_SIZE = 10000;
     auto buf = std::make_shared<std::array<char, BUF_SIZE>>();
@@ -89,9 +89,9 @@ void Session::receivePacketAsync() {
                     std::cout << "bytes read: " << length << std::endl;
 
                     std::string data(buf->begin(), buf->begin() + hdr.size);
-                    self->addReceivedPacket(hdr.type, data);
+                    self->_addReceivedPacket(hdr.type, data);
                     std::cout << "received full packet data" << std::endl;
-                    receivePacketAsync();
+                    _receivePacketAsync();
                 });
 
         });
