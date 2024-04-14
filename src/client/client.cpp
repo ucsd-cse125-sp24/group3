@@ -22,8 +22,7 @@ Client::Client(boost::asio::io_context& io_context, std::string ip_addr):
 }
 
 void Client::connectAndListen() {
-    // start listening before connecting
-    this->client_session->startListen();
-
     this->client_session->connectTo(this->endpoints);
+
+    this->client_session->startListen();
 }

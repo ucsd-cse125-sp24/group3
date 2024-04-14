@@ -26,7 +26,9 @@ void Session::startListen() {
 }
 
 void Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpoints) {
-    boost::asio::connect(socket, endpoints);
+    tcp::endpoint endpt = boost::asio::connect(socket, endpoints);
+
+    std::cout << "Connected Endpoint: " << endpt << std::endl;
 }
 
 void Session::_addReceivedPacket(packet::Type type, std::string data) {
