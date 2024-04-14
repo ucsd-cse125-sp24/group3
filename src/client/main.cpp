@@ -19,15 +19,8 @@ int main(int argc, char* argv[])
 
     boost::asio::io_context context;
     // LobbyFinder lobby_finder(context);
-    Client client(context);
-
-    // Resolve the server address
-    tcp::resolver resolver(context);
-    auto endpoints = resolver.resolve("localhost", "45623");
-
-    // Create and connect socket
-    tcp::socket socket(context);
-    boost::asio::connect(socket, endpoints);
+    Client client(context, "localhost");
+    client.connectAndListen();
 
     while (true)
     {
@@ -38,26 +31,29 @@ int main(int argc, char* argv[])
         // std::getline(std::cin, message);
 
         auto packet = packagePacket(packet::Type::ClientDeclareInfo,
-            packet::ClientDeclareInfo{ .player_name = "Test Name" });
+            packet::ClientDeclareInfo{ .player_name = client_name });
 
-        boost::asio::write(socket, packet->toBuffer());
+        client.client_session->sendPacketAsync(packet);
+        // boost::asio::write(client.client_session->socket, packet->toBuffer());
 
+        // replace everything below with Session->receivePacketAsync
         // Receive response from server
-        std::array<char, 128> buf;
-        boost::system::error_code error;
-        size_t len = socket.read_some(boost::asio::buffer(buf), error);
+        //std::array<char, 128> buf;
+        //boost::system::error_code error;
 
-        if (error == boost::asio::error::eof)
-        {
-            std::cout << "Connection closed by server." << std::endl;
-            break;
-        }
-        else if (error)
-        {
-            throw boost::system::system_error(error); // Some other error.
-        }
+        //size_t len = client.client_session->socket.read_some(boost::asio::buffer(buf), error);
 
-        std::cout << std::string(buf.begin(), buf.end()) << std::endl;
+        //if (error == boost::asio::error::eof)
+        //{
+        //    std::cout << "Connection closed by server." << std::endl;
+        //    break;
+        //}
+        //else if (error)
+        //{
+        //    throw boost::system::system_error(error); // Some other error.
+        //}
+
+        //std::cout << std::string(buf.begin(), buf.end()) << std::endl;
 
         // for (const auto& [endpoint, lobby] : lobby_finder.getFoundLobbies()) {
         //     std::cout << "------------------\n";
@@ -66,6 +62,11 @@ int main(int argc, char* argv[])
         //     std::cout << "------------------\n";
         //     std::cout << std::endl;
         // }
+
+        for (const auto& [type, data] : client.client_session->getAllReceivedPackets()) {
+            std::cout << "Recevied packet type " << static_cast<int>(type) << "\n";
+            std::cout << "Recevied packet data " << data << "\n";
+        }
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }

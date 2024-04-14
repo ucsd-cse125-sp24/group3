@@ -18,8 +18,12 @@ Client::Client(boost::asio::io_context& io_context, std::string ip_addr):
     socket(io_context)
 {
     this->endpoints = resolver.resolve(ip_addr, std::to_string(PORT));
+    this->client_session = std::make_shared<Session>(std::move(this->socket));
 }
 
-void Client::connect() {
-    boost::asio::connect(this->socket, this->endpoints);
+void Client::connectAndListen() {
+    // start listening before connecting
+    this->client_session->startListen();
+
+    this->client_session->connectTo(this->endpoints);
 }
