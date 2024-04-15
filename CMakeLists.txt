@@ -37,7 +37,10 @@ add_subdirectory(src/client) # create client executable
 add_subdirectory(src/server) # create server executable
 
 # this might not be compatible on Windows due to how find is used
+file(GLOB_RECURSE LINT_FILES "src/*.cpp" "include/*.hpp")
+find_program(CLANG_TIDY "clang-tidy")
 add_custom_target(lint
-    COMMAND clang-tidy
-    -p build `find ../src -name '*.cpp'` `find ../include -name '*.hpp'`
+    COMMAND ${CLANG_TIDY} 
+    -p=.
+    ${LINT_FILES}
 )
