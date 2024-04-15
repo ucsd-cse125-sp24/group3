@@ -9,5 +9,5 @@ int main() {
     std::cout << "I am a server!\n"; 
 
     // Test that shared lib is linked correctly
-    std::cout << "Random number: " << randomInt(0, 100) << "\n";
+    std::cout << "Random number: " << randomInt(0, 100) << "\n"; // NOLINT
 }

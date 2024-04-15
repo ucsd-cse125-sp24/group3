@@ -2,7 +2,7 @@
 
 class Server {
 public:
-    Server();
+    Server() = default;
 private:
 
 };
