@@ -16,7 +16,7 @@ jobs:
       run: mkdir -p build
     - name: Run CMake
       run: cd build && cmake -G "Unix Makefiles" ..
-    - name: Build
+    - name: Test
       run: cd build && make run_client_tests 
   client-linux:
     name: Client on Linux (Ubuntu) 
@@ -27,7 +27,7 @@ jobs:
       run: mkdir -p build
     - name: Run CMake
       run: cd build && cmake ..
-    - name: Build
+    - name: Test
       run: cd build && make run_client_tests
   server-windows:
     name: Server on Windows 
@@ -38,7 +38,7 @@ jobs:
       run: mkdir -p build
     - name: Run CMake
       run: cd build && cmake -G "Unix Makefiles" ..
-    - name: Build
+    - name: Test
       run: cd build && make run_server_tests
   server-linux:
     name: Server on Linux (Ubuntu) 
@@ -49,7 +49,7 @@ jobs:
       run: mkdir -p build
     - name: Run CMake
       run: cd build && cmake ..
-    - name: Build
+    - name: Test
       run: cd build && make run_server_tests
   shared-windows:
     name: Shared on Windows 
@@ -60,7 +60,7 @@ jobs:
       run: mkdir -p build
     - name: Run CMake
       run: cd build && cmake -G "Unix Makefiles" ..
-    - name: Build
+    - name: Test
       run: cd build && make run_shared_tests
   shared-linux:
     name: Shared on Linux (Ubuntu) 
@@ -71,5 +71,5 @@ jobs:
       run: mkdir -p build
     - name: Run CMake
       run: cd build && cmake ..
-    - name: Build
+    - name: Test
       run: cd build && make run_shared_tests
