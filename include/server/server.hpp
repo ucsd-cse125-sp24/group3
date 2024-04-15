@@ -10,12 +10,13 @@
 
 #include "server/lobbybroadcaster.hpp"
 #include "shared/network/session.hpp"
+#include "shared/utilities/config.hpp"
 
 using boost::asio::ip::tcp;
 
 class Server {
 public:
-    Server(boost::asio::io_context& io_context);
+    Server(boost::asio::io_context& io_context, GameConfig config);
     void doAccept();
 
     static EntityID genNewEID();

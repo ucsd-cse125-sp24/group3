@@ -7,6 +7,7 @@
 #include <atomic>
 
 #include "shared/network/packet.hpp"
+#include "shared/utilities/config.hpp"
 
 using namespace boost::asio::ip;
 
@@ -17,16 +18,20 @@ using namespace boost::asio::ip;
 class LobbyBroadcaster {
 public:
     /**
-     * Instantiates the Lobby Finder and spawns up a background thread which starts looking
-     * for lobbies that are being broadcast over the LAN.
+     * Instantiates the Lobby Broadcast but does not start broadcasting yet
      */
-    LobbyBroadcaster(boost::asio::io_context& io_context,
-        packet::ServerLobbyBroadcast bcast_info);
+    LobbyBroadcaster(boost::asio::io_context& io_context, GameConfig config);
 
     /**
      * Calls LobbyFinder::stopBroadcasting(), if it hasn't already been called.
      */
     ~LobbyBroadcaster();
+
+    /**
+     * Start broadcasting that this lobby is available to join, if it isn't already
+     * broadcasting.
+     */
+    void startBroadcasting(packet::ServerLobbyBroadcast bcast_info);
 
     /**
      * Tell the broadcaster the current state of the lobby so it can broadcast
@@ -58,4 +63,7 @@ private:
     std::mutex mut;
     /// @brief info of the lobby to announce
     packet::ServerLobbyBroadcast bcast_info;
+
+    /// @brief Configuration options. Used to know server port info.
+    GameConfig config;
 };

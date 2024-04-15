@@ -10,6 +10,7 @@
 #include <mutex>
 
 #include "shared/network/packet.hpp"
+#include "shared/utilities/config.hpp"
 
 using namespace boost::asio::ip;
 
@@ -22,15 +23,19 @@ using Lobbies = std::unordered_map<udp::endpoint, packet::ServerLobbyBroadcast>;
 class LobbyFinder {
 public:
     /**
-     * Instantiates the Lobby Finder and spawns up a background thread which starts looking
-     * for lobbies that are being broadcast over the LAN.
+     * Instantiates the Lobby Finder but doesn't start searching.
      */
-    LobbyFinder(boost::asio::io_context& io_context);
+    LobbyFinder(boost::asio::io_context& io_context, GameConfig config);
 
     /**
      * Calls LobbyFinder::stopSearching(), if it hasn't already been called.
      */
     ~LobbyFinder();
+
+    /**
+     * Tells the lobby finder to start searching for lobbies. 
+     */
+    void startSearching();
 
     /**
      * Tells the LobbyFinder to stop trying to look for a lobby. Closes the socket, and exits 

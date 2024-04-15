@@ -7,17 +7,29 @@
 #include <mutex>
 
 #include "shared/network/packet.hpp"
+#include "shared/utilities/config.hpp"
 
-LobbyFinder::LobbyFinder(boost::asio::io_context& io_context)
-    :lobby_discovery_socket(io_context, udp::endpoint(address_v4::any(), PORT)),
-     worker_thread(&LobbyFinder::_searchForLobbyWorker, this),
-     keep_searching(true)
+LobbyFinder::LobbyFinder(boost::asio::io_context& io_context, GameConfig config):
+    lobby_discovery_socket(io_context,
+        udp::endpoint(address_v4::any(), config.network.server_port)),
+    keep_searching(false)
 {
 
 }
 
 LobbyFinder::~LobbyFinder() {
     this->stopSearching();
+    boost::system::error_code ec;
+    this->lobby_discovery_socket.close(ec);
+    if (ec) {
+        std::cerr << "Error closing the LobbyFinder socket: " << ec << std::endl;
+        return;
+    }
+}
+
+void LobbyFinder::startSearching() {
+    this->keep_searching = true;
+    this->worker_thread = std::thread(&LobbyFinder::_searchForLobbyWorker, this);
 }
 
 void LobbyFinder::stopSearching() {
@@ -27,11 +39,6 @@ void LobbyFinder::stopSearching() {
         this->lobby_discovery_socket.shutdown(udp::socket::shutdown_receive, ec);
         if (ec) {
             std::cerr << "Error shutting down the LobbyFinder socket: " << ec << std::endl;
-            return;
-        }
-        this->lobby_discovery_socket.close(ec);
-        if (ec) {
-            std::cerr << "Error closing the LobbyFinder socket: " << ec << std::endl;
             return;
         }
 

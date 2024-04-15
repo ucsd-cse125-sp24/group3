@@ -2,6 +2,7 @@ set(TARGET_NAME client)
 
 set(FILES
     client.cpp
+    clientinfo.cpp
     lobbyfinder.cpp
     main.cpp
 )

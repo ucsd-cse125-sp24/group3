@@ -16,6 +16,7 @@
 #include <boost/archive/text_oarchive.hpp>
 
 #include "shared/network/constants.hpp"
+#include "shared/utilities/typedefs.hpp"
 
 // Helper macro to reduce boilerplate in making boost::serialize-able structs
 #define DEF_SERIALIZE \
@@ -24,7 +25,6 @@
     void serialize
 
 // Might want to move this later on to somewhere in the game code
-using EntityID = uint32_t;
 
 namespace packet {
 

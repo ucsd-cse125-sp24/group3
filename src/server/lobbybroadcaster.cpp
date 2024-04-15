@@ -7,21 +7,29 @@
 
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
+#include "shared/utilities/config.hpp"
 
 using namespace std::chrono_literals;
 using namespace boost::asio::ip;
 
-LobbyBroadcaster::LobbyBroadcaster(boost::asio::io_context& io_context, packet::ServerLobbyBroadcast bcast_info)
-    :socket(io_context),
-     keep_broadcasting(true),
-     worker_thread(&LobbyBroadcaster::_lobbyBroadcastWorker, this),
-     bcast_info{bcast_info}
+LobbyBroadcaster::LobbyBroadcaster(boost::asio::io_context& io_context, GameConfig config):
+    socket(io_context),
+    keep_broadcasting(false),
+    config(config)
 {
 
 }
 
 LobbyBroadcaster::~LobbyBroadcaster() {
     this->stopBroadcasting();
+}
+
+void LobbyBroadcaster::startBroadcasting(packet::ServerLobbyBroadcast bcast_info) {
+    if (!this->keep_broadcasting) {
+        this->bcast_info = bcast_info;
+        this->keep_broadcasting = true;
+        this->worker_thread = std::thread(&LobbyBroadcaster::_lobbyBroadcastWorker, this);
+    }
 }
 
 void LobbyBroadcaster::setLobbyInfo(packet::ServerLobbyBroadcast bcast_info) {
@@ -50,7 +58,7 @@ void LobbyBroadcaster::_lobbyBroadcastWorker() {
     this->socket.set_option(udp::socket::reuse_address(true));
     this->socket.set_option(boost::asio::socket_base::broadcast(true));
 
-    udp::endpoint endpt(address_v4::broadcast(), PORT);
+    udp::endpoint endpt(address_v4::broadcast(), this->config.network.server_port);
 
     // Don't bother with packet headers here, because there is only one packet being sent over UDP
     // so we don't need to distinguish them.

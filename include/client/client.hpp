@@ -10,20 +10,22 @@
 #include "client/lobbyfinder.hpp"
 #include "client/clientinfo.hpp"
 #include "shared/network/session.hpp"
+#include "shared/utilities/config.hpp"
 
 using namespace boost::asio::ip;
 
 class Client {
 public:
-    Client(boost::asio::io_service& io_service, std::string ip_addr);
+    Client(boost::asio::io_service& io_service, GameConfig config);
 
-    void connectAndListen();
+    void connectAndListen(std::string ip_addr);
 
-//private:
+// private:
+    GameConfig config;
     tcp::resolver resolver;
     tcp::socket socket;
     basic_resolver_results<class boost::asio::ip::tcp> endpoints;
-    // ClientInfo info;
+    ClientInfo info;
     std::shared_ptr<Session> client_session;
 };
 

@@ -14,7 +14,6 @@ using namespace boost::asio::ip;
 Session::Session(tcp::socket socket)
     :socket(std::move(socket))
 {
-    // std::cout << "New Client Session Established!" << std::endl;
 }
 
 Session::~Session() {
@@ -27,8 +26,6 @@ void Session::startListen() {
 
 void Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpoints) {
     tcp::endpoint endpt = boost::asio::connect(socket, endpoints);
-
-    std::cout << "Connected Endpoint: " << endpt << std::endl;
 }
 
 void Session::_addReceivedPacket(packet::Type type, std::string data) {

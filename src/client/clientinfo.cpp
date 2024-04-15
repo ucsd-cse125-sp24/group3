@@ -2,18 +2,16 @@
 
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
+#include "shared/utilities/typedefs.hpp"
 
-ClientInfo::ClientInfo()
-{
-
-}
-
-EntityID ClientInfo::getEID()
-{
+ClientInfo::ClientInfo() {
 
 }
 
-std::string ClientInfo::getName()
-{
+EntityID ClientInfo::getEID() {
+
+}
+
+std::string ClientInfo::getName() {
 
 }

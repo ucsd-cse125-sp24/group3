@@ -8,21 +8,29 @@
 
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
-
+#include "shared/utilities/config.hpp"
 
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
-Client::Client(boost::asio::io_context& io_context, std::string ip_addr):
+Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
-    socket(io_context)
+    socket(io_context),
+    config(config)
 {
-    this->endpoints = resolver.resolve(ip_addr, std::to_string(PORT));
-    this->client_session = std::make_shared<Session>(std::move(this->socket));
+    
 }
 
-void Client::connectAndListen() {
+void Client::connectAndListen(std::string ip_addr) {
+    this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
+    this->client_session = std::make_shared<Session>(std::move(this->socket));
+
     this->client_session->connectTo(this->endpoints);
+
+    auto packet = packagePacket(packet::Type::ClientDeclareInfo,
+        packet::ClientDeclareInfo { .player_name = config.client.default_name });
+
+    this->client_session->sendPacketAsync(packet);
 
     this->client_session->startListen();
 }

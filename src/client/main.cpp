@@ -11,32 +11,31 @@ using namespace std::chrono_literals;
 
 int main(int argc, char* argv[])
 {
-    // nlohmann::json config = parseConfig(argc, argv);
-
+    auto config = GameConfig::parse(argc, argv);
     boost::asio::io_context context;
+    LobbyFinder lobby_finder(context, config);
+    Client client(context, config);
+    if (config.client.lobby_discovery) {
+        // TODO: once we have UI, there should be a way to connect based on
+        // this. Right now, there isn't really a way to react to the information
+        // the LobbyFinder is gathering.
+        std::cerr << "Error: lobby discovery not implemented yet for client-side."
+            << std::endl;
+        std::exit(1);
 
-    // LobbyFinder lobby_finder(context);
-    Client client(context, "localhost");
-    client.connectAndListen();
-
-    // Send data to server
-    std::string client_name = argv[1];
+        // lobby_finder.startSearching();
+    } else {
+        client.connectAndListen(config.network.server_ip);
+    }
 
     while (true)
     {
         context.run_for(1s);
 
-        auto packet = packagePacket(packet::Type::ClientDeclareInfo,
-            packet::ClientDeclareInfo{ .player_name = client_name });
-
-        client.client_session->sendPacketAsync(packet);
-
         for (const auto& [type, data] : client.client_session->getAllReceivedPackets()) {
             std::cout << "Recevied packet type " << static_cast<int>(type) << "\n";
             std::cout << "Recevied packet data " << data << "\n";
         }
-
-        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     return 0;

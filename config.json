@@ -1,6 +1,15 @@
 {
     "network": {
-        "lobby_discovery": false,
-        "server_ip": "127.0.0.1"
+        "server_ip": "localhost",
+        "server_port": 2355
+    },
+    "server": {
+        "lobby_name": "My Test Lobby",
+        "lobby_broadcast": false,
+        "max_players": 4
+    },
+    "client": {
+        "default_name": "Player",
+        "lobby_discovery": false 
     }
 }

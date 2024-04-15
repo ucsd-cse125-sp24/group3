@@ -10,9 +10,9 @@
 using namespace std::chrono_literals;
 
 int main(int argc, char** argv) {
-    nlohmann::json config = parseConfig(argc, argv);
+    auto config = GameConfig::parse(argc, argv);
     boost::asio::io_context context;
-    Server server(context);
+    Server server(context, config);
 
     while (true) {
         context.run_for(1s);

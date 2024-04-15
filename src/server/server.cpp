@@ -13,17 +13,24 @@
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
+#include "shared/utilities/config.hpp"
 
 using namespace std::chrono_literals;
 using namespace boost::asio::ip;
 
-Server::Server(boost::asio::io_context& io_context)
-    :lobby_broadcaster(io_context, // TODO: put in actual lobby info here?
-        packet::ServerLobbyBroadcast {.lobby_name="My Lobby", .slots_taken=0, .slots_avail=4}),
-     acceptor(io_context, tcp::endpoint(tcp::v4(), PORT)),
+Server::Server(boost::asio::io_context& io_context, GameConfig config)
+    :lobby_broadcaster(io_context, config),
+     acceptor(io_context, tcp::endpoint(tcp::v4(), config.network.server_port)),
      socket(io_context)
 {
     doAccept(); // start asynchronously accepting
+
+    if (config.server.lobby_broadcast) {
+        this->lobby_broadcaster.startBroadcasting(packet::ServerLobbyBroadcast {
+            .lobby_name  = config.server.lobby_name,
+            .slots_taken = 0,
+            .slots_avail = config.server.max_players});
+    }
 }
 
 EntityID Server::genNewEID() {
@@ -42,7 +49,8 @@ void Server::doAccept() {
 
                 this->sessions.insert({eid, session});
 
-                session->sendPacketAsync(packagePacket(packet::Type::ServerAssignEID, packet::ServerAssignEID{ .eid = eid }));
+                session->sendPacketAsync(packagePacket(packet::Type::ServerAssignEID,
+                    packet::ServerAssignEID{ .eid = eid }));
             } else {
                 std::cerr << "Error accepting tcp connection: " << ec << std::endl;
             }

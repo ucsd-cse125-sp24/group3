@@ -5,6 +5,8 @@
 
 #include <utility>
 
+#include "shared/utilities/typedefs.hpp"
+
 using namespace boost::asio::ip;
 
 class ClientInfo {
