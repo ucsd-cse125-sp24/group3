@@ -173,3 +173,15 @@ TEST(FactorialTest, HandlesPositiveInput) {
 }
 ```
 3. Run the tests locally with the steps above or with GitHub actions
+
+## Linting
+
+We are using [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) for linting and code style. They run automatically with GitHub actions.
+
+### Linting locally 
+
+#### Linux/macOS
+Install clang-tidy on your system. [Here are instructions for Debian/Ubuntu Linux distros](https://apt.llvm.org/). [Here is a Stack Overflow of people attempting to install it on macOS](https://stackoverflow.com/questions/53111082/how-to-install-clang-tidy-on-macos).
+
+#### Windows
+Visual Studio supports [clang-tidy natively](https://learn.microsoft.com/en-us/cpp/code-quality/clang-tidy?view=msvc-170)

@@ -1,0 +1,15 @@
+---
+Checks: >
+  *,
+  -altera-struct-pack-align,
+  -fuchsia-*,
+  -google-*,
+  -zircon-*,
+  -abseil-*,
+  -modernize-use-trailing-return-type,
+  -llvm-*,
+  -llvmlibc-*,
+CheckOptions: [{ key: misc-non-private-member-variables-in-classes, value: IgnoreClassesWithAllMemberVariablesBeingPublic }]
+WarningsAsErrors: '*'
+HeaderFilterRegex: ''
+FormatStyle: none

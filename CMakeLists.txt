@@ -35,3 +35,9 @@ SET(INCLUDE_DIRECTORY ${PROJECT_SOURCE_DIR}/include)
 add_subdirectory(src/shared) # define game_shared_lib
 add_subdirectory(src/client) # create client executable
 add_subdirectory(src/server) # create server executable
+
+# this might not be compatible on Windows due to how find is used
+add_custom_target(lint
+    COMMAND clang-tidy
+    -p build `find ../src -name '*.cpp'` `find ../include -name '*.hpp'`
+)
