@@ -2,10 +2,6 @@
 
 #include <string>
 
-GameState::GameState() {
-
-}
-
 std::string GameState::serialize() const {
     return "";
 }

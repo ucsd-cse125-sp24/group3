@@ -2,7 +2,7 @@
 
 class Client {
 public:
-    Client();
+    Client() = default;
 private:
 
 };

@@ -10,5 +10,6 @@ mkShell {
     gcc13
 
     doxygen
+    clang-tools_14
   ];
 }

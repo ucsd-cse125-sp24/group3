@@ -9,6 +9,6 @@
 class Serializable {
 public:
     // Maybe we want to change the return type of this to not be string?
-    virtual std::string serialize() const = 0;
+    [[nodiscard]] virtual std::string serialize() const = 0;
 };
 
