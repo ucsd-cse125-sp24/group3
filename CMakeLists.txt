@@ -29,3 +29,4 @@ SET(INCLUDE_DIRECTORY ${PROJECT_SOURCE_DIR}/include)
 add_subdirectory(src/shared) # define game_shared_lib
 add_subdirectory(src/client) # create client executable
 add_subdirectory(src/server) # create server executable
+add_subdirectory(src/debugger) # create debugger executable

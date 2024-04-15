@@ -1,11 +1,15 @@
 set(LIB_NAME game_shared_lib)
 
 set(FILES
-    game/gamestate.cpp
+    game/GameState.cpp
+
+    game/GameLogic/Object.cpp
 
     network/packet.cpp
 
     utilities/rng.cpp
+
+    utilities/vector3.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})
