@@ -16,5 +16,7 @@ jobs:
       run: mkdir -p build
     - name: Run CMake
       run: cd build && cmake ..
+    - name: clang-tidy version
+      run: clang-tidy --version 
     - name: Lint
       run: cd build && make lint 
