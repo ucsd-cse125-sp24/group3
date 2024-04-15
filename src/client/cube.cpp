@@ -10,7 +10,7 @@ Cube::Cube() {
     model = glm::mat4(1.0f);
 
     // The color of the cube. Try setting it to something else!
-    color = glm::vec3(1.0f, 1.0f, 1.0f);
+    color = glm::vec3(0.0f, 1.0f, 1.0f);
 
     // Specify vertex positions
     positions = {
@@ -138,9 +138,32 @@ Cube::~Cube() {
 
 void Cube::draw(GLuint shader) {
     // actiavte the shader program
+    // std::cout << "draw" << std::endl;
+
     glUseProgram(shader);
 
-    glm::mat4 viewProjMtx(1.0f);
+    // Currently 'hardcoding' camera logic in
+    float FOV = 45.0f;
+    float Aspect = 1.33f;
+    float NearClip = 0.1f;
+    float FarClip = 100.0f;
+
+    float Distance = 10.0f;
+    float Azimuth = 0.0f;
+    float Incline = 20.0f;
+
+    glm::mat4 world(1);
+    world[3][2] = Distance;
+    world = glm::eulerAngleY(glm::radians(-Azimuth)) * glm::eulerAngleX(glm::radians(-Incline)) * world;
+
+    // Compute view matrix (inverse of world matrix)
+    glm::mat4 view = glm::inverse(world);
+
+    // Compute perspective projection matrix
+    glm::mat4 project = glm::perspective(glm::radians(FOV), Aspect, NearClip, FarClip);
+
+    // Compute final view-projection matrix
+    glm::mat4 viewProjMtx = project * view;
 
     // get the locations and send the uniforms to the shader
     glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, (float*)&viewProjMtx);
@@ -150,13 +173,12 @@ void Cube::draw(GLuint shader) {
     // Bind the VAO
     glBindVertexArray(VAO);
 
+    // Drawing mode for cube (wireframe vs filled)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // draw the points using triangles, indexed with the EBO
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-    // glDrawArrays(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-
 
     // Unbind the VAO and shader program
     glBindVertexArray(0);

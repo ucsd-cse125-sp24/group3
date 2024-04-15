@@ -29,13 +29,13 @@ int Client::start() {
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-// https://stackoverflow.com/questions/12329082/glcreateshader-is-crashing#comment43358404_23541855
-#ifndef __APPLE__ // GLew not needed on OSX systems
-  GLenum err = glewInit() ; 
-  if (GLEW_OK != err) { 
-    std::cerr << "Error: " << glewGetString(err) << std::endl; 
-  } 
-#endif
+    // https://stackoverflow.com/questions/12329082/glcreateshader-is-crashing#comment43358404_23541855
+    #ifndef __APPLE__ // GLew not needed on OSX systems
+    GLenum err = glewInit() ; 
+    if (GLEW_OK != err) { 
+        std::cerr << "Error: " << glewGetString(err) << std::endl; 
+    } 
+    #endif
 
     ///* Initialize GLAD */
     //if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -60,14 +60,14 @@ int Client::start() {
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         /* Swap front and back buffers */
-        glfwSwapBuffers(window);
         c->draw(shaderProgram);
 
         /* Poll for and process events */
+        glfwSwapBuffers(window);
         glfwPollEvents();
     }
 

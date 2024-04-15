@@ -7,11 +7,8 @@ in vec3 fragNormal;
 
 // uniforms used for lighting
 uniform vec3 AmbientColor = vec3(0.2);
-uniform vec3 LightADirection = normalize(vec3(2, 4, 3));
-//uniform vec3 LightAColor = vec3(0.9, 0.2, 0.5);
-uniform vec3 LightAColor = vec3(0.0, 0.0, 0.0);
-uniform vec3 LightBDirection = normalize(vec3(-2, 7, 3));
-uniform vec3 LightBColor = vec3(0.2, 0.8, 0.6);
+uniform vec3 LightDirection = normalize(vec3(2, 4, 3));
+uniform vec3 LightColor = vec3(1.0, 1.0, 1.0);
 uniform vec3 DiffuseColor = vec3(1.0, 1.0, 1.0);
 
 // You can output many things. The first vec4 type output determines the color of the fragment
@@ -21,7 +18,7 @@ void main()
 {
 
 	// Compute irradiance (sum of ambient & direct lighting)
-	vec3 irradiance = AmbientColor + LightAColor * max(0, dot(LightADirection, fragNormal)) + LightBColor * max(0, dot(LightBDirection, fragNormal));
+	vec3 irradiance = AmbientColor + LightColor * max(0, dot(LightDirection, fragNormal));
 
 	// Diffuse reflectance
 	vec3 reflectance = irradiance * DiffuseColor;

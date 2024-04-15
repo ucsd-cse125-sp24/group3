@@ -5,6 +5,11 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/transform.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/euler_angles.hpp>
+
 #include <iostream>
 #include <ostream>
 #include <vector>
