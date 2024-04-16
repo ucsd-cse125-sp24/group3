@@ -14,6 +14,12 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 
+# Generate a "compile_commands.json" file for clang-tidy and VScode to use 
+set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+
+# Add google test to CMake
+add_subdirectory(dependencies/google-test)
+
 # If we need any compiler / linker flags, add them here
 SET(GCC_COMPILE_FLAGS "")
 SET(GCC_LINK_FLAGS    "")
@@ -32,3 +38,12 @@ add_subdirectory(src/shared) # define game_shared_lib
 add_subdirectory(src/client) # create client executable
 add_subdirectory(src/server) # create server executable
 add_subdirectory(src/debugger) # create debugger executable
+
+# this might not be compatible on Windows due to how find is used
+file(GLOB_RECURSE LINT_FILES "src/*.cpp" "include/*.hpp")
+find_program(CLANG_TIDY "clang-tidy")
+add_custom_target(lint
+    COMMAND ${CLANG_TIDY} 
+    -p=.
+    ${LINT_FILES}
+)

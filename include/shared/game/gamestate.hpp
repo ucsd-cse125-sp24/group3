@@ -58,7 +58,12 @@ public:
     unsigned int getTimestep() { return this->timestep; }
     unsigned int getTimestepLength() { return this->timestep_length; }
 
-    std::string to_string();
+    /**
+     * Serializes GameState instances to be sent over the
+     * network.
+     * @return serialized string of GameState 
+     */
+    [[nodiscard]] std::string serialize() const override; 
 private:
     /**
      *  Vector of all objects in the current timestep of this game instance.

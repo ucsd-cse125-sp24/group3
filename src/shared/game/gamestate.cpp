@@ -1,4 +1,5 @@
 #include "shared/game/GameState.hpp"
+#include <string>
 
 GameState::GameState(unsigned int timestep, unsigned int timestep_length) {
 	this->timestep = timestep;
@@ -21,6 +22,10 @@ void GameState::update() {
 
 	//	Increment timestep
 	this->timestep++;
+}
+
+std::string GameState::serialize() const {
+    return "";
 }
 
 Object* GameState::createObject() {
