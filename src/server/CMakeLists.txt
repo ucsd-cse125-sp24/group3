@@ -18,12 +18,16 @@ target_link_libraries(${LIB_NAME}
     Boost::serialization
     nlohmann_json::nlohmann_json
 )
+target_include_directories(${LIB_NAME} PRIVATE ${GLM_LIBRARY_INCLUDES})
+target_link_libraries(${LIB_NAME} PRIVATE glm::glm)
 
 add_executable(${TARGET_NAME} main.cpp)
 
 target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORY})
-target_link_libraries(${TARGET_NAME} PRIVATE game_shared_lib)
-target_link_libraries(${TARGET_NAME} PRIVATE ${LIB_NAME})
+target_link_libraries(${TARGET_NAME} PRIVATE game_shared_lib ${LIB_NAME})
+
+target_include_directories(${TARGET_NAME} PRIVATE ${GLM_LIBRARY_INCLUDES})
+target_link_libraries(${TARGET_NAME} PRIVATE glm::glm)
 
 target_include_directories(${TARGET_NAME} PRIVATE ${BOOST_LIBRARY_INCLUDES})
 target_link_libraries(${TARGET_NAME} 

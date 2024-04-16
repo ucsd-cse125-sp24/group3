@@ -41,10 +41,12 @@ ENDIF(MSVC)
 
 add_subdirectory(dependencies/boost) # include boost libraries that we use
 add_subdirectory(dependencies/json) # include boost libraries that we use
+add_subdirectory(dependencies/glm) # include glm library
 
 add_subdirectory(src/shared) # define game_shared_lib
 add_subdirectory(src/client) # create client executable
 add_subdirectory(src/server) # create server executable
+add_subdirectory(src/debugger) # create debugger executable
 
 # this might not be compatible on Windows due to how find is used
 file(GLOB_RECURSE LINT_FILES "src/*.cpp" "include/*.hpp")

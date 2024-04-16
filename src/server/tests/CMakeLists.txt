@@ -18,6 +18,8 @@ target_link_libraries(${TARGET_NAME}
     Boost::serialization
     nlohmann_json::nlohmann_json
 )
+target_include_directories(${TARGET_NAME} PRIVATE ${GLM_LIBRARY_INCLUDES})
+target_link_libraries(${TARGET_NAME} PRIVATE glm::glm)
 
 target_link_libraries(${TARGET_NAME} PUBLIC gtest_main)
 add_test(NAME ${TARGET_NAME} COMMAND ${TARGET_NAME})

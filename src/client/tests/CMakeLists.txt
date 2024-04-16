@@ -21,6 +21,8 @@ target_link_libraries(${TARGET_NAME}
     Boost::serialization
     nlohmann_json::nlohmann_json
 )
+target_include_directories(${TARGET_NAME} PRIVATE ${GLM_LIBRARY_INCLUDES})
+target_link_libraries(${TARGET_NAME} PRIVATE glm::glm)
 
 # setup make target
 set(RUN_TESTS_TARGET "run_${TARGET_NAME}")
