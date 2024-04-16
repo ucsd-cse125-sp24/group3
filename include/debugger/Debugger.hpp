@@ -1,5 +1,6 @@
 #pragma once
 #include "shared/game/GameState.hpp"
+#include "shared/game/GameLogic/constants.hpp"
 
 const std::string NO_SHORTHAND = "NO_SHORTHAND";
 
@@ -180,13 +181,14 @@ public:
 					std::cout << object->id << std::endl;
 				}
 				else if (property.compare("position") == 0) {
-					std::cout << object->position.to_string() << std::endl;
+					std::cout << glm::to_string(object->position) << std::endl;
 				}
 				else if (property.compare("velocity") == 0) {
-					std::cout << object->velocity.to_string() << std::endl;
+					std::cout << glm::to_string(object->velocity) << std::endl;
 				}
 				else if (property.compare("acceleration") == 0) {
-					std::cout << object->acceleration.to_string() << std::endl;
+					std::cout << glm::to_string(object->acceleration) << std::endl;
+					
 				}
 				else {
 					std::cout << "Error: Didn't recognize object property '" << property << "'.\n";

@@ -1,4 +1,5 @@
 #include "shared/game/GameLogic/Object.hpp"
+#include "shared/game/GameLogic/constants.hpp"
 
 //	Initialize static object counter
 unsigned int Object::numObjects = 0;
@@ -17,9 +18,9 @@ std::string Object::to_string(unsigned int tab_offset) {
 
 	std::string representation = tabs + "{\n";
 	representation += tabs + "\tid:\t\t" + std::to_string(this->id) + '\n';
-	representation += tabs + "\tposition:\t\t" + this->position.to_string() + '\n';
-	representation += tabs + "\tvelocity:\t\t" + this->velocity.to_string() + '\n';
-	representation += tabs + "\tacceleration:\t\t" + this->acceleration.to_string() + '\n';
+	representation += tabs + "\tposition:\t\t" + glm::to_string(this->position) + '\n';
+	representation += tabs + "\tvelocity:\t\t" + glm::to_string(this->velocity) + '\n';
+	representation += tabs + "\tacceleration:\t\t" + glm::to_string(this->acceleration) + '\n';
 	representation += tabs + "}";
 
 	return representation;

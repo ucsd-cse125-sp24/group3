@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include "shared/game/GameState.hpp"
+#include "shared/game/GameLogic/constants.hpp"
 #include "debugger/Debugger.hpp"
 
 std::vector<Command*> commands;
@@ -26,12 +27,14 @@ int main(int argc, char* argv[]) {
 
 	//	2.	Fill it with some objects
 	Object* obj1 = state.createObject();
-	obj1->velocity.setVector(0, 0, 10);
-	obj1->acceleration.setVector(0, 0, -1);
+	obj1->setPosition(glm::vec3(0.f, 0.f, 0.f));
+	obj1->setVelocity(glm::vec3(0.f, 0.f, 10.f));
+	obj1->setAcceleration(glm::vec3(0.f, 0.f, -1.f));
 
 	Object* obj2 = state.createObject();
-	obj2->velocity.setVector(1, 1, 0);
-	obj2->acceleration.setVector(1, -1, 0);
+	obj2->setPosition(glm::vec3(0.f, 0.f, 0.f));
+	obj2->setVelocity(glm::vec3(1.f, 1.f, 10.f));
+	obj2->setAcceleration(glm::vec3(1.f, -1.f, 0.f));
 
 	//	3.	Start debugger shell
 
