@@ -5,7 +5,6 @@ set(FILES
     client.cpp
     clientinfo.cpp
     lobbyfinder.cpp
-    main.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

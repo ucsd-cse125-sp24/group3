@@ -4,7 +4,7 @@ set(FILES
     hello_client_test.cpp
 )
 
-add_executable(${TARGET_NAME} ${FILES} ${CLIENT_FILES})
+add_executable(${TARGET_NAME} ${FILES})
 target_link_libraries(${TARGET_NAME} PRIVATE game_client_lib game_shared_lib)
 
 target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORY})
