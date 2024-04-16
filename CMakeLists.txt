@@ -17,6 +17,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 # Generate a "compile_commands.json" file for clang-tidy and VScode to use 
 set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
+# Tell CMake to ignore warnings from stuff in our dependencies. Surely GLM
+# knows what it is doing... https://7tv.app/emotes/61e8fae862858c6406126ced
+set_property(
+    DIRECTORY build 
+    PROPERTY COMPILE_OPTIONS "-w"
+)
+
 # Add google test to CMake
 add_subdirectory(dependencies/google-test)
 

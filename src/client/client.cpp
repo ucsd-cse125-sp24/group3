@@ -27,7 +27,7 @@ void Client::connectAndListen(std::string ip_addr) {
 
     this->client_session->connectTo(this->endpoints);
 
-    auto packet = packagePacket(packet::Type::ClientDeclareInfo,
+    auto packet = PackagedPacket::make_shared(packet::Type::ClientDeclareInfo,
         packet::ClientDeclareInfo { .player_name = config.client.default_name });
 
     this->client_session->sendPacketAsync(packet);

@@ -49,7 +49,7 @@ void Server::doAccept() {
 
                 this->sessions.insert({eid, session});
 
-                session->sendPacketAsync(packagePacket(packet::Type::ServerAssignEID,
+                session->sendPacketAsync(PackagedPacket::make_shared(packet::Type::ServerAssignEID,
                     packet::ServerAssignEID{ .eid = eid }));
             } else {
                 std::cerr << "Error accepting tcp connection: " << ec << std::endl;

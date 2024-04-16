@@ -8,6 +8,7 @@
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
+#include "shared/utilities/serialize.hpp"
 
 using namespace std::chrono_literals;
 using namespace boost::asio::ip;

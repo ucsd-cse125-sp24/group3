@@ -8,6 +8,7 @@
 
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
+#include "shared/utilities/serialize.hpp"
 
 LobbyFinder::LobbyFinder(boost::asio::io_context& io_context, GameConfig config):
     lobby_discovery_socket(io_context,

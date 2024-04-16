@@ -14,6 +14,7 @@
 #include "shared/network/constants.hpp"
 #include "shared/utilities/typedefs.hpp"
 #include "shared/utilities/serialize_macro.hpp"
+#include "shared/utilities/serialize.hpp"
 
 
 // Might want to move this later on to somewhere in the game code
@@ -29,7 +30,7 @@ namespace packet {
  * packet type!
  */
 enum class Type: uint16_t {
-    // Lobby Setup
+    // Setup
     ServerLobbyBroadcast = 0, ///< Sent by the server via UDP broadcast saying it has a server open
     ClientDeclareInfo,   ///< Sent by the client after TCP handshake 
     ServerAssignEID,     ///< Sent by the server after TCP handshake, giving client its EID
@@ -149,46 +150,64 @@ struct ServerDoEvent {
 
 }
 
-/**
- * Helper function to easily serialize a packet's data into a string
- * to send over the network.
- * 
- * @param packet Packet object that you want to serialize to send across the network.
- * This should not include any header information, it should strictly be a struct
- * for packet data.
- */
-template<class Packet>
-std::string serialize(Packet packet) {
-    std::ostringstream archive_stream;
-    boost::archive::text_oarchive archive(archive_stream);
-    archive << packet;
-    return archive_stream.str();
-}
-
-/**
- * Helper function to easily deserialize a string received over the network into
- * a packet.
- * 
- * @param data String representation of a serialized packet recieved across the network.
- */
-template <class Packet>
-Packet deserialize(std::string data) {
-    Packet parsed_info;
-    std::istringstream stream(data);
-    boost::archive::text_iarchive archive(stream);
-    archive >> parsed_info;
-    return parsed_info;
-}
 
 /**
  * A class which wraps around a packet that has yet to be sent across the network.
+ * Note: this class can only be instantiated as a shared_ptr using the provided friend
+ * helper function
  */
 class PackagedPacket { 
 public:
     /**
+     * We explicitly make the destructor availabale.
+     */
+    ~PackagedPacket() = default;
+
+    /**
+     * Factory function that creates a smart pointer for the packaged packet.
+     * 
+     * @param type of packet to make
+     * @param packet actual packet data
+     */
+    template <class Packet>
+    static std::shared_ptr<PackagedPacket> make_shared(packet::Type type, Packet packet) {
+        std::string data = serialize<Packet>(packet);
+
+        packet::Header hdr(data.size(), type);
+
+        return std::shared_ptr<PackagedPacket>(new PackagedPacket(hdr, data));
+    }
+
+    /**
+     * Converts the PackagedPacket into asio::buffer format. 
+     * Note: it is important when doing an async write THAT THE PackagedPacket DOES NOT
+     * GET DESTROYED BEFORE THE ASYNC WRITE ACTUALLY OCCURS. If the PackagedPacket is
+     * destroyed before the buffer is read from, the underlying data will be deleted
+     * and garbage will be written to the network socket.
+     * 
+     * Since we only expose a way to make this class as a shared_ptr, you should pass
+     * this shared_ptr into any callback that needs to read from the packet
+     * 
+     * @return The packet in buffer format, which can easily be passed into boost::asio::write
+     * or similar function.
+     */
+    std::array<boost::asio::const_buffer, 2> toBuffer() {
+        return {
+            boost::asio::buffer(&this->hdr, sizeof(packet::Header)),
+            boost::asio::buffer(this->data)
+        };
+    }
+
+private:
+    /**
      * Constructs a PackagedPacket for sending across the network. Converts the header
      * into network byte order, and sets the header size to be equal to the data, if
      * not already.
+     * 
+     * This constructor is PRIVATE because when making a packaged packet, you only ever want it
+     * to be inside of a shared_ptr, so that you can pass the shared ptr into the async callback
+     * function ensuring that the PackagedPacket will live as long as the async call needs it.
+     * Use the provided make_shared function
      * 
      * @param hdr Header of the packet. This should not already be in network byte order, and 
      * the hdr.size does not need to be set.
@@ -203,43 +222,14 @@ public:
     }
 
     /**
-     * Converts the PackagedPacket into asio::buffer format. 
-     * Note: it is important when doing an async write THAT THE PackagedPacket DOES NOT
-     * GET DESTROYED BEFORE THE ASYNC WRITE ACTUALLY OCCURS. If the PackagedPacket is
-     * destroyed before the buffer is read from, the underlying data will be deleted
-     * and garbage will be written to the network socket.
-     * 
-     * @return The packet in buffer format, which can easily be passed into boost::asio::write
-     * or similar function.
+     * We delete the copy constructor and assignment operator so that this can only live inside of 
+     * a shared ptr.
      */
-    std::array<boost::asio::const_buffer, 2> toBuffer() {
-        return {
-            boost::asio::buffer(&this->hdr, sizeof(packet::Header)),
-            boost::asio::buffer(this->data)
-        };
-    }
-private:
+    PackagedPacket(const PackagedPacket& a) = delete;
+    PackagedPacket& operator=(const PackagedPacket& a) = delete;
+
     /// @brief Header of the packet to send
     packet::Header hdr;
     /// @brief Data of the packet to send, in boost::serialize format
     std::string data;
 };
-
-/**
- * Helper function that packages a packet as a collection of boost buffers, which can
- * then be sent into a write socket call. This conveniently puts it inside of a shared
- * ptr which should be passed into the boost async callback 
- * 
- * @param type Type of the packet
- * @param packet Packet data to send
- */
-template <class Packet>
-std::shared_ptr<PackagedPacket> packagePacket(packet::Type type, Packet packet) {
-    std::string data = serialize<Packet>(packet);
-
-    packet::Header hdr(data.size(), type);
-
-    auto pkt = std::make_shared<PackagedPacket>(hdr, data);
-
-    return pkt;
-}
