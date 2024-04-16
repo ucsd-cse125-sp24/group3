@@ -8,6 +8,16 @@ add_executable(${TARGET_NAME} ${FILES})
 target_link_libraries(${TARGET_NAME} PRIVATE game_shared_lib)
 
 target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORY})
+target_include_directories(${TARGET_NAME} PRIVATE ${BOOST_LIBRARY_INCLUDES})
+target_link_libraries(${TARGET_NAME} 
+    PRIVATE 
+    Boost::asio
+    Boost::filesystem
+    Boost::thread
+    Boost::program_options
+    Boost::serialization
+    nlohmann_json::nlohmann_json
+)
 
 target_link_libraries(${TARGET_NAME} PUBLIC gtest_main)
 add_test(NAME ${TARGET_NAME} COMMAND ${TARGET_NAME})
