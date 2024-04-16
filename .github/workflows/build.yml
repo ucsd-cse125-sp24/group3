@@ -15,7 +15,7 @@ jobs:
     - name: Create build dir
       run: mkdir -p build
     - name: Run CMake
-      run: cd build && cmake -G "Unix Makefiles" ..
+      run: cd build && cmake -G "Visual Studio 17 2022" ..
     - name: Build
       run: cd build && make client
   client-linux:
@@ -37,7 +37,7 @@ jobs:
     - name: Create build dir
       run: mkdir -p build
     - name: Run CMake
-      run: cd build && cmake -G "Unix Makefiles" ..
+      run: cd build && cmake -G "Visual Studio 17 2022" ..
     - name: Build
       run: cd build && make server 
   server-linux:
