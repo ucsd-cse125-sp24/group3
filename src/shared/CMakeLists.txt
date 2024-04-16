@@ -10,8 +10,6 @@ set(FILES
     utilities/rng.cpp
 )
 
-
-
 add_library(${LIB_NAME} STATIC ${FILES})
 target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIRECTORY})
 target_include_directories(${LIB_NAME} PUBLIC ${BOOST_LIBRARY_INCLUDES})
@@ -25,3 +23,5 @@ target_link_libraries(${LIB_NAME}
     Boost::dll
     nlohmann_json::nlohmann_json
 )
+
+add_subdirectory(tests) # define shared unit tests

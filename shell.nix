@@ -8,5 +8,8 @@ mkShell {
     cmake
     gnumake
     gcc13
+
+    doxygen
+    clang-tools_14
   ];
 }
