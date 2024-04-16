@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install CppCheck
-      run: apt-get update && apt-get install cppcheck
+      run: sudo apt-get update && sudo apt-get install cppcheck
     - uses: actions/checkout@v4
     - name: Create build dir
       run: mkdir -p build
