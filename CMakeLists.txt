@@ -14,7 +14,7 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 
-# Generate a "compile_commands.json" file for clang-tidy and VScode to use 
+# Generate a "compile_commands.json" file for VScode to use 
 set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
 # Add google test to CMake
