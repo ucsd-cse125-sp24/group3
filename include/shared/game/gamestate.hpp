@@ -4,13 +4,20 @@
 
 #include <string>
 
+enum class GamePhase {
+    TITLE_SCREEN,
+    LOBBY,
+    GAME
+};
+
 class GameState {
 public:
     GameState() = default;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-
+        ar & phase;
     }
-private:
 
+private:
+    GamePhase phase;
 };

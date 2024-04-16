@@ -22,6 +22,7 @@ public:
     static EntityID genNewEID();
 
     const std::unordered_map<EntityID, std::shared_ptr<Session>>& getSessions();
+    
 
 private:
     LobbyBroadcaster lobby_broadcaster;

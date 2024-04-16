@@ -10,7 +10,6 @@
 
 enum class EventType {
     LobbyAction,
-    LoadLobbyState,
     LoadGameState,
     MoveRelative,
     MoveAbsolute,
@@ -28,17 +27,6 @@ struct LobbyActionEvent {
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar & action;
-    }
-};
-
-struct LoadLobbyStateEvent {
-    /// @brief Contains (Entity ID, name, ready_status) information for each player
-    std::vector<std::tuple<EntityID, std::string, bool>> players;
-    /// @brief How many more spots there are available in the lobby
-    int slots_avail;
-
-    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & players & slots_avail;
     }
 };
 
@@ -96,7 +84,6 @@ struct Event {
     /// the value of type, you should look at the data associated with that type of event.
     std::variant<
         LobbyActionEvent,
-        LoadLobbyStateEvent,
         LoadGameStateEvent,
         MoveRelativeEvent,
         MoveAbsoluteEvent,
