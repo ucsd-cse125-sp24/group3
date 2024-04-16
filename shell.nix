@@ -11,5 +11,6 @@ mkShell {
 
     doxygen
     clang-tools_14
+    cppcheck
   ];
 }
