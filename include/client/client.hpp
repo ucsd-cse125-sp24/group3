@@ -14,12 +14,16 @@ class Client {
 public:
     Client();
     ~Client();
+    int init();
     int start();
 
 private:
-    void processInput(GLFWwindow* window);
+    void processInput();
 
     Cube* cube;
     float cubeMovementDelta = 0.05f;
+
+    GLFWwindow *window;
+    GLuint shaderProgram;
 };
 

@@ -2,17 +2,14 @@
 #include <GLFW/glfw3.h>
 
 Client::Client() {
-    cube = new Cube();
+
 }
 
 Client::~Client() {
 
 }
 
-// Remember to do error message output for later
-int Client::start() {
-    GLFWwindow *window;
-
+int Client::init() {
     /* Initialize the library */
     if (!glfwInit())
         return -1;
@@ -47,7 +44,7 @@ int Client::start() {
 
     /* Load shader programs */
     std::cout << "loading shader" << std::endl;
-    GLuint shaderProgram = LoadShaders("../src/client/shaders/shader.vert", "../src/client/shaders/shader.frag");
+    shaderProgram = LoadShaders("../src/client/shaders/shader.vert", "../src/client/shaders/shader.frag");
 
     // Check the shader program.
     if (!shaderProgram) {
@@ -55,11 +52,20 @@ int Client::start() {
         return false;
     }
 
-    // Cube* cube = new Cube();
+    cube = new Cube();
+
+    return 0;
+}
+
+// Remember to do error message output for later
+int Client::start() {
+    init();
+
+    // Constrain framerate
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        processInput(window);
+        processInput();
         /* Render here */
         glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -78,7 +84,7 @@ int Client::start() {
     return 0;
 }
 
-void Client::processInput(GLFWwindow *window) {
+void Client::processInput() {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
