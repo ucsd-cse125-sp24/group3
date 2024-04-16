@@ -2,7 +2,7 @@ set(TARGET_NAME debugger)
 
 set(FILES
 	main.cpp
-	Debugger.cpp
+	debugger.cpp
 )
 
 add_executable(${TARGET_NAME} ${FILES})

@@ -1,9 +1,9 @@
 set(LIB_NAME game_shared_lib)
 
 set(FILES
-    game/GameState.cpp
+    game/gamestate.cpp
 
-    game/GameLogic/Object.cpp
+    game/gamelogic/object.cpp
 
     network/packet.cpp
 
