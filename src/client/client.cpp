@@ -1,7 +1,8 @@
 #include "client/client.hpp"
+#include <GLFW/glfw3.h>
 
 Client::Client() {
-
+    cube = new Cube();
 }
 
 Client::~Client() {
@@ -54,17 +55,17 @@ int Client::start() {
         return false;
     }
 
-    Cube* c = new Cube();
-
+    // Cube* cube = new Cube();
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+        processInput(window);
         /* Render here */
         glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         /* Swap front and back buffers */
-        c->draw(shaderProgram);
+        cube->draw(shaderProgram);
 
         /* Poll for and process events */
         glfwSwapBuffers(window);
@@ -75,4 +76,19 @@ int Client::start() {
 
     glDeleteProgram(shaderProgram);
     return 0;
+}
+
+void Client::processInput(GLFWwindow *window) {
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+    if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+    if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        cube->update_delta(glm::vec3(cubeMovementDelta, 0.0f, 0.0f));
+    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+        cube->update_delta(glm::vec3(-cubeMovementDelta, 0.0f, 0.0f));
+    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+        cube->update_delta(glm::vec3(0.0f, cubeMovementDelta, 0.0f));
+    if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        cube->update_delta(glm::vec3(0.0f, -cubeMovementDelta, 0.0f));
 }

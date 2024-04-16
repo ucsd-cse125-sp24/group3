@@ -17,6 +17,9 @@ public:
     int start();
 
 private:
+    void processInput(GLFWwindow* window);
 
+    Cube* cube;
+    float cubeMovementDelta = 0.05f;
 };
 

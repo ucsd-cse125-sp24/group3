@@ -20,6 +20,7 @@ public:
     ~Cube();
     void draw(GLuint shader);
     void update(glm::vec3 new_pos);
+    void update_delta(glm::vec3 delta);
 
 private:
     GLuint VAO;
@@ -27,6 +28,7 @@ private:
 
     glm::mat4 model;
     glm::vec3 color;
+
 
     // Cube Information
     std::vector<glm::vec3> positions;

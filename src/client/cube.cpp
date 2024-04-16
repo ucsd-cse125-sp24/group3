@@ -188,3 +188,7 @@ void Cube::draw(GLuint shader) {
 void Cube::update(glm::vec3 new_pos) {
     model[3] = glm::vec4(new_pos, 1.0f);
 }
+
+void Cube::update_delta(glm::vec3 delta) {
+    model = glm::translate(model, delta);
+}
