@@ -39,8 +39,8 @@ IF(MSVC)
     ADD_DEFINITIONS("/EHsc")
 ENDIF(MSVC)
 
-add_subdirectory(deps/boost) # include boost libraries that we use
-add_subdirectory(deps/json) # include boost libraries that we use
+add_subdirectory(dependencies/boost) # include boost libraries that we use
+add_subdirectory(dependencies/json) # include boost libraries that we use
 
 add_subdirectory(src/shared) # define game_shared_lib
 add_subdirectory(src/client) # create client executable

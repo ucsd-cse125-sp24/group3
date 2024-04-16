@@ -13,6 +13,7 @@ add_executable(${TARGET_NAME} main.cpp)
 
 target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORY})
 target_link_libraries(${TARGET_NAME} PRIVATE game_shared_lib)
+target_link_libraries(${TARGET_NAME} PRIVATE ${LIB_NAME})
 
 target_include_directories(${TARGET_NAME} PRIVATE ${BOOST_LIBRARY_INCLUDES})
 target_link_libraries(${TARGET_NAME} 
