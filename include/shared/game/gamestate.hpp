@@ -6,9 +6,14 @@
 
 class GameState : public Serializable {
 public:
-    GameState();
+    GameState() = default;
 
-    std::string serialize() const override; 
+    /**
+     * Serializes GameState instances to be sent over the
+     * network.
+     * @return serialized string of GameState 
+     */
+    [[nodiscard]] std::string serialize() const override; 
 private:
 
 };
