@@ -26,7 +26,8 @@ project(game VERSION 1.0)
 # Custom Variables
 SET(INCLUDE_DIRECTORY ${PROJECT_SOURCE_DIR}/include)
 
-add_subdirectory(deps/glm) # # include glm library
+add_subdirectory(dependencies/glm) # include glm library
+
 add_subdirectory(src/shared) # define game_shared_lib
 add_subdirectory(src/client) # create client executable
 add_subdirectory(src/server) # create server executable
