@@ -7,16 +7,16 @@ on:
   pull_request:
 
 jobs:
-  clang-tidy:
-    name: clang-tidy
+  cppcheck:
+    name: cppcheck 
     runs-on: ubuntu-latest
     steps:
+    - name: Install CppCheck
+      run: apt-get update && apt-get install cppcheck
     - uses: actions/checkout@v4
     - name: Create build dir
       run: mkdir -p build
     - name: Run CMake
       run: cd build && cmake ..
-    - name: clang-tidy version
-      run: clang-tidy --version 
     - name: Lint
       run: cd build && make lint 
