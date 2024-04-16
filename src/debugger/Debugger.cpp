@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include "shared/game/GameState.hpp"
-#include "debugger/Debugger.hpp"
+#include "shared/game/gamestate.hpp"
+#include "debugger/debugger.hpp"
 
 std::vector<std::string> get_string_tokens(std::string input, char delimeter) {
 	//	Split string by delimiter

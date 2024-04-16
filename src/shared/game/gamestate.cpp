@@ -1,4 +1,4 @@
-#include "shared/game/GameState.hpp"
+#include "shared/game/gamestate.hpp"
 #include <string>
 
 GameState::GameState(unsigned int timestep, unsigned int timestep_length) {

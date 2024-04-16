@@ -1,7 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
-#include "Object.hpp"
+#include "object.hpp"
 
 class Wall : public Object {
 public:

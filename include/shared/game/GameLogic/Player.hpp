@@ -1,8 +1,8 @@
 #pragma once
 
 #include "constants.hpp"
-#include "Item.hpp"
-#include "Creature.hpp"
+#include "item.hpp"
+#include "creature.hpp"
 
 class Player : public Creature {
 public:

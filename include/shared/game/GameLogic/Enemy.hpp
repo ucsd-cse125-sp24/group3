@@ -1,7 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
-#include "Creature.hpp"
+#include "creature.hpp"
 
 class Enemy : public Creature {
 public:

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Collider.hpp"
+#include "collider.hpp"
 
 class SphereCollider : public Collider {
 public:

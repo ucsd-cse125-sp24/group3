@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shared/game/GameLogic/Object.hpp"
+#include "shared/game/gamelogic/object.hpp"
 #include <vector>
 #include <string>
 

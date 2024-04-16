@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include "shared/game/GameState.hpp"
-#include "shared/game/GameLogic/constants.hpp"
-#include "debugger/Debugger.hpp"
+#include "shared/game/gamestate.hpp"
+#include "shared/game/gamelogic/constants.hpp"
+#include "debugger/debugger.hpp"
 
 std::vector<Command*> commands;
 

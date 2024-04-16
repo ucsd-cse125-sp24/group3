@@ -2,7 +2,7 @@
 
 #include "constants.hpp"
 #include "shared/utilities/vector3.hpp"
-#include "Collider.hpp"
+#include "collider.hpp"
 
 class Object {
 public:

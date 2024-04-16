@@ -1,6 +1,6 @@
 #pragma once
-#include "shared/game/GameState.hpp"
-#include "shared/game/GameLogic/constants.hpp"
+#include "shared/game/gamestate.hpp"
+#include "shared/game/gamelogic/constants.hpp"
 
 const std::string NO_SHORTHAND = "NO_SHORTHAND";
 

@@ -1,5 +1,5 @@
-#include "shared/game/GameLogic/Object.hpp"
-#include "shared/game/GameLogic/constants.hpp"
+#include "shared/game/gamelogic/object.hpp"
+#include "shared/game/gamelogic/constants.hpp"
 
 //	Initialize static object counter
 unsigned int Object::numObjects = 0;
