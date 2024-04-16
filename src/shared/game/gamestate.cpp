@@ -24,10 +24,6 @@ void GameState::update() {
 	this->timestep++;
 }
 
-std::string GameState::serialize() const {
-    return "";
-}
-
 Object* GameState::createObject() {
 	//	Create a new object and return a pointer to it
 	this->objects.push_back(Object());
