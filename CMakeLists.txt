@@ -39,11 +39,18 @@ add_subdirectory(src/client) # create client executable
 add_subdirectory(src/server) # create server executable
 add_subdirectory(src/debugger) # create debugger executable
 
-# this might not be compatible on Windows due to how find is used
-file(GLOB_RECURSE LINT_FILES "src/*.cpp" "include/*.hpp")
-find_program(CLANG_TIDY "clang-tidy")
+find_program(CPPCHECK "cppcheck")
 add_custom_target(lint
-    COMMAND ${CLANG_TIDY} 
-    -p=.
-    ${LINT_FILES}
+    COMMAND ${CPPCHECK}
+    # checks to enable
+    --enable=warning,style,performance,portability
+    # tell it about our include directory
+    -I ${CMAKE_SOURCE_DIR}/include
+    # only check include and src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    # ignore test directories
+    -i${CMAKE_SOURCE_DIR}/src/client/tests
+    -i${CMAKE_SOURCE_DIR}/src/server/tests
+    -i${CMAKE_SOURCE_DIR}/src/shared/tests
 )
