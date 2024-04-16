@@ -3,7 +3,6 @@ set(LIB_NAME game_shared_lib)
 set(FILES
     game/gamestate.cpp
 
-    network/packet.cpp
     network/session.cpp
 
     utilities/config.cpp

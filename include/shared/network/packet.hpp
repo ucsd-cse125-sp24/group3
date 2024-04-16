@@ -9,20 +9,12 @@
 #include <iostream>
 
 #include <boost/asio.hpp>
-#include <boost/serialization/access.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/utility.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
 
+#include "shared/game/event.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/utilities/serialize_macro.hpp"
 
-// Helper macro to reduce boilerplate in making boost::serialize-able structs
-#define DEF_SERIALIZE \
-    friend class boost::serialization::access; \
-    template<class Archive> \
-    void serialize
 
 // Might want to move this later on to somewhere in the game code
 
@@ -41,23 +33,11 @@ enum class Type: uint16_t {
     ServerLobbyBroadcast = 0, ///< Sent by the server via UDP broadcast saying it has a server open
     ClientDeclareInfo,   ///< Sent by the client after TCP handshake 
     ServerAssignEID,     ///< Sent by the server after TCP handshake, giving client its EID
-    ServerLobbyInfo,     ///< Sent periodically to all clients in lobby telling lobby info
-
-    // Loading
-    ServerSendGameState = 1000, ///< Serialized repr of entire GameState, sent to clients
 
     // Gameplay
     ClientRequestEvent = 2000, ///< Client requesting server to perform specific input
     ServerDoEvent,             ///< Server telling clients what events have occurred.
 };
-
-/**
- * Function that checks if the type is valid or not.
- * 
- * @param type The type integer value to validate (most likely received from the network)
- * @return true if the packet is valid, false otherwise
- */
-bool validateType(Type type);
 
 /**
  * Header for any arbitrary packet on the network sent by our game.
@@ -150,45 +130,22 @@ struct ServerAssignEID {
     }
 };
 
-/**
- * Packet sent periodically by the server to clients in a lobby, informing them of
- * who else is in the lobby and everyone's ready statuses.
- */
-struct ServerLobbyInfo {
-    /// @brief Contains (Entity ID, name, ready_status) information for each player
-    std::vector<std::tuple<EntityID, std::string, bool>> players;
-    /// @brief How many more spots there are available in the lobby
-    int slots_avail;
+struct ClientRequestEvent {
+    Event event;
     
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & players;
-        ar & slots_avail;
+        ar & event;
     }
 };
 
-/**
- * Different actions that the clients can do while inside of a lobby
- */
-enum class LobbyActionType {
-    Leave = 0,
-    SetReady,
-    SetNotReady
-};
-
-/**
- * Packet sent by the client to the server whenever they make an action in a lobby.
- */
-struct ClientLobbyAction {
-    /// @brief the action taken by the sending client
-    LobbyActionType action;
+struct ServerDoEvent {
+    Event event;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & action;
+        ar & event;
     }
 };
 
-// TODO: packets for the actual game itself
-// https://docs.google.com/document/d/1gkvuVnrpik86YUdQWANHn61yHgOpOSGWT6aXjq7orYg/edit
 
 }
 

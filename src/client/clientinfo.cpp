@@ -9,9 +9,9 @@ ClientInfo::ClientInfo() {
 }
 
 EntityID ClientInfo::getEID() {
-
+    return 0; // TODO: 
 }
 
 std::string ClientInfo::getName() {
-
+    return ""; // TODO
 }
