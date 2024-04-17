@@ -4,13 +4,25 @@ set(FILES
     hello_client_test.cpp
 )
 
-add_executable(${TARGET_NAME} ${FILES} ${CLIENT_FILES})
+add_executable(${TARGET_NAME} ${FILES})
 target_link_libraries(${TARGET_NAME} PRIVATE game_client_lib game_shared_lib)
 
 target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORY})
 
 target_link_libraries(${TARGET_NAME} PUBLIC gtest_main)
 add_test(NAME ${TARGET_NAME} COMMAND ${TARGET_NAME})
+target_include_directories(${TARGET_NAME} PRIVATE ${BOOST_LIBRARY_INCLUDES})
+target_link_libraries(${TARGET_NAME} 
+    PRIVATE 
+    Boost::asio
+    Boost::filesystem
+    Boost::thread
+    Boost::program_options
+    Boost::serialization
+    nlohmann_json::nlohmann_json
+)
+target_include_directories(${TARGET_NAME} PRIVATE ${GLM_LIBRARY_INCLUDES})
+target_link_libraries(${TARGET_NAME} PRIVATE glm::glm)
 
 # setup make target
 set(RUN_TESTS_TARGET "run_${TARGET_NAME}")
