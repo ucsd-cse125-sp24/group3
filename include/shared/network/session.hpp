@@ -88,7 +88,7 @@ public:
      * ClientRequestEvent
      * @param evt The event object to send
      */
-    void sendEventAsync(packet::Type type, Event evt);
+    void sendEventAsync(PacketType type, Event evt);
 
     /**
      * Get the information associated with this session.
@@ -110,7 +110,7 @@ private:
      * @param type Type of the packet received
      * @param data Serialized format of the data received on the network.
      */
-    void _handleReceivedPacket(packet::Type type, std::string data);
+    void _handleReceivedPacket(PacketType type, std::string data);
 
     /**
      * Sets up one async callback to receive a packet. This callback ends up calling

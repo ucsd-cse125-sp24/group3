@@ -31,13 +31,13 @@ public:
      * Start broadcasting that this lobby is available to join, if it isn't already
      * broadcasting.
      */
-    void startBroadcasting(packet::ServerLobbyBroadcast bcast_info);
+    void startBroadcasting(ServerLobbyBroadcastPacket bcast_info);
 
     /**
      * Tell the broadcaster the current state of the lobby so it can broadcast
      * updated messages.
      */
-    void setLobbyInfo(packet::ServerLobbyBroadcast bcast_info);
+    void setLobbyInfo(ServerLobbyBroadcastPacket bcast_info);
 
     /**
      * Tells the LobbyBroadcaster to stop advertising that there is a lobby open.
@@ -62,7 +62,7 @@ private:
     /// @brief Lock to protect concurrent access to the broadcast info
     std::mutex mut;
     /// @brief info of the lobby to announce
-    packet::ServerLobbyBroadcast bcast_info;
+    ServerLobbyBroadcastPacket bcast_info;
 
     /// @brief Configuration options. Used to know server port info.
     GameConfig config;

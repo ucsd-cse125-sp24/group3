@@ -62,7 +62,7 @@ void LobbyFinder::_searchForLobbyWorker() {
 
             std::string packet(this->lobby_info_buf.begin(), this->lobby_info_buf.end());
             packet.resize(bytes_read);
-            auto parsed_info = deserialize<packet::ServerLobbyBroadcast>(packet);
+            auto parsed_info = deserialize<ServerLobbyBroadcastPacket>(packet);
 
             std::unique_lock<std::mutex> lock(this->mut);
             this->lobbies_avail[this->endpoint_buf] = parsed_info;

@@ -19,8 +19,6 @@
 
 // Might want to move this later on to somewhere in the game code
 
-namespace packet {
-
 /**
  * Enumeration for all of the different packet types that can be sent.
  * 
@@ -29,7 +27,7 @@ namespace packet {
  * Note: you need to update the below function validateType whenever you add a new
  * packet type!
  */
-enum class Type: uint16_t {
+enum class PacketType: uint16_t {
     // Setup
     ServerLobbyBroadcast = 0, ///< Sent by the server via UDP broadcast saying it has a server open
     ClientDeclareInfo,   ///< Sent by the client after TCP handshake 
@@ -47,14 +45,14 @@ enum class Type: uint16_t {
  * and then use boost::serialization to deserialize the more complicated
  * Packet types below.
  */
-struct Header {
+struct PacketHeader {
     /**
      * Constructor which makes a Header normally
      * 
      * @param size Size in bytes of the data portion of the packet (not inc header)
-     * @param type Type of the packet, according to the packet::Type enum
+     * @param type Type of the packet, according to the PacketType enum
      */
-    Header(uint16_t size, Type type): size{size}, type{type} {}
+    PacketHeader(uint16_t size, PacketType type): size{size}, type{type} {}
 
     /**
      * Converts this packet to network byte order. This should be called before sending
@@ -62,7 +60,7 @@ struct Header {
      */
     void to_network() {
         this->size = htons(this->size);
-        this->type = static_cast<Type>(htons(static_cast<uint16_t>(this->type))); 
+        this->type = static_cast<PacketType>(htons(static_cast<uint16_t>(this->type))); 
     }
 
     /**
@@ -74,23 +72,23 @@ struct Header {
      * @param buffer The buffer received over the network containing the 4 bytes
      * for the header.
      */
-    Header(void* buffer) {
-        Header* buf_hdr = static_cast<Header*>(buffer);
+    PacketHeader(void* buffer) {
+        PacketHeader* buf_hdr = static_cast<PacketHeader*>(buffer);
         this->size = ntohs(buf_hdr->size);
-        this->type = static_cast<Type>(ntohs(static_cast<uint16_t>(buf_hdr->type)));
+        this->type = static_cast<PacketType>(ntohs(static_cast<uint16_t>(buf_hdr->type)));
     }
 
     /// @brief Size (in bytes) of the packet data (not including the header)
     uint16_t size;
     /// @brief What kind of packet this is, according to the Type enum class
-    Type type;
+    PacketType type;
 };
 
 /**
  * Packet sent by the server via UDP broadcast, announcing that there is a lobby available for
  * players to join.
  */
-struct ServerLobbyBroadcast {
+struct ServerLobbyBroadcastPacket {
     /// @brief Name of the server lobby
     std::string lobby_name;
     /// @brief How many clients are already in this lobby
@@ -109,7 +107,7 @@ struct ServerLobbyBroadcast {
  * Packet sent by the client to the server after the TCP handshake, telling
  * the server what their information is. Currently this is just a name.
  */
-struct ClientDeclareInfo {
+struct ClientDeclareInfoPacket {
     /// @brief Name that the client wishes to be called by.
     std::string player_name;
 
@@ -122,7 +120,7 @@ struct ClientDeclareInfo {
  * Packet sent by the server to a client after the TCP handshake, telling the
  * client what their player's entity ID is.
  */
-struct ServerAssignEID {
+struct ServerAssignEIDPacket {
     /// @brief ID that the server is assigning to the client.
     EntityID eid;
 
@@ -131,7 +129,7 @@ struct ServerAssignEID {
     }
 };
 
-struct ClientRequestEvent {
+struct ClientRequestEventPacket {
     Event event;
     
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
@@ -139,16 +137,13 @@ struct ClientRequestEvent {
     }
 };
 
-struct ServerDoEvent {
+struct ServerDoEventPacket {
     Event event;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar & event;
     }
 };
-
-
-}
 
 
 /**
@@ -170,10 +165,10 @@ public:
      * @param packet actual packet data
      */
     template <class Packet>
-    static std::shared_ptr<PackagedPacket> make_shared(packet::Type type, Packet packet) {
+    static std::shared_ptr<PackagedPacket> make_shared(PacketType type, Packet packet) {
         std::string data = serialize<Packet>(packet);
 
-        packet::Header hdr(data.size(), type);
+        PacketHeader hdr(data.size(), type);
 
         return std::shared_ptr<PackagedPacket>(new PackagedPacket(hdr, data));
     }
@@ -193,7 +188,7 @@ public:
      */
     std::array<boost::asio::const_buffer, 2> toBuffer() {
         return {
-            boost::asio::buffer(&this->hdr, sizeof(packet::Header)),
+            boost::asio::buffer(&this->hdr, sizeof(PacketHeader)),
             boost::asio::buffer(this->data)
         };
     }
@@ -214,7 +209,7 @@ private:
      * @param data The string representation of the packet data. This will probably be the
      * return value of the serialize helper function.
      */
-    PackagedPacket(packet::Header hdr, std::string data)
+    PackagedPacket(PacketHeader hdr, std::string data)
         :hdr(hdr), data(data)
     {
         this->hdr.size = data.size();
@@ -229,7 +224,7 @@ private:
     PackagedPacket& operator=(const PackagedPacket& a) = delete;
 
     /// @brief Header of the packet to send
-    packet::Header hdr;
+    PacketHeader hdr;
     /// @brief Data of the packet to send, in boost::serialize format
     std::string data;
 };

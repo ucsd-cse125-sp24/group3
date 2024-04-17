@@ -31,7 +31,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     doAccept(); // start asynchronously accepting
 
     if (config.server.lobby_broadcast) {
-        this->lobby_broadcaster.startBroadcasting(packet::ServerLobbyBroadcast {
+        this->lobby_broadcaster.startBroadcasting(ServerLobbyBroadcastPacket {
             .lobby_name  = config.server.lobby_name,
             .slots_taken = 0,
             .slots_avail = config.server.max_players});
@@ -60,7 +60,7 @@ std::chrono::milliseconds Server::doTick() {
 
             // Tell each client the current lobby status
             for (const auto& [eid, session]: this->sessions) {
-                session->sendEventAsync(packet::Type::ServerDoEvent, Event(this->world_eid,
+                session->sendEventAsync(PacketType::ServerDoEvent, Event(this->world_eid,
                     EventType::LoadGameState, LoadGameStateEvent(this->state)));
             };
 
@@ -91,8 +91,8 @@ void Server::doAccept() {
 
                 this->sessions.insert({eid, session});
 
-                session->sendPacketAsync(PackagedPacket::make_shared(packet::Type::ServerAssignEID,
-                    packet::ServerAssignEID{ .eid = eid }));
+                session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
+                    ServerAssignEIDPacket { .eid = eid }));
             } else {
                 std::cerr << "Error accepting tcp connection: " << ec << std::endl;
             }

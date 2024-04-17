@@ -14,7 +14,7 @@
 
 using namespace boost::asio::ip;
 
-using Lobbies = std::unordered_map<udp::endpoint, packet::ServerLobbyBroadcast>;
+using Lobbies = std::unordered_map<udp::endpoint, ServerLobbyBroadcastPacket>;
 
 /**
  * Class which abstracts away the logic of listening for lobby broadcast UDP packets

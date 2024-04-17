@@ -25,7 +25,7 @@ LobbyBroadcaster::~LobbyBroadcaster() {
     this->stopBroadcasting();
 }
 
-void LobbyBroadcaster::startBroadcasting(packet::ServerLobbyBroadcast bcast_info) {
+void LobbyBroadcaster::startBroadcasting(ServerLobbyBroadcastPacket bcast_info) {
     if (!this->keep_broadcasting) {
         this->bcast_info = bcast_info;
         this->keep_broadcasting = true;
@@ -33,7 +33,7 @@ void LobbyBroadcaster::startBroadcasting(packet::ServerLobbyBroadcast bcast_info
     }
 }
 
-void LobbyBroadcaster::setLobbyInfo(packet::ServerLobbyBroadcast bcast_info) {
+void LobbyBroadcaster::setLobbyInfo(ServerLobbyBroadcastPacket bcast_info) {
     std::unique_lock<std::mutex> lock(this->mut);
     this->bcast_info = bcast_info;
 }
@@ -68,7 +68,7 @@ void LobbyBroadcaster::_lobbyBroadcastWorker() {
         std::this_thread::sleep_for(1s);
 
         std::unique_lock<std::mutex> lock(this->mut);
-        std::string packet_data = serialize<packet::ServerLobbyBroadcast>(this->bcast_info);
+        std::string packet_data = serialize<ServerLobbyBroadcastPacket>(this->bcast_info);
         std::cout << "Broadcasting lobby info for " << this->bcast_info.lobby_name
             << " (" << this->bcast_info.slots_taken << "/"
             << this->bcast_info.slots_taken + this->bcast_info.slots_avail

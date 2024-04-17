@@ -66,9 +66,23 @@ public:
 
     GamePhase getPhase() const;
 
+    /**
+     * Reassign id to the specified name in the mapping. This is okay to call if the
+     * player is already in the mapping, as nothing will happen. If a player's name
+     * has changed, then this will update their name as well.
+     */
     void addPlayerToLobby(EntityID id, std::string name);
+    /**
+     * Removes a player from the lobby with the specified id. 
+     */
     void removePlayerFromLobby(EntityID id);
+    /**
+     * Getter for the mapping between entity ID and player name in the lobby
+     */
     const std::unordered_map<EntityID, std::string>& getLobbyPlayers() const;
+    /**
+     * Returns how many max players can be in the lobby, based on the config option
+     */
     int getLobbyMaxPlayers() const;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {

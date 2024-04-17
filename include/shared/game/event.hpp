@@ -8,8 +8,22 @@
 #include "shared/game/gamestate.hpp"
 
 
-// TODO: doxygen
+/****************************************************
+ * 
+ * Important notes for adding new events:
+ * 
+ * 1. Make sure you correctly define the serialization function for all data members
+ * 2. Make sure you define two constructors: one "dummy" default constructor which
+ *    does nothing, and one constructor to actually make the Events. The dummy constructor
+ *    is needed to make everything compile.
+ * 3. Make sure you add the new struct you make to the EventData boost::variant typedef
+ *    further down.
+ * 
+ ***************************************************/
 
+/**
+ * Tag for the different kind of events there are
+ */
 enum class EventType {
     LobbyAction,
     LoadGameState,
@@ -18,8 +32,14 @@ enum class EventType {
     SpawnEntity,
 };
 
+/**
+ * Override << so we can std::cout << EventType_var;
+ */
 std::ostream& operator<<(std::ostream& os, const EventType& type);
 
+/**
+ * Event representing an action a player can take during the lobby screen
+ */
 struct LobbyActionEvent {
     enum class Action {
         LEAVE,
@@ -37,6 +57,10 @@ struct LobbyActionEvent {
     }
 };
 
+/**
+ * Event sent by the server to a client, telling the client to update their GameState
+ * to this new GameState
+ */
 struct LoadGameStateEvent {
     // Dummy value doesn't matter because will be overridden with whatever you deserialize
     LoadGameStateEvent() : state(GameState(GamePhase::TITLE_SCREEN, GameConfig{})){}
@@ -49,6 +73,9 @@ struct LoadGameStateEvent {
     }
 };
 
+/**
+ * Event for an entity moving a relative distance
+ */
 struct MoveRelativeEvent {
     MoveRelativeEvent() {}
     MoveRelativeEvent(EntityID entity_to_move) : entity_to_move(entity_to_move) {}
@@ -61,6 +88,9 @@ struct MoveRelativeEvent {
     }
 };
 
+/**
+ * Event for an entity moving to some new absolute location
+ */
 struct MoveAbsoluteEvent {
     MoveAbsoluteEvent() {}
     MoveAbsoluteEvent(EntityID entity_to_move) : entity_to_move(entity_to_move) {}
@@ -73,6 +103,9 @@ struct MoveAbsoluteEvent {
     }
 };
 
+/**
+ * Event for the creation of a new Entity
+ */
 struct SpawnEntityEvent {
     SpawnEntityEvent() {}
     SpawnEntityEvent(EntityID new_id, int entity_type) : new_id(new_id), entity_type(entity_type) {}
@@ -91,6 +124,10 @@ struct SpawnEntityEvent {
 
 };
 
+/**
+ * All of the different kinds of events in a tagged union, so we can
+ * easily pull out the actual data for a specific Event
+ */
 using EventData = boost::variant<
     LobbyActionEvent,
     LoadGameStateEvent,
@@ -110,7 +147,8 @@ struct Event {
     /// @brief who is attempting to trigger this event (if client -> server) or who is
     /// triggering this event (if server -> client)
     EntityID evt_source;
-    /// @brief The type of event
+    /// @brief The type of event. This actually might not be needed because I think boost::variant
+    /// has a tag built in, but We're already using it everywhere...
     EventType type;
     /// @brief All of the different kinds of event data that you might have. Depending on
     /// the value of type, you should look at the data associated with that type of event.
@@ -121,4 +159,9 @@ struct Event {
     }
 };
 
+/**
+ * Allow us to std::cout an Event
+ * 
+ * TODO: actually output the data for the EventData
+ */
 std::ostream& operator<<(std::ostream& os, const Event& evt);

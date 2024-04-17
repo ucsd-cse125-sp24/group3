@@ -33,19 +33,19 @@ void Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpo
     tcp::endpoint endpt = boost::asio::connect(socket, endpoints);
 }
 
-void Session::_handleReceivedPacket(packet::Type type, std::string data) {
+void Session::_handleReceivedPacket(PacketType type, std::string data) {
     // First figure out if packet is event or non-event
-    if (type == packet::Type::ClientRequestEvent) {
-        auto event = deserialize<packet::ClientRequestEvent>(data).event;
+    if (type == PacketType::ClientRequestEvent) {
+        auto event = deserialize<ClientRequestEventPacket>(data).event;
         this->received_events.push_back(event);
-    } else if (type == packet::Type::ServerDoEvent) {
-        auto event = deserialize<packet::ServerDoEvent>(data).event;
+    } else if (type == PacketType::ServerDoEvent) {
+        auto event = deserialize<ServerDoEventPacket>(data).event;
         this->received_events.push_back(event);
-    } else if (type == packet::Type::ServerAssignEID) {
-        this->info.client_eid = deserialize<packet::ServerAssignEID>(data).eid;
+    } else if (type == PacketType::ServerAssignEID) {
+        this->info.client_eid = deserialize<ServerAssignEIDPacket>(data).eid;
         std::cout << "Handling ServerAssignEID of " << *this->info.client_eid << "...\n";
-    } else if (type == packet::Type::ClientDeclareInfo) {
-        this->info.client_name = deserialize<packet::ClientDeclareInfo>(data).player_name;
+    } else if (type == PacketType::ClientDeclareInfo) {
+        this->info.client_name = deserialize<ClientDeclareInfoPacket>(data).player_name;
         std::cout << "Handling ClientDeclareInfo from " << *this->info.client_name << "...\n";
     } else {
         std::cerr << "Unknown packet type received in Session::_addReceivedPacket" << std::endl;
@@ -79,15 +79,15 @@ void Session::sendPacketAsync(std::shared_ptr<PackagedPacket> packet) {
         });
 }
 
-void Session::sendEventAsync(packet::Type type, Event evt) {
+void Session::sendEventAsync(PacketType type, Event evt) {
     std::shared_ptr<PackagedPacket> packet = nullptr;
 
-    if (type == packet::Type::ServerDoEvent) {
-        packet = PackagedPacket::make_shared(type, packet::ServerDoEvent {
+    if (type == PacketType::ServerDoEvent) {
+        packet = PackagedPacket::make_shared(type, ServerDoEventPacket {
             .event = evt
         });
-    } else if (type == packet::Type::ClientRequestEvent) {
-        packet = PackagedPacket::make_shared(type, packet::ClientRequestEvent {
+    } else if (type == PacketType::ClientRequestEvent) {
+        packet = PackagedPacket::make_shared(type, ClientRequestEventPacket {
             .event = evt
         });
     } else {
@@ -105,7 +105,7 @@ void Session::_receivePacketAsync() {
     auto buf = std::make_shared<std::array<char, BUF_SIZE>>();
 
     boost::asio::async_read(socket, boost::asio::buffer(&buf.get()[0], BUF_SIZE),
-        boost::asio::transfer_exactly(sizeof(packet::Header)),
+        boost::asio::transfer_exactly(sizeof(PacketHeader)),
         [this, buf, self](boost::system::error_code ec, std::size_t length) {
 
             switch (_classifySocketError(ec, "receiving header")) {
@@ -115,7 +115,7 @@ void Session::_receivePacketAsync() {
                 return;
             }
 
-            packet::Header hdr(static_cast<void*>(&buf.get()[0]));
+            PacketHeader hdr(static_cast<void*>(&buf.get()[0]));
 
             boost::asio::async_read(socket, boost::asio::buffer(buf.get(), BUF_SIZE),
                 boost::asio::transfer_exactly(hdr.size),
