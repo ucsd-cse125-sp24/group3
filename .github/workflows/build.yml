@@ -12,11 +12,12 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: seanmiddleditch/gha-setup-ninja@master
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.1
     - name: Create build dir
       run: mkdir -p build
     - name: Run CMake
-      run: cd build && cmake -G "Ninja" ..
+      run: cd build && cmake -G "Ninja" --DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
     - name: Test Directory 1
       if: always()
       run: ls
