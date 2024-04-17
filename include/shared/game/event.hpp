@@ -1,10 +1,12 @@
 #pragma once
 
-#include <variant>
+#include <boost/variant/variant.hpp>
+#include <iostream>
 
 #include "shared/utilities/typedefs.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/game/gamestate.hpp"
+
 
 // TODO: doxygen
 
@@ -16,12 +18,17 @@ enum class EventType {
     SpawnEntity,
 };
 
+std::ostream& operator<<(std::ostream& os, const EventType& type);
+
 struct LobbyActionEvent {
     enum class Action {
         LEAVE,
         READY_UP,
         UNREADY
     };
+
+    LobbyActionEvent() {}
+    LobbyActionEvent(Action action) : action(action) {}
 
     Action action;
 
@@ -31,6 +38,10 @@ struct LobbyActionEvent {
 };
 
 struct LoadGameStateEvent {
+    // Dummy value doesn't matter because will be overridden with whatever you deserialize
+    LoadGameStateEvent() : state(GameState(GamePhase::TITLE_SCREEN)){}
+    LoadGameStateEvent(GameState state) : state(state) {}
+
     GameState state;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
@@ -39,6 +50,9 @@ struct LoadGameStateEvent {
 };
 
 struct MoveRelativeEvent {
+    MoveRelativeEvent() {}
+    MoveRelativeEvent(EntityID entity_to_move) : entity_to_move(entity_to_move) {}
+
     EntityID entity_to_move;
     /// some velocity / movement information...
 
@@ -48,6 +62,9 @@ struct MoveRelativeEvent {
 };
 
 struct MoveAbsoluteEvent {
+    MoveAbsoluteEvent() {}
+    MoveAbsoluteEvent(EntityID entity_to_move) : entity_to_move(entity_to_move) {}
+
     EntityID entity_to_move;
     /// some velocity / movement information...
 
@@ -57,6 +74,9 @@ struct MoveAbsoluteEvent {
 };
 
 struct SpawnEntityEvent {
+    SpawnEntityEvent() {}
+    SpawnEntityEvent(EntityID new_id, int entity_type) : new_id(new_id), entity_type(entity_type) {}
+
     /// @brief Id of the new entity, if the server is sending this down. Ignored, if this is a client request.
     EntityID new_id;
     /// @brief What kind of entity to spawn
@@ -71,10 +91,22 @@ struct SpawnEntityEvent {
 
 };
 
+using EventData = boost::variant<
+    LobbyActionEvent,
+    LoadGameStateEvent,
+    MoveRelativeEvent,
+    MoveAbsoluteEvent,
+    SpawnEntityEvent
+>;
+
 /**
  * Struct to represent any possible event that could happen in our game. 
  */
 struct Event {
+    Event() {}
+    Event(EntityID evt_source, EventType type, EventData data)
+        :evt_source(evt_source), type(type), data(data) {}
+
     /// @brief who is attempting to trigger this event (if client -> server) or who is
     /// triggering this event (if server -> client)
     EntityID evt_source;
@@ -82,15 +114,11 @@ struct Event {
     EventType type;
     /// @brief All of the different kinds of event data that you might have. Depending on
     /// the value of type, you should look at the data associated with that type of event.
-    std::variant<
-        LobbyActionEvent,
-        LoadGameStateEvent,
-        MoveRelativeEvent,
-        MoveAbsoluteEvent,
-        SpawnEntityEvent
-    > data;
+    EventData data;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar & evt_source & type & data;
     }
 };
+
+std::ostream& operator<<(std::ostream& os, const Event& evt);

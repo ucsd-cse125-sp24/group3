@@ -7,10 +7,12 @@
 #include <atomic>
 #include <unordered_map>
 #include <memory>
+#include <chrono>
 
 #include "server/lobbybroadcaster.hpp"
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
+#include "shared/utilities/typedefs.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -21,14 +23,22 @@ public:
 
     static EntityID genNewEID();
 
-    const std::unordered_map<EntityID, std::shared_ptr<Session>>& getSessions();
-    
+    /**
+     * Do one game tick
+     * 
+     * @returns Time in MS to wait until starting next tick
+     */
+    std::chrono::milliseconds doTick();
 
 private:
+    EntityID world_eid;
+
     LobbyBroadcaster lobby_broadcaster;
 
     tcp::acceptor acceptor;
     tcp::socket socket;
 
     std::unordered_map<EntityID, std::shared_ptr<Session>> sessions;
+
+    GameState state;
 };

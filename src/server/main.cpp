@@ -15,14 +15,14 @@ int main(int argc, char** argv) {
     Server server(context, config);
 
     while (true) {
-        context.run_for(1s);
+        // Do one tick of updates
+        auto wait_time = server.doTick();
 
-        for (const auto& [eid, session] : server.getSessions()) {
-            std::cout << "Session " << eid << "\n";
-            for (const auto& [type, data] : session->getAllReceivedPackets()) {
-                std::cout << "Recevied packet type " << static_cast<int>(type) << "\n";
-                std::cout << "Recevied packet data " << data << "\n";
-            }
-        }
+        // Wait until next tick
+        context.run_for(wait_time);
+        // TODO: context.run_for will return early if there is no more work to do
+        // so we should figure out a way to make it always run for a specified amount
+        // of time, whether we do this manually or through some API call I don't know about
+        std::this_thread::sleep_for(1s); // limiting tick rate for easier to parse tests for now
     }
 }

@@ -2,9 +2,12 @@
 
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/game/gamelogic/object.hpp"
+#include "shared/utilities/typedefs.hpp"
 
 #include <string>
 #include <vector>
+#include <chrono>
+#include <unordered_map>
 
 enum class GamePhase {
     TITLE_SCREEN,
@@ -21,17 +24,20 @@ public:
     /**
      * @brief Default GameState constructor. Creates a GameState instance with
      * an empty world (no objects) with default timestep length.
+     * 
+     * @param phase Phase to start the game in
      */
-    GameState() : GameState(FIRST_TIMESTEP, TIMESTEP_LEN) {}
+    GameState(GamePhase phase) : GameState(phase, FIRST_TIMESTEP, std::chrono::milliseconds(TIMESTEP_LEN)) {}
 
     /**
      * @brief GameState constructor that sets the current timestep and the
      * timestep length to the given arguments.
      *
+     * @param phase starting phase of the game
      * @param timestep Current timestep
      * @param timestep_length Timestep length
      */
-    GameState(unsigned int timestep, unsigned int timestep_length);
+    GameState(GamePhase phase, unsigned int timestep, std::chrono::milliseconds timestep_length);
 
     /**
      * @brief Updates this GameState instance from the current timestep to the
@@ -65,10 +71,17 @@ public:
 
     std::string to_string();
     unsigned int getTimestep() { return this->timestep; }
-    unsigned int getTimestepLength() { return this->timestep_length; }
+    std::chrono::milliseconds getTimestepLength() { return this->timestep_length; }
+
+    GamePhase getPhase() const;
+
+    void addPlayerToLobby(EntityID id, std::string name);
+    void removePlayerFromLobby(EntityID id);
+    const std::unordered_map<EntityID, std::string>& getLobbyPlayers() const;
+    int getLobbyMaxPlayers() const;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & phase;
+        ar & phase & lobby.max_players & lobby.players;
     }
 
 private:
@@ -80,7 +93,7 @@ private:
     /**
      *  Timestep length in milliseconds.
      */
-    unsigned int timestep_length;
+    std::chrono::milliseconds timestep_length;
 
     /**
      *  Current timestep (starts at 0)
@@ -91,4 +104,12 @@ private:
      * Current phase of the game
      */
     GamePhase phase;
+
+    /**
+     * Information about the lobby
+     */
+    struct {
+        std::unordered_map<EntityID, std::string> players;
+        int max_players;
+    } lobby;
 };

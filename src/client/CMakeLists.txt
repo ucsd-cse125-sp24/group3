@@ -11,7 +11,8 @@ add_library(${LIB_NAME} STATIC ${FILES})
 target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIRECTORY})
 target_include_directories(${LIB_NAME} PRIVATE ${BOOST_LIBRARY_INCLUDES})
 target_link_libraries(${LIB_NAME} 
-    PRIVATE 
+    PRIVATE
+    game_shared_lib
     Boost::asio
     Boost::filesystem
     Boost::thread

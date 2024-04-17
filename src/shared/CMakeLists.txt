@@ -2,7 +2,7 @@ set(LIB_NAME game_shared_lib)
 
 set(FILES
     game/gamestate.cpp
-
+    game/event.cpp
     game/gamelogic/object.cpp
 
     network/session.cpp

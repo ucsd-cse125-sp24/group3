@@ -7,14 +7,18 @@
 #include <mutex>
 #include <thread>
 #include <string>
+#include <optional>
 
 #include "shared/network/packet.hpp"
+#include "shared/utilities/typedefs.hpp"
 
 using namespace boost::asio::ip;
 
 /**
  * Enumeration to classify different kinds of networking errors depending on the kind
- * of action we should take
+ * of action we should take. Note, we aren't currently classifying anything as RETRY.
+ * IF we find an error that we are treating as FATAL but should be RETRY, then we can
+ * use it.
  */
 enum SocketError {
     /// @brief No error, everything is good
@@ -26,6 +30,18 @@ enum SocketError {
 };
 
 /**
+ * Info about the client and server associated with this session.
+ * 
+ * The fields are optional because when the session is initially created,
+ * some of the information may not have been sent yet, so we initialize
+ * them to the "None" value.
+ */
+struct SessionInfo {
+    std::optional<std::string> client_name;
+    std::optional<EntityID> client_eid;
+};
+
+/**
  * A class which wraps around the concept of a Client <-> Server relationship. This
  * works from both the client perpsective and the Server perspective. It essentially
  * provides a wrapper around a tcp::socket and lets us easily send and receive
@@ -34,12 +50,13 @@ enum SocketError {
 class Session : public std::enable_shared_from_this<Session> {
 public:
     /**
-     * Constructs a new session, with the specified client eid
+     * Constructs a new session, with the specified info 
      * 
      * @param socket The boost asio socket which is already open and contains
      * the connection.
+     * @param info Session Information
      */
-    Session(tcp::socket socket);
+    Session(tcp::socket socket, SessionInfo info);
     ~Session();
 
     /**
@@ -54,7 +71,7 @@ public:
      * 
      * @returns received packets on the socket
      */
-    std::vector<std::pair<packet::Type, std::string>> getAllReceivedPackets();
+    std::vector<Event> getEvents();
 
     /**
      * Sends a packet on the socket
@@ -63,24 +80,37 @@ public:
      */
     void sendPacketAsync(std::shared_ptr<PackagedPacket> packet);
 
+    /**
+     * Sends an event on the socket after packaging it into
+     * the packet format.
+     * 
+     * @param type Type of the event, should either be ServerDoEvent or
+     * ClientRequestEvent
+     * @param evt The event object to send
+     */
+    void sendEventAsync(packet::Type type, Event evt);
+
+    /**
+     * Get the information associated with this session.
+     */
+    const SessionInfo& getInfo() const;
+
 private:
     tcp::socket socket;
 
-    // TODO: determine if we need a mutex to proect this or not,
-    // might not because we will only be checking received packets
-    // during the game tick, and will only be running background async 
-    // tasks during sleep time between ticks
-    std::vector<std::pair<packet::Type, std::string>> received_packets;
+    std::vector<Event> received_events;
+
+    SessionInfo info;
 
     /**
-     * Stores the received packet inside of the internal received_packets
-     * vector, so it can be retrieved later by the getAllReceivedPackets()
+     * Stores the received packet inside of the internal received_events
+     * vector, so it can be retrieved later by the getEvents()
      * function.
      * 
      * @param type Type of the packet received
      * @param data Serialized format of the data received on the network.
      */
-    void _addReceivedPacket(packet::Type type, std::string data);
+    void _handleReceivedPacket(packet::Type type, std::string data);
 
     /**
      * Sets up one async callback to receive a packet. This callback ends up calling

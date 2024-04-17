@@ -1,7 +1,13 @@
 #include "shared/game/gamestate.hpp"
-#include <string>
 
-GameState::GameState(unsigned int timestep, unsigned int timestep_length) {
+#include <string>
+#include <chrono>
+#include <unordered_map>
+
+#include "shared/utilities/typedefs.hpp"
+
+GameState::GameState(GamePhase phase, unsigned int timestep, std::chrono::milliseconds timestep_length) {
+	this->phase = phase;
 	this->timestep = timestep;
 	this->timestep_length = timestep_length;
 }
@@ -78,7 +84,7 @@ Object* GameState::getObject(unsigned int id) {
 std::string GameState::to_string() {
 	std::string representation = "{";
 	representation += "\n\ttimestep:\t\t" + std::to_string(this->timestep);
-	representation += "\n\ttimestep len:\t\t" + std::to_string(this->timestep_length);
+	representation += "\n\ttimestep len:\t\t" + std::to_string(this->timestep_length.count());
 	representation += "\n\tobjects: [\n";
 
 	for (int i = 0; i < this->objects.size(); i++) {
@@ -96,3 +102,22 @@ std::string GameState::to_string() {
 	return representation;
 }
 
+GamePhase GameState::getPhase() const {
+	return this->phase;
+}
+
+void GameState::addPlayerToLobby(EntityID id, std::string name) {
+	this->lobby.players[id] = name;
+}
+
+void GameState::removePlayerFromLobby(EntityID id) {
+	this->lobby.players.erase(id);
+}
+
+const std::unordered_map<EntityID, std::string>& GameState::getLobbyPlayers() const {
+	return this->lobby.players;
+}
+
+int GameState::getLobbyMaxPlayers() const {
+	return this->lobby.max_players;
+}
