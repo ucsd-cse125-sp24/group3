@@ -12,13 +12,9 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: seanmiddleditch/gha-setup-ninja@master
     - name: Create build dir
       run: mkdir -p build
-    - name: Setup Ninja
-      uses: ashutoshvarma/setup-ninja@master
-      with:
-          # ninja version to download. Default: 1.10.0
-          version: 1.10.0
     - name: Run CMake
       run: cd build && cmake -G "Ninja" ..
     - name: Test Directory 1
