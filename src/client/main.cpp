@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
         // But this is a demo of how you could use the client session to get information from
         // the game state
 
-        for (Event event : client.client_session->getEvents()) {
+        for (Event event : client.session->getEvents()) {
             std::cout << "Event Received: " << event << std::endl;
             if (event.type == EventType::LoadGameState) {
                 auto data = boost::get<LoadGameStateEvent>(event.data);

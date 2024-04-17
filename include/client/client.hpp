@@ -8,7 +8,6 @@
 
 #include "shared/network/packet.hpp"
 #include "client/lobbyfinder.hpp"
-#include "client/clientinfo.hpp"
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
 
@@ -20,12 +19,12 @@ public:
 
     void connectAndListen(std::string ip_addr);
 
+// TODO: move these back to private?
 // private:
     GameConfig config;
     tcp::resolver resolver;
     tcp::socket socket;
     basic_resolver_results<class boost::asio::ip::tcp> endpoints;
-    ClientInfo info;
-    std::shared_ptr<Session> client_session;
+    std::shared_ptr<Session> session;
 };
 

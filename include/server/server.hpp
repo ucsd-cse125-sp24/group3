@@ -31,14 +31,18 @@ public:
     std::chrono::milliseconds doTick();
 
 private:
+    /// @brief EID that is reserved for the Server / World itself.
     EntityID world_eid;
 
+    /// @brief Broadcaster whicih spawns up another thread advertising this lobby
     LobbyBroadcaster lobby_broadcaster;
 
     tcp::acceptor acceptor;
     tcp::socket socket;
 
+    /// @brief Mapping from player id to session for that player.
     std::unordered_map<EntityID, std::shared_ptr<Session>> sessions;
 
+    /// @brief Master copy of the GameState, living on the server
     GameState state;
 };

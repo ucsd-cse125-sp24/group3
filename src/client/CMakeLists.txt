@@ -3,7 +3,6 @@ set(LIB_NAME game_client_lib)
 
 set(FILES
     client.cpp
-    clientinfo.cpp
     lobbyfinder.cpp
 )
 

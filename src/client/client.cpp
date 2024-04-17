@@ -23,17 +23,17 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
 
 void Client::connectAndListen(std::string ip_addr) {
     this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
-    this->client_session = std::make_shared<Session>(std::move(this->socket), SessionInfo {
+    this->session = std::make_shared<Session>(std::move(this->socket), SessionInfo {
         .client_name = this->config.client.default_name,
         .client_eid = {}
     });
 
-    this->client_session->connectTo(this->endpoints);
+    this->session->connectTo(this->endpoints);
 
     auto packet = PackagedPacket::make_shared(PacketType::ClientDeclareInfo,
         ClientDeclareInfoPacket { .player_name = config.client.default_name });
 
-    this->client_session->sendPacketAsync(packet);
+    this->session->sendPacketAsync(packet);
 
-    this->client_session->startListen();
+    this->session->startListen();
 }
