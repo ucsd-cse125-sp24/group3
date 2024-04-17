@@ -44,6 +44,10 @@ add_custom_target(lint
     COMMAND ${CPPCHECK}
     # checks to enable
     --enable=warning,style,performance,portability
+    # allow us to suppress individual lines with // cppcheck-suppress <check-name>
+    --inline-suppr
+    # return error exit code 1 on failures
+    --error-exitcode=1
     # tell it about our include directory
     -I ${CMAKE_SOURCE_DIR}/include
     # only check include and src
