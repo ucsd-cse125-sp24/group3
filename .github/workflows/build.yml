@@ -16,6 +16,12 @@ jobs:
       run: mkdir -p build
     - name: Run CMake
       run: cd build && cmake -G "Visual Studio 17 2022" ..
+    - name: Test Directory 1
+      run: ls
+    - name: Test Directory 2
+      run: ls build
+    - name: Test Directory 3
+      run: ls out
     - name: Build
       run: cd build && make client
   client-linux:
