@@ -35,11 +35,12 @@ void Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpo
 
 void Session::_handleReceivedPacket(packet::Type type, std::string data) {
     // First figure out if packet is event or non-event
-    if (type == packet::Type::ClientRequestEvent || type == packet::Type::ServerDoEvent) {
-        std::cout << "Handling event...\n";
-        auto event = deserialize<Event>(data);
-        std::cout << event.type << std::endl;
-        this->received_events.push_back(deserialize<Event>(data));
+    if (type == packet::Type::ClientRequestEvent) {
+        auto event = deserialize<packet::ClientRequestEvent>(data).event;
+        this->received_events.push_back(event);
+    } else if (type == packet::Type::ServerDoEvent) {
+        auto event = deserialize<packet::ServerDoEvent>(data).event;
+        this->received_events.push_back(event);
     } else if (type == packet::Type::ServerAssignEID) {
         this->info.client_eid = deserialize<packet::ServerAssignEID>(data).eid;
         std::cout << "Handling ServerAssignEID of " << *this->info.client_eid << "...\n";
@@ -80,8 +81,6 @@ void Session::sendPacketAsync(std::shared_ptr<PackagedPacket> packet) {
 
 void Session::sendEventAsync(packet::Type type, Event evt) {
     std::shared_ptr<PackagedPacket> packet = nullptr;
-
-    std::cout << "TYPE1:" << evt.type << std::endl;
 
     if (type == packet::Type::ServerDoEvent) {
         packet = PackagedPacket::make_shared(type, packet::ServerDoEvent {

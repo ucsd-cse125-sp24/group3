@@ -5,11 +5,13 @@
 #include <unordered_map>
 
 #include "shared/utilities/typedefs.hpp"
+#include "shared/utilities/config.hpp"
 
-GameState::GameState(GamePhase phase, unsigned int timestep, std::chrono::milliseconds timestep_length) {
+GameState::GameState(GamePhase phase, GameConfig config) {
 	this->phase = phase;
-	this->timestep = timestep;
-	this->timestep_length = timestep_length;
+	this->timestep = 0;
+	this->timestep_length = config.game.timestep_length_ms;
+	this->lobby.max_players = config.server.max_players;
 }
 
 void GameState::update() {

@@ -5,7 +5,7 @@
 #include "shared/game/event.hpp"
 
 TEST(SerializeTest, SerializeEvent) {
-    GameState state(GamePhase::LOBBY);
+    GameState state(GamePhase::LOBBY, GameConfig{});
     state.addPlayerToLobby(1, "Player Name");
     Event evt(0, EventType::LoadGameState, LoadGameStateEvent(state));
     Event evt2 = deserialize<Event>(serialize(evt));
@@ -19,7 +19,7 @@ TEST(SerializeTest, SerializeEvent) {
 }
 
 TEST(SerializeTest, SerializePacketEvent) {
-    GameState state(GamePhase::LOBBY);
+    GameState state(GamePhase::LOBBY, GameConfig{});
     state.addPlayerToLobby(1, "Player Name");
     Event evt(0, EventType::LoadGameState, LoadGameStateEvent(state));
 

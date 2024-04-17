@@ -22,8 +22,10 @@ std::unordered_map<std::string, Command&> command_map;
 int main(int argc, char* argv[]) {
 	//	GameState "Debugger"
 
+	auto config = GameConfig::parse(argc, argv);
+
 	//	1.	Create a GameState object
-	GameState state(GamePhase::GAME);
+	GameState state(GamePhase::GAME, config);
 
 	//	2.	Fill it with some objects
 	Object* obj1 = state.createObject();

@@ -1,4 +1,7 @@
 {
+    "game": {
+        "timestep_length_ms": 30
+    },
     "network": {
         "server_ip": "localhost",
         "server_port": 2355

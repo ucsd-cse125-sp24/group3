@@ -3,6 +3,7 @@
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/game/gamelogic/object.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/utilities/config.hpp"
 
 #include <string>
 #include <vector>
@@ -22,22 +23,12 @@ enum class GamePhase {
 class GameState {
 public:
     /**
-     * @brief Default GameState constructor. Creates a GameState instance with
-     * an empty world (no objects) with default timestep length.
-     * 
-     * @param phase Phase to start the game in
-     */
-    GameState(GamePhase phase) : GameState(phase, FIRST_TIMESTEP, std::chrono::milliseconds(TIMESTEP_LEN)) {}
-
-    /**
-     * @brief GameState constructor that sets the current timestep and the
-     * timestep length to the given arguments.
+     * @brief GameState constructor that sets data members based on the config
      *
      * @param phase starting phase of the game
-     * @param timestep Current timestep
-     * @param timestep_length Timestep length
+     * @param config Config options
      */
-    GameState(GamePhase phase, unsigned int timestep, std::chrono::milliseconds timestep_length);
+    GameState(GamePhase phase, GameConfig config);
 
     /**
      * @brief Updates this GameState instance from the current timestep to the

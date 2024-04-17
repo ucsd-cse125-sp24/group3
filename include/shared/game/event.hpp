@@ -39,7 +39,7 @@ struct LobbyActionEvent {
 
 struct LoadGameStateEvent {
     // Dummy value doesn't matter because will be overridden with whatever you deserialize
-    LoadGameStateEvent() : state(GameState(GamePhase::TITLE_SCREEN)){}
+    LoadGameStateEvent() : state(GameState(GamePhase::TITLE_SCREEN, GameConfig{})){}
     LoadGameStateEvent(GameState state) : state(state) {}
 
     GameState state;

@@ -26,7 +26,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      acceptor(io_context, tcp::endpoint(tcp::v4(), config.network.server_port)),
      socket(io_context),
      world_eid(0),
-     state(GameState(GamePhase::LOBBY))
+     state(GameState(GamePhase::LOBBY, config))
 {
     doAccept(); // start asynchronously accepting
 

@@ -40,6 +40,9 @@ GameConfig GameConfig::parse(int argc, char** argv) {
 
     try {
         return GameConfig {
+            .game = {
+                .timestep_length_ms = std::chrono::milliseconds(json.at("game").at("timestep_length_ms")),
+            },
             .network = {
                 .server_ip = json.at("network").at("server_ip"),
                 .server_port = json.at("network").at("server_port")

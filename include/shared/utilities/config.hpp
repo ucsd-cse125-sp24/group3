@@ -10,6 +10,10 @@
  * to know the exact string indices to use to index into the nlohmann::json object.
  */
 struct GameConfig {
+    /// @brief Game config options
+    struct {
+        std::chrono::milliseconds timestep_length_ms;
+    } game;
     /// @brief Shared config settings for the network
     struct {
         /// @brief IP that the server is being hosted on. E.g. "127.0.0.1" for localhost.

@@ -32,7 +32,6 @@ std::string serialize(Type obj) {
  */
 template <class Type>
 Type deserialize(std::string data) {
-    std::cout << data << std::endl;
     Type parsed_info;
     {
         std::istringstream stream(data);
