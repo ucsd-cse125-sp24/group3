@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 
     while (true)
     {
-        context.run_for(1s);
+        context.run_for(30ms);
 
         // probably want to put rendering logic inside of client, so that this main function
         // mimics the server one where all of the important logic is done inside of a run command

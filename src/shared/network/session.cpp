@@ -37,6 +37,8 @@ void Session::_handleReceivedPacket(packet::Type type, std::string data) {
     // First figure out if packet is event or non-event
     if (type == packet::Type::ClientRequestEvent || type == packet::Type::ServerDoEvent) {
         std::cout << "Handling event...\n";
+        auto event = deserialize<Event>(data);
+        std::cout << event.type << std::endl;
         this->received_events.push_back(deserialize<Event>(data));
     } else if (type == packet::Type::ServerAssignEID) {
         this->info.client_eid = deserialize<packet::ServerAssignEID>(data).eid;
@@ -59,6 +61,7 @@ std::vector<Event> Session::getEvents() {
 
 void Session::sendPacketAsync(std::shared_ptr<PackagedPacket> packet) {
     auto self = shared_from_this();
+
     // pass packet shared ptr into closure capture list to keep it alive until written to buffer
     boost::asio::async_write(socket, packet->toBuffer(),
         [this, packet, self](boost::system::error_code ec, std::size_t /*length*/) {
@@ -77,6 +80,8 @@ void Session::sendPacketAsync(std::shared_ptr<PackagedPacket> packet) {
 
 void Session::sendEventAsync(packet::Type type, Event evt) {
     std::shared_ptr<PackagedPacket> packet = nullptr;
+
+    std::cout << "TYPE1:" << evt.type << std::endl;
 
     if (type == packet::Type::ServerDoEvent) {
         packet = PackagedPacket::make_shared(type, packet::ServerDoEvent {

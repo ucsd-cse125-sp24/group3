@@ -173,6 +173,15 @@ public:
     static std::shared_ptr<PackagedPacket> make_shared(packet::Type type, Packet packet) {
         std::string data = serialize<Packet>(packet);
 
+        static int times = 0;
+
+        if (times++ > 0) {
+            std::cout << "data: " << data << std::endl;
+            std::cout << "end\n";
+            packet::ServerDoEvent p = deserialize<packet::ServerDoEvent>(data);
+            std::cout << "TYPE2: " << p.event.type << std::endl;
+        }
+
         packet::Header hdr(data.size(), type);
 
         return std::shared_ptr<PackagedPacket>(new PackagedPacket(hdr, data));

@@ -2,6 +2,7 @@ set(TARGET_NAME shared_tests)
 
 set(FILES
     hello_shared_test.cpp
+    serialize_test.cpp
 )
 
 add_executable(${TARGET_NAME} ${FILES})

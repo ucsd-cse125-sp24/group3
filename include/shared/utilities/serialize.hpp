@@ -17,8 +17,10 @@
 template<class Type>
 std::string serialize(Type obj) {
     std::ostringstream archive_stream;
-    boost::archive::text_oarchive archive(archive_stream);
-    archive << obj;
+    {
+        boost::archive::text_oarchive archive(archive_stream);
+        archive << obj;
+    }
     return archive_stream.str();
 }
 
@@ -30,9 +32,12 @@ std::string serialize(Type obj) {
  */
 template <class Type>
 Type deserialize(std::string data) {
+    std::cout << data << std::endl;
     Type parsed_info;
-    std::istringstream stream(data);
-    boost::archive::text_iarchive archive(stream);
-    archive >> parsed_info;
+    {
+        std::istringstream stream(data);
+        boost::archive::text_iarchive archive(stream);
+        archive >> parsed_info;
+    }
     return parsed_info;
 }
