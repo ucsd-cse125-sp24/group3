@@ -16,7 +16,7 @@ jobs:
     - name: Create build dir
       run: mkdir -p build
     - name: Run CMake
-      run: cd build && cmake -G "Ninja" --DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
+      run: cd build && cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
     - name: Test Directory 1
       if: always()
       run: ls
