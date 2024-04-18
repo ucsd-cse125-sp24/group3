@@ -12,12 +12,13 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: ilammy/msvc-dev-cmd@v1
     - name: Create build dir
       run: mkdir -p build
     - name: Run CMake
-      run: cd build && cmake -G "Unix Makefiles" ..
+      run: cd build && cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
     - name: Build
-      run: cd build && make client
+      run: cd build && ninja client
   client-linux:
     name: Client on Linux (Ubuntu) 
     runs-on: ubuntu-latest
@@ -34,12 +35,13 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: ilammy/msvc-dev-cmd@v1
     - name: Create build dir
       run: mkdir -p build
     - name: Run CMake
-      run: cd build && cmake -G "Unix Makefiles" ..
+      run: cd build && cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
     - name: Build
-      run: cd build && make server 
+      run: cd build && ninja server
   server-linux:
     name: Server on Linux (Ubuntu) 
     runs-on: ubuntu-latest
