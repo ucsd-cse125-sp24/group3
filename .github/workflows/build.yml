@@ -12,16 +12,19 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: ilammy/msvc-dev-cmd@v1
     - name: Create build dir
       run: mkdir -p build
     - name: Run CMake
-      run: cd build && cmake -G "Unix Makefiles" ..
+      run: cd build && cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
     - name: Build
-      run: cd build && make client
+      run: cd build && ninja client
   client-linux:
     name: Client on Linux (Ubuntu) 
     runs-on: ubuntu-latest
     steps:
+    - name: Install OpenGL
+      run: sudo apt-get update && sudo apt-get install cmake pkg-config && sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev && sudo apt-get install libglew-dev libglfw3-dev libglm-dev && sudo apt-get install libao-dev libmpg123-dev
     - uses: actions/checkout@v4
     - name: Create build dir
       run: mkdir -p build
@@ -34,16 +37,19 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: ilammy/msvc-dev-cmd@v1
     - name: Create build dir
       run: mkdir -p build
     - name: Run CMake
-      run: cd build && cmake -G "Unix Makefiles" ..
+      run: cd build && cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
     - name: Build
-      run: cd build && make server 
+      run: cd build && ninja server
   server-linux:
     name: Server on Linux (Ubuntu) 
     runs-on: ubuntu-latest
     steps:
+    - name: Install OpenGL
+      run: sudo apt-get update && sudo apt-get install cmake pkg-config && sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev && sudo apt-get install libglew-dev libglfw3-dev libglm-dev && sudo apt-get install libao-dev libmpg123-dev
     - uses: actions/checkout@v4
     - name: Create build dir
       run: mkdir -p build

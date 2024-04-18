@@ -13,6 +13,9 @@
 #include <thread>
 #include <chrono>
 
+#include "boost/variant/get.hpp"
+#include "shared/game/event.hpp"
+#include "shared/game/gamelogic/object.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
@@ -26,8 +29,11 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      acceptor(io_context, tcp::endpoint(tcp::v4(), config.network.server_port)),
      socket(io_context),
      world_eid(0),
-     state(GameState(GamePhase::LOBBY, config))
+     state(GameState(GamePhase::GAME, config))
 {
+    Object* obj = state.createObject();
+    obj->position = glm::vec3(0.0f, 0.0f, 0.0f);
+    
     doAccept(); // start asynchronously accepting
 
     if (config.server.lobby_broadcast) {
@@ -65,10 +71,28 @@ std::chrono::milliseconds Server::doTick() {
             };
 
             break;
+        case GamePhase::GAME:
+            for(const auto& [eid, session]: this->sessions) {
+                session->sendEventAsync(PacketType::ServerDoEvent, Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
+                std::vector<Event> events = session->getEvents();
+                for(const Event& event: events) {
+                    switch (event.type) {
+                        case EventType::MoveRelative:
+                            auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
+                            Object* obj = state.getObject(moveRelativeEvent.entity_to_move);
+                            obj->setPosition(obj->position + moveRelativeEvent.movement);
+                            break;
+                        // default:
+                        //     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
+                    }
+                }
+            }
+            break;
         default:
             std::cerr << "Non Lobby State not implemented on server side yet" << std::endl;
             std::exit(1);
     }
+
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(
