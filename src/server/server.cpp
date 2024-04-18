@@ -66,14 +66,14 @@ std::chrono::milliseconds Server::doTick() {
 
             // Tell each client the current lobby status
             for (const auto& [eid, session]: this->sessions) {
-                session->sendEventAsync(PacketType::ServerDoEvent, Event(this->world_eid,
+                session->sendEventAsync(Event(this->world_eid,
                     EventType::LoadGameState, LoadGameStateEvent(this->state)));
             };
 
             break;
         case GamePhase::GAME:
             for(const auto& [eid, session]: this->sessions) {
-                session->sendEventAsync(PacketType::ServerDoEvent, Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
+                session->sendEventAsync(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
                 std::vector<Event> events = session->getEvents();
                 for(const Event& event: events) {
                     switch (event.type) {
