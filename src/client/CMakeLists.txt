@@ -1,9 +1,10 @@
 set(TARGET_NAME client)
 
 set(FILES
-    main.cpp
+    camera.cpp
     client.cpp
     cube.cpp
+    main.cpp
     util.cpp
 )
 

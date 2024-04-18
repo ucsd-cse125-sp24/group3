@@ -1,8 +1,6 @@
 #pragma once
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
+#include "client/core.hpp"
 
 #include <iostream>
 #include <ostream>
@@ -11,19 +9,34 @@
 #include "client/util.hpp"
 
 class Client {
+
 public:
-    Client();
-    ~Client();
-    int init();
-    int start();
+
+    // init
+    static int init();
+    static int cleanup();
+
+    // Callbacks
+    static void displayCallback();
+    static void idleCallback();
+    static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+
+    // Getter / Setters
+    static GLFWwindow* getWindow() { return window; }
 
 private:
-    void processInput();
+    // static void processInput();
 
-    Cube* cube;
-    float cubeMovementDelta = 0.05f;
+    static float cubeMovementDelta;
+    static Cube* cube;
+    static GLFWwindow *window;
+    static GLuint shaderProgram;
 
-    GLFWwindow *window;
-    GLuint shaderProgram;
+    // Flags
+    static bool is_held_up;
+    static bool is_held_down;
+    static bool is_held_right;
+    static bool is_held_left;
+
 };
 

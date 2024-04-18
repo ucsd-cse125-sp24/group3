@@ -1,16 +1,19 @@
 #include "client/client.hpp"
 #include <GLFW/glfw3.h>
 
-Client::Client() {
+float Client::cubeMovementDelta = 0.05;
+Cube* Client::cube;
+GLFWwindow* Client::window;
+GLuint Client::shaderProgram;
 
-}
-
-Client::~Client() {
-
-}
+// Flags
+bool Client::is_held_up = false;
+bool Client::is_held_down = false;
+bool Client::is_held_right = false;
+bool Client::is_held_left = false;
 
 int Client::init() {
-    /* Initialize the library */
+    /* Initialize glfw library */
     if (!glfwInit())
         return -1;
 
@@ -27,17 +30,10 @@ int Client::init() {
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    // https://stackoverflow.com/questions/12329082/glcreateshader-is-crashing#comment43358404_23541855
-    #ifndef __APPLE__ // GLew not needed on OSX systems
     GLenum err = glewInit() ; 
     if (GLEW_OK != err) { 
         std::cerr << "Error: " << glewGetString(err) << std::endl; 
     } 
-    #endif
-
-    ///* Initialize GLAD */
-    //if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    //    return -1;
 
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
@@ -57,44 +53,105 @@ int Client::init() {
     return 0;
 }
 
-// Remember to do error message output for later
-int Client::start() {
-    init();
-
-    // Constrain framerate
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
-        processInput();
-        /* Render here */
-        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        /* Swap front and back buffers */
-        cube->draw(shaderProgram);
-
-        /* Poll for and process events */
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    glfwTerminate();
-
+int Client::cleanup() {
     glDeleteProgram(shaderProgram);
+    delete cube;
     return 0;
 }
 
-void Client::processInput() {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-    if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-    if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+// Handles all rendering
+void Client::displayCallback() {
+    // processInput();
+    /* Render here */
+    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    /* Swap front and back buffers */
+    cube->draw(shaderProgram);
+
+    /* Poll for and process events */
+    glfwPollEvents();
+    glfwSwapBuffers(window);
+}
+
+// Handle any updates, 
+void Client::idleCallback() {
+    if(is_held_right)
         cube->update_delta(glm::vec3(cubeMovementDelta, 0.0f, 0.0f));
-    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+    if(is_held_left)
         cube->update_delta(glm::vec3(-cubeMovementDelta, 0.0f, 0.0f));
-    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    if(is_held_up)
         cube->update_delta(glm::vec3(0.0f, cubeMovementDelta, 0.0f));
-    if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    if(is_held_down)
         cube->update_delta(glm::vec3(0.0f, -cubeMovementDelta, 0.0f));
+}
+
+// void Client::processInput() {
+//     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+//         glfwSetWindowShouldClose(window, true);
+//     if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+//         glfwSetWindowShouldClose(window, true);
+//     if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+//         cube->update_delta(glm::vec3(cubeMovementDelta, 0.0f, 0.0f));
+//     if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+//         cube->update_delta(glm::vec3(-cubeMovementDelta, 0.0f, 0.0f));
+//     if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+//         cube->update_delta(glm::vec3(0.0f, cubeMovementDelta, 0.0f));
+//     if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+//         cube->update_delta(glm::vec3(0.0f, -cubeMovementDelta, 0.0f));
+// }
+
+// callbacks - for Interaction
+void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+  // Check for a key press.
+    if (action == GLFW_PRESS) {
+        switch (key) {
+        case GLFW_KEY_ESCAPE:
+            // Close the window. This causes the program to also terminate.
+            glfwSetWindowShouldClose(window, GL_TRUE);
+            break;
+
+        case GLFW_KEY_DOWN:
+            is_held_down = true;
+            break;
+
+        case GLFW_KEY_UP:
+            is_held_up = true;
+            break;
+
+        case GLFW_KEY_LEFT:
+            is_held_left = true;
+            break;
+
+        case GLFW_KEY_RIGHT:
+            is_held_right = true;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    if (action == GLFW_RELEASE) {
+        switch (key) {
+        case GLFW_KEY_DOWN:
+            is_held_down = false;
+            break;
+
+        case GLFW_KEY_UP:
+            is_held_up = false;
+            break;
+
+        case GLFW_KEY_LEFT:
+            is_held_left = false;
+            break;
+
+        case GLFW_KEY_RIGHT:
+            is_held_right = false;
+            break;
+
+        default:
+            break;
+        }
+    }
 }
