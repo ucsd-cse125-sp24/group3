@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "shared/utilities/typedefs.hpp"
+#include "shared/utilities/serialize.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/game/gamestate.hpp"
 
@@ -78,13 +79,14 @@ struct LoadGameStateEvent {
  */
 struct MoveRelativeEvent {
     MoveRelativeEvent() {}
-    MoveRelativeEvent(EntityID entity_to_move) : entity_to_move(entity_to_move) {}
+    MoveRelativeEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
 
+    glm::vec3 movement;
     EntityID entity_to_move;
     /// some velocity / movement information...
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-
+        ar & entity_to_move & movement;
     }
 };
 

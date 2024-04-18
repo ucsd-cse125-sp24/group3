@@ -11,6 +11,7 @@ FATAL: In-source builds are not allowed.
 endif()
 
 # CMake Variables
+set(CMAKE_CXX_COMPILER g++)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 

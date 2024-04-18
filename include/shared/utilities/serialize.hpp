@@ -1,7 +1,8 @@
 #pragma once
-
 #include <string>
 #include <sstream>
+
+#include <glm/glm.hpp>
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
@@ -39,4 +40,17 @@ Type deserialize(std::string data) {
         archive >> parsed_info;
     }
     return parsed_info;
+}
+
+namespace  boost {
+    namespace serialization {
+        /**
+         * Function to serialize a glm::vec3 for Boost
+         */
+        template<class Archive>
+        void serialize(Archive & ar, glm::vec3& vec, const unsigned int version)
+        {
+            ar & vec.x & vec.y & vec.z;
+        }
+    }
 }

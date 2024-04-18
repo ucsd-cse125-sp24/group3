@@ -60,6 +60,8 @@ public:
      */
     Object* getObject(unsigned int id);
 
+    const std::vector<Object>& getObjects();
+
     std::string to_string();
     unsigned int getTimestep() { return this->timestep; }
     std::chrono::milliseconds getTimestepLength() { return this->timestep_length; }
@@ -86,7 +88,7 @@ public:
     int getLobbyMaxPlayers() const;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & phase & lobby.max_players & lobby.players;
+        ar & phase & lobby.max_players & lobby.players & objects;
     }
 
 private:
@@ -118,3 +120,4 @@ private:
         int max_players;
     } lobby;
 };
+
