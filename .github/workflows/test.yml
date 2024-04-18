@@ -18,7 +18,7 @@ jobs:
     - name: Run CMake
       run: cd build && cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
     - name: Test
-      run: cd build && make run_client_tests 
+      run: cd build && ninja run_client_tests 
   client-linux:
     name: Client on Linux (Ubuntu) 
     runs-on: ubuntu-latest
@@ -41,7 +41,7 @@ jobs:
     - name: Run CMake
       run: cd build && cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
     - name: Test
-      run: cd build && make run_server_tests
+      run: cd build && ninja run_server_tests
   server-linux:
     name: Server on Linux (Ubuntu) 
     runs-on: ubuntu-latest
@@ -64,7 +64,7 @@ jobs:
     - name: Run CMake
       run: cd build && cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
     - name: Test
-      run: cd build && make run_server_tests
+      run: cd build && ninja run_server_tests
   shared-linux:
     name: Shared on Linux (Ubuntu) 
     runs-on: ubuntu-latest
