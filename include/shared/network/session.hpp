@@ -110,7 +110,7 @@ private:
      * @param type Type of the packet received
      * @param data Serialized format of the data received on the network.
      */
-    void _handleReceivedPacket(PacketType type, std::string data);
+    void _handleReceivedPacket(PacketType type, const std::string& data);
 
     /**
      * Sets up one async callback to receive a packet. This callback ends up calling

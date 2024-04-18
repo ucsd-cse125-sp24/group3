@@ -15,7 +15,7 @@
  * for packet data.
  */
 template<class Type>
-std::string serialize(Type obj) {
+std::string serialize(const Type& obj) {
     std::ostringstream archive_stream;
     {
         boost::archive::text_oarchive archive(archive_stream);

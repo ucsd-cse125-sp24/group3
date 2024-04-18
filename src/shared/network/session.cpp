@@ -33,7 +33,7 @@ void Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpo
     tcp::endpoint endpt = boost::asio::connect(socket, endpoints);
 }
 
-void Session::_handleReceivedPacket(PacketType type, std::string data) {
+void Session::_handleReceivedPacket(PacketType type, const std::string& data) {
     // First figure out if packet is event or non-event
     if (type == PacketType::ClientRequestEvent) {
         auto event = deserialize<ClientRequestEventPacket>(data).event;

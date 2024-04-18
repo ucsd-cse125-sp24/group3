@@ -13,7 +13,7 @@
 using namespace std::chrono_literals;
 using namespace boost::asio::ip;
 
-LobbyBroadcaster::LobbyBroadcaster(boost::asio::io_context& io_context, GameConfig config):
+LobbyBroadcaster::LobbyBroadcaster(boost::asio::io_context& io_context, const GameConfig& config): // cppcheck-suppress uninitMemberVar
     socket(io_context),
     keep_broadcasting(false),
     config(config)
@@ -25,7 +25,7 @@ LobbyBroadcaster::~LobbyBroadcaster() {
     this->stopBroadcasting();
 }
 
-void LobbyBroadcaster::startBroadcasting(ServerLobbyBroadcastPacket bcast_info) {
+void LobbyBroadcaster::startBroadcasting(const ServerLobbyBroadcastPacket& bcast_info) {
     if (!this->keep_broadcasting) {
         this->bcast_info = bcast_info;
         this->keep_broadcasting = true;
@@ -33,7 +33,7 @@ void LobbyBroadcaster::startBroadcasting(ServerLobbyBroadcastPacket bcast_info) 
     }
 }
 
-void LobbyBroadcaster::setLobbyInfo(ServerLobbyBroadcastPacket bcast_info) {
+void LobbyBroadcaster::setLobbyInfo(const ServerLobbyBroadcastPacket& bcast_info) {
     std::unique_lock<std::mutex> lock(this->mut);
     this->bcast_info = bcast_info;
 }

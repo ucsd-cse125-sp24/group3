@@ -7,7 +7,7 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/utilities/config.hpp"
 
-GameState::GameState(GamePhase phase, GameConfig config) {
+GameState::GameState(GamePhase phase, const GameConfig& config) {
 	this->phase = phase;
 	this->timestep = 0;
 	this->timestep_length = config.game.timestep_length_ms;
@@ -108,7 +108,7 @@ GamePhase GameState::getPhase() const {
 	return this->phase;
 }
 
-void GameState::addPlayerToLobby(EntityID id, std::string name) {
+void GameState::addPlayerToLobby(EntityID id, const std::string& name) {
 	this->lobby.players[id] = name;
 }
 
