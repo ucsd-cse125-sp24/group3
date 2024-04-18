@@ -51,7 +51,7 @@ void initialize_commands(std::vector<Command*>& commands);
  * @brief  Deallocate all Command objects allocated by initialize_commands().
  * @param commands  
  */
-void free_commands(std::vector<Command*> commands);
+void free_commands(const std::vector<Command*>& commands);
 
 //	Debugger Commands
 
@@ -387,4 +387,4 @@ std::vector<std::string> get_string_tokens(std::string input, char delimeter);
  * debugger to all known commands.
  * @param command_map  Reference to the debugger's command map (assumed empty).
  */
-void initialize_command_map(std::unordered_map<std::string, Command&>& command_map, std::vector<Command*> commands);
+void initialize_command_map(std::unordered_map<std::string, Command&>& command_map, const std::vector<Command*>& commands);

@@ -17,6 +17,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 # Generate a "compile_commands.json" file for VScode to use 
 set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
+# Tell CMake to ignore warnings from stuff in our dependencies. Surely GLM
+# knows what it is doing... https://7tv.app/emotes/61e8fae862858c6406126ced
+
 # Add google test to CMake
 add_subdirectory(dependencies/google-test)
 
@@ -32,6 +35,15 @@ project(game VERSION 1.0)
 # Custom Variables
 SET(INCLUDE_DIRECTORY ${PROJECT_SOURCE_DIR}/include)
 
+# Dependencies
+
+# For some reason I had to add this in two places to make it work on certain lab computers???
+IF(MSVC)
+    ADD_DEFINITIONS("/EHsc")
+ENDIF(MSVC)
+
+add_subdirectory(dependencies/boost) # include boost libraries that we use
+add_subdirectory(dependencies/json) # include boost libraries that we use
 add_subdirectory(dependencies/glm) # include glm library
 
 add_subdirectory(src/shared) # define game_shared_lib

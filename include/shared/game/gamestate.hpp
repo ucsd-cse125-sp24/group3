@@ -1,8 +1,20 @@
 #pragma once
 
+#include "shared/utilities/serialize_macro.hpp"
 #include "shared/game/gamelogic/object.hpp"
-#include <vector>
+#include "shared/utilities/typedefs.hpp"
+#include "shared/utilities/config.hpp"
+
 #include <string>
+#include <vector>
+#include <chrono>
+#include <unordered_map>
+
+enum class GamePhase {
+    TITLE_SCREEN,
+    LOBBY,
+    GAME
+};
 
 //	Constants
 #define	FIRST_TIMESTEP	0
@@ -11,19 +23,12 @@
 class GameState {
 public:
     /**
-     * @brief Default GameState constructor. Creates a GameState instance with
-     * an empty world (no objects) with default timestep length.
-     */
-    GameState() : GameState(FIRST_TIMESTEP, TIMESTEP_LEN) {}
-
-    /**
-     * @brief GameState constructor that sets the current timestep and the
-     * timestep length to the given arguments.
+     * @brief GameState constructor that sets data members based on the config
      *
-     * @param timestep Current timestep
-     * @param timestep_length Timestep length
+     * @param phase starting phase of the game
+     * @param config Config options
      */
-    GameState(unsigned int timestep, unsigned int timestep_length);
+    GameState(GamePhase phase, GameConfig config);
 
     /**
      * @brief Updates this GameState instance from the current timestep to the
@@ -57,7 +62,32 @@ public:
 
     std::string to_string();
     unsigned int getTimestep() { return this->timestep; }
-    unsigned int getTimestepLength() { return this->timestep_length; }
+    std::chrono::milliseconds getTimestepLength() { return this->timestep_length; }
+
+    GamePhase getPhase() const;
+
+    /**
+     * Reassign id to the specified name in the mapping. This is okay to call if the
+     * player is already in the mapping, as nothing will happen. If a player's name
+     * has changed, then this will update their name as well.
+     */
+    void addPlayerToLobby(EntityID id, std::string name);
+    /**
+     * Removes a player from the lobby with the specified id. 
+     */
+    void removePlayerFromLobby(EntityID id);
+    /**
+     * Getter for the mapping between entity ID and player name in the lobby
+     */
+    const std::unordered_map<EntityID, std::string>& getLobbyPlayers() const;
+    /**
+     * Returns how many max players can be in the lobby, based on the config option
+     */
+    int getLobbyMaxPlayers() const;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & phase & lobby.max_players & lobby.players;
+    }
 
 private:
     /**
@@ -68,10 +98,23 @@ private:
     /**
      *  Timestep length in milliseconds.
      */
-    unsigned int timestep_length;
+    std::chrono::milliseconds timestep_length;
 
     /**
      *  Current timestep (starts at 0)
      */
     unsigned int timestep;
+
+    /**
+     * Current phase of the game
+     */
+    GamePhase phase;
+
+    /**
+     * Information about the lobby
+     */
+    struct {
+        std::unordered_map<EntityID, std::string> players;
+        int max_players;
+    } lobby;
 };

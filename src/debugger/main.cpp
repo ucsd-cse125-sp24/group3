@@ -22,8 +22,10 @@ std::unordered_map<std::string, Command&> command_map;
 int main(int argc, char* argv[]) {
 	//	GameState "Debugger"
 
+	auto config = GameConfig::parse(argc, argv);
+
 	//	1.	Create a GameState object
-	GameState state;
+	GameState state(GamePhase::GAME, config);
 
 	//	2.	Fill it with some objects
 	Object* obj1 = state.createObject();
@@ -41,7 +43,7 @@ int main(int argc, char* argv[]) {
 	//	Initial printouts
 	std::cout << "GameState Debugger" << std::endl;
 	std::cout << "Current timestep: " << state.getTimestep();
-	std::cout << " | Timestep Length: " << state.getTimestepLength() << std::endl;
+	std::cout << " | Timestep Length: " << state.getTimestepLength().count() << std::endl;
 
 	//	4.	Load all debugger commands
 	std::cout << "Loading debugger commands...";
