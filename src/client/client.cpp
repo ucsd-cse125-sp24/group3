@@ -7,6 +7,7 @@
 #include <iostream>
 #include <thread>
 
+#include "shared/game/event.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
@@ -70,10 +71,6 @@ int Client::init() {
     } 
     #endif
 
-    ///* Initialize GLAD */
-    //if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    //    return -1;
-
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
 
@@ -86,8 +83,6 @@ int Client::init() {
         std::cerr << "Failed to initialize shader program" << std::endl;
         return false;
     }
-
-    cube = new Cube();
 
     return 0;
 }
@@ -106,11 +101,11 @@ int Client::start(boost::asio::io_context& context) {
         glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        /* Swap front and back buffers */
-        cube->draw(shaderProgram);
+        this->draw();
 
-        /* Poll for and process events */
+        /* Swap front and back buffers */
         glfwSwapBuffers(window);
+        /* Poll for and process events */
         glfwPollEvents();
     }
 
@@ -121,18 +116,24 @@ int Client::start(boost::asio::io_context& context) {
 }
 
 void Client::processClientInput() {
+    std::optional<glm::vec3> movement;
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        cube->update_delta(glm::vec3(cubeMovementDelta, 0.0f, 0.0f));
+       movement = glm::vec3(cubeMovementDelta, 0.0f, 0.0f);
     if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        cube->update_delta(glm::vec3(-cubeMovementDelta, 0.0f, 0.0f));
+       movement = glm::vec3(-cubeMovementDelta, 0.0f, 0.0f);
     if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        cube->update_delta(glm::vec3(0.0f, cubeMovementDelta, 0.0f));
+        movement = glm::vec3(0.0f, cubeMovementDelta, 0.0f);
     if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        cube->update_delta(glm::vec3(0.0f, -cubeMovementDelta, 0.0f));
+        movement = glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
+
+    if (movement.has_value()) {
+        auto eid = 0; 
+        this->session->sendEventAsync(PacketType::ClientRequestEvent, Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
+    }
 }
 
 void Client::processServerInput(boost::asio::io_context& context) {
@@ -146,13 +147,23 @@ void Client::processServerInput(boost::asio::io_context& context) {
     for (Event event : this->session->getEvents()) {
         std::cout << "Event Received: " << event << std::endl;
         if (event.type == EventType::LoadGameState) {
-            auto data = boost::get<LoadGameStateEvent>(event.data);
-            for (const auto& [eid, player] : data.state.getLobbyPlayers()) {
-                std::cout << "\tPlayer " << eid << ": " << player << "\n";
-            }
-            std::cout << "\tThere are " <<
-                data.state.getLobbyMaxPlayers() - data.state.getLobbyPlayers().size() <<
-                " slots remaining in this lobby\n";
+            this->gameState = boost::get<LoadGameStateEvent>(event.data).state;
+            // for (const auto& [eid, player] : data.state.getLobbyPlayers()) {
+            //     std::cout << "\tPlayer " << eid << ": " << player << "\n";
+            // }
+            // std::cout << "\tThere are " <<
+            //     data.state.getLobbyMaxPlayers() - data.state.getLobbyPlayers().size() <<
+            //     " slots remaining in this lobby\n";
         }
+    }
+}
+
+void Client::draw() {
+    for(const Object& obj: this->gameState.getObjects()) {
+        std::cout << "got an object" << std::endl;
+        // tmp: all objects are cubes
+        Cube* cube = new Cube();
+        cube->update(obj.position);
+        cube->draw(this->shaderProgram);
     }
 }

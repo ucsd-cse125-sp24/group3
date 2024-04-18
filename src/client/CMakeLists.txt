@@ -15,7 +15,6 @@ find_package(OpenGL REQUIRED)
 
 # Subprojects
 # potential review later
-# add_subdirectory(../../dependencies/glad ${CMAKE_BINARY_DIR}/glad)
 add_subdirectory(../../dependencies/glfw ${CMAKE_BINARY_DIR}/glfw)
 add_subdirectory(../../dependencies/glm ${CMAKE_BINARY_DIR}/glm)
 add_subdirectory(../../dependencies/imgui ${CMAKE_BINARY_DIR}/imgui)

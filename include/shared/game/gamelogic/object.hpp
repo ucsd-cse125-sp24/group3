@@ -2,6 +2,8 @@
 
 #include "constants.hpp"
 #include "shared/utilities/vector3.hpp"
+#include "shared/utilities/serialize.hpp"
+#include "shared/utilities/serialize_macro.hpp"
 #include "collider.hpp"
 
 class Object {
@@ -41,6 +43,10 @@ public:
 	void setAcceleration(const glm::vec3& newAcc) {
 		acceleration = newAcc;
 	}
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & id & position & acceleration;
+    }
 
 private:
 	static unsigned int numObjects;

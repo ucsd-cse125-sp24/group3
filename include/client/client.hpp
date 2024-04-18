@@ -29,6 +29,7 @@ public:
     ~Client();
     int init();
     int start(boost::asio::io_context& context);
+    void draw();
     void connectAndListen(std::string ip_addr);
 
 private:
@@ -38,7 +39,6 @@ private:
     
     GameState gameState;
 
-    Cube* cube;
     float cubeMovementDelta = 0.05f;
 
     GLFWwindow *window;
