@@ -23,7 +23,8 @@ jobs:
     name: Client on Linux (Ubuntu) 
     runs-on: ubuntu-latest
     steps:
-    - uses: openrndr/setup-opengl@v1.1
+    - name: Install OpenGL
+      run: sudo apt-get update && sudo apt-get install cmake pkg-config && sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev && sudo apt-get install libglew-dev libglfw3-dev libglm-dev && sudo apt-get install libao-dev libmpg123-dev
     - uses: actions/checkout@v4
     - name: Create build dir
       run: mkdir -p build
@@ -47,7 +48,8 @@ jobs:
     name: Server on Linux (Ubuntu) 
     runs-on: ubuntu-latest
     steps:
-    - uses: openrndr/setup-opengl@v1.1
+    - name: Install OpenGL
+      run: sudo apt-get update && sudo apt-get install cmake pkg-config && sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev && sudo apt-get install libglew-dev libglfw3-dev libglm-dev && sudo apt-get install libao-dev libmpg123-dev
     - uses: actions/checkout@v4
     - name: Create build dir
       run: mkdir -p build
