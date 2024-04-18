@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-GameConfig GameConfig::parse(int argc, char** argv) {
+GameConfig GameConfig::parse(int argc, const char** argv) {
     if (argc > 2) {
         std::cerr << "Expected use:\n";
         std::cerr << "   (1) ./" << argv[0] << "\n";

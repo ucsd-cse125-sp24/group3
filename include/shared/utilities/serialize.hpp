@@ -38,5 +38,5 @@ Type deserialize(std::string data) {
         boost::archive::text_iarchive archive(stream);
         archive >> parsed_info;
     }
-    return parsed_info;
+    return parsed_info; // cppcheck-suppress uninitStructMember
 }

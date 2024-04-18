@@ -62,7 +62,7 @@ public:
 		this->shorthand = "q";
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override {
+	void run(const std::vector<std::string>& arguments, GameState& state) override {
 		//	This command ignores arguments
 		std::cout << "Quitting gsdb..." << std::endl;
 
@@ -124,7 +124,7 @@ public:
 		this->shorthand = NO_SHORTHAND;
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override {
+	void run(cosnt std::vector<std::string>& arguments, GameState& state) override {
 		//	This command ignores arguments
 
 		//	Print GameState instance' state
@@ -208,7 +208,7 @@ public:
 		this->shorthand = NO_SHORTHAND;
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override {
+	void run(const std::vector<std::string> arguments&, GameState& state) override {
 		//	This command ignores arguments (though it may make sense to have
 		//	command descriptors, e.g. help step -> "the step command does ..."
 
@@ -232,7 +232,7 @@ public:
 		this->shorthand = "c";
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override {
+	void run(const std::vector<std::string>& arguments, GameState& state) override {
 		//	This command ignores arguments
 
 		//	Create a new object in the game state

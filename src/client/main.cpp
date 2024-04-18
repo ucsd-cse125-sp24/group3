@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
             std::cout << "Event Received: " << event << std::endl;
             if (event.type == EventType::LoadGameState) {
                 auto data = boost::get<LoadGameStateEvent>(event.data);
-                for (const auto& [eid, player] : data.state.getLobbyPlayers()) {
+                for (const auto& [eid, player] : data.state.getLobbyPlayers()) { // cppcheck-suppress unassignedVariable
                     std::cout << "\tPlayer " << eid << ": " << player << "\n";
                 }
                 std::cout << "\tThere are " <<

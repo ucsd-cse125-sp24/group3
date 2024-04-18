@@ -59,7 +59,7 @@ std::chrono::milliseconds Server::doTick() {
             }
 
             // Tell each client the current lobby status
-            for (const auto& [eid, session]: this->sessions) {
+            for (const auto& [eid, session]: this->sessions) { // cppcheck-suppress unusedVariable
                 session->sendEventAsync(PacketType::ServerDoEvent, Event(this->world_eid,
                     EventType::LoadGameState, LoadGameStateEvent(this->state)));
             };
