@@ -23,10 +23,11 @@ mkShell {
     glfw
     glm
 
-    clang-tools_13
-
     freeglut
     libGLU
+
+    doxygen
+    clang-tools_14
   ];
   nativeBuildInputs = with pkgs; [
         pkg-config

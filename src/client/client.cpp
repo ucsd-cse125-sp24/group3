@@ -1,8 +1,43 @@
 #include "client/client.hpp"
 #include <GLFW/glfw3.h>
 
-Client::Client() {
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <iostream>
+#include <thread>
 
+#include "shared/network/constants.hpp"
+#include "shared/network/packet.hpp"
+#include "shared/utilities/config.hpp"
+
+using namespace boost::asio::ip;
+using namespace std::chrono_literals;
+
+Client::Client(boost::asio::io_context& io_context, GameConfig config):
+    resolver(io_context),
+    socket(io_context),
+    config(config),
+    gameState(GamePhase::TITLE_SCREEN, config)
+{
+    
+}
+
+void Client::connectAndListen(std::string ip_addr) {
+    this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
+    this->session = std::make_shared<Session>(std::move(this->socket), SessionInfo {
+        .client_name = this->config.client.default_name,
+        .client_eid = {}
+    });
+
+    this->session->connectTo(this->endpoints);
+
+    auto packet = PackagedPacket::make_shared(PacketType::ClientDeclareInfo,
+        ClientDeclareInfoPacket { .player_name = config.client.default_name });
+
+    this->session->sendPacketAsync(packet);
+
+    this->session->startListen();
 }
 
 Client::~Client() {
@@ -58,14 +93,15 @@ int Client::init() {
 }
 
 // Remember to do error message output for later
-int Client::start() {
+int Client::start(boost::asio::io_context& context) {
     init();
 
     // Constrain framerate
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        processInput();
+        processClientInput();
+        processServerInput(context);
         /* Render here */
         glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -84,7 +120,7 @@ int Client::start() {
     return 0;
 }
 
-void Client::processInput() {
+void Client::processClientInput() {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
@@ -97,4 +133,26 @@ void Client::processInput() {
         cube->update_delta(glm::vec3(0.0f, cubeMovementDelta, 0.0f));
     if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
         cube->update_delta(glm::vec3(0.0f, -cubeMovementDelta, 0.0f));
+}
+
+void Client::processServerInput(boost::asio::io_context& context) {
+    context.run_for(30ms);
+
+    // probably want to put rendering logic inside of client, so that this main function
+    // mimics the server one where all of the important logic is done inside of a run command
+    // But this is a demo of how you could use the client session to get information from
+    // the game state
+
+    for (Event event : this->session->getEvents()) {
+        std::cout << "Event Received: " << event << std::endl;
+        if (event.type == EventType::LoadGameState) {
+            auto data = boost::get<LoadGameStateEvent>(event.data);
+            for (const auto& [eid, player] : data.state.getLobbyPlayers()) {
+                std::cout << "\tPlayer " << eid << ": " << player << "\n";
+            }
+            std::cout << "\tThere are " <<
+                data.state.getLobbyMaxPlayers() - data.state.getLobbyPlayers().size() <<
+                " slots remaining in this lobby\n";
+        }
+    }
 }
