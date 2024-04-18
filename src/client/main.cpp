@@ -4,10 +4,10 @@
 #include "shared/utilities/rng.hpp"
 
 int main() {
-    Client client;
+    Client client; // cppcheck-suppress unusedVariable
 
     std::cout << "I am a client!\n"; 
 
     // Test that shared lib is linked correctly
-    std::cout << "Random number: " << randomInt(0, 100) << "\n"; // NOLINT
+    std::cout << "Random number: " << randomInt(0, 100) << "\n";
 }

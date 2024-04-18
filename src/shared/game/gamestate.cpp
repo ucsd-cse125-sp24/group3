@@ -41,7 +41,7 @@ bool GameState::removeObject(unsigned int id) {
 	//	Iterate through the objects vector and search for an object with the
 	//	given id.
 	for (int i = 0; i < this->objects.size(); i++) {
-		Object& current = this->objects.at(i);
+		const Object& current = this->objects.at(i);
 
 		if (current.id == id)
 		{

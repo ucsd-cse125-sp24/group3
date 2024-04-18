@@ -236,7 +236,7 @@ public:
 		//	This command ignores arguments
 
 		//	Create a new object in the game state
-		Object* obj = state.createObject();
+		const Object* obj = state.createObject();
 
 		std::cout << "Created new object (id " << obj->id << ")" << std::endl;
 	}
