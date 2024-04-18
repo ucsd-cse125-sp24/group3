@@ -62,7 +62,7 @@ public:
 		this->shorthand = "q";
 	}
 
-	void run(const std::vector<std::string>& arguments, GameState& state) override {
+	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
 		//	This command ignores arguments
 		std::cout << "Quitting gsdb..." << std::endl;
 
@@ -79,7 +79,7 @@ public:
 		//this->num_expected_args = 0;
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override {
+	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
 		//	Possible variations:
 		//	step - call GameState::update() once on the given state instance.
 		//	step n - call update() n times.
@@ -124,7 +124,7 @@ public:
 		this->shorthand = NO_SHORTHAND;
 	}
 
-	void run(cosnt std::vector<std::string>& arguments, GameState& state) override {
+	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
 		//	This command ignores arguments
 
 		//	Print GameState instance' state
@@ -139,7 +139,7 @@ public:
 		this->shorthand = "p";
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override {
+	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
 		//	Variations:
 		//	print [id number] - print state of object with given id
 		//	print [id number] [property] - print state of given property
@@ -208,7 +208,7 @@ public:
 		this->shorthand = NO_SHORTHAND;
 	}
 
-	void run(const std::vector<std::string> arguments&, GameState& state) override {
+	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
 		//	This command ignores arguments (though it may make sense to have
 		//	command descriptors, e.g. help step -> "the step command does ..."
 
@@ -232,7 +232,7 @@ public:
 		this->shorthand = "c";
 	}
 
-	void run(const std::vector<std::string>& arguments, GameState& state) override {
+	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
 		//	This command ignores arguments
 
 		//	Create a new object in the game state
@@ -249,7 +249,7 @@ public:
 		this->shorthand = "d";
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override {
+	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
 		//	delete [object id]
 		if (arguments.size() != 2) {
 			std::cout << "Error: Incorrect number of arguments for 'delete' command.\n";
@@ -285,7 +285,7 @@ public:
 		this->shorthand = NO_SHORTHAND;
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override {
+	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
 		//	set [object id] [property] [new value]
 		if (arguments.size() != 4) {
 			std::cout << "Error: Incorrect number of arguments for 'set' command.\n";
