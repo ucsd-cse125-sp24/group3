@@ -1,13 +1,23 @@
 #pragma once
 
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/io_service.hpp>
-
+#include <iostream>
+#include <ostream>
 #include <utility>
 #include <unordered_map>
 
-#include "shared/network/packet.hpp"
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/io_service.hpp>
+
+#include "client/cube.hpp"
+#include "client/util.hpp"
 #include "client/lobbyfinder.hpp"
+
+#include "shared/game/gamestate.hpp"
+#include "shared/network/packet.hpp"
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
 
@@ -16,15 +26,24 @@ using namespace boost::asio::ip;
 class Client {
 public:
     Client(boost::asio::io_service& io_service, GameConfig config);
-
-    /**
-     * Client connects to the IP address and listen for packets
-     */
+    ~Client();
+    int init();
+    int start(boost::asio::io_context& context);
+    void draw();
     void connectAndListen(std::string ip_addr);
 
-    std::shared_ptr<Session> session;
-
 private:
+    void processClientInput();
+    void processServerInput(boost::asio::io_context& context);
+
+    
+    GameState gameState;
+
+    float cubeMovementDelta = 0.05f;
+
+    GLFWwindow *window;
+    GLuint shaderProgram;
+
     GameConfig config;
     tcp::resolver resolver;
     tcp::socket socket;

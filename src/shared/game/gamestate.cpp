@@ -4,6 +4,7 @@
 #include <chrono>
 #include <unordered_map>
 
+#include "shared/game/gamelogic/object.hpp"
 #include "shared/utilities/typedefs.hpp"
 #include "shared/utilities/config.hpp"
 
@@ -81,6 +82,10 @@ Object* GameState::getObject(unsigned int id) {
 
 	//	Didn't find an object with the given id
 	return nullptr;
+}
+
+const std::vector<Object>& GameState::getObjects() {
+    return this->objects;
 }
 
 std::string GameState::to_string() {
