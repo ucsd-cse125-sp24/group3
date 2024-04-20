@@ -23,8 +23,8 @@ TEST(SerializeTest, SerializePacketEvent) {
     state.addPlayerToLobby(1, "Player Name");
     Event evt(0, EventType::LoadGameState, LoadGameStateEvent(state));
 
-    ServerDoEventPacket packet {.event=evt};
-    ServerDoEventPacket packet2 = deserialize<ServerDoEventPacket>(serialize(packet));
+    EventPacket packet {.event=evt};
+    EventPacket packet2 = deserialize<EventPacket>(serialize(packet));
 
     ASSERT_EQ(packet.event.type, EventType::LoadGameState);
     ASSERT_EQ(packet.event.type, packet2.event.type);
