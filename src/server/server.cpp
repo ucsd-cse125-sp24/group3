@@ -59,7 +59,7 @@ std::chrono::milliseconds Server::doTick() {
             // we have the up-to-date info
             // TODO: logic to determine if a session is dropped using std::weak_ptr
             //       and then call state.removePlayerFromLobby if dropped.
-            for (const auto& [eid, session]: this->sessions) {
+            for (const auto& [eid, ip, session]: this->sessions) {
                 this->state.addPlayerToLobby(eid,
                     session->getInfo().client_name.value_or("[UNKNOWN NAME]"));
             }

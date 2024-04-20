@@ -1,5 +1,9 @@
 #pragma once
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+
 #include <iostream>
 #include <boost/asio.hpp>
 #include <memory>
@@ -29,6 +33,7 @@ enum SocketError {
     RETRY,
 };
 
+
 /**
  * Info about the client and server associated with this session.
  * 
@@ -40,6 +45,7 @@ struct SessionInfo {
     std::optional<std::string> client_name;
     std::optional<EntityID> client_eid;
 };
+
 
 /**
  * A class which wraps around the concept of a Client <-> Server relationship. This
@@ -129,3 +135,42 @@ private:
      */
     SocketError _classifySocketError(boost::system::error_code ec, const char* where);
 };
+
+/**
+ * Used by server and client as the data stored in a boost::multi_index container
+ */
+struct SessionWrapper {
+    EntityID id;
+    boost::asio::ip::address ip;
+    std::weak_ptr<Session> session;
+};
+
+// Tag structs to let you index into a Sessions Multi_index map by a name
+struct IndexByID {};
+// Tag structs to let you index into a Sessions Multi_index map by a name
+struct IndexByIP {};
+
+/**
+ * This creates a data structure which allows us to query for a Session by either
+ * the id of the player associated with it, or by that player's tcp::endpoint information.
+ * 
+ * This stackoverflow post was helpful in understanding how to use boost::multi_index
+ * https://stackoverflow.com/questions/39510143/how-to-use-create-boostmulti-index
+ * 
+ * HOW TO USE:
+ * 
+ * TODO: write tutorial
+ */
+using Sessions = boost::multi_index_container<
+    SessionWrapper,
+    boost::multi_index::indexed_by<
+        boost::multi_index::hashed_unique<
+            boost::multi_index::tag<IndexByID>,
+            boost::multi_index::member<SessionWrapper, EntityID, &SessionWrapper::id>
+        >,
+        boost::multi_index::hashed_unique<
+            boost::multi_index::tag<IndexByIP>,
+            boost::multi_index::member<SessionWrapper, boost::asio::ip::address, &SessionWrapper::ip>
+        >
+    >
+>;
