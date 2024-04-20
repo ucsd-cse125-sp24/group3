@@ -34,7 +34,7 @@ private:
     /// @brief EID that is reserved for the Server / World itself.
     EntityID world_eid;
 
-    /// @brief Broadcaster whicih spawns up another thread advertising this lobby
+    /// @brief Broadcaster which spawns up another thread advertising this lobby
     LobbyBroadcaster lobby_broadcaster;
 
     tcp::acceptor acceptor;
