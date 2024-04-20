@@ -90,11 +90,9 @@ public:
      * Sends an event on the socket after packaging it into
      * the packet format.
      * 
-     * @param type Type of the event, should either be ServerDoEvent or
-     * ClientRequestEvent
      * @param evt The event object to send
      */
-    void sendEventAsync(PacketType type, Event evt);
+    void sendEventAsync(Event evt);
 
     /**
      * Get the information associated with this session.

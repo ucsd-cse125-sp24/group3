@@ -35,11 +35,8 @@ void Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpo
 
 void Session::_handleReceivedPacket(PacketType type, std::string data) {
     // First figure out if packet is event or non-event
-    if (type == PacketType::ClientRequestEvent) {
-        auto event = deserialize<ClientRequestEventPacket>(data).event;
-        this->received_events.push_back(event);
-    } else if (type == PacketType::ServerDoEvent) {
-        auto event = deserialize<ServerDoEventPacket>(data).event;
+    if (type == PacketType::Event) {
+        auto event = deserialize<EventPacket>(data).event;
         this->received_events.push_back(event);
     } else if (type == PacketType::ServerAssignEID) {
         this->info.client_eid = deserialize<ServerAssignEIDPacket>(data).eid;
@@ -79,24 +76,10 @@ void Session::sendPacketAsync(std::shared_ptr<PackagedPacket> packet) {
         });
 }
 
-void Session::sendEventAsync(PacketType type, Event evt) {
+void Session::sendEventAsync(Event event) {
     std::shared_ptr<PackagedPacket> packet = nullptr;
 
-    if (type == PacketType::ServerDoEvent) {
-        packet = PackagedPacket::make_shared(type, ServerDoEventPacket {
-            .event = evt
-        });
-    } else if (type == PacketType::ClientRequestEvent) {
-        packet = PackagedPacket::make_shared(type, ClientRequestEventPacket {
-            .event = evt
-        });
-    } else {
-        std::cerr << "Error: non event packet passed into Session::sendEventAsync(). Ignoring"
-            << std::endl;
-        return;
-    }
-
-    this->sendPacketAsync(packet);
+    this->sendPacketAsync(PackagedPacket::make_shared(PacketType::Event, EventPacket(event)));
 }
 
 void Session::_receivePacketAsync() {

@@ -34,8 +34,7 @@ enum class PacketType: uint16_t {
     ServerAssignEID,     ///< Sent by the server after TCP handshake, giving client its EID
 
     // Gameplay
-    ClientRequestEvent = 2000, ///< Client requesting server to perform specific input
-    ServerDoEvent,             ///< Server telling clients what events have occurred.
+    Event = 2000, ///< Client requesting server to perform specific input
 };
 
 /**
@@ -129,22 +128,13 @@ struct ServerAssignEIDPacket {
     }
 };
 
-struct ClientRequestEventPacket {
+struct EventPacket {
     Event event;
     
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar & event;
     }
 };
-
-struct ServerDoEventPacket {
-    Event event;
-
-    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & event;
-    }
-};
-
 
 /**
  * A class which wraps around a packet that has yet to be sent across the network.

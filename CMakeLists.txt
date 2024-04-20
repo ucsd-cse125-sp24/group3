@@ -11,7 +11,6 @@ FATAL: In-source builds are not allowed.
 endif()
 
 # CMake Variables
-set(CMAKE_CXX_COMPILER g++)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 
@@ -39,9 +38,6 @@ SET(INCLUDE_DIRECTORY ${PROJECT_SOURCE_DIR}/include)
 # Dependencies
 
 # For some reason I had to add this in two places to make it work on certain lab computers???
-IF(MSVC)
-    ADD_DEFINITIONS("/EHsc")
-ENDIF(MSVC)
 
 add_subdirectory(dependencies/boost) # include boost libraries that we use
 add_subdirectory(dependencies/json) # include boost libraries that we use
