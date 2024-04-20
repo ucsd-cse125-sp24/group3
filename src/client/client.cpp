@@ -107,6 +107,8 @@ int Client::start(boost::asio::io_context& context) {
         glfwSwapBuffers(window);
         /* Poll for and process events */
         glfwPollEvents();
+
+        // std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     glfwTerminate();
