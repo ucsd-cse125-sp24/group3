@@ -54,20 +54,22 @@ std::chrono::milliseconds Server::doTick() {
 
     switch (this->state.getPhase()) {
         case GamePhase::LOBBY:
+
             // Go through sessions and update GameState lobby info
-            // Right now just always resetting and then readding so we make sure
-            // we have the up-to-date info
-            // TODO: logic to determine if a session is dropped using std::weak_ptr
-            //       and then call state.removePlayerFromLobby if dropped.
             for (const auto& [eid, ip, session]: this->sessions) {
-                this->state.addPlayerToLobby(eid,
-                    session->getInfo().client_name.value_or("[UNKNOWN NAME]"));
+                if (auto s = session.lock()) {
+                    this->state.addPlayerToLobby(eid, s->getInfo().client_name.value_or("UNKNOWN NAME"));
+                } else {
+                    this->state.removePlayerFromLobby(eid);
+                }
             }
 
             // Tell each client the current lobby status
-            for (const auto& [eid, session]: this->sessions) {
-                session->sendEventAsync(Event(this->world_eid,
-                    EventType::LoadGameState, LoadGameStateEvent(this->state)));
+            for (const auto& [eid, ip, session]: this->sessions) {
+                if (auto s = session.lock()) {
+                    s->sendEventAsync(Event(this->world_eid,
+                        EventType::LoadGameState, LoadGameStateEvent(this->state)));
+                }
             };
 
             break;
@@ -106,14 +108,13 @@ void Server::doAccept() {
         [this](boost::system::error_code ec) {
             if (!ec) {
                 EntityID eid = Server::genNewEID();
-                auto session = std::make_shared<Session>(std::move(this->socket), SessionInfo {
-                    .client_name = {},
-                    .client_eid = eid
-                });
+                auto session = std::make_shared<Session>(std::move(this->socket),
+                    SessionInfo({}, eid));
+
+                this->sessions.insert(SessionEntry(eid, 
+                    this->socket.remote_endpoint().address(), session));
 
                 session->startListen();
-
-                this->sessions.insert({eid, session});
 
                 session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                     ServerAssignEIDPacket { .eid = eid }));

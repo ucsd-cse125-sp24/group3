@@ -42,6 +42,10 @@ enum SocketError {
  * them to the "None" value.
  */
 struct SessionInfo {
+    SessionInfo(std::optional<std::string> client_name,
+        std::optional<EntityID> client_eid)
+        : client_name(client_name), client_eid(client_eid) {}
+
     std::optional<std::string> client_name;
     std::optional<EntityID> client_eid;
 };
@@ -137,7 +141,12 @@ private:
 /**
  * Used by server and client as the data stored in a boost::multi_index container
  */
-struct SessionWrapper {
+struct SessionEntry {
+    SessionEntry(EntityID id, 
+        boost::asio::ip::address ip, 
+        std::shared_ptr<Session> session)
+        : id(id), ip(ip), session(session) {}
+
     EntityID id;
     boost::asio::ip::address ip;
     std::weak_ptr<Session> session;
@@ -160,15 +169,15 @@ struct IndexByIP {};
  * TODO: write tutorial
  */
 using Sessions = boost::multi_index_container<
-    SessionWrapper,
+    SessionEntry,
     boost::multi_index::indexed_by<
         boost::multi_index::hashed_unique<
             boost::multi_index::tag<IndexByID>,
-            boost::multi_index::member<SessionWrapper, EntityID, &SessionWrapper::id>
+            boost::multi_index::member<SessionEntry, EntityID, &SessionEntry::id>
         >,
         boost::multi_index::hashed_unique<
             boost::multi_index::tag<IndexByIP>,
-            boost::multi_index::member<SessionWrapper, boost::asio::ip::address, &SessionWrapper::ip>
+            boost::multi_index::member<SessionEntry, boost::asio::ip::address, &SessionEntry::ip>
         >
     >
 >;
