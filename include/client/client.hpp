@@ -47,6 +47,8 @@ private:
     GameConfig config;
     tcp::resolver resolver;
     tcp::socket socket;
+
+    /// @brief Generate endpoints the client can connect to
     basic_resolver_results<class boost::asio::ip::tcp> endpoints;
     std::shared_ptr<Session> session;
 };
