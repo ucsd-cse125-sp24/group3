@@ -132,7 +132,7 @@ void Client::processClientInput() {
 
     if (movement.has_value()) {
         auto eid = 0; 
-        this->session->sendEventAsync(PacketType::ClientRequestEvent, Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
+        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
     }
 }
 
