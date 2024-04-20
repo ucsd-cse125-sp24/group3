@@ -30,6 +30,12 @@ public:
      */
     std::chrono::milliseconds doTick();
 
+    std::vector<Event> getAllClientEvents();
+
+    void updateGameState(std::vector<Event> events);
+
+    void sendUpdateToAllClients(Event event);
+
 private:
     /// @brief EID that is reserved for the Server / World itself.
     EntityID world_eid;
