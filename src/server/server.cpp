@@ -29,7 +29,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      acceptor(io_context, tcp::endpoint(tcp::v4(), config.network.server_port)),
      socket(io_context),
      world_eid(0),
-     state(GameState(GamePhase::GAME, config))
+     state(GameState(GamePhase::LOBBY, config))
 {
     Object* obj = state.createObject();
     obj->position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -101,6 +101,16 @@ std::chrono::milliseconds Server::doTick() {
                     this->state.removePlayerFromLobby(eid);
                 }
             }
+
+            if (this->state.enoughPlayers()) {
+                this->state.setPhase(GamePhase::GAME);
+            }
+
+            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
+
+            std::cout << "in LOBBY phase!" << std::endl;
+            std::cout << "max num players: " << this->state.getLobbyMaxPlayers() << std::endl;
+
             break;
         case GamePhase::GAME: {
             std::vector<Event> allClientEvents = getAllClientEvents();
@@ -108,6 +118,8 @@ std::chrono::milliseconds Server::doTick() {
             updateGameState(allClientEvents);
 
             sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
+
+            std::cout << "in GAME phase!" << std::endl;
             break;
         }
         default:
