@@ -6,7 +6,7 @@
 #include <boost/archive/text_oarchive.hpp>
 
 #include <cassert>
-
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <ostream>
@@ -49,8 +49,8 @@ EntityID Server::genNewEID() {
     return id++;
 }
 
-void Server::updateGameState(std::vector<Event> events) {
-    for (const Event& event : events) {
+void Server::updateGameState(EventList events) {
+    for (const auto& [src_id, event] : events) {
         switch (event.type) {
         case EventType::MoveRelative:
             auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
@@ -63,17 +63,21 @@ void Server::updateGameState(std::vector<Event> events) {
     }
 }
 
-std::vector<Event> Server::getAllClientEvents() {
-    std::vector<Event> allEvents;
+EventList Server::getAllClientEvents() {
+    EventList allEvents;
 
     // Loop through each session
-    for (const auto& [_eid, _ip, session] : this->sessions) {
+    for (const auto& [eid, _ip, session] : this->sessions) {
         if (auto s = session.lock()) {
             // Get events from the current session
             std::vector<Event> sessionEvents = s->getEvents();
 
-            // Append session events to the overall vector
-            allEvents.insert(allEvents.end(), sessionEvents.begin(), sessionEvents.end());
+            // Put events into the allEvents vector, prepending each event with the id of the 
+            // client that requested it
+            std::transform(sessionEvents.begin(), sessionEvents.end(), allEvents.end(), 
+                [eid](const Event& e) {
+                    return std::make_pair(eid, e);
+                });
         }
     }
 
@@ -107,13 +111,10 @@ std::chrono::milliseconds Server::doTick() {
                 this->state.setPhase(GamePhase::GAME);
             }
 
-            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
-
-            std::cout << "not enough players to start\n";
-
+            // sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
             break;
         case GamePhase::GAME: {
-            std::vector<Event> allClientEvents = getAllClientEvents();
+            EventList allClientEvents = getAllClientEvents();
 
             updateGameState(allClientEvents);
 
@@ -141,6 +142,7 @@ void Server::_doAccept() {
                 auto new_session = this->_handleNewSession(addr);
 
                 new_session->startListen();
+                std::cout << "about to send server assign id packet" <<std::endl;
                 new_session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                     ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value() }));
             } else {
@@ -189,10 +191,6 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
     std::cout << "Established new connection with " << addr << ", which was assigned eid "
         << id << std::endl;
-
-    session->startListen();
-    session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
-        ServerAssignEIDPacket { .eid = id }));
 
     return session;
 }

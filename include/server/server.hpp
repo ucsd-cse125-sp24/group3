@@ -16,6 +16,9 @@
 
 using boost::asio::ip::tcp;
 
+/// Represents a list of events from a certain client with a specified ID
+using EventList = std::vector<std::pair<EntityID, Event>>;
+
 class Server {
 public:
     Server(boost::asio::io_context& io_context, GameConfig config);
@@ -29,9 +32,9 @@ public:
      */
     std::chrono::milliseconds doTick();
 
-    std::vector<Event> getAllClientEvents();
+    EventList getAllClientEvents();
 
-    void updateGameState(std::vector<Event> events);
+    void updateGameState(EventList events);
 
     void sendUpdateToAllClients(Event event);
 

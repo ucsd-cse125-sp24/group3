@@ -163,7 +163,6 @@ void Client::processServerInput(boost::asio::io_context& context) {
 
 void Client::draw() {
     for(const Object& obj: this->gameState.getObjects()) {
-        std::cout << "got an object" << std::endl;
         // tmp: all objects are cubes
         Cube* cube = new Cube();
         cube->update(obj.position);

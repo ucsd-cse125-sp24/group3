@@ -36,7 +36,9 @@ void Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpo
 void Session::_handleReceivedPacket(PacketType type, std::string data) {
     // First figure out if packet is event or non-event
     if (type == PacketType::Event) {
+        std::cout << "Handling event" << std::endl;
         auto event = deserialize<EventPacket>(data).event;
+        std::cout << "deserialized event" << std::endl;
         this->received_events.push_back(event);
     } else if (type == PacketType::ServerAssignEID) {
         this->info.client_eid = deserialize<ServerAssignEIDPacket>(data).eid;
