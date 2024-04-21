@@ -5,6 +5,7 @@
 #include <boost/serialization/variant.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/utility.hpp>
+#include <boost/serialization/unordered_set.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 

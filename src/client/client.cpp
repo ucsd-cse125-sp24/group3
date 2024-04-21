@@ -21,7 +21,6 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     config(config),
     gameState(GamePhase::TITLE_SCREEN, config)
 {
-    
 }
 
 void Client::connectAndListen(std::string ip_addr) {
@@ -159,11 +158,23 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
-    for(const Object& obj: this->gameState.getObjects()) {
+    //for(const Object& obj: this->gameState.getObjects()) {
+    //    std::cout << "got an object" << std::endl;
+    //    // tmp: all objects are cubes
+    //    Cube* cube = new Cube();
+    //    cube->update(obj.position);
+    //    cube->draw(this->shaderProgram);
+    //}
+    for (int i = 0; i < this->gameState.objects.size(); i++) {
+        SharedObject* sharedObject = this->gameState.objects.get(i);
+
+        if (sharedObject == nullptr)
+            continue;
+
         std::cout << "got an object" << std::endl;
-        // tmp: all objects are cubes
+        //  tmp: all objects are cubes
         Cube* cube = new Cube();
-        cube->update(obj.position);
+        cube->update(sharedObject->physics.position);
         cube->draw(this->shaderProgram);
     }
 }

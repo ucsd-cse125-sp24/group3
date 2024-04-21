@@ -16,7 +16,8 @@
 #include "client/util.hpp"
 #include "client/lobbyfinder.hpp"
 
-#include "shared/game/gamestate.hpp"
+//#include "shared/game/gamestate.hpp"
+#include "shared/game/sharedgamestate.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
@@ -36,8 +37,8 @@ private:
     void processClientInput();
     void processServerInput(boost::asio::io_context& context);
 
-    
-    GameState gameState;
+    SharedGameState gameState;
+    //GameState gameState;
 
     float cubeMovementDelta = 0.05f;
 

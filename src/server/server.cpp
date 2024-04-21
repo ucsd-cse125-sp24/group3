@@ -15,6 +15,7 @@
 
 #include "boost/variant/get.hpp"
 #include "shared/game/event.hpp"
+#include "shared/game/servergamestate.hpp"
 #include "shared/game/gamelogic/object.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
@@ -29,10 +30,11 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      acceptor(io_context, tcp::endpoint(tcp::v4(), config.network.server_port)),
      socket(io_context),
      world_eid(0),
-     state(GameState(GamePhase::GAME, config))
+     state(ServerGameState(GamePhase::GAME, config))
 {
-    Object* obj = state.createObject();
-    obj->position = glm::vec3(0.0f, 0.0f, 0.0f);
+    //Object* obj = state.createObject();
+    //obj->position = glm::vec3(0.0f, 0.0f, 0.0f);
+    unsigned int object_typeID = state.createObject(ObjectType::Object);
     
     doAccept(); // start asynchronously accepting
 
@@ -55,7 +57,8 @@ void Server::updateGameState(std::vector<Event> events) {
         case EventType::MoveRelative:
             auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
             Object* obj = state.getObject(moveRelativeEvent.entity_to_move);
-            obj->setPosition(obj->position + moveRelativeEvent.movement);
+            //obj->setPosition(obj->position + moveRelativeEvent.movement);
+            obj->physics.position += moveRelativeEvent.movement;
             break;
             // default:
             //     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
@@ -102,7 +105,7 @@ std::chrono::milliseconds Server::doTick() {
             // Tell each client the current lobby status
             for (const auto& [eid, session]: this->sessions) {
                 session->sendEventAsync(Event(this->world_eid,
-                    EventType::LoadGameState, LoadGameStateEvent(this->state)));
+                    EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
             };
 
             break;
@@ -111,7 +114,7 @@ std::chrono::milliseconds Server::doTick() {
 
             updateGameState(allClientEvents);
 
-            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
+            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
             break;
         }
         default:
