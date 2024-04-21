@@ -101,7 +101,9 @@ int Client::start(boost::asio::io_context& context) {
         glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        this->draw();
+        if (this->gameState.getPhase() == GamePhase::GAME) {
+            this->draw();
+        }
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -150,6 +152,7 @@ void Client::processServerInput(boost::asio::io_context& context) {
         std::cout << "Event Received: " << event << std::endl;
         if (event.type == EventType::LoadGameState) {
             this->gameState = boost::get<LoadGameStateEvent>(event.data).state;
+
             // for (const auto& [eid, player] : data.state.getLobbyPlayers()) {
             //     std::cout << "\tPlayer " << eid << ": " << player << "\n";
             // }
