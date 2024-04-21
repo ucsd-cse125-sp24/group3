@@ -74,7 +74,7 @@ EventList Server::getAllClientEvents() {
 
             // Put events into the allEvents vector, prepending each event with the id of the 
             // client that requested it
-            std::transform(sessionEvents.begin(), sessionEvents.end(), allEvents.end(), 
+            std::transform(sessionEvents.begin(), sessionEvents.end(), std::back_inserter(allEvents), 
                 [eid](const Event& e) {
                     return std::make_pair(eid, e);
                 });
@@ -109,9 +109,11 @@ std::chrono::milliseconds Server::doTick() {
 
             if (this->state.enoughPlayers()) {
                 this->state.setPhase(GamePhase::GAME);
+            } else {
+                std::cout << "Only have " << this->state.getLobbyPlayers().size() << "/" << this->state.getLobbyMaxPlayers() << "\n";
             }
 
-            // sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
+            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
             break;
         case GamePhase::GAME: {
             EventList allClientEvents = getAllClientEvents();

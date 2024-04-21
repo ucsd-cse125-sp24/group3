@@ -147,16 +147,8 @@ void Client::processServerInput(boost::asio::io_context& context) {
     // the game state
 
     for (Event event : this->session->getEvents()) {
-        std::cout << "Event Received: " << event << std::endl;
         if (event.type == EventType::LoadGameState) {
             this->gameState = boost::get<LoadGameStateEvent>(event.data).state;
-
-            // for (const auto& [eid, player] : data.state.getLobbyPlayers()) {
-            //     std::cout << "\tPlayer " << eid << ": " << player << "\n";
-            // }
-            // std::cout << "\tThere are " <<
-            //     data.state.getLobbyMaxPlayers() - data.state.getLobbyPlayers().size() <<
-            //     " slots remaining in this lobby\n";
         }
     }
 }
