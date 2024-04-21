@@ -26,10 +26,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
 
 void Client::connectAndListen(std::string ip_addr) {
     this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
-    this->session = std::make_shared<Session>(std::move(this->socket), SessionInfo {
-        .client_name = this->config.client.default_name,
-        .client_eid = {}
-    });
+    this->session = std::make_shared<Session>(std::move(this->socket),
+        SessionInfo(this->config.client.default_name, {}));
 
     this->session->connectTo(this->endpoints);
 

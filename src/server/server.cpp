@@ -93,7 +93,8 @@ std::chrono::milliseconds Server::doTick() {
 
     switch (this->state.getPhase()) {
         case GamePhase::LOBBY:
-            // Go through sessions and update GameStte lobby info
+            // Go through sessions and update GameState lobby info
+            // TODO: move this into updateGameState or something else
             for (const auto& [eid, ip, session]: this->sessions) {
                 if (auto s = session.lock()) {
                     this->state.addPlayerToLobby(eid, s->getInfo().client_name.value_or("UNKNOWN NAME"));
@@ -108,8 +109,7 @@ std::chrono::milliseconds Server::doTick() {
 
             sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
 
-            std::cout << "in LOBBY phase!" << std::endl;
-            std::cout << "max num players: " << this->state.getLobbyMaxPlayers() << std::endl;
+            std::cout << "not enough players to start\n";
 
             break;
         case GamePhase::GAME: {
@@ -118,12 +118,10 @@ std::chrono::milliseconds Server::doTick() {
             updateGameState(allClientEvents);
 
             sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
-
-            std::cout << "in GAME phase!" << std::endl;
             break;
         }
         default:
-            std::cerr << "Non Lobby State not implemented on server side yet" << std::endl;
+            std::cerr << "Invalid GamePhase on server:" << static_cast<int>(this->state.getPhase()) << std::endl;
             std::exit(1);
     }
 
@@ -168,28 +166,33 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
             std::cout << "Reestablished connection with " << addr 
                 << ", which was previously assigned eid " << old_id << std::endl;
+            
+            return new_session;
 
         } else {
             // Some some reason the session is still alive, but we are getting
             // a connection request from the host?
             std::cerr << "Error: incoming connection request from " << addr
                 << " with which we already have an active session" << std::endl;
+
+            return old_session->session.lock();
         }
-    } else {
-        // Brand new connection
-        // TODO: reject connection if not in LOBBY GamePhase
-        EntityID id = Server::genNewEID();
-        auto session = std::make_shared<Session>(std::move(this->socket),
-            SessionInfo({}, id));
-
-        this->sessions.insert(SessionEntry(id, 
-            this->socket.remote_endpoint().address(), session));
-
-        std::cout << "Established new connection with " << addr << ", which was assigned eid "
-            << id << std::endl;
-
-        session->startListen();
-        session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
-            ServerAssignEIDPacket { .eid = id }));
     }
+
+    // Brand new connection
+    // TODO: reject connection if not in LOBBY GamePhase
+    EntityID id = Server::genNewEID();
+    auto session = std::make_shared<Session>(std::move(this->socket),
+        SessionInfo({}, id));
+
+    this->sessions.insert(SessionEntry(id, addr, session));
+
+    std::cout << "Established new connection with " << addr << ", which was assigned eid "
+        << id << std::endl;
+
+    session->startListen();
+    session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
+        ServerAssignEIDPacket { .eid = id }));
+
+    return session;
 }
