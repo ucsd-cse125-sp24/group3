@@ -68,6 +68,10 @@ public:
 
     GamePhase getPhase() const;
 
+    void setPhase(GamePhase phase);
+
+    bool enoughPlayers();
+
     /**
      * Reassign id to the specified name in the mapping. This is okay to call if the
      * player is already in the mapping, as nothing will happen. If a player's name
