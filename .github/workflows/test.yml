@@ -1,0 +1,84 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+
+jobs:
+  client-windows:
+    name: Client on Windows 
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ilammy/msvc-dev-cmd@v1
+    - name: Create build dir
+      run: mkdir -p build
+    - name: Run CMake
+      run: cd build && cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
+    - name: Test
+      run: cd build && ninja run_client_tests 
+  client-linux:
+    name: Client on Linux (Ubuntu) 
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install OpenGL
+      run: sudo apt-get update && sudo apt-get install --fix-missing cmake pkg-config mesa-utils libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev libxkbcommon-dev libxinerama-dev libxcursor-dev libxi-dev xvfb
+    - uses: actions/checkout@v4
+    - name: Create build dir
+      run: mkdir -p build
+    - name: Run CMake
+      run: cd build && cmake ..
+    - name: Test
+      run: cd build && make run_client_tests
+  server-windows:
+    name: Server on Windows 
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ilammy/msvc-dev-cmd@v1
+    - name: Create build dir
+      run: mkdir -p build
+    - name: Run CMake
+      run: cd build && cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
+    - name: Test
+      run: cd build && ninja run_server_tests
+  server-linux:
+    name: Server on Linux (Ubuntu) 
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install OpenGL
+      run: sudo apt-get update && sudo apt-get install --fix-missing cmake pkg-config mesa-utils libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev libxkbcommon-dev libxinerama-dev libxcursor-dev libxi-dev xvfb
+    - uses: actions/checkout@v4
+    - name: Create build dir
+      run: mkdir -p build
+    - name: Run CMake
+      run: cd build && cmake ..
+    - name: Test
+      run: cd build && make run_server_tests
+  shared-windows:
+    name: Shared on Windows 
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ilammy/msvc-dev-cmd@v1
+    - name: Create build dir
+      run: mkdir -p build
+    - name: Run CMake
+      run: cd build && cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl -DCMAKE_C_COMPILER=cl ..
+    - name: Test
+      run: cd build && ninja run_server_tests
+  shared-linux:
+    name: Shared on Linux (Ubuntu) 
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install OpenGL
+      run: sudo apt-get update && sudo apt-get install --fix-missing cmake pkg-config mesa-utils libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev libxkbcommon-dev libxinerama-dev libxcursor-dev libxi-dev xvfb
+    - uses: actions/checkout@v4
+    - name: Create build dir
+      run: mkdir -p build
+    - name: Run CMake
+      run: cd build && cmake ..
+    - name: Test
+      run: cd build && make run_shared_tests

@@ -1,5 +1,7 @@
 ## Game Name Here
 
+![Docs](https://github.com/ucsd-cse125-sp24/group3/actions/workflows/docs.yml/badge.svg)
+
 TODO: Game description here, with screenshots.
 
 ## Setup
@@ -12,7 +14,7 @@ TODO: Game description here, with screenshots.
 		- in the popup window put in this URL: `https://github.com/ucsd-cse125-sp24/group3.git`
     - Alternatively, you can use the command line and then open Visual Studio in the directory where you cloned it:
 		- `git clone https://github.com/ucsd-cse125-sp24/group3.git`
-3. Everything should just work™. To run the program, you can click on the green arrow at the top bar that says "Select Startup Item." There is a dropdown arrow on the right side which will let you select between running the client and the server.
+3. Everything should just workï¿½. To run the program, you can click on the green arrow at the top bar that says "Select Startup Item." There is a dropdown arrow on the right side which will let you select between running the client and the server.
 
 ### Linux / Mac
 
@@ -124,3 +126,62 @@ Depending on where you need to link the library (client, server, shared), you wi
 
 - [C++ Intellisense](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools)
 - [General Productivity](https://marketplace.visualstudio.com/items?itemName=jirkavrba.subway-surfers)
+
+## Documentation
+
+View deployed documentation [here](https://cse125.ucsd.edu/2024/cse125g3/site/docs/html/)
+
+### Build Docs Locally 
+
+1. We are using Doxygen which you can install locally from [here](https://www.doxygen.nl/download.html)
+2. Run `doxygen` from the root of the directory
+3. Open the `html` files in the `docs` directory of the repo
+
+
+## Testing
+
+We are using [GoogleTest](https://google.github.io/googletest/) for unit testing. They run automatically in GitHub actions or can also be done manually.
+
+There are three categories of unit tests:
+
+1. Client tests for client specific code
+2. Server tests for server specific code
+2. Shared tests for code shared between the client and server 
+
+### Running Tests Locally
+
+From the build directory run the following commands for each testing category:
+
+```sh
+make run_client_tests
+make run_server_tests
+make run_shared_tests
+```
+
+### Adding New Tests 
+
+1. Add a new `.cpp` file to the testing directory you want (either `src/client/tests`, `src/server/tests` or `src/shared/tests`).
+
+2. Add a testing function with the GoogleTest `TEST` macro. See [this](https://google.github.io/googletest/reference/assertions.html) page to see all the available assertions.
+```cpp
+// Tests factorial of positive numbers.
+TEST(FactorialTest, HandlesPositiveInput) {
+  EXPECT_EQ(Factorial(1), 1);
+  EXPECT_EQ(Factorial(2), 2);
+  EXPECT_EQ(Factorial(3), 6);
+  EXPECT_EQ(Factorial(8), 40320);
+}
+```
+3. Run the tests locally with the steps above or with GitHub actions
+
+## Linting
+
+We are using [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) for linting and code style. They run automatically with GitHub actions.
+
+### Linting locally 
+
+#### Linux/macOS
+Install clang-tidy on your system. [Here are instructions for Debian/Ubuntu Linux distros](https://apt.llvm.org/). [Here is a Stack Overflow of people attempting to install it on macOS](https://stackoverflow.com/questions/53111082/how-to-install-clang-tidy-on-macos).
+
+#### Windows
+Visual Studio supports [clang-tidy natively](https://learn.microsoft.com/en-us/cpp/code-quality/clang-tidy?view=msvc-170)
