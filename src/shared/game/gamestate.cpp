@@ -109,8 +109,16 @@ std::string GameState::to_string() {
 	return representation;
 }
 
+bool GameState::enoughPlayers() {
+	return this->lobby.players.size() == getLobbyMaxPlayers();
+}
+
 GamePhase GameState::getPhase() const {
 	return this->phase;
+}
+
+void GameState::setPhase(GamePhase phase) {
+	this->phase = phase;
 }
 
 void GameState::addPlayerToLobby(EntityID id, const std::string& name) {

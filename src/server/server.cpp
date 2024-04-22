@@ -29,7 +29,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      acceptor(io_context, tcp::endpoint(tcp::v4(), config.network.server_port)),
      socket(io_context),
      world_eid(0),
-     state(GameState(GamePhase::GAME, config))
+     state(GameState(GamePhase::LOBBY, config))
 {
     Object* obj = state.createObject();
     obj->position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -49,6 +49,41 @@ EntityID Server::genNewEID() {
     return id++;
 }
 
+void Server::updateGameState(std::vector<Event> events) {
+    for (const Event& event : events) {
+        switch (event.type) {
+        case EventType::MoveRelative:
+            auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
+            Object* obj = state.getObject(moveRelativeEvent.entity_to_move);
+            obj->setPosition(obj->position + moveRelativeEvent.movement);
+            break;
+            // default:
+            //     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
+        }
+    }
+}
+
+std::vector<Event> Server::getAllClientEvents() {
+    std::vector<Event> allEvents;
+
+    // Loop through each session
+    for (const auto& [eid, session] : this->sessions) {
+        // Get events from the current session
+        std::vector<Event> sessionEvents = session->getEvents();
+
+        // Append session events to the overall vector
+        allEvents.insert(allEvents.end(), sessionEvents.begin(), sessionEvents.end());
+    }
+
+    return allEvents;
+}
+
+void Server::sendUpdateToAllClients(Event event) {
+    for (const auto& [eid, session] : this->sessions) {
+        session->sendEventAsync(event); // SEND UPDATED GAME STATE TO CLIENTS
+    }
+}
+
 std::chrono::milliseconds Server::doTick() {
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -64,39 +99,40 @@ std::chrono::milliseconds Server::doTick() {
                     session->getInfo().client_name.value_or("[UNKNOWN NAME]"));
             }
 
+            if (this->state.enoughPlayers()) {
+                this->state.setPhase(GamePhase::GAME);
+            }
+
             // Tell each client the current lobby status
-            for (const auto& [eid, session]: this->sessions) { // cppcheck-suppress unusedVariable
-                session->sendEventAsync(PacketType::ServerDoEvent, Event(this->world_eid,
+            for (const auto& [eid, session]: this->sessions) {
+                session->sendEventAsync(Event(this->world_eid,
                     EventType::LoadGameState, LoadGameStateEvent(this->state)));
             };
 
+            std::cout << "in LOBBY phase!" << std::endl;
+            std::cout << "max num players: " << this->state.getLobbyMaxPlayers() << std::endl;
+
             break;
-        case GamePhase::GAME:
-            for(const auto& [eid, session]: this->sessions) {
-                session->sendEventAsync(PacketType::ServerDoEvent, Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
-                std::vector<Event> events = session->getEvents();
-                for(const Event& event: events) {
-                    switch (event.type) {
-                        case EventType::MoveRelative:
-                            auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-                            Object* obj = state.getObject(moveRelativeEvent.entity_to_move);
-                            obj->setPosition(obj->position + moveRelativeEvent.movement);
-                            break;
-                        // default:
-                        //     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
-                    }
-                }
-            }
+        case GamePhase::GAME: {
+            std::vector<Event> allClientEvents = getAllClientEvents();
+
+            updateGameState(allClientEvents);
+
+            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
+
+            std::cout << "in GAME phase!" << std::endl;
             break;
+        }
         default:
             std::cerr << "Non Lobby State not implemented on server side yet" << std::endl;
             std::exit(1);
     }
 
-
     auto stop = std::chrono::high_resolution_clock::now();
+
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(
         this->state.getTimestepLength() - (stop - start));
+
     assert(wait.count() > 0);
     return wait;
 }
