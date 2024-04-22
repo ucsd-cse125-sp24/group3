@@ -49,7 +49,7 @@ EntityID Server::genNewEID() {
     return id++;
 }
 
-void Server::updateGameState(std::vector<Event> events) {
+void Server::updateGameState(const std::vector<Event>& events) {
     for (const Event& event : events) {
         switch (event.type) {
         case EventType::MoveRelative:

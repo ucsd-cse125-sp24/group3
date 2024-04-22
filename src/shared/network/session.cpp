@@ -77,8 +77,6 @@ void Session::sendPacketAsync(std::shared_ptr<PackagedPacket> packet) {
 }
 
 void Session::sendEventAsync(Event event) {
-    std::shared_ptr<PackagedPacket> packet = nullptr;
-
     this->sendPacketAsync(PackagedPacket::make_shared(PacketType::Event, EventPacket(event)));
 }
 
