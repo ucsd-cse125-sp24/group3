@@ -28,6 +28,9 @@ struct SharedGameState {
 		this->timestep = FIRST_TIMESTEP;
 		this->timestep_length = TIMESTEP_LEN;
 		this->lobby.max_players = MAX_PLAYERS;
+
+		//	Initialize SmartVectors with max sizes
+		this->objects = SmartVector<SharedObject>(MAX_NUM_OBJECTS);
 	}
 
 	SharedGameState(GamePhase start_phase, GameConfig config) {
@@ -35,6 +38,9 @@ struct SharedGameState {
 		this->timestep = FIRST_TIMESTEP;
 		this->timestep_length = config.game.timestep_length_ms;
 		this->lobby.max_players = config.server.max_players;
+
+		//	Initialize SmartVectors with max sizes
+		this->objects = SmartVector<SharedObject>(MAX_NUM_OBJECTS);
 	}
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {

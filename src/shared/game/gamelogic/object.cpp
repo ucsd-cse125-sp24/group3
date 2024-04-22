@@ -48,14 +48,22 @@ std::string Object::to_string(unsigned int tab_offset) {
 
 	std::string representation = tabs + "{\n";
 	representation += tabs + "\tglobal id:\t\t" + std::to_string(this->globalID) + '\n';
-	representation += tabs + "\type id:\t\t" + std::to_string(this->typeID) + '\n';
-	representation += tabs + "\tposition:\t\t" + glm::to_string(this->physics.position) + '\n';
-	representation += tabs + "\tvelocity:\t\t" + glm::to_string(this->physics.velocity) + '\n';
-	representation += tabs + "\tacceleration:\t\t" + glm::to_string(this->physics.acceleration) + '\n';
-	representation += tabs + "\tfacing:\t\t" + glm::to_string(this->physics.facing) + '\n';
+	representation += tabs + "\ttype id:\t\t" + std::to_string(this->typeID) + '\n';
+	representation += tabs + "\tObjectType:\t\t" + objectTypeString(this->type) + '\n';
+	representation += tabs + "\tPhysics:\t\t" + '\n';
+	representation += this->physics.to_string(tab_offset + 1) + '\n';
 	representation += tabs + "}";
 
 	return representation;
+}
+
+std::string objectTypeString(ObjectType type) {
+	switch (type) {
+		case ObjectType::Object:
+			return "Object";
+		default:
+			return "Unknown";
+	}
 }
 
 
@@ -67,4 +75,23 @@ SharedPhysics Physics::generateSharedPhysics() {
 	shared.position = this->position;
 
 	return shared;
+}
+
+std::string Physics::to_string(unsigned int tab_offset) {
+	//	Return a string representation of this Physics struct
+
+	std::string tabs;
+
+	for (unsigned int i = 0; i < tab_offset; i++)
+		tabs += '\t';
+
+	std::string representation = tabs + "{\n";
+	representation += tabs + "\tmovable:\t\t" + (this->movable ? "true" : "false") + '\n';
+	representation += tabs + "\tposition:\t\t" + glm::to_string(this->position) + '\n';
+	representation += tabs + "\tvelocity:\t\t" + glm::to_string(this->velocity) + '\n';
+	representation += tabs + "\tacceleration:\t\t" + glm::to_string(this->acceleration) + '\n';
+	representation += tabs + "\tfacing:\t\t\t" + glm::to_string(this->facing) + '\n';
+	representation += tabs + "}";
+
+	return representation;
 }

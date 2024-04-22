@@ -14,9 +14,15 @@ template<typename T>
 class SmartVector {
 public:
 	/**
-	 * @brief Creates a SmartVector instance.
+	 * @brief Creates a SmartVector instance with a maximum wrapped vector size
+	 * of the given value.
 	 */
-	SmartVector() {}
+	SmartVector(size_t max_size) {
+		this->max_size = max_size;
+		this->wrapped_vector.reserve(max_size);
+	}
+
+	SmartVector() : SmartVector(1) {}
 
 	/**
 	 * @brief Pushes the given object to the end of the wrapped vector if it is
@@ -25,6 +31,7 @@ public:
 	 * vector.
 	 */
 	size_t push(T object) {
+
 		//	See if there's an empty index
 		size_t index;
 		auto it = freelist.begin();
@@ -36,6 +43,11 @@ public:
 		}
 		else {
 			index = wrapped_vector.size();
+
+			//	Check that the wrapped vector can be safely pushed to (without 
+			//	causing reallocation)
+			assert(this->max_size > index);
+
 			wrapped_vector.push_back(object);
 		}
 
@@ -51,6 +63,11 @@ public:
 	size_t pushEmpty() {
 		T emptyObject;
 		size_t index = wrapped_vector.size();
+
+		//	Check that the wrapped vector can be safely pushed to (without 
+		//	causing reallocation)
+		assert(this->max_size > index);
+
 		freelist.insert(index);
 		wrapped_vector.push_back(emptyObject);
 
@@ -138,6 +155,13 @@ public:
 	}
 
 private:
+	/**
+	 * @brief Maximum size of the wrapped_vector (this is the capacity that its
+	 * underlying container will hold. Never push more than this amount as then 
+	 * the wrapped vector will be forced to reallocate its underlying container,
+	 * meaning that all pointers to vector elements will become invalid).
+	 */
+	size_t max_size;
 	std::vector<T> wrapped_vector;
 	std::unordered_set<size_t> freelist;
 };

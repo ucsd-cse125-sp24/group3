@@ -8,6 +8,11 @@ ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) {
 	this->timestep = FIRST_TIMESTEP;
 	this->timestep_length = config.game.timestep_length_ms;
 	this->lobby.max_players = config.server.max_players;
+
+	//	Initialize SmartVectors with max sizes
+	this->objects = SmartVector<Object*>(MAX_NUM_OBJECTS);
+
+	this->base_objects = SmartVector<Object>(MAX_NUM_BASE_OBJECTS);
 }
 
 ServerGameState::ServerGameState(GamePhase start_phase) {
@@ -15,6 +20,11 @@ ServerGameState::ServerGameState(GamePhase start_phase) {
 	this->timestep = FIRST_TIMESTEP;
 	this->timestep_length = TIMESTEP_LEN;
 	this->lobby.max_players = MAX_PLAYERS;
+
+	//	Initialize SmartVectors with max sizes
+	this->objects = SmartVector<Object*>(MAX_NUM_OBJECTS);
+
+	this->base_objects = SmartVector<Object>(MAX_NUM_BASE_OBJECTS);
 }
 
 ServerGameState::ServerGameState() : ServerGameState(GamePhase::LOBBY) {}
@@ -160,6 +170,10 @@ Object* ServerGameState::getObject(unsigned int global_id) {
 	else {
 		return *ptrToPtr;
 	}
+}
+
+Object* ServerGameState::getBaseObject(unsigned int type_id) {
+	return this->base_objects.get(type_id);
 }
 
 unsigned int ServerGameState::getTimestep() const {

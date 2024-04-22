@@ -43,9 +43,13 @@ struct Lobby {
 };
 
 /*	Constants	*/
-#define	FIRST_TIMESTEP	0
-#define TIMESTEP_LEN	std::chrono::milliseconds(30)
-#define	MAX_PLAYERS		4
+#define	FIRST_TIMESTEP			0
+#define TIMESTEP_LEN			std::chrono::milliseconds(30)
+#define	MAX_PLAYERS				4
+
+//	SmartVector capacities
+#define	MAX_NUM_OBJECTS			100
+#define MAX_NUM_BASE_OBJECTS	100
 
 /**
  * @brief The ServerGameState class contains all abstract game state data and
@@ -85,6 +89,8 @@ public:
 
 	/*	SharedGameState generation	*/
 
+	//	TODO: Modify this function to dynamically allocate a SharedGameState
+	//	instance and return a pointer (perhaps a unique pointer) to it
 	/**
 	 * @brief Generate a SharedGameState object from this ServerGameState
 	 * instance.
@@ -131,6 +137,14 @@ public:
 
 	//	TODO: Add type-specific object getters (e.g., getPlayer(), getWalls(),
 	//	etc.)
+
+	/**
+	 * @brief Attempts to retrieve the base object with the given type ID.
+	 * @param type_id Type ID of the base object to retrieve
+	 * @return A pointer to the base object with the given type ID or nullptr if
+	 * none exists.
+	 */
+	Object * getBaseObject(unsigned int type_id);
 
 	/*	Other getters and setters	*/
 

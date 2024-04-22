@@ -20,6 +20,13 @@ enum class ObjectType {
 };
 
 /**
+ * @brief Returns a string representation of the ObjectType enum
+ * @param type ObjectType enum
+ * @return String representation of the given ObjectType enum
+ */
+std::string objectTypeString(ObjectType type);
+
+/**
  * @brief Physics struct that contains all movement / collision related data for
  * a particular object
  */
@@ -60,6 +67,10 @@ struct Physics {
 	 * @return SharedPhysics representation of this Physics struct.
 	 */
 	SharedPhysics generateSharedPhysics();
+
+	/*	Debugger Methods	*/
+	std::string to_string(unsigned int tab_offset);
+	std::string to_string() { return this->to_string(0); }
 };
 
 class Object {
