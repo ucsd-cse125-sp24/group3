@@ -32,7 +32,7 @@ public:
 
     std::vector<Event> getAllClientEvents();
 
-    void updateGameState(std::vector<Event> events);
+    void updateGameState(const std::vector<Event>& events);
 
     void sendUpdateToAllClients(Event event);
 

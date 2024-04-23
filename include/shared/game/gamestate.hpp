@@ -28,7 +28,7 @@ public:
      * @param phase starting phase of the game
      * @param config Config options
      */
-    GameState(GamePhase phase, GameConfig config);
+    GameState(GamePhase phase, const GameConfig& config);
 
     /**
      * @brief Updates this GameState instance from the current timestep to the
@@ -77,7 +77,7 @@ public:
      * player is already in the mapping, as nothing will happen. If a player's name
      * has changed, then this will update their name as well.
      */
-    void addPlayerToLobby(EntityID id, std::string name);
+    void addPlayerToLobby(EntityID id, const std::string& name);
     /**
      * Removes a player from the lobby with the specified id. 
      */

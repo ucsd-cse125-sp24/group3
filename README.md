@@ -176,12 +176,30 @@ TEST(FactorialTest, HandlesPositiveInput) {
 
 ## Linting
 
-We are using [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) for linting and code style. They run automatically with GitHub actions.
+We are using [cppcheck](https://github.com/danmar/cppcheck) for linting and static code analysis. They run automatically with GitHub actions.
+
+### Suppressing errors
+
+You can suppress a single error by adding comments in the following format after the lint in question:
+
+```cpp
+int x = 5; // cppcheck-suppress unusedVariable 
+```
+
+You can also pass in `--suppress <check-name>` to cppcheck. You can modify the flags that `make lint` uses by modifying the lint target's definition in the root level CMakeLists.txt.
 
 ### Linting locally 
 
 #### Linux/macOS
-Install clang-tidy on your system. [Here are instructions for Debian/Ubuntu Linux distros](https://apt.llvm.org/). [Here is a Stack Overflow of people attempting to install it on macOS](https://stackoverflow.com/questions/53111082/how-to-install-clang-tidy-on-macos).
+Install cppcheck on your system based on instructions [here](https://cppcheck.sourceforge.io/)
 
 #### Windows
-Visual Studio supports [clang-tidy natively](https://learn.microsoft.com/en-us/cpp/code-quality/clang-tidy?view=msvc-170)
+Visual Studio supports a [cppcheck plugin](https://github.com/VioletGiraffe/cppcheck-vs-addin/tree/1.5)
+
+#### Run
+
+From inside the build directory run:
+
+```sh
+make lint
+```
