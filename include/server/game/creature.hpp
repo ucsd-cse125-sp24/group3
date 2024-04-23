@@ -4,10 +4,7 @@
 #include "server/game/object.hpp"
 #include "shared/game/sharedobject.hpp"
 
-struct Stats {
-	float health;
-	float speed;
-};
+
 
 class Creature : public Object {
 public:

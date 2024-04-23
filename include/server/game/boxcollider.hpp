@@ -1,6 +1,6 @@
 #pragma once
 
-#include "collider.hpp"
+#include "server/game/collider.hpp"
 
 class BoxCollider : public Collider {
 public:

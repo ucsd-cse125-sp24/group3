@@ -1,11 +1,39 @@
 #pragma once
 
-#include "server/game/servergamestate.hpp"
+//#include "server/game/servergamestate.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/smartvector.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 
 #include <chrono>
+
+enum class GamePhase {
+	TITLE_SCREEN,
+	LOBBY,
+	GAME
+};
+
+/**
+ * @brief Information about the current lobby of players.
+ */
+struct Lobby {
+	//	TODO: Perhaps instead of a mapping from EntityID -> string, the mapping
+	//	could eventually be EntityID -> Player (where Player derives from
+	//	Object)?
+
+	/**
+	 * @brief A hash table that maps from player's EntityID to their names.
+	 */
+	std::unordered_map<EntityID, std::string> players;
+
+	/**
+	 * @brief The maximum number of players that this game instance can support.
+	 */
+	int max_players;
+
+	//	TODO: Add a player role listing? I.e., which player is playing which
+	//	character and which player is playing as the Dungeon Master?
+};
 
 /**
  * @brief The SharedGameState is a representation of the ServerGameState

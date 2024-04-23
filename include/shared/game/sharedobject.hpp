@@ -2,9 +2,29 @@
 
 #include <optional>
 
-#include "server/game/object.hpp"
+//#include "server/game/object.hpp"
 #include "shared/utilities/serialize_macro.hpp"
-#include "server/game/creature.hpp" // stats
+//#include "server/game/creature.hpp" // stats
+
+/**
+ * @brief An enum for the type of an object; the fields here should match all
+ * class names in the inheritance tree in which Object is the root.
+ */
+enum class ObjectType {
+	Object	//	Generic object type (base class)
+};
+
+/**
+ * @brief Returns a string representation of the ObjectType enum
+ * @param type ObjectType enum
+ * @return String representation of the given ObjectType enum
+ */
+std::string objectTypeString(ObjectType type);
+
+struct Stats {
+	float health;
+	float speed;
+};
 
 struct SharedPhysics {
 	/**
