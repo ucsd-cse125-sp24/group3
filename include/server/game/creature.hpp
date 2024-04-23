@@ -1,7 +1,8 @@
 #pragma once
 
-#include "constants.hpp"
-#include "object.hpp"
+#include "server/game/constants.hpp"
+#include "server/game/object.hpp"
+#include "shared/game/sharedobject.hpp"
 
 struct Stats {
 	float health;
@@ -16,7 +17,6 @@ public:
 	~Creature();
 
 	virtual SharedObject generateSharedObject() override;
-
 private:
 
 };

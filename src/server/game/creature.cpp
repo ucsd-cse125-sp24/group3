@@ -4,4 +4,5 @@
 SharedObject Creature::generateSharedObject() {
     auto so = Object::generateSharedObject();
     so.stats = this->stats;
+    return so;
 }

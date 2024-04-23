@@ -12,7 +12,7 @@ ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) {
 	//	Initialize SmartVectors with max sizes
 	this->objects = SmartVector<Object*>(MAX_NUM_OBJECTS);
 
-	this->base_objects = SmartVector<Object>(MAX_NUM_BASE_OBJECTS);
+	this->base_objects = SmartVector<Object *>(MAX_NUM_BASE_OBJECTS);
 }
 
 ServerGameState::ServerGameState(GamePhase start_phase) {
@@ -24,7 +24,7 @@ ServerGameState::ServerGameState(GamePhase start_phase) {
 	//	Initialize SmartVectors with max sizes
 	this->objects = SmartVector<Object*>(MAX_NUM_OBJECTS);
 
-	this->base_objects = SmartVector<Object>(MAX_NUM_BASE_OBJECTS);
+	this->base_objects = SmartVector<Object *>(MAX_NUM_BASE_OBJECTS);
 }
 
 ServerGameState::ServerGameState() : ServerGameState(GamePhase::LOBBY) {}
@@ -95,7 +95,7 @@ void ServerGameState::updateMovement() {
 		if (object->physics.movable) {
 			//	object position [meters]
 			//	= old position [meters] + (velocity [meters / timestep] * 1 timestep)
-			object->physics.position += object->physics.velocity;
+			object->physics.shared.position += object->physics.velocity;
 
 			//	Object velocity [meters / timestep]
 			//	=	old velocity [meters / timestep]
@@ -118,17 +118,16 @@ unsigned int ServerGameState::createObject(ObjectType type) {
 	switch (type) {
 		case ObjectType::Object:
 			//	Create a new object of type Object in base_objects
-			typeID = this->base_objects.push(Object());
+			Object* object = new Object();
+			typeID = this->base_objects.push(object);
 
 			//	Add a reference to the new object in the global objects 
 			//	SmartVector
-			Object * newObject = this->base_objects.get(typeID);
-
-			globalID = this->objects.push(newObject);
+			globalID = this->objects.push(object);
 
 			//	Set object's type and global IDs
-			newObject->globalID = globalID;
-			newObject->typeID = typeID;
+			object->globalID = globalID;
+			object->typeID = typeID;
 			break;
 	}
 
@@ -173,7 +172,7 @@ Object* ServerGameState::getObject(unsigned int global_id) {
 }
 
 Object* ServerGameState::getBaseObject(unsigned int type_id) {
-	return this->base_objects.get(type_id);
+	return *(this->base_objects.get(type_id));
 }
 
 unsigned int ServerGameState::getTimestep() const {

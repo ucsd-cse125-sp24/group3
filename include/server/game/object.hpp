@@ -1,12 +1,16 @@
 #pragma once
 
-#include "constants.hpp"
+#include "server/game/constants.hpp"
 #include "shared/utilities/serialize.hpp"
 #include "shared/utilities/serialize_macro.hpp"
-#include "collider.hpp"
+#include "server/game/collider.hpp"
+#include "shared/game/sharedobject.hpp"
 
 //	From sharedobject.hpp
 class SharedObject;
+
+//	From sharedobject.hpp
+struct SharedPhysics;
 
 /**
  * @brief An enum for the type of an object; the fields here should match all
@@ -28,16 +32,13 @@ std::string objectTypeString(ObjectType type);
  * a particular object
  */
 struct Physics {
+	SharedPhysics shared;
+
 	/**
 	 * @brief true if the object that contains this Physics struct can move and
 	 * false otherwise
 	 */
 	bool movable;
-
-	/**
-	 * @brief 3-D vector that denotes this object's current position.
-	 */
-	glm::vec3 position;
 
 	/**
 	 * @brief 3-D vector that denotes this object's current velocity.
@@ -48,11 +49,6 @@ struct Physics {
 	 * @brief 3-D vector that denotes this object's current acceleration.
 	 */
 	glm::vec3 acceleration;
-
-	/**
-	 * @brief 3-D vector that denotes this object's facing direction.
-	 */
-	glm::vec3 facing;
 
 	/**
 	 * @brief Pointer to this object's collider.

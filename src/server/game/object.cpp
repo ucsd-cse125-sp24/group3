@@ -12,10 +12,11 @@ Object::Object() {
 	//	By default, the newly created object spawns at the origin without any
 	//	velocity or acceleration, and is movable. The object faces toward the
 	//	x-axis.
-	this->physics.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	this->physics.shared.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
+
 	this->physics.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->physics.acceleration = glm::vec3(0.0f, 0.0f, 0.0f);
-	this->physics.facing = glm::vec3(1.0f, 0.0f, 0.0f);
 	this->physics.movable = true;
 
 	//	By default, the object is not assigned a collider (must be explicitly
@@ -32,8 +33,7 @@ SharedObject Object::generateSharedObject() {
 	shared.globalID = this->globalID;
 	shared.typeID = this->typeID;
 	shared.type = this->type;
-	shared.facing = this->physics.facing;
-	shared.position = this->physics.position;
+	shared.physics = this->physics.shared;
 
 	return shared;
 }
@@ -77,10 +77,10 @@ std::string Physics::to_string(unsigned int tab_offset) {
 
 	std::string representation = tabs + "{\n";
 	representation += tabs + "\tmovable:\t\t" + (this->movable ? "true" : "false") + '\n';
-	representation += tabs + "\tposition:\t\t" + glm::to_string(this->position) + '\n';
+	representation += tabs + "\tposition:\t\t" + glm::to_string(this->shared.position) + '\n';
 	representation += tabs + "\tvelocity:\t\t" + glm::to_string(this->velocity) + '\n';
 	representation += tabs + "\tacceleration:\t\t" + glm::to_string(this->acceleration) + '\n';
-	representation += tabs + "\tfacing:\t\t\t" + glm::to_string(this->facing) + '\n';
+	representation += tabs + "\tfacing:\t\t\t" + glm::to_string(this->shared.facing) + '\n';
 	representation += tabs + "}";
 
 	return representation;

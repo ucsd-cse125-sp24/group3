@@ -242,7 +242,7 @@ private:
 	//	TODO: Add type-specific object arrays (e.g., vector<Player> players,
 	//	vector<Wall> walls, etc.)
 
-	SmartVector<Object> base_objects;
+	SmartVector<Object *> base_objects;
 
 	/**
 	 *  Timestep length in milliseconds.

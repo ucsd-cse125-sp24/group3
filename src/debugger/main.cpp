@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include "shared/game/servergamestate.hpp"
-#include "shared/game/gamelogic/constants.hpp"
+#include "server/game/servergamestate.hpp"
+#include "server/game/constants.hpp"
 #include "debugger/debugger.hpp"
 
 std::vector<Command*> commands;

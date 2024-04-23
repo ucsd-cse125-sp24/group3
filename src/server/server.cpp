@@ -58,7 +58,7 @@ void Server::updateGameState(std::vector<Event> events) {
             auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
             Object* obj = state.getObject(moveRelativeEvent.entity_to_move);
             //obj->setPosition(obj->position + moveRelativeEvent.movement);
-            obj->physics.position += moveRelativeEvent.movement;
+            obj->physics.shared.position += moveRelativeEvent.movement;
             break;
             // default:
             //     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
