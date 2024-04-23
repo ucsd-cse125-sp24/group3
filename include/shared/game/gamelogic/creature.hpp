@@ -3,18 +3,19 @@
 #include "constants.hpp"
 #include "object.hpp"
 
+struct Stats {
+	float health;
+	float speed;
+};
+
 class Creature : public Object {
 public:
-	float health;
-
-	float speed;
+	Stats stats;
 
 	Creature();
 	~Creature();
 
-	void walk();
-
-	void attack();
+	virtual SharedObject generateSharedObject() override;
 
 private:
 

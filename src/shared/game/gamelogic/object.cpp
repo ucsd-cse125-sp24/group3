@@ -32,7 +32,8 @@ SharedObject Object::generateSharedObject() {
 	shared.globalID = this->globalID;
 	shared.typeID = this->typeID;
 	shared.type = this->type;
-	shared.physics = this->physics.generateSharedPhysics();
+	shared.facing = this->physics.facing;
+	shared.position = this->physics.position;
 
 	return shared;
 }
@@ -64,17 +65,6 @@ std::string objectTypeString(ObjectType type) {
 		default:
 			return "Unknown";
 	}
-}
-
-
-
-SharedPhysics Physics::generateSharedPhysics() {
-	SharedPhysics shared;
-
-	shared.facing = this->facing;
-	shared.position = this->position;
-
-	return shared;
 }
 
 std::string Physics::to_string(unsigned int tab_offset) {

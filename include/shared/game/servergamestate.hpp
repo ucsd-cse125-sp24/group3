@@ -245,17 +245,6 @@ private:
 	SmartVector<Object> base_objects;
 
 	/**
-	 * @brief Vector of all Object instances whose actual type is closest to
-	 * Object.
-	 */
-	//std::vector<Object> base_objects;
-
-	/**
-	 * @brief Type-specific ID freelist for the base_objects array.
-	 */
-	//std::queue<unsigned int> base_objects_ID_freelist;
-
-	/**
 	 *  Timestep length in milliseconds.
 	 */
 	std::chrono::milliseconds timestep_length;

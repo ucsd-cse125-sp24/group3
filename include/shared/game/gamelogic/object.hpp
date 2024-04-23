@@ -8,9 +8,6 @@
 //	From sharedobject.hpp
 class SharedObject;
 
-//	From sharedobject.hpp
-struct SharedPhysics;
-
 /**
  * @brief An enum for the type of an object; the fields here should match all
  * class names in the inheritance tree in which Object is the root.
@@ -62,12 +59,6 @@ struct Physics {
 	 */
 	Collider* boundary;
 
-	/**
-	 * @brief Generates a SharedPhysics representation of this Physics struct.
-	 * @return SharedPhysics representation of this Physics struct.
-	 */
-	SharedPhysics generateSharedPhysics();
-
 	/*	Debugger Methods	*/
 	std::string to_string(unsigned int tab_offset);
 	std::string to_string() { return this->to_string(0); }
@@ -92,53 +83,26 @@ public:
 	 */
 	ObjectType type;
 
-	//	TODO: Add Physics struct that contains movement vectors + collider info
 	Physics physics;
-
-	// (x,y,z) position
-	//glm::vec3 position;
-
-	// velocity vector
-	//glm::vec3 velocity;
-
-	// acceleration vector
-	//glm::vec3 acceleration;
-
-	//Collision boundary of the object
-	//Collider* boundary;
 
 	Object();
 	~Object();
 
-	//virtual void applyAction();
-	//virtual void onCollision(Object* other);
+	virtual void applyAction() = 0;
+	virtual void onCollision(Object* other) = 0;
 
 	/**
 	 * @brief Generates a SharedObject representation of this object.
 	 * @return Generates a SharedObject representation of this object.
 	 */
-	SharedObject generateSharedObject();
+	virtual SharedObject generateSharedObject();
 
 	/*	Debugger Methods	*/
 
 	std::string to_string(unsigned int tab_offset);
 	std::string to_string() { return this->to_string(0); }
 
-	/*void setPosition(const glm::vec3& newPos) {
-		position = newPos;
-	}
-
-	void setVelocity(const glm::vec3& newVel) {
-		velocity = newVel;
-	}
-
-	void setAcceleration(const glm::vec3& newAcc) {
-		acceleration = newAcc;
-	}
-
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar & id & position & acceleration;
-    }*/
-
-private:
+    }
 };
