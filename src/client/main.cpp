@@ -40,41 +40,6 @@ void set_opengl_settings() {
     glClearColor(0.0, 0.0, 0.0, 0.0);
 }
 
-
-int main() {
-    Client::init();
-    GLFWwindow* window = Client::getWindow();
-    if (!window) exit(EXIT_FAILURE);
-
-    // Setup callbacks.
-    set_callbacks(window);
-    // Setup OpenGL settings.
-    set_opengl_settings();
-
-    // Initialize the shader program; exit if initialization fails.
-    // if (!Window::initializeProgram()) exit(EXIT_FAILURE);
-    // Initialize objects/pointers for rendering; exit if initialization fails.
-    // if (!Window::initializeObjects(argc, argv)) exit(EXIT_FAILURE);
-
-    // Loop while GLFW window should stay open.
-    while (!glfwWindowShouldClose(window)) {
-        // Main render display callback. Rendering of objects is done here.
-        Client::displayCallback();
-
-        // Idle callback. Updating objects, etc. can be done here.
-        Client::idleCallback();
-    }
-
-    // Window::cleanUp();
-    // Destroy the window.
-    glfwDestroyWindow(window);
-    // Terminate GLFW.
-    glfwTerminate();
-
-    exit(EXIT_SUCCESS);
-    return 0;
-}
-
 int main(int argc, char* argv[])
 {
     auto config = GameConfig::parse(argc, argv);
@@ -93,7 +58,41 @@ int main(int argc, char* argv[])
         client.connectAndListen(config.network.server_ip);
     }
 
-    client.start(context);
+
+    if (client.init() == -1) {
+        exit(EXIT_FAILURE);
+    }
+    
+    GLFWwindow* window = client.getWindow();
+    if (!window) exit(EXIT_FAILURE);
+
+    // Setup callbacks.
+    set_callbacks(window);
+    // Setup OpenGL settings.
+    set_opengl_settings();
+
+    // Initialize the shader program; exit if initialization fails.
+    // if (!Window::initializeProgram()) exit(EXIT_FAILURE);
+    // Initialize objects/pointers for rendering; exit if initialization fails.
+    // if (!Window::initializeObjects(argc, argv)) exit(EXIT_FAILURE);
+
+    // Loop while GLFW window should stay open.
+    while (!glfwWindowShouldClose(window)) {
+        // Main render display callback. Rendering of objects is done here.
+        client.displayCallback();
+
+        // Idle callback. Updating objects, etc. can be done here.
+        client.idleCallback(context);
+    }
+
+    client.cleanup();
+
+    // Destroy the window.
+    glfwDestroyWindow(window);
+    // Terminate GLFW.
+    glfwTerminate();
+
+    exit(EXIT_SUCCESS);
 
     return 0;
 }
