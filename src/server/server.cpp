@@ -67,7 +67,7 @@ std::vector<Event> Server::getAllClientEvents() {
     std::vector<Event> allEvents;
 
     // Loop through each session
-    for (const auto& [eid, session] : this->sessions) {
+    for (const auto& [eid, session] : this->sessions) { // cppcheck-suppress unusedVariable
         // Get events from the current session
         std::vector<Event> sessionEvents = session->getEvents();
 
@@ -79,7 +79,7 @@ std::vector<Event> Server::getAllClientEvents() {
 }
 
 void Server::sendUpdateToAllClients(Event event) {
-    for (const auto& [eid, session] : this->sessions) {
+    for (const auto& [eid, session] : this->sessions) { // cppcheck-suppress unusedVariable
         session->sendEventAsync(event); // SEND UPDATED GAME STATE TO CLIENTS
     }
 }
@@ -104,7 +104,7 @@ std::chrono::milliseconds Server::doTick() {
             }
 
             // Tell each client the current lobby status
-            for (const auto& [eid, session]: this->sessions) {
+            for (const auto& [eid, session]: this->sessions) { // cppcheck-suppress unusedVariable
                 session->sendEventAsync(Event(this->world_eid,
                     EventType::LoadGameState, LoadGameStateEvent(this->state)));
             };
