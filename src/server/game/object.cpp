@@ -1,6 +1,6 @@
-#include "shared/game/gamelogic/object.hpp"
-#include "shared/game/gamelogic/constants.hpp"
-#include "shared/game/sharedgamestate/sharedobject.hpp"
+#include "server/game/object.hpp"
+#include "server/game/constants.hpp"
+#include "shared/game/sharedobject.hpp"
 
 /*	Constructors and Destructors	*/
 

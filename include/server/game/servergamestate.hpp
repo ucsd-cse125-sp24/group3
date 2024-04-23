@@ -3,7 +3,7 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/smartvector.hpp"
-#include "shared/game/gamelogic/object.hpp"
+#include "server/game/object.hpp"
 
 #include <string>
 #include <vector>

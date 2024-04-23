@@ -174,7 +174,7 @@ void Client::draw() {
         std::cout << "got an object" << std::endl;
         //  tmp: all objects are cubes
         Cube* cube = new Cube();
-        cube->update(sharedObject->physics.position);
+        cube->update(sharedObject->position);
         cube->draw(this->shaderProgram);
     }
 }

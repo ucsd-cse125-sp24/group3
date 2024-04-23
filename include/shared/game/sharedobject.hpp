@@ -1,9 +1,10 @@
 #pragma once
 
-#include "shared/game/gamelogic/object.hpp"
-#include "shared/utilities/serialize_macro.hpp"
+#include <optional>
 
-struct Stats;
+#include "server/game/object.hpp"
+#include "shared/utilities/serialize_macro.hpp"
+#include "server/game/creature.hpp" // stats
 
 /**
  * @brief Representation of the Object class used by ServerGameState, containing

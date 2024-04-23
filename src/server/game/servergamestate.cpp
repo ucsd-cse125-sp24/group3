@@ -1,4 +1,4 @@
-#include "shared/game/servergamestate.hpp"
+#include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
 
 /*	Constructors and Destructors	*/

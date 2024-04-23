@@ -1,7 +1,7 @@
 #pragma once
 
-#include "shared/game/servergamestate.hpp"
-#include "shared/game/sharedgamestate/sharedobject.hpp"
+#include "server/game/servergamestate.hpp"
+#include "shared/game/sharedobject.hpp"
 #include "shared/utilities/smartvector.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 

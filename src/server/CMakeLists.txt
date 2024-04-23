@@ -4,6 +4,11 @@ set(LIB_NAME game_server_lib)
 set(FILES
     lobbybroadcaster.cpp
     server.cpp
+    game/boxcollider.cpp
+    game/spherecollider.cpp
+    game/creature.cpp
+    game/object.cpp
+    game/servergamestate.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

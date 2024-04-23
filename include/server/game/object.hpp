@@ -88,9 +88,6 @@ public:
 	Object();
 	~Object();
 
-	virtual void applyAction() = 0;
-	virtual void onCollision(Object* other) = 0;
-
 	/**
 	 * @brief Generates a SharedObject representation of this object.
 	 * @return Generates a SharedObject representation of this object.
@@ -101,8 +98,4 @@ public:
 
 	std::string to_string(unsigned int tab_offset);
 	std::string to_string() { return this->to_string(0); }
-
-    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & id & position & acceleration;
-    }
 };

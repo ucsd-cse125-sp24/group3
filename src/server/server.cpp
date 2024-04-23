@@ -15,8 +15,8 @@
 
 #include "boost/variant/get.hpp"
 #include "shared/game/event.hpp"
-#include "shared/game/servergamestate.hpp"
-#include "shared/game/gamelogic/object.hpp"
+#include "server/game/servergamestate.hpp"
+#include "server/game/object.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"

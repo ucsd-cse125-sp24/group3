@@ -13,7 +13,7 @@
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/typedefs.hpp"
-#include "shared/game/servergamestate.hpp"
+#include "server/game/servergamestate.hpp"
 
 using boost::asio::ip::tcp;
 

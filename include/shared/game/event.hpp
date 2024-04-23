@@ -6,7 +6,6 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/utilities/serialize.hpp"
 #include "shared/utilities/serialize_macro.hpp"
-//#include "shared/game/gamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
 
 
