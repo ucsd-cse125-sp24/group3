@@ -14,7 +14,7 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 
-# Generate a "compile_commands.json" file for clang-tidy and VScode to use 
+# Generate a "compile_commands.json" file for VScode to use 
 set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
 # Tell CMake to ignore warnings from stuff in our dependencies. Surely GLM
@@ -48,11 +48,22 @@ add_subdirectory(src/client) # create client executable
 add_subdirectory(src/server) # create server executable
 add_subdirectory(src/debugger) # create debugger executable
 
-# this might not be compatible on Windows due to how find is used
-file(GLOB_RECURSE LINT_FILES "src/*.cpp" "include/*.hpp")
-find_program(CLANG_TIDY "clang-tidy")
+find_program(CPPCHECK "cppcheck")
 add_custom_target(lint
-    COMMAND ${CLANG_TIDY} 
-    -p=.
-    ${LINT_FILES}
+    COMMAND ${CPPCHECK}
+    # checks to enable
+    --enable=warning,style,performance,portability
+    # allow us to suppress individual lines with // cppcheck-suppress <check-name>
+    --inline-suppr
+    # return error exit code 1 on failures
+    --error-exitcode=1
+    # tell it about our include directory
+    -I ${CMAKE_SOURCE_DIR}/include
+    # only check include and src
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    # ignore test directories
+    -i${CMAKE_SOURCE_DIR}/src/client/tests
+    -i${CMAKE_SOURCE_DIR}/src/server/tests
+    -i${CMAKE_SOURCE_DIR}/src/shared/tests
 )

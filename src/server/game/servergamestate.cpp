@@ -83,76 +83,6 @@ void ServerGameState::updateMovement() {
 	}
 }
 
-/*	Object CRUD methods	*/
-
-//unsigned int ServerGameState::createObject(ObjectType type) {
-//	//	Create a new object with the given type in the relevant type-specific
-//	//	object SmartVector, add a reference to it in the global object
-//	//	SmartVector, and set the indices it receives in both as its type ID
-//	//	and global ID, respectively.
-//
-//	unsigned int typeID, globalID;
-//
-//	switch (type) {
-//		case ObjectType::Object:
-//			//	Create a new object of type Object in base_objects
-//			Object* object = new Object();
-//			typeID = this->base_objects.push(object);
-//
-//			//	Add a reference to the new object in the global objects 
-//			//	SmartVector
-//			globalID = this->objects.push(object);
-//
-//			//	Set object's type and global IDs
-//			object->globalID = globalID;
-//			object->typeID = typeID;
-//			break;
-//	}
-//
-//	//	Return new object's type ID
-//	return typeID;
-//}
-//
-//bool ServerGameState::removeObject(unsigned int global_id) {
-//	//	Check that the given object exists
-//	Object** ptrToPtr = this->objects.get(global_id);
-//
-//	if (ptrToPtr == nullptr) {
-//		//	Object with the given index doesn't exist
-//		return false;
-//	}
-//
-//	Object* object = *ptrToPtr;
-//
-//	//	Remove object from the global objects SmartVector and from the
-//	//	type-specific Object vector it's in
-//	this->objects.remove(global_id);
-//
-//	switch (object->type) {
-//		case ObjectType::Object:
-//			//	Remove this object from the base_objects SmartVector
-//			this->base_objects.remove(object->typeID);
-//			break;
-//	}
-//
-//	return true;
-//}
-//
-//Object* ServerGameState::getObject(unsigned int global_id) {
-//	Object** ptrToPtr = this->objects.get(global_id);
-//
-//	if (ptrToPtr == nullptr) {
-//		return nullptr;
-//	}
-//	else {
-//		return *ptrToPtr;
-//	}
-//}
-//
-//Object* ServerGameState::getBaseObject(unsigned int type_id) {
-//	return *(this->base_objects.get(type_id));
-//}
-
 unsigned int ServerGameState::getTimestep() const {
 	return this->timestep;
 }
@@ -163,6 +93,10 @@ std::chrono::milliseconds ServerGameState::getTimestepLength() const {
 
 GamePhase ServerGameState::getPhase() const {
 	return this->phase;
+}
+
+void ServerGameState::setPhase(GamePhase phase) {
+	this->phase = phase;
 }
 
 void ServerGameState::addPlayerToLobby(EntityID id, std::string name) {

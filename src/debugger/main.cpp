@@ -58,7 +58,6 @@ int main(int argc, char* argv[]) {
 
 	//	User input string
 	std::string input;
-	std::vector<std::string> tokens;
 
 	while (true) {
 		//	Print prompt
@@ -68,7 +67,7 @@ int main(int argc, char* argv[]) {
 		std::getline(std::cin, input);
 
 		//	Parse user input
-		tokens = get_string_tokens(input, ' ');
+        std::vector<std::string> tokens = get_string_tokens(input, ' ');
 
 		//	Try to find command in command_map
 		std::unordered_map<std::string, Command&>::iterator c_iter = command_map.find(tokens.at(0));

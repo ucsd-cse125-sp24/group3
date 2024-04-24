@@ -25,7 +25,7 @@ public:
     /**
      * Instantiates the Lobby Finder but doesn't start searching.
      */
-    LobbyFinder(boost::asio::io_context& io_context, GameConfig config);
+    LobbyFinder(boost::asio::io_context& io_context, const GameConfig& config);
 
     /**
      * Calls LobbyFinder::stopSearching(), if it hasn't already been called.

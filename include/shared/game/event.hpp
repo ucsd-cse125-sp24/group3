@@ -49,7 +49,7 @@ struct LobbyActionEvent {
     };
 
     LobbyActionEvent() {}
-    LobbyActionEvent(Action action) : action(action) {}
+    explicit LobbyActionEvent(Action action) : action(action) {}
 
     Action action;
 
@@ -65,7 +65,7 @@ struct LobbyActionEvent {
 struct LoadGameStateEvent {
     // Dummy value doesn't matter because will be overridden with whatever you deserialize
     LoadGameStateEvent() : state(SharedGameState(GamePhase::TITLE_SCREEN, GameConfig{})){}
-    LoadGameStateEvent(SharedGameState state) : state(state) {}
+    explicit LoadGameStateEvent(SharedGameState state) : state(state) {}
 
     SharedGameState state;
 
@@ -95,7 +95,7 @@ struct MoveRelativeEvent {
  */
 struct MoveAbsoluteEvent {
     MoveAbsoluteEvent() {}
-    MoveAbsoluteEvent(EntityID entity_to_move) : entity_to_move(entity_to_move) {}
+    explicit MoveAbsoluteEvent(EntityID entity_to_move) : entity_to_move(entity_to_move) {}
 
     EntityID entity_to_move;
     /// some velocity / movement information...

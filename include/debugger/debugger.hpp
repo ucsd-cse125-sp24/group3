@@ -51,7 +51,7 @@ void initialize_commands(std::vector<Command*>& commands);
  * @brief  Deallocate all Command objects allocated by initialize_commands().
  * @param commands  
  */
-void free_commands(std::vector<Command*> commands);
+void free_commands(const std::vector<Command*>& commands);
 
 //	Debugger Commands
 
@@ -62,7 +62,7 @@ public:
 		this->shorthand = "q";
 	}
 
-	void run(std::vector<std::string> arguments, ServerGameState& state) override {
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { //cppcheck-suppress passedByValue
 		//	This command ignores arguments
 		std::cout << "Quitting gsdb..." << std::endl;
 
@@ -79,7 +79,7 @@ public:
 		//this->num_expected_args = 0;
 	}
 
-	void run(std::vector<std::string> arguments, ServerGameState& state) override {
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { // cppcheck-suppress passedByValue
 		//	Possible variations:
 		//	step - call GameState::update() once on the given state instance.
 		//	step n - call update() n times.
@@ -124,7 +124,7 @@ public:
 		this->shorthand = NO_SHORTHAND;
 	}
 
-	void run(std::vector<std::string> arguments, ServerGameState& state) override {
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { // cppcheck-suppress passedByValue
 		//	This command ignores arguments
 
 		//	Print GameState instance' state
@@ -139,7 +139,7 @@ public:
 		this->shorthand = "p";
 	}
 
-	void run(std::vector<std::string> arguments, ServerGameState& state) override {
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { //cppcheck-suppress passedByValue
 		//	Variations:
 		//	print [global id number] - print state of object with given id
 		//	print [global id number] [property] - print state of given property
@@ -222,7 +222,7 @@ public:
 		this->shorthand = NO_SHORTHAND;
 	}
 
-	void run(std::vector<std::string> arguments, ServerGameState& state) override {
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { //cppcheck-suppress passedByValue
 		//	This command ignores arguments (though it may make sense to have
 		//	command descriptors, e.g. help step -> "the step command does ..."
 
@@ -246,7 +246,7 @@ public:
 		this->shorthand = "c";
 	}
 
-	void run(std::vector<std::string> arguments, ServerGameState& state) override {
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { // cppcheck-suppress passedByValue
 		//	This command ignores arguments
 
 		//	Create a new base object in the game state
@@ -264,7 +264,7 @@ public:
 		this->shorthand = "d";
 	}
 
-	void run(std::vector<std::string> arguments, ServerGameState& state) override {
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { // cppcheck-suppress passedByValue
 		//	delete [object global id]
 		if (arguments.size() != 2) {
 			std::cout << "Error: Incorrect number of arguments for 'delete' command.\n";
@@ -300,7 +300,7 @@ public:
 		this->shorthand = NO_SHORTHAND;
 	}
 
-	void run(std::vector<std::string> arguments, ServerGameState& state) override {
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { //cppcheck-suppress passedByValue
 		//	set [object global id] [property] [new value]
 		if (arguments.size() != 4) {
 			std::cout << "Error: Incorrect number of arguments for 'set' command.\n";
@@ -398,4 +398,4 @@ std::vector<std::string> get_string_tokens(std::string input, char delimeter);
  * debugger to all known commands.
  * @param command_map  Reference to the debugger's command map (assumed empty).
  */
-void initialize_command_map(std::unordered_map<std::string, Command&>& command_map, std::vector<Command*> commands);
+void initialize_command_map(std::unordered_map<std::string, Command&>& command_map, const std::vector<Command*>& commands);

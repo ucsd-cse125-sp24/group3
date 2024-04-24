@@ -70,53 +70,6 @@ public:
 	 */
 	SharedGameState generateSharedGameState();
 
-	/*	Object CRUD methods	*/
-	
-	/**
-	 * @brief Creates a new object with the specified type and places it in the
-	 * relevant type-specific object vector.
-	 * 
-	 * This method assigns a unique global ID and type-specific ID to the newly
-	 * created object (NOTE: the Object constructor does NOT do this!)
-	 * 
-	 * @return the type-specific ID of the created object (the idea is that more
-	 * often than not, you'd want to get a reference to the derived class of the
-	 * newly created object than a reference to Object which you'd then need to
-	 * cast)
-	 */
-	//unsigned int createObject(ObjectType type);
-
-	/**
-	 * @brief Attempts to remove an object with the given global ID.
-	 * 
-	 * This removes the object from the type-specific object vector that
-	 * contains it as well as from the global Object & vector.
-	 * 
-	 * @param global_id Global ID of the object to remove from this game
-	 * instance.
-	 * @return true if the object was successfully removed and false otherwise.
-	 */
-	//bool removeObject(unsigned int global_id);
-
-	/**
-	 * @brief Attempts to retrieve the object with the given global ID.
-	 * @param global_id Global ID of the object to retrieve
-	 * @return A pointer to the object with the given global ID or nullptr if
-	 * none exists.
-	 */
-	//Object* getObject(unsigned int global_id);
-
-	//	TODO: Add type-specific object getters (e.g., getPlayer(), getWalls(),
-	//	etc.)
-
-	/**
-	 * @brief Attempts to retrieve the base object with the given type ID.
-	 * @param type_id Type ID of the base object to retrieve
-	 * @return A pointer to the base object with the given type ID or nullptr if
-	 * none exists.
-	 */
-	//Object * getBaseObject(unsigned int type_id);
-
 	/*	Other getters and setters	*/
 
 	/**
@@ -137,6 +90,11 @@ public:
 	 * @return The current GamePhase of this ServerGameState instance. 
 	 */
 	GamePhase getPhase() const;
+
+	/**
+	 * @brief setter for game phase
+	 */
+	void setPhase(GamePhase phase);
 
 	/**
 	 * Reassign id to the specified name in the mapping. This is okay to call if the
@@ -166,55 +124,6 @@ public:
 	std::string to_string();
 
 private:
-	/*
-	 * Note on how Objects are stored:
-	 *
-	 * The ServerGameState class has a vector<Object &> objects array that holds
-	 * references to all Objects in the game instance at the current timestep.
-	 * The actual objects are stored in type-specific vectors, e.g., all of the
-	 * Player objects are stored in vector<Player> players, and all Wall objects
-	 * are stored in vector<Wall> walls; this idea requires that each object is
-	 * stored in exactly one type-specific object vector. I think a good rule is
-	 * that an object should be stored in the type-specific array whose type is
-	 * closest to its actual type. E.g., let's say Creature derives from Object
-	 * and Player and Enemy derive from Creature, and that there exists a
-	 * vector<Object> base_objects type-specific object vector as well as a 
-	 * vector<Creature> creatures type-specific object vector. All Player, 
-	 * Enemy, and Creature objects should be stored in the creatures vector and 
-	 * all other objects should be stored in the base_objects vector.
-	 * 
-	 * To access an object in the vector<Object &> vector, use its global ID as
-	 * the index.
-	 * To access an object in the type-specific vector that contains it, use
-	 * its type-specific ID as the index.
-	 * Hence, all Objects have two IDs - a global ID and a type-specific ID.
-	 */
-
-	//	TODO: Refactor vector<T> array + queue<unsigned int> freelist into a
-	//	single template class - otherwise, each type-specific object vector will
-	//	come with an extra free list and this will get hairy to use.
-
-	//SmartVector<Object *> objects;
-
-	/**
-	 * @brief Vector of Object references to all objects in the current timestep
-	 * of this game instance.
-	 * 
-	 * The objects vector is indexed by each Object's global id; that is, the 
-	 * Object reference at index x is to the Object with glboal id x.
-	 */
-	//std::vector<Object&> objects;
-
-	/**
-	 * @brief Global ID freelist, used for assigning global object IDs.
-	 */
-	//std::queue<unsigned int> global_ID_freelist;
-
-	//	TODO: Add type-specific object arrays (e.g., vector<Player> players,
-	//	vector<Wall> walls, etc.)
-
-	//SmartVector<Object *> base_objects;
-
 	/**
 	 *  Timestep length in milliseconds.
 	 */

@@ -10,10 +10,11 @@
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/serialize.hpp"
 
-LobbyFinder::LobbyFinder(boost::asio::io_context& io_context, GameConfig config):
+LobbyFinder::LobbyFinder(boost::asio::io_context& io_context, const GameConfig& config):
     lobby_discovery_socket(io_context,
         udp::endpoint(address_v4::any(), config.network.server_port)),
-    keep_searching(false)
+    keep_searching(false),
+    lobby_info_buf()
 {
 
 }
@@ -66,7 +67,7 @@ void LobbyFinder::_searchForLobbyWorker() {
 
             std::unique_lock<std::mutex> lock(this->mut);
             this->lobbies_avail[this->endpoint_buf] = parsed_info;
-        } catch (boost::system::system_error e) {
+        } catch (boost::system::system_error& e) {
             std::cerr << "Error while searching for lobby: " << e.what() << std::endl;
         }
     }

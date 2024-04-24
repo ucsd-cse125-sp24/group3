@@ -30,7 +30,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      acceptor(io_context, tcp::endpoint(tcp::v4(), config.network.server_port)),
      socket(io_context),
      world_eid(0),
-     state(ServerGameState(GamePhase::GAME, config))
+     state(ServerGameState(GamePhase::LOBBY, config))
 {
     //Object* obj = state.createObject();
     //obj->position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -51,7 +51,7 @@ EntityID Server::genNewEID() {
     return id++;
 }
 
-void Server::updateGameState(std::vector<Event> events) {
+void Server::updateGameState(const std::vector<Event>& events) {
     for (const Event& event : events) {
         switch (event.type) {
         case EventType::MoveRelative:
@@ -70,7 +70,7 @@ std::vector<Event> Server::getAllClientEvents() {
     std::vector<Event> allEvents;
 
     // Loop through each session
-    for (const auto& [eid, session] : this->sessions) {
+    for (const auto& [eid, session] : this->sessions) { // cppcheck-suppress unusedVariable
         // Get events from the current session
         std::vector<Event> sessionEvents = session->getEvents();
 
@@ -82,7 +82,7 @@ std::vector<Event> Server::getAllClientEvents() {
 }
 
 void Server::sendUpdateToAllClients(Event event) {
-    for (const auto& [eid, session] : this->sessions) {
+    for (const auto& [eid, session] : this->sessions) { // cppcheck-suppress unusedVariable
         session->sendEventAsync(event); // SEND UPDATED GAME STATE TO CLIENTS
     }
 }
@@ -102,11 +102,17 @@ std::chrono::milliseconds Server::doTick() {
                     session->getInfo().client_name.value_or("[UNKNOWN NAME]"));
             }
 
+            if (this->state.getLobbyPlayers().size() >= this->state.getLobbyMaxPlayers()) {
+                this->state.setPhase(GamePhase::GAME);
+            }
+
             // Tell each client the current lobby status
-            for (const auto& [eid, session]: this->sessions) {
+            for (const auto& [eid, session]: this->sessions) { // cppcheck-suppress unusedVariable
                 session->sendEventAsync(Event(this->world_eid,
                     EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
             };
+
+            std::cout << "waiting for " << this->state.getLobbyMaxPlayers() << " players" << std::endl;
 
             break;
         case GamePhase::GAME: {
