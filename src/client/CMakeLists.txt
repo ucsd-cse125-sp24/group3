@@ -6,6 +6,7 @@ set(FILES
     cube.cpp
     util.cpp
     lobbyfinder.cpp
+    shaders.cpp
     ${imgui-source}
 )
 

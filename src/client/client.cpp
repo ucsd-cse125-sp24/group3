@@ -7,6 +7,7 @@
 #include <iostream>
 #include <thread>
 
+#include "client/shaders.hpp"
 #include "shared/game/event.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
@@ -45,19 +46,18 @@ Client::~Client() {
 
 }
 
-int Client::init() {
+bool Client::init() {
     /* Initialize the library */
     if (!glfwInit())
-        return -1;
+        return false;
 
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-    if (!window)
-    {
+    if (!window) {
         glfwTerminate();
-        return -1;
+        return false;
     }
 
     /* Make the window's context current */
@@ -67,34 +67,33 @@ int Client::init() {
     #ifndef __APPLE__ // GLew not needed on OSX systems
     GLenum err = glewInit() ; 
     if (GLEW_OK != err) { 
-        std::cerr << "Error: " << glewGetString(err) << std::endl; 
+        std::cerr << "Error loading GLEW: " << glewGetString(err) << std::endl; 
+        return false;
     } 
     #endif
 
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
 
-    /* Load shader programs */
-    std::cout << "loading shader" << std::endl;
-    shaderProgram = LoadShaders("../src/client/shaders/shader.vert", "../src/client/shaders/shader.frag");
-
-    // Check the shader program.
-    if (!shaderProgram) {
-        std::cerr << "Failed to initialize shader program" << std::endl;
+    this->cubeShaderProgram = loadCubeShaders();
+    if (!this->cubeShaderProgram) {
+        std::cout << "Failed to load cube shader files" << std::endl; 
         return false;
     }
 
-    return 0;
+    return true;
 }
 
 // Remember to do error message output for later
-int Client::start(boost::asio::io_context& context) {
-    init();
+bool Client::start(boost::asio::io_context& context) {
+    if(!init()){
+        std::cout << "Client initialization failed" << std::endl;
+        return false;
+    }
 
     // Constrain framerate
     /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         processClientInput();
         processServerInput(context);
         /* Render here */
@@ -115,8 +114,8 @@ int Client::start(boost::asio::io_context& context) {
 
     glfwTerminate();
 
-    glDeleteProgram(shaderProgram);
-    return 0;
+    glDeleteProgram(this->cubeShaderProgram);
+    return true;
 }
 
 void Client::processClientInput() {
@@ -169,6 +168,6 @@ void Client::draw() {
         // tmp: all objects are cubes
         Cube* cube = new Cube();
         cube->update(obj.position);
-        cube->draw(this->shaderProgram);
+        cube->draw(this->cubeShaderProgram);
     }
 }

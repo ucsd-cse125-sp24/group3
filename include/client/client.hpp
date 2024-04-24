@@ -27,8 +27,8 @@ class Client {
 public:
     Client(boost::asio::io_service& io_service, GameConfig config);
     ~Client();
-    int init();
-    int start(boost::asio::io_context& context);
+    bool init();
+    bool start(boost::asio::io_context& context);
     void draw();
     void connectAndListen(std::string ip_addr);
 
@@ -36,13 +36,13 @@ private:
     void processClientInput();
     void processServerInput(boost::asio::io_context& context);
 
+    GLuint cubeShaderProgram;
     
     GameState gameState;
 
     float cubeMovementDelta = 0.05f;
 
     GLFWwindow *window;
-    GLuint shaderProgram;
 
     GameConfig config;
     tcp::resolver resolver;

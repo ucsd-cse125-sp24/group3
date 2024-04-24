@@ -45,11 +45,11 @@ GLuint LoadSingleShader(const char* shaderFilePath, ShaderType type) {
     glGetShaderiv(shaderID, GL_COMPILE_STATUS, &Result);
     glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
     if (InfoLogLength > 0) {
-        std::vector<char> shaderErrorMessage(InfoLogLength + 1);
-        glGetShaderInfoLog(shaderID, InfoLogLength, NULL, shaderErrorMessage.data());
-        std::string msg(shaderErrorMessage.begin(), shaderErrorMessage.end());
-        std::cerr << msg << std::endl;
-        return 0;
+        // std::vector<char> shaderErrorMessage(InfoLogLength + 1);
+        // glGetShaderInfoLog(shaderID, InfoLogLength, NULL, shaderErrorMessage.data());
+        // std::string msg(shaderErrorMessage.begin(), shaderErrorMessage.end());
+        // std::cerr << msg << std::endl;
+        // return 0;
     } else {
         if (type == vertex)
             printf("Successfully compiled vertex shader!\n");
@@ -82,12 +82,12 @@ GLuint LoadShaders(const char* vertexFilePath, const char* fragmentFilePath) {
     glGetProgramiv(programID, GL_LINK_STATUS, &Result);
     glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &InfoLogLength);
     if (InfoLogLength > 0) {
-        std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
-        glGetProgramInfoLog(programID, InfoLogLength, NULL, ProgramErrorMessage.data());
-        std::string msg(ProgramErrorMessage.begin(), ProgramErrorMessage.end());
-        std::cerr << msg << std::endl;
-        glDeleteProgram(programID);
-        return 0;
+        // std::vector<char> ProgramErrorMessage(InfoLogLength + 1);
+        // glGetProgramInfoLog(programID, InfoLogLength, NULL, ProgramErrorMessage.data());
+        // std::string msg(ProgramErrorMessage.begin(), ProgramErrorMessage.end());
+        // std::cerr << msg << std::endl;
+        // glDeleteProgram(programID);
+        // return 0;
     } else {
         printf("Successfully linked program!\n");
     }
