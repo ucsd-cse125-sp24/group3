@@ -60,16 +60,12 @@ void ServerGameState::updateMovement() {
 	//	positions and velocities if they are movable.
 
 	SmartVector<Object*> gameObjects = this->objects.getObjects();
-	Object** ptrToPtr;
-	Object* object;
 	for (int i = 0; i < gameObjects.size(); i++) {
-		ptrToPtr = gameObjects.get(i);
+		Object* object = gameObjects.get(i);
 
-		if (ptrToPtr == nullptr)
+		if (object == nullptr)
 			continue;
 		
-		object = *ptrToPtr;
-
 		if (object->physics.movable) {
 			//	object position [meters]
 			//	= old position [meters] + (velocity [meters / timestep] * 1 timestep)
@@ -99,7 +95,7 @@ void ServerGameState::setPhase(GamePhase phase) {
 	this->phase = phase;
 }
 
-void ServerGameState::addPlayerToLobby(EntityID id, std::string name) {
+void ServerGameState::addPlayerToLobby(EntityID id, const std::string& name) {
 	this->lobby.players[id] = name;
 }
 
@@ -124,12 +120,10 @@ std::string ServerGameState::to_string() {
 	SmartVector<Object*> gameObjects = this->objects.getObjects();
 
 	for (int i = 0; i < gameObjects.size(); i++) {
-		Object** ptrToPtr = gameObjects.get(i);
+		Object* object = gameObjects.get(i);
 
-		if (ptrToPtr == nullptr)
+		if (object == nullptr)
 			continue;
-
-		Object* object = *ptrToPtr;
 
 		representation += object->to_string(2);
 

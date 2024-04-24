@@ -56,13 +56,13 @@ public:
 	 * @brief Unique object ID (used to index into the ServerGameState::objects
 	 * vector)
 	 */
-	EntityID globalID;
+	EntityID globalID {};
 
 	/**
 	 * @brief Type-specific Object ID (used to index into the type-specific
 	 * objects vector in ServerGameState)
 	 */
-	SpecificID typeID;
+	SpecificID typeID {};
 
 	/**
 	 * @brief Identifies this object's type (derived class)
@@ -71,7 +71,7 @@ public:
 
 	Physics physics;
 
-	Object();
+	explicit Object(ObjectType type);
 	~Object();
 
 	/**

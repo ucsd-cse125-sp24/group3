@@ -32,9 +32,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      world_eid(0),
      state(ServerGameState(GamePhase::LOBBY, config))
 {
-    //Object* obj = state.createObject();
-    //obj->position = glm::vec3(0.0f, 0.0f, 0.0f);
-    unsigned int object_globalID = state.objects.createObject(ObjectType::Object);
+    state.objects.createObject(ObjectType::Object);
     
     doAccept(); // start asynchronously accepting
 

@@ -7,7 +7,9 @@
 #include "shared/utilities/config.hpp"
 #include "server/game/constants.hpp"
 
+#include <memory>
 #include <chrono>
+#include <vector>
 
 enum class GamePhase {
 	TITLE_SCREEN,
@@ -43,7 +45,7 @@ struct Lobby {
  * timestep. It is intended only for use by the client(s).
  */
 struct SharedGameState {
-	SmartVector<SharedObject> objects;
+	std::vector<std::shared_ptr<SharedObject>> objects;
 
 	std::chrono::milliseconds timestep_length;
 
@@ -53,24 +55,24 @@ struct SharedGameState {
 
 	GamePhase phase;
 
-	SharedGameState() {
+	SharedGameState():
+		objects(std::vector<std::shared_ptr<SharedObject>>())
+	{
+		this->objects.reserve(MAX_NUM_OBJECTS);
 		this->phase = GamePhase::TITLE_SCREEN;
 		this->timestep = FIRST_TIMESTEP;
 		this->timestep_length = TIMESTEP_LEN;
 		this->lobby.max_players = MAX_PLAYERS;
-
-		//	Initialize SmartVectors with max sizes
-		this->objects = SmartVector<SharedObject>(MAX_NUM_OBJECTS);
 	}
 
-	SharedGameState(GamePhase start_phase, GameConfig config) {
+	SharedGameState(GamePhase start_phase, GameConfig config):
+		objects(std::vector<std::shared_ptr<SharedObject>>())
+	{
+		this->objects.reserve(MAX_NUM_OBJECTS);
 		this->phase = start_phase;
 		this->timestep = FIRST_TIMESTEP;
 		this->timestep_length = config.game.timestep_length_ms;
 		this->lobby.max_players = config.server.max_players;
-
-		//	Initialize SmartVectors with max sizes
-		this->objects = SmartVector<SharedObject>(MAX_NUM_OBJECTS);
 	}
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {

@@ -4,9 +4,9 @@
 
 /*	Constructors and Destructors	*/
 
-Object::Object() {
+Object::Object(ObjectType type) {
 	//	Set object type to Object
-	this->type = ObjectType::Object;
+	this->type = type;
 	
 	//	Initialize object Physics
 	//	By default, the newly created object spawns at the origin without any

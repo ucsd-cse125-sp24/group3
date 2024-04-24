@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "server/game/object.hpp"
 
 #include "shared/utilities/smartvector.hpp"
@@ -52,10 +54,10 @@ public:
 	/**
 	 * @brief Generates a list of SharedObjects that corresponds to all objects
 	 * in the game instance.
-	 * @return Returns a SmartVector<SharedObject> that corresponds to all
+	 * @return Returns a std::vector<SharedObject> that corresponds to all
 	 * objects in the game instance.
 	 */
-	SmartVector<SharedObject> toShared();
+	std::vector<std::shared_ptr<SharedObject>> toShared();
 
 private:
 	/*

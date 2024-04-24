@@ -13,9 +13,9 @@ public:
 	SphereCollider(glm::vec3 center, float radius);
 	~SphereCollider();
 
-	bool detectCollision(Collider* otherCollider);
-	bool resolveCollision(Collider* otherCollider);
-	Shape getShape();
+	bool detectCollision(Collider* otherCollider) override;
+	bool resolveCollision(Collider* otherCollider) override;
+	Shape getShape() override;
 
 private:
 

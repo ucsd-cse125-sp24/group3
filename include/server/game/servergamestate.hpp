@@ -41,7 +41,7 @@ public:
 	 * @param start_phase GamePhase that the new ServerGameState instance will
 	 * start in.
 	 */
-	ServerGameState(GamePhase start_phase);
+	explicit ServerGameState(GamePhase start_phase);
 
 	ServerGameState(GamePhase start_phase, GameConfig config);
 
@@ -101,7 +101,7 @@ public:
 	 * player is already in the mapping, as nothing will happen. If a player's name
 	 * has changed, then this will update their name as well.
 	 */
-	void addPlayerToLobby(EntityID id, std::string name);
+	void addPlayerToLobby(EntityID id, const std::string& name);
 	/**
 	 * Removes a player from the lobby with the specified id.
 	 */

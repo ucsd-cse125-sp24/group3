@@ -52,7 +52,7 @@ public:
 
 	std::optional<Stats> stats;	
 
-	SharedObject() {}
+	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {

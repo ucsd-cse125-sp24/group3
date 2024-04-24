@@ -171,7 +171,7 @@ void Client::draw() {
     //    cube->draw(this->shaderProgram);
     //}
     for (int i = 0; i < this->gameState.objects.size(); i++) {
-        SharedObject* sharedObject = this->gameState.objects.get(i);
+        std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
 
         if (sharedObject == nullptr)
             continue;

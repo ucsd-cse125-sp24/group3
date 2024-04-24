@@ -1,5 +1,7 @@
 #include "server/game/objectmanager.hpp"
 
+#include <memory>
+
 /*	Constructors and Destructors	*/
 
 ObjectManager::ObjectManager() {
@@ -24,7 +26,7 @@ EntityID ObjectManager::createObject(ObjectType type) {
 	switch (type) {
 	case ObjectType::Object:
 		//	Create a new object of type Object
-		Object* object = new Object();
+		Object* object = new Object(ObjectType::Object);
 
 		//	TODO: Maybe change SmartVector's index return value? size_t is
 		//	larger than uint32 (which is what SpecificID and EntityID are
@@ -47,14 +49,12 @@ EntityID ObjectManager::createObject(ObjectType type) {
 
 bool ObjectManager::removeObject(EntityID globalID) {
 	//	Check that the given object exists
-	Object** ptrToPtr = this->objects.get(globalID);
+	Object* object = this->objects.get(globalID);
 
-	if (ptrToPtr == nullptr) {
+	if (object == nullptr) {
 		//	Object with the given index doesn't exist
 		return false;
 	}
-
-	Object* object = *ptrToPtr;
 
 	//	Remove object from the global objects SmartVector and from the
 	//	type-specific Object vector it's in
@@ -75,13 +75,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 }
 
 Object* ObjectManager::getObject(EntityID globalID) {
-	Object** ptrToPtr = this->objects.get(globalID);
+	Object* object = this->objects.get(globalID);
 
-	if (ptrToPtr == nullptr) {
-		return nullptr;
-	}
-
-	return *ptrToPtr;
+	return object;
 }
 
 SmartVector<Object*> ObjectManager::getObjects() {
@@ -90,23 +86,21 @@ SmartVector<Object*> ObjectManager::getObjects() {
 
 /*	SharedGameState generation	*/
 
-SmartVector<SharedObject> ObjectManager::toShared() {
-	SmartVector<SharedObject> shared;
+std::vector<std::shared_ptr<SharedObject>> ObjectManager::toShared() {
+	std::vector<std::shared_ptr<SharedObject>> shared;
 
 	//	Fill shared SmartVector of SharedObjects
 	for (int i = 0; i < this->objects.size(); i++) {
-		Object** ptrToPtr = this->objects.get(i);
+		Object* object = this->objects.get(i);
 
-		if (ptrToPtr == nullptr) {
+		if (object == nullptr) {
 			//	Push empty object to SharedObject SmartVector
-			shared.pushEmpty();
+			shared.push_back(nullptr);
 		}
 		else {
-			Object* object = *ptrToPtr;
-
 			//	Create a SharedObject representation for this object and push it
 			//	to the SharedObject SmartVector
-			shared.push(object->toShared());
+			shared.push_back(std::make_shared<SharedObject>(object->toShared()));
 		}
 	}
 

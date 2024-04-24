@@ -9,6 +9,8 @@
  * @brief SmartVector is a wrapper for the std::vector class that adds objects
  * either to the end of the wrapped vector if it is full or places them in gaps.
  * @tparam T Type that the wrapped vector will store.
+ * 
+ * NOTE: T must be a pointer type currently!
  */
 template<typename T>
 class SmartVector {
@@ -17,7 +19,7 @@ public:
 	 * @brief Creates a SmartVector instance with a maximum wrapped vector size
 	 * of the given value.
 	 */
-	SmartVector(size_t max_size) {
+	explicit SmartVector(size_t max_size) {
 		//this->max_size = max_size;
 		this->wrapped_vector.reserve(max_size);
 	}
@@ -61,7 +63,6 @@ public:
 	 * wrapped vector)
 	 */
 	size_t pushEmpty() {
-		T emptyObject;
 		size_t index = wrapped_vector.size();
 
 		//	Check that the wrapped vector can be safely pushed to (without 
@@ -69,7 +70,7 @@ public:
 		//assert(this->max_size > index);
 
 		freelist.insert(index);
-		wrapped_vector.push_back(emptyObject);
+		wrapped_vector.push_back({});
 
 		return index;
 	}
@@ -92,12 +93,12 @@ public:
 	}
 
 	/**
-	 * @brief Returns a pointer to the object stored at the given index if it
+	 * @brief Returns the object stored at the given index if it
 	 * exists, and returns nullptr otherwise.
 	 * @return Pointer to the object stored at the given index if it exists and
 	 * nullptr otherwise.
 	 */
-	const T* get(size_t index) const {
+	const T get(size_t index) const {
 		//	Check that the index is in bounds
 		if (index >= wrapped_vector.size())
 		{
@@ -115,7 +116,7 @@ public:
 	}
 
 	// https://stackoverflow.com/questions/38790352/how-can-you-return-a-non-const-reference-to-an-element-in-a-stdvector-data-mem
-	T* get(size_t index) {
+	T get(size_t index) {
 		//	Check that the index is in bounds
 		if (index >= wrapped_vector.size())
 		{
@@ -129,7 +130,7 @@ public:
 		}
 
 		//	Return pointer to object stored at the given index
-		return &wrapped_vector[index];
+		return wrapped_vector[index];
 	}
 
 	/**
