@@ -4,6 +4,8 @@
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/smartvector.hpp"
 #include "shared/utilities/serialize_macro.hpp"
+#include "shared/utilities/config.hpp"
+#include "server/game/constants.hpp"
 
 #include <chrono>
 

@@ -15,14 +15,6 @@
 //	From sharedgamestate.hpp
 struct SharedGameState;
 
-/*	Constants	*/
-#define	FIRST_TIMESTEP			0
-#define TIMESTEP_LEN			std::chrono::milliseconds(30)
-#define	MAX_PLAYERS				4
-
-//	SmartVector capacities
-#define	MAX_NUM_OBJECTS			100
-#define MAX_NUM_BASE_OBJECTS	100
 
 /**
  * @brief The ServerGameState class contains all abstract game state data and

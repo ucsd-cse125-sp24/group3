@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <glm/glm.hpp>
 
 //#include "server/game/object.hpp"
 #include "shared/utilities/serialize_macro.hpp"

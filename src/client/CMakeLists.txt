@@ -1,4 +1,4 @@
-z`set(TARGET_NAME client)
+set(TARGET_NAME client)
 set(LIB_NAME game_client_lib)
 
 set(FILES
