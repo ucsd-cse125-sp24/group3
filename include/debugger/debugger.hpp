@@ -274,7 +274,7 @@ public:
 		//	Get global id argument
 		EntityID id;
 		try {
-			id = std::stoi(arguments.at(1));
+			id = (EntityID) std::stoi(arguments.at(1));
 		}
 		catch (...) {
 			std::cout << "Error: invalid argument for 'delete' command - expected an integer.\n";

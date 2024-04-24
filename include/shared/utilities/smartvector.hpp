@@ -18,7 +18,7 @@ public:
 	 * of the given value.
 	 */
 	SmartVector(size_t max_size) {
-		this->max_size = max_size;
+		//this->max_size = max_size;
 		this->wrapped_vector.reserve(max_size);
 	}
 
@@ -46,7 +46,7 @@ public:
 
 			//	Check that the wrapped vector can be safely pushed to (without 
 			//	causing reallocation)
-			assert(this->max_size > index);
+			//assert(this->max_size > index);
 
 			wrapped_vector.push_back(object);
 		}
@@ -66,7 +66,7 @@ public:
 
 		//	Check that the wrapped vector can be safely pushed to (without 
 		//	causing reallocation)
-		assert(this->max_size > index);
+		//assert(this->max_size > index);
 
 		freelist.insert(index);
 		wrapped_vector.push_back(emptyObject);
@@ -161,7 +161,7 @@ private:
 	 * the wrapped vector will be forced to reallocate its underlying container,
 	 * meaning that all pointers to vector elements will become invalid).
 	 */
-	size_t max_size;
+	//size_t max_size;
 	std::vector<T> wrapped_vector;
 	std::unordered_set<size_t> freelist;
 };

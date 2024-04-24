@@ -3,6 +3,9 @@ set(TARGET_NAME debugger)
 set(FILES
 	main.cpp
 	debugger.cpp
+	../server/game/servergamestate.cpp
+	../server/game/object.cpp
+	../server/game/objectmanager.cpp
 )
 
 add_executable(${TARGET_NAME} ${FILES})
