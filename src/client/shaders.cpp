@@ -1,6 +1,8 @@
 #include <GL/glew.h>
 #include <boost/dll/runtime_symbol_info.hpp>
 
+#include <string>
+
 #include "client/util.hpp"
 
 GLuint loadCubeShaders() {
@@ -8,7 +10,7 @@ GLuint loadCubeShaders() {
     boost::filesystem::path vertFilepath = root_path / "src/client/shaders/shader.vert";
     boost::filesystem::path fragFilepath = root_path / "src/client/shaders/shader.frag";
 
-    GLuint shaderProgram = LoadShaders(vertFilepath.c_str(), fragFilepath.c_str());
+    GLuint shaderProgram = LoadShaders(vertFilepath.string(), fragFilepath.string());
     // Check the shader program exists and is non-zero
     if (!shaderProgram) {
         return 0;

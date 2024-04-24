@@ -5,7 +5,7 @@ enum ShaderType {
 	fragment 
 };
 
-GLuint LoadSingleShader(const char* shaderFilePath, ShaderType type) {
+GLuint LoadSingleShader(const std::string shaderFilePath, ShaderType type) {
     // Create a shader id.
     GLuint shaderID = 0;
 
@@ -60,7 +60,7 @@ GLuint LoadSingleShader(const char* shaderFilePath, ShaderType type) {
     return shaderID;
 }
 
-GLuint LoadShaders(const char* vertexFilePath, const char* fragmentFilePath) {
+GLuint LoadShaders(const std::string vertexFilePath, const std::string fragmentFilePath) {
     // Create the vertex shader and fragment shader.
     GLuint vertexShaderID = LoadSingleShader(vertexFilePath, vertex);
     GLuint fragmentShaderID = LoadSingleShader(fragmentFilePath, fragment);
