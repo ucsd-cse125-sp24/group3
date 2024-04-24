@@ -9,7 +9,7 @@
     "server": {
         "lobby_name": "My Test Lobby",
         "lobby_broadcast": false,
-        "max_players": 4
+        "max_players": 1
     },
     "client": {
         "default_name": "Player",

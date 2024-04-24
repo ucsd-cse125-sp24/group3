@@ -13,6 +13,7 @@
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "server/game/servergamestate.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -49,6 +50,6 @@ private:
     /// @brief Mapping from player id to session for that player.
     std::unordered_map<EntityID, std::shared_ptr<Session>> sessions;
 
-    /// @brief Master copy of the GameState, living on the server
-    GameState state;
+    /// @brief Master copy of the ServerGameState, living on the server
+    ServerGameState state;
 };

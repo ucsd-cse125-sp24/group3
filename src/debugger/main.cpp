@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include "shared/game/gamestate.hpp"
-#include "shared/game/gamelogic/constants.hpp"
+#include "server/game/servergamestate.hpp"
+#include "server/game/constants.hpp"
 #include "debugger/debugger.hpp"
 
 std::vector<Command*> commands;
@@ -24,19 +24,21 @@ int main(int argc, char* argv[]) {
 
 	auto config = GameConfig::parse(argc, argv);
 
-	//	1.	Create a GameState object
-	GameState state(GamePhase::GAME, config);
+	//	1.	Create a ServerGameState object
+	ServerGameState state(GamePhase::GAME, config);
 
 	//	2.	Fill it with some objects
-	Object* obj1 = state.createObject();
-	obj1->setPosition(glm::vec3(0.f, 0.f, 0.f));
-	obj1->setVelocity(glm::vec3(0.f, 0.f, 10.f));
-	obj1->setAcceleration(glm::vec3(0.f, 0.f, -1.f));
+	unsigned int globalID1 = state.objects.createObject(ObjectType::Object);
+	Object* obj1 = state.objects.getObject(globalID1);
+	obj1->physics.shared.position = glm::vec3(0.f, 0.f, 0.f);
+	obj1->physics.velocity = glm::vec3(0.f, 0.f, 10.f);
+	obj1->physics.acceleration = glm::vec3(0.f, 0.f, -1.f);
 
-	Object* obj2 = state.createObject();
-	obj2->setPosition(glm::vec3(0.f, 0.f, 0.f));
-	obj2->setVelocity(glm::vec3(1.f, 1.f, 10.f));
-	obj2->setAcceleration(glm::vec3(1.f, -1.f, 0.f));
+	unsigned int globalID2 = state.objects.createObject(ObjectType::Object);
+	Object* obj2 = state.objects.getObject(globalID2);
+	obj2->physics.shared.position = glm::vec3(0.f, 0.f, 0.f);
+	obj2->physics.velocity = glm::vec3(1.f, 1.f, 10.f);
+	obj2->physics.acceleration = glm::vec3(1.f, -1.f, 0.f);
 
 	//	3.	Start debugger shell
 

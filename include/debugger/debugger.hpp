@@ -1,6 +1,6 @@
 #pragma once
-#include "shared/game/gamestate.hpp"
-#include "shared/game/gamelogic/constants.hpp"
+#include "server/game/servergamestate.hpp"
+#include "server/game/constants.hpp"
 
 const std::string NO_SHORTHAND = "NO_SHORTHAND";
 
@@ -28,10 +28,10 @@ public:
 	 * @brief The Command's run() method is overloaded by each particular
 	 * command to implement its particular behavior.
 	 * @param arguments Vector of string arguments from user
-	 * @param state Reference to the GameState instance maintained by the
+	 * @param state Reference to the ServerGameState instance maintained by the
 	 * debugger.
 	 */
-	virtual void run(std::vector<std::string> arguments, GameState& state) = 0;
+	virtual void run(std::vector<std::string> arguments, ServerGameState& state) = 0;
 };
 
 //	Vector of all commands known by the debugger
@@ -62,7 +62,7 @@ public:
 		this->shorthand = "q";
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { //cppcheck-suppress passedByValue
 		//	This command ignores arguments
 		std::cout << "Quitting gsdb..." << std::endl;
 
@@ -79,7 +79,7 @@ public:
 		//this->num_expected_args = 0;
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { // cppcheck-suppress passedByValue
 		//	Possible variations:
 		//	step - call GameState::update() once on the given state instance.
 		//	step n - call update() n times.
@@ -124,7 +124,7 @@ public:
 		this->shorthand = NO_SHORTHAND;
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { // cppcheck-suppress passedByValue
 		//	This command ignores arguments
 
 		//	Print GameState instance' state
@@ -139,16 +139,16 @@ public:
 		this->shorthand = "p";
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { //cppcheck-suppress passedByValue
 		//	Variations:
-		//	print [id number] - print state of object with given id
-		//	print [id number] [property] - print state of given property
+		//	print [global id number] - print state of object with given id
+		//	print [global id number] [property] - print state of given property
 
 		if (arguments.size() == 1) {
 			std::cout << "Error: Incorrect number of arguments for 'print' command\n";
 		}
 		else if (arguments.size() >= 2 && arguments.size() < 4) {
-			//	print [id number]
+			//	print [global id number]
 			//	Verify that second argument is an integer
 			unsigned int id;
 			try {
@@ -159,7 +159,7 @@ public:
 				return;
 			}
 
-			Object* object = state.getObject(id);
+			Object* object = state.objects.getObject(id);
 
 			if (object == nullptr) {
 				std::cout << "No object with id " << arguments.at(1) << " exists.\n";
@@ -171,24 +171,38 @@ public:
 				std::cout << object->to_string() << std::endl;
 			}
 			else if (arguments.size() == 3) {
-				//	print [id number] [property]
+				//	print [global id number] [property]
 
 				//	Attempt to print object's given property (must be a better
 				//	way to do this)
 				std::string property = arguments.at(2);
 
-				if (property.compare("id") == 0) {
-					std::cout << object->id << std::endl;
+				if (property.compare("globalID") == 0) {
+					std::cout << object->globalID << std::endl;
 				}
-				else if (property.compare("position") == 0) {
-					std::cout << glm::to_string(object->position) << std::endl;
+				else if (property.compare("typeID") == 0) {
+					std::cout << object->typeID << std::endl;
 				}
-				else if (property.compare("velocity") == 0) {
-					std::cout << glm::to_string(object->velocity) << std::endl;
+				else if (property.compare("type") == 0) {
+					std::cout << objectTypeString(object->type) << std::endl;
 				}
-				else if (property.compare("acceleration") == 0) {
-					std::cout << glm::to_string(object->acceleration) << std::endl;
-					
+				else if (property.compare("physics") == 0) {
+					std::cout << object->physics.to_string() << std::endl;
+				}
+				else if (property.compare("physics.movable") == 0) {
+					std::cout << (object->physics.movable ? "true" : "false") << std::endl;
+				}
+				else if (property.compare("physics.shared.position") == 0) {
+					std::cout << glm::to_string(object->physics.shared.position) << std::endl;
+				}
+				else if (property.compare("physics.velocity") == 0) {
+					std::cout << glm::to_string(object->physics.velocity) << std::endl;
+				}
+				else if (property.compare("physics.acceleration") == 0) {
+					std::cout << glm::to_string(object->physics.acceleration) << std::endl;
+				}
+				else if (property.compare("physics.shared.facing") == 0) {
+					std::cout << glm::to_string(object->physics.shared.facing) << std::endl;
 				}
 				else {
 					std::cout << "Error: Didn't recognize object property '" << property << "'.\n";
@@ -208,7 +222,7 @@ public:
 		this->shorthand = NO_SHORTHAND;
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { //cppcheck-suppress passedByValue
 		//	This command ignores arguments (though it may make sense to have
 		//	command descriptors, e.g. help step -> "the step command does ..."
 
@@ -232,13 +246,14 @@ public:
 		this->shorthand = "c";
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { // cppcheck-suppress passedByValue
 		//	This command ignores arguments
 
-		//	Create a new object in the game state
-		const Object* obj = state.createObject();
+		//	Create a new base object in the game state
+		unsigned int globalID = state.objects.createObject(ObjectType::Object);
+		Object* obj = state.objects.getObject(globalID);
 
-		std::cout << "Created new object (id " << obj->id << ")" << std::endl;
+		std::cout << "Created new object (global id " << globalID << ")" << std::endl;
 	}
 };
 
@@ -249,17 +264,17 @@ public:
 		this->shorthand = "d";
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
-		//	delete [object id]
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { // cppcheck-suppress passedByValue
+		//	delete [object global id]
 		if (arguments.size() != 2) {
 			std::cout << "Error: Incorrect number of arguments for 'delete' command.\n";
 			return;
 		}
 
-		//	Get id argument
-		unsigned int id;
+		//	Get global id argument
+		EntityID id;
 		try {
-			id = std::stoi(arguments.at(1));
+			id = (EntityID) std::stoi(arguments.at(1));
 		}
 		catch (...) {
 			std::cout << "Error: invalid argument for 'delete' command - expected an integer.\n";
@@ -267,13 +282,13 @@ public:
 		}
 
 		//	Attempt to remove object with the given id
-		bool success = state.removeObject(id);
+		bool success = state.objects.removeObject(id);
 
 		if (success) {
-			std::cout << "Deleted object (id " << id << ")" << std::endl;
+			std::cout << "Deleted object (global id " << id << ")" << std::endl;
 		}
 		else {
-			std::cout << "Failed to delete object (id " << id << ") - object does not exist.\n";
+			std::cout << "Failed to delete object (global id " << id << ") - object does not exist.\n";
 		}
 	}
 };
@@ -285,14 +300,14 @@ public:
 		this->shorthand = NO_SHORTHAND;
 	}
 
-	void run(std::vector<std::string> arguments, GameState& state) override { //cppcheck-suppress passedByValue
-		//	set [object id] [property] [new value]
+	void run(std::vector<std::string> arguments, ServerGameState& state) override { //cppcheck-suppress passedByValue
+		//	set [object global id] [property] [new value]
 		if (arguments.size() != 4) {
 			std::cout << "Error: Incorrect number of arguments for 'set' command.\n";
 			return;
 		}
 
-		//	Get id argument
+		//	Get global id argument
 		unsigned int id;
 		try {
 			id = std::stoi(arguments.at(1));
@@ -316,53 +331,49 @@ public:
 		}
 
 		//	Try to get object
-		Object* obj = state.getObject(id);
+		Object* obj = state.objects.getObject(id);
 
 		if (obj == nullptr) {
-			std::cout << "No object with id " << id << " exists.\n";
+			std::cout << "No object with global id " << id << " exists.\n";
 			return;
 		}
 
 		//	Set property
-		if (property.compare("id") == 0) {
-			obj->id = value;
-			std::cout << "Set object (original id " << id << ") id to " << value << ".\n";
+		if (property.compare("physics.shared.position.x") == 0) {
+			obj->physics.shared.position.x = value;
+			std::cout << "Set object (global id " << id << ") position.x to " << value << ".\n";
 		}
-		else if (property.compare("position.x") == 0) {
-			obj->position.x = value;
-			std::cout << "Set object (id " << id << ") position.x to " << value << ".\n";
+		else if (property.compare("physics.shared.position.y") == 0) {
+			obj->physics.shared.position.y = value;
+			std::cout << "Set object (global id " << id << ") position.y to " << value << ".\n";
 		}
-		else if (property.compare("position.y") == 0) {
-			obj->position.y = value;
-			std::cout << "Set object (id " << id << ") position.y to " << value << ".\n";
+		else if (property.compare("physics.shared.position.z") == 0) {
+			obj->physics.shared.position.z = value;
+			std::cout << "Set object (global id " << id << ") position.z to " << value << ".\n";
 		}
-		else if (property.compare("position.z") == 0) {
-			obj->position.z = value;
-			std::cout << "Set object (id " << id << ") position.z to " << value << ".\n";
+		else if (property.compare("physics.velocity.x") == 0) {
+			obj->physics.velocity.x = value;
+			std::cout << "Set object (global id " << id << ") velocity.x to " << value << ".\n";
 		}
-		else if (property.compare("velocity.x") == 0) {
-			obj->velocity.x = value;
-			std::cout << "Set object (id " << id << ") velocity.x to " << value << ".\n";
+		else if (property.compare("physics.velocity.y") == 0) {
+			obj->physics.velocity.y = value;
+			std::cout << "Set object (global id " << id << ") velocity.y to " << value << ".\n";
 		}
-		else if (property.compare("velocity.y") == 0) {
-			obj->velocity.y = value;
-			std::cout << "Set object (id " << id << ") velocity.y to " << value << ".\n";
+		else if (property.compare("physics.velocity.z") == 0) {
+			obj->physics.velocity.z = value;
+			std::cout << "Set object (global id " << id << ") velocity.z to " << value << ".\n";
 		}
-		else if (property.compare("velocity.z") == 0) {
-			obj->velocity.z = value;
-			std::cout << "Set object (id " << id << ") velocity.z to " << value << ".\n";
+		else if (property.compare("physics.acceleration.x") == 0) {
+			obj->physics.acceleration.x = value;
+			std::cout << "Set object (global id " << id << ") acceleration.x to " << value << ".\n";
 		}
-		else if (property.compare("acceleration.x") == 0) {
-			obj->acceleration.x = value;
-			std::cout << "Set object (id " << id << ") acceleration.x to " << value << ".\n";
+		else if (property.compare("physics.acceleration.y") == 0) {
+			obj->physics.acceleration.y = value;
+			std::cout << "Set object (global id " << id << ") acceleration.y to " << value << ".\n";
 		}
-		else if (property.compare("acceleration.y") == 0) {
-			obj->acceleration.y = value;
-			std::cout << "Set object (id " << id << ") acceleration.y to " << value << ".\n";
-		}
-		else if (property.compare("acceleration.z") == 0) {
-			obj->acceleration.z = value;
-			std::cout << "Set object (id " << id << ") acceleration.z to " << value << ".\n";
+		else if (property.compare("physics.acceleration.z") == 0) {
+			obj->physics.acceleration.z = value;
+			std::cout << "Set object (global id " << id << ") acceleration.z to " << value << ".\n";
 		}
 		else {
 			std::cout << "Error: Didn't recognize object property '" << property << "'.\n";
