@@ -3,6 +3,7 @@
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/game/event.hpp"
+#include "server/game/servergamestate.hpp"
 
 TEST(SerializeTest, SerializeEvent) {
     ServerGameState state(GamePhase::LOBBY, GameConfig{});
