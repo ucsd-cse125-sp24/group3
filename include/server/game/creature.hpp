@@ -13,7 +13,7 @@ public:
 	Creature();
 	~Creature();
 
-	virtual SharedObject generateSharedObject() override;
+	virtual SharedObject toShared() override;
 private:
 
 };

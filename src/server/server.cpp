@@ -34,7 +34,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
 {
     //Object* obj = state.createObject();
     //obj->position = glm::vec3(0.0f, 0.0f, 0.0f);
-    unsigned int object_typeID = state.createObject(ObjectType::Object);
+    unsigned int object_globalID = state.objects.createObject(ObjectType::Object);
     
     doAccept(); // start asynchronously accepting
 
@@ -56,7 +56,7 @@ void Server::updateGameState(std::vector<Event> events) {
         switch (event.type) {
         case EventType::MoveRelative:
             auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-            Object* obj = state.getObject(moveRelativeEvent.entity_to_move);
+            Object* obj = state.objects.getObject(moveRelativeEvent.entity_to_move);
             //obj->setPosition(obj->position + moveRelativeEvent.movement);
             obj->physics.shared.position += moveRelativeEvent.movement;
             break;

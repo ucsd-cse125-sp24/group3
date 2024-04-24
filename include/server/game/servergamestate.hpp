@@ -5,6 +5,7 @@
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/smartvector.hpp"
 #include "server/game/object.hpp"
+#include "server/game/objectmanager.hpp"
 
 #include <string>
 #include <vector>
@@ -13,8 +14,7 @@
 #include <queue>
 
 //	From sharedgamestate.hpp
-struct SharedGameState;
-
+//struct SharedGameState;
 
 /**
  * @brief The ServerGameState class contains all abstract game state data and
@@ -23,6 +23,12 @@ struct SharedGameState;
  */
 class ServerGameState {
 public:
+	/**
+	 * @brief ObjectManager instance that manages all objects in this game
+	 * instance at the current timestep.
+	 */
+	ObjectManager objects;
+
 	/**
 	 * @brief Creates a ServerGameState instance. The intial GamePhase is set to
 	 * Lobby.
@@ -78,7 +84,7 @@ public:
 	 * newly created object than a reference to Object which you'd then need to
 	 * cast)
 	 */
-	unsigned int createObject(ObjectType type);
+	//unsigned int createObject(ObjectType type);
 
 	/**
 	 * @brief Attempts to remove an object with the given global ID.
@@ -90,7 +96,7 @@ public:
 	 * instance.
 	 * @return true if the object was successfully removed and false otherwise.
 	 */
-	bool removeObject(unsigned int global_id);
+	//bool removeObject(unsigned int global_id);
 
 	/**
 	 * @brief Attempts to retrieve the object with the given global ID.
@@ -98,7 +104,7 @@ public:
 	 * @return A pointer to the object with the given global ID or nullptr if
 	 * none exists.
 	 */
-	Object* getObject(unsigned int global_id);
+	//Object* getObject(unsigned int global_id);
 
 	//	TODO: Add type-specific object getters (e.g., getPlayer(), getWalls(),
 	//	etc.)
@@ -109,7 +115,7 @@ public:
 	 * @return A pointer to the base object with the given type ID or nullptr if
 	 * none exists.
 	 */
-	Object * getBaseObject(unsigned int type_id);
+	//Object * getBaseObject(unsigned int type_id);
 
 	/*	Other getters and setters	*/
 
@@ -188,7 +194,7 @@ private:
 	//	single template class - otherwise, each type-specific object vector will
 	//	come with an extra free list and this will get hairy to use.
 
-	SmartVector<Object *> objects;
+	//SmartVector<Object *> objects;
 
 	/**
 	 * @brief Vector of Object references to all objects in the current timestep
@@ -207,7 +213,7 @@ private:
 	//	TODO: Add type-specific object arrays (e.g., vector<Player> players,
 	//	vector<Wall> walls, etc.)
 
-	SmartVector<Object *> base_objects;
+	//SmartVector<Object *> base_objects;
 
 	/**
 	 *  Timestep length in milliseconds.

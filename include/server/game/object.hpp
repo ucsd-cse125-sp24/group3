@@ -5,6 +5,7 @@
 #include "shared/utilities/serialize_macro.hpp"
 #include "server/game/collider.hpp"
 #include "shared/game/sharedobject.hpp"
+#include "shared/utilities/typedefs.hpp"
 
 //	From sharedobject.hpp
 class SharedObject;
@@ -17,6 +18,10 @@ struct SharedPhysics;
  * a particular object
  */
 struct Physics {
+	/**
+	 * @brief Shared physics properties (needed by both the server and the 
+	 * client)
+	 */
 	SharedPhysics shared;
 
 	/**
@@ -51,13 +56,13 @@ public:
 	 * @brief Unique object ID (used to index into the ServerGameState::objects
 	 * vector)
 	 */
-	unsigned int globalID;
+	EntityID globalID;
 
 	/**
 	 * @brief Type-specific Object ID (used to index into the type-specific
 	 * objects vector in ServerGameState)
 	 */
-	unsigned int typeID;
+	SpecificID typeID;
 
 	/**
 	 * @brief Identifies this object's type (derived class)
@@ -71,9 +76,9 @@ public:
 
 	/**
 	 * @brief Generates a SharedObject representation of this object.
-	 * @return Generates a SharedObject representation of this object.
+	 * @return A SharedObject representation of this object.
 	 */
-	virtual SharedObject generateSharedObject();
+	virtual SharedObject toShared();
 
 	/*	Debugger Methods	*/
 

@@ -8,11 +8,6 @@ ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) {
 	this->timestep = FIRST_TIMESTEP;
 	this->timestep_length = config.game.timestep_length_ms;
 	this->lobby.max_players = config.server.max_players;
-
-	//	Initialize SmartVectors with max sizes
-	this->objects = SmartVector<Object*>(MAX_NUM_OBJECTS);
-
-	this->base_objects = SmartVector<Object *>(MAX_NUM_BASE_OBJECTS);
 }
 
 ServerGameState::ServerGameState(GamePhase start_phase) {
@@ -20,11 +15,6 @@ ServerGameState::ServerGameState(GamePhase start_phase) {
 	this->timestep = FIRST_TIMESTEP;
 	this->timestep_length = TIMESTEP_LEN;
 	this->lobby.max_players = MAX_PLAYERS;
-
-	//	Initialize SmartVectors with max sizes
-	this->objects = SmartVector<Object*>(MAX_NUM_OBJECTS);
-
-	this->base_objects = SmartVector<Object *>(MAX_NUM_BASE_OBJECTS);
 }
 
 ServerGameState::ServerGameState() : ServerGameState(GamePhase::LOBBY) {}
@@ -38,20 +28,7 @@ SharedGameState ServerGameState::generateSharedGameState() {
 	SharedGameState shared;
 
 	//	Initialize object vector
-	for (int i = 0; i < this->objects.size(); i++) {
-		Object** ptrToPtr = this->objects.get(i);
-
-		if (ptrToPtr == nullptr) {
-			//	Push empty object to SharedObject SmartVector
-			shared.objects.pushEmpty();
-		}
-		else {
-			Object* object = *ptrToPtr;
-			
-			//	Create a SharedObject from this object
-			shared.objects.push(object->generateSharedObject());
-		}
-	}
+	shared.objects = this->objects.toShared();
 
 	//	Copy timestep data
 	shared.timestep = this->timestep;
@@ -82,10 +59,11 @@ void ServerGameState::updateMovement() {
 	//	Iterate through all objects in the ServerGameState and update their
 	//	positions and velocities if they are movable.
 
+	SmartVector<Object*> gameObjects = this->objects.getObjects();
 	Object** ptrToPtr;
 	Object* object;
-	for (int i = 0; i < this->objects.size(); i++) {
-		ptrToPtr = this->objects.get(i);
+	for (int i = 0; i < gameObjects.size(); i++) {
+		ptrToPtr = gameObjects.get(i);
 
 		if (ptrToPtr == nullptr)
 			continue;
@@ -107,73 +85,73 @@ void ServerGameState::updateMovement() {
 
 /*	Object CRUD methods	*/
 
-unsigned int ServerGameState::createObject(ObjectType type) {
-	//	Create a new object with the given type in the relevant type-specific
-	//	object SmartVector, add a reference to it in the global object
-	//	SmartVector, and set the indices it receives in both as its type ID
-	//	and global ID, respectively.
-
-	unsigned int typeID, globalID;
-
-	switch (type) {
-		case ObjectType::Object:
-			//	Create a new object of type Object in base_objects
-			Object* object = new Object();
-			typeID = this->base_objects.push(object);
-
-			//	Add a reference to the new object in the global objects 
-			//	SmartVector
-			globalID = this->objects.push(object);
-
-			//	Set object's type and global IDs
-			object->globalID = globalID;
-			object->typeID = typeID;
-			break;
-	}
-
-	//	Return new object's type ID
-	return typeID;
-}
-
-bool ServerGameState::removeObject(unsigned int global_id) {
-	//	Check that the given object exists
-	Object** ptrToPtr = this->objects.get(global_id);
-
-	if (ptrToPtr == nullptr) {
-		//	Object with the given index doesn't exist
-		return false;
-	}
-
-	Object* object = *ptrToPtr;
-
-	//	Remove object from the global objects SmartVector and from the
-	//	type-specific Object vector it's in
-	this->objects.remove(global_id);
-
-	switch (object->type) {
-		case ObjectType::Object:
-			//	Remove this object from the base_objects SmartVector
-			this->base_objects.remove(object->typeID);
-			break;
-	}
-
-	return true;
-}
-
-Object* ServerGameState::getObject(unsigned int global_id) {
-	Object** ptrToPtr = this->objects.get(global_id);
-
-	if (ptrToPtr == nullptr) {
-		return nullptr;
-	}
-	else {
-		return *ptrToPtr;
-	}
-}
-
-Object* ServerGameState::getBaseObject(unsigned int type_id) {
-	return *(this->base_objects.get(type_id));
-}
+//unsigned int ServerGameState::createObject(ObjectType type) {
+//	//	Create a new object with the given type in the relevant type-specific
+//	//	object SmartVector, add a reference to it in the global object
+//	//	SmartVector, and set the indices it receives in both as its type ID
+//	//	and global ID, respectively.
+//
+//	unsigned int typeID, globalID;
+//
+//	switch (type) {
+//		case ObjectType::Object:
+//			//	Create a new object of type Object in base_objects
+//			Object* object = new Object();
+//			typeID = this->base_objects.push(object);
+//
+//			//	Add a reference to the new object in the global objects 
+//			//	SmartVector
+//			globalID = this->objects.push(object);
+//
+//			//	Set object's type and global IDs
+//			object->globalID = globalID;
+//			object->typeID = typeID;
+//			break;
+//	}
+//
+//	//	Return new object's type ID
+//	return typeID;
+//}
+//
+//bool ServerGameState::removeObject(unsigned int global_id) {
+//	//	Check that the given object exists
+//	Object** ptrToPtr = this->objects.get(global_id);
+//
+//	if (ptrToPtr == nullptr) {
+//		//	Object with the given index doesn't exist
+//		return false;
+//	}
+//
+//	Object* object = *ptrToPtr;
+//
+//	//	Remove object from the global objects SmartVector and from the
+//	//	type-specific Object vector it's in
+//	this->objects.remove(global_id);
+//
+//	switch (object->type) {
+//		case ObjectType::Object:
+//			//	Remove this object from the base_objects SmartVector
+//			this->base_objects.remove(object->typeID);
+//			break;
+//	}
+//
+//	return true;
+//}
+//
+//Object* ServerGameState::getObject(unsigned int global_id) {
+//	Object** ptrToPtr = this->objects.get(global_id);
+//
+//	if (ptrToPtr == nullptr) {
+//		return nullptr;
+//	}
+//	else {
+//		return *ptrToPtr;
+//	}
+//}
+//
+//Object* ServerGameState::getBaseObject(unsigned int type_id) {
+//	return *(this->base_objects.get(type_id));
+//}
 
 unsigned int ServerGameState::getTimestep() const {
 	return this->timestep;
@@ -209,8 +187,10 @@ std::string ServerGameState::to_string() {
 	representation += "\n\ttimestep len:\t\t" + std::to_string(this->timestep_length.count());
 	representation += "\n\tobjects: [\n";
 
-	for (int i = 0; i < this->objects.size(); i++) {
-		Object** ptrToPtr = this->objects.get(i);
+	SmartVector<Object*> gameObjects = this->objects.getObjects();
+
+	for (int i = 0; i < gameObjects.size(); i++) {
+		Object** ptrToPtr = gameObjects.get(i);
 
 		if (ptrToPtr == nullptr)
 			continue;
@@ -219,7 +199,7 @@ std::string ServerGameState::to_string() {
 
 		representation += object->to_string(2);
 
-		if (i < this->objects.size() - 1) {
+		if (i < gameObjects.size() - 1) {
 			representation += ",";
 		}
 

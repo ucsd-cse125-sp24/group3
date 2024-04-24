@@ -27,11 +27,10 @@ Object::Object() {
 Object::~Object() {}
 
 /*	SharedGameState generation	*/
-SharedObject Object::generateSharedObject() {
+SharedObject Object::toShared() {
 	SharedObject shared;
 
 	shared.globalID = this->globalID;
-	shared.typeID = this->typeID;
 	shared.type = this->type;
 	shared.physics = this->physics.shared;
 
@@ -56,15 +55,6 @@ std::string Object::to_string(unsigned int tab_offset) {
 	representation += tabs + "}";
 
 	return representation;
-}
-
-std::string objectTypeString(ObjectType type) {
-	switch (type) {
-		case ObjectType::Object:
-			return "Object";
-		default:
-			return "Unknown";
-	}
 }
 
 std::string Physics::to_string(unsigned int tab_offset) {

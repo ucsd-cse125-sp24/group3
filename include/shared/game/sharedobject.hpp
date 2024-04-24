@@ -5,6 +5,7 @@
 
 //#include "server/game/object.hpp"
 #include "shared/utilities/serialize_macro.hpp"
+#include "shared/utilities/typedefs.hpp"
 //#include "server/game/creature.hpp" // stats
 
 /**
@@ -45,8 +46,7 @@ struct SharedPhysics {
  */
 class SharedObject {
 public:
-	unsigned int globalID;
-	unsigned int typeID;
+	EntityID globalID;
 	ObjectType type;
 	SharedPhysics physics;
 
@@ -56,7 +56,7 @@ public:
 	~SharedObject() {}
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& globalID& typeID& type& physics.position & physics.facing;
+		ar& globalID & type& physics.position & physics.facing;
 	}
 private:
 };

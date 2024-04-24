@@ -9,6 +9,7 @@ set(FILES
     game/creature.cpp
     game/object.cpp
     game/servergamestate.cpp
+    game/objectmanager.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

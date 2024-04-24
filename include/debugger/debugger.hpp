@@ -159,7 +159,7 @@ public:
 				return;
 			}
 
-			Object* object = state.getObject(id);
+			Object* object = state.objects.getObject(id);
 
 			if (object == nullptr) {
 				std::cout << "No object with id " << arguments.at(1) << " exists.\n";
@@ -192,8 +192,8 @@ public:
 				else if (property.compare("physics.movable") == 0) {
 					std::cout << (object->physics.movable ? "true" : "false") << std::endl;
 				}
-				else if (property.compare("physics.position") == 0) {
-					std::cout << glm::to_string(object->physics.position) << std::endl;
+				else if (property.compare("physics.shared.position") == 0) {
+					std::cout << glm::to_string(object->physics.shared.position) << std::endl;
 				}
 				else if (property.compare("physics.velocity") == 0) {
 					std::cout << glm::to_string(object->physics.velocity) << std::endl;
@@ -201,8 +201,8 @@ public:
 				else if (property.compare("physics.acceleration") == 0) {
 					std::cout << glm::to_string(object->physics.acceleration) << std::endl;
 				}
-				else if (property.compare("physics.facing") == 0) {
-					std::cout << glm::to_string(object->physics.facing) << std::endl;
+				else if (property.compare("physics.shared.facing") == 0) {
+					std::cout << glm::to_string(object->physics.shared.facing) << std::endl;
 				}
 				else {
 					std::cout << "Error: Didn't recognize object property '" << property << "'.\n";
@@ -250,10 +250,10 @@ public:
 		//	This command ignores arguments
 
 		//	Create a new base object in the game state
-		unsigned int typeID = state.createObject(ObjectType::Object);
-		Object* obj = state.getBaseObject(typeID);
+		unsigned int globalID = state.objects.createObject(ObjectType::Object);
+		Object* obj = state.objects.getObject(globalID);
 
-		std::cout << "Created new object (global id " << obj->globalID << ")" << std::endl;
+		std::cout << "Created new object (global id " << globalID << ")" << std::endl;
 	}
 };
 
@@ -272,7 +272,7 @@ public:
 		}
 
 		//	Get global id argument
-		unsigned int id;
+		EntityID id;
 		try {
 			id = std::stoi(arguments.at(1));
 		}
@@ -282,7 +282,7 @@ public:
 		}
 
 		//	Attempt to remove object with the given id
-		bool success = state.removeObject(id);
+		bool success = state.objects.removeObject(id);
 
 		if (success) {
 			std::cout << "Deleted object (global id " << id << ")" << std::endl;
@@ -331,7 +331,7 @@ public:
 		}
 
 		//	Try to get object
-		Object* obj = state.getObject(id);
+		Object* obj = state.objects.getObject(id);
 
 		if (obj == nullptr) {
 			std::cout << "No object with global id " << id << " exists.\n";
@@ -339,16 +339,16 @@ public:
 		}
 
 		//	Set property
-		if (property.compare("physics.position.x") == 0) {
-			obj->physics.position.x = value;
+		if (property.compare("physics.shared.position.x") == 0) {
+			obj->physics.shared.position.x = value;
 			std::cout << "Set object (global id " << id << ") position.x to " << value << ".\n";
 		}
-		else if (property.compare("physics.position.y") == 0) {
-			obj->physics.position.y = value;
+		else if (property.compare("physics.shared.position.y") == 0) {
+			obj->physics.shared.position.y = value;
 			std::cout << "Set object (global id " << id << ") position.y to " << value << ".\n";
 		}
-		else if (property.compare("physics.position.z") == 0) {
-			obj->physics.position.z = value;
+		else if (property.compare("physics.shared.position.z") == 0) {
+			obj->physics.shared.position.z = value;
 			std::cout << "Set object (global id " << id << ") position.z to " << value << ".\n";
 		}
 		else if (property.compare("physics.velocity.x") == 0) {
