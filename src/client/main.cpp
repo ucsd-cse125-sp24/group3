@@ -9,6 +9,40 @@
 
 using namespace std::chrono_literals;
 
+void error_callback(int error, const char* description) {
+    // Print error.
+    std::cerr << description << std::endl;
+}
+
+void set_callbacks(GLFWwindow* window) {
+    // Set the error callback.
+    glfwSetErrorCallback(error_callback);
+
+    // Set the window resize callback.
+    // glfwSetWindowSizeCallback(window, client.resizeCallback);
+
+    // Set the key callback.
+    glfwSetKeyCallback(window, Client::keyCallback);
+
+    // Set the mouse and cursor callbacks
+    // glfwSetMouseButtonCallback(window, client.mouse_callback);
+    // glfwSetCursorPosCallback(window, client.cursor_callback);
+}
+
+void set_opengl_settings() {
+    // Enable depth buffering.
+    glEnable(GL_DEPTH_TEST);
+
+    // Related to shaders and z value comparisons for the depth buffer.
+    glDepthFunc(GL_LEQUAL);
+
+    // Set polygon drawing mode to fill front and back of each polygon.
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    // Set clear color to black.
+    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+}
+
 int main(int argc, char* argv[])
 {
     auto config = GameConfig::parse(argc, argv);
@@ -27,7 +61,36 @@ int main(int argc, char* argv[])
         client.connectAndListen(config.network.server_ip);
     }
 
-    client.start(context);
+
+    if (client.init() == -1) {
+        exit(EXIT_FAILURE);
+    }
+    
+    GLFWwindow* window = client.getWindow();
+    if (!window) exit(EXIT_FAILURE);
+
+    // Setup callbacks.
+    set_callbacks(window);
+    // Setup OpenGL settings.
+    set_opengl_settings();
+
+    // Loop while GLFW window should stay open.
+    while (!glfwWindowShouldClose(window)) {
+        // Main render display callback. Rendering of objects is done here.
+        client.displayCallback();
+
+        // Idle callback. Updating objects, etc. can be done here.
+        client.idleCallback(context);
+    }
+
+    client.cleanup();
+
+    // Destroy the window.
+    glfwDestroyWindow(window);
+    // Terminate GLFW.
+    glfwTerminate();
+
+    exit(EXIT_SUCCESS);
 
     return 0;
 }
