@@ -25,8 +25,8 @@ void set_callbacks(GLFWwindow* window) {
     glfwSetKeyCallback(window, Client::keyCallback);
 
     // Set the mouse and cursor callbacks
-    // glfwSetMouseButtonCallback(window, client.mouse_callback);
-    // glfwSetCursorPosCallback(window, client.cursor_callback);
+    // glfwSetMouseButtonCallback(window, Client::mouseCallback);
+    glfwSetCursorPosCallback(window, Client::mouseCallback);
 }
 
 void set_opengl_settings() {

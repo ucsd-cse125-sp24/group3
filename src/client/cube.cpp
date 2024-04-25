@@ -136,7 +136,7 @@ Cube::~Cube() {
     glDeleteVertexArrays(1, &VAO);
 }
 
-void Cube::draw(GLuint shader) {
+void Cube::draw(glm::mat4 viewProjMat, GLuint shader) {
     // actiavte the shader program
     // std::cout << "draw" << std::endl;
 
@@ -163,10 +163,14 @@ void Cube::draw(GLuint shader) {
     glm::mat4 project = glm::perspective(glm::radians(FOV), Aspect, NearClip, FarClip);
 
     // Compute final view-projection matrix
-    glm::mat4 viewProjMtx = project * view;
+    // std::cout << glm::to_string(viewProjMat) << std::endl;
+
+    // viewProjMat = project * view;
+
+    // std::cout << glm::to_string(viewProjMat) << std::endl;
 
     // get the locations and send the uniforms to the shader
-    glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, reinterpret_cast<float*>(&viewProjMtx));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, reinterpret_cast<float*>(&viewProjMat));
     glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, reinterpret_cast<float*>(&model));
     glUniform3fv(glGetUniformLocation(shader, "DiffuseColor"), 1, &color[0]);
 

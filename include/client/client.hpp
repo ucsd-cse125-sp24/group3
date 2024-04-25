@@ -13,6 +13,7 @@
 #include "client/cube.hpp"
 #include "client/util.hpp"
 #include "client/lobbyfinder.hpp"
+#include "client/camera.hpp"
 
 //#include "shared/game/gamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -31,6 +32,7 @@ public:
 
     // Bound window callbacks
     static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+    static void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
 
     // Getter / Setters
@@ -47,12 +49,12 @@ private:
     void processClientInput();
     void processServerInput(boost::asio::io_context& context);
 
-    SharedGameState gameState;
-
     float cubeMovementDelta = 0.05f;
 
     GLFWwindow *window;
     GLuint shaderProgram;
+
+    Camera *cam;
 
     // Flags
     static bool is_held_up;
@@ -60,6 +62,15 @@ private:
     static bool is_held_right;
     static bool is_held_left;
 
+    static bool cam_is_held_up;
+    static bool cam_is_held_down;
+    static bool cam_is_held_right;
+    static bool cam_is_held_left;
+
+    static float mouse_xpos;
+    static float mouse_ypos;
+
+    SharedGameState gameState;
     GameConfig config;
     tcp::resolver resolver;
     tcp::socket socket;

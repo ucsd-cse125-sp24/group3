@@ -15,7 +15,7 @@ class Cube {
 public:
     Cube();
     ~Cube();
-    void draw(GLuint shader);
+    void draw(glm::mat4 viewProjMat, GLuint shader);
     void update(glm::vec3 new_pos);
     void update_delta(glm::vec3 delta);
 

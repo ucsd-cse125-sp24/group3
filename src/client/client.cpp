@@ -20,12 +20,21 @@ bool Client::is_held_down = false;
 bool Client::is_held_right = false;
 bool Client::is_held_left = false;
 
+bool Client::cam_is_held_up = false;
+bool Client::cam_is_held_down = false;
+bool Client::cam_is_held_right = false;
+bool Client::cam_is_held_left = false;
+
+float Client::mouse_xpos = 0.0f;
+float Client::mouse_ypos = 0.0f;
+
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
     socket(io_context),
     config(config),
     gameState(GamePhase::TITLE_SCREEN, config)
 {
+    cam = new Camera();
 }
 
 void Client::connectAndListen(std::string ip_addr) {
@@ -65,6 +74,9 @@ int Client::init() {
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+
+    // tell GLFW to capture our mouse
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     GLenum err = glewInit() ; 
     if (GLEW_OK != err) { 
@@ -119,6 +131,18 @@ void Client::idleCallback(boost::asio::io_context& context) {
     if(is_held_down)
         movement.value() += glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
 
+    if(cam_is_held_right)
+        cam->move(false, 1.0f);
+    if(cam_is_held_left)
+        cam->move(false, -1.0f);
+    if(cam_is_held_up)
+        cam->move(true, 1.0f);
+    if(cam_is_held_down)
+        cam->move(true, -1.0f);
+
+
+    cam->update(mouse_xpos, mouse_ypos);
+
     if (movement.has_value()) {
         auto eid = 0; 
         this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
@@ -153,7 +177,8 @@ void Client::draw() {
         //  tmp: all objects are cubes
         Cube* cube = new Cube();
         cube->update(sharedObject->physics.position);
-        cube->draw(this->shaderProgram);
+        
+        cube->draw(this->cam->getViewProj(), this->shaderProgram);
     }
 }
 
@@ -183,6 +208,22 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             is_held_right = true;
             break;
 
+        case GLFW_KEY_S:
+            cam_is_held_down = true;
+            break;
+
+        case GLFW_KEY_W:
+            cam_is_held_up = true;
+            break;
+
+        case GLFW_KEY_A:
+            cam_is_held_left = true;
+            break;
+
+        case GLFW_KEY_D:
+            cam_is_held_right = true;
+            break;
+
         default:
             break;
         }
@@ -206,9 +247,29 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             is_held_right = false;
             break;
 
+        case GLFW_KEY_S:
+            cam_is_held_down = false;
+            break;
+
+        case GLFW_KEY_W:
+            cam_is_held_up = false;
+            break;
+
+        case GLFW_KEY_A:
+            cam_is_held_left = false;
+            break;
+
+        case GLFW_KEY_D:
+            cam_is_held_right = false;
+            break;
+            
         default:
             break;
         }
     }
 }
 
+void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
+    mouse_xpos = static_cast<float>(xposIn);
+    mouse_ypos = static_cast<float>(yposIn);
+}
