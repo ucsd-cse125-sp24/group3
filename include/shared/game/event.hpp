@@ -6,7 +6,7 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/utilities/serialize.hpp"
 #include "shared/utilities/serialize_macro.hpp"
-#include "shared/game/gamestate.hpp"
+#include "shared/game/sharedgamestate.hpp"
 
 
 /****************************************************
@@ -49,7 +49,7 @@ struct LobbyActionEvent {
     };
 
     LobbyActionEvent() {}
-    LobbyActionEvent(Action action) : action(action) {}
+    explicit LobbyActionEvent(Action action) : action(action) {}
 
     Action action;
 
@@ -59,15 +59,15 @@ struct LobbyActionEvent {
 };
 
 /**
- * Event sent by the server to a client, telling the client to update their GameState
- * to this new GameState
+ * Event sent by the server to a client, telling the client to update their SharedGameState
+ * to this new SharedGameState
  */
 struct LoadGameStateEvent {
     // Dummy value doesn't matter because will be overridden with whatever you deserialize
-    LoadGameStateEvent() : state(GameState(GamePhase::TITLE_SCREEN, GameConfig{})){}
-    LoadGameStateEvent(GameState state) : state(state) {}
+    LoadGameStateEvent() : state(SharedGameState(GamePhase::TITLE_SCREEN, GameConfig{})){}
+    explicit LoadGameStateEvent(const SharedGameState& state) : state(state) {}
 
-    GameState state;
+    SharedGameState state;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar & state;
@@ -95,7 +95,7 @@ struct MoveRelativeEvent {
  */
 struct MoveAbsoluteEvent {
     MoveAbsoluteEvent() {}
-    MoveAbsoluteEvent(EntityID entity_to_move) : entity_to_move(entity_to_move) {}
+    explicit MoveAbsoluteEvent(EntityID entity_to_move) : entity_to_move(entity_to_move) {}
 
     EntityID entity_to_move;
     /// some velocity / movement information...

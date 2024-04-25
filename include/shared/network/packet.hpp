@@ -71,7 +71,7 @@ struct PacketHeader {
      * @param buffer The buffer received over the network containing the 4 bytes
      * for the header.
      */
-    PacketHeader(void* buffer) {
+    explicit PacketHeader(void* buffer) {
         PacketHeader* buf_hdr = static_cast<PacketHeader*>(buffer);
         this->size = ntohs(buf_hdr->size);
         this->type = static_cast<PacketType>(ntohs(static_cast<uint16_t>(buf_hdr->type)));
@@ -199,7 +199,7 @@ private:
      * @param data The string representation of the packet data. This will probably be the
      * return value of the serialize helper function.
      */
-    PackagedPacket(PacketHeader hdr, std::string data)
+    PackagedPacket(PacketHeader hdr, const std::string& data)
         :hdr(hdr), data(data)
     {
         this->hdr.size = data.size();

@@ -14,7 +14,8 @@
 #include "client/util.hpp"
 #include "client/lobbyfinder.hpp"
 
-#include "shared/game/gamestate.hpp"
+//#include "shared/game/gamestate.hpp"
+#include "shared/game/sharedgamestate.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
@@ -43,7 +44,13 @@ public:
     void connectAndListen(std::string ip_addr);
 
 private:
-    float cubeMovementDelta = 0.05;
+    void processClientInput();
+    void processServerInput(boost::asio::io_context& context);
+
+    SharedGameState gameState;
+
+    float cubeMovementDelta = 0.05f;
+
     GLFWwindow *window;
     GLuint shaderProgram;
 
@@ -53,9 +60,6 @@ private:
     static bool is_held_right;
     static bool is_held_left;
 
-    void processServerInput(boost::asio::io_context& context);
-
-    GameState gameState;
     GameConfig config;
     tcp::resolver resolver;
     tcp::socket socket;

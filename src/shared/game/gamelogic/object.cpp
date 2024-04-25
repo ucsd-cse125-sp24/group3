@@ -7,6 +7,10 @@ unsigned int Object::numObjects = 0;
 Object::Object() {
 	//	Assign a new unique id (not accounting for overflow)
 	this->id = Object::numObjects++;
+    // note from Anthony: I initialized boundary to null here
+    // because otherwise cppcheck complains about not initializing 
+    // a member variable
+    this->boundary = nullptr;
 }
 
 std::string Object::to_string(unsigned int tab_offset) {

@@ -8,7 +8,7 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/utilities/config.hpp"
 
-GameState::GameState(GamePhase phase, GameConfig config) {
+GameState::GameState(GamePhase phase, const GameConfig& config) {
 	this->phase = phase;
 	this->timestep = 0;
 	this->timestep_length = config.game.timestep_length_ms;
@@ -50,7 +50,7 @@ bool GameState::removeObject(unsigned int id) {
 	//	Iterate through the objects vector and search for an object with the
 	//	given id.
 	for (int i = 0; i < this->objects.size(); i++) {
-		Object& current = this->objects.at(i);
+		const Object& current = this->objects.at(i);
 
 		if (current.id == id)
 		{
@@ -121,7 +121,7 @@ void GameState::setPhase(GamePhase phase) {
 	this->phase = phase;
 }
 
-void GameState::addPlayerToLobby(EntityID id, std::string name) {
+void GameState::addPlayerToLobby(EntityID id, const std::string& name) {
 	this->lobby.players[id] = name;
 }
 
