@@ -47,8 +47,9 @@ SharedGameState ServerGameState::generateSharedGameState() {
 
 void ServerGameState::update() {
 	//	TODO: fill update() method with updating object movement
+	useItem();
 	updateMovement();
-
+	
 	//	Increment timestep
 	this->timestep++;
 }
@@ -76,6 +77,20 @@ void ServerGameState::updateMovement() {
 			//		+ (acceleration [meters / timestep^2] * 1 timestep)
 			object->physics.velocity += object->physics.acceleration;
 		}
+	}
+}
+
+void ServerGameState::useItem() {
+	// Update whatever is necesssary for item
+	// This method may need to be broken down for different types
+	// of item types
+
+	SmartVector<Item*> items = this->objects.getItems();
+	for (int i = 0; i < items.size(); i++) {
+		Item* item = items.get(i);
+
+		if (item == nullptr)
+			continue;
 	}
 }
 

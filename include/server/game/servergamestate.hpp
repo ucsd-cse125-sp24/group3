@@ -58,6 +58,10 @@ public:
 
 	void updateMovement();
 
+	//	TODO: Add implementations of items
+
+	void useItem();
+
 	/*	SharedGameState generation	*/
 
 	//	TODO: Modify this function to dynamically allocate a SharedGameState

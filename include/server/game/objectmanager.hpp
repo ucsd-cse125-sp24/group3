@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "server/game/object.hpp"
+#include "server/game/item.hpp"
 
 #include "shared/utilities/smartvector.hpp"
 
@@ -48,6 +49,14 @@ public:
 	 * instance.
 	 */
 	SmartVector<Object*> getObjects();
+
+	/**
+	 * @brief Get a list of all items in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Item pointers of all items in the game
+	 * instance.
+	 */
+	SmartVector<Item*> getItems();
 
 	/*	SharedGameState generation	*/
 	
@@ -104,4 +113,9 @@ private:
 	 * ObjectType::Object.
 	 */
 	SmartVector<Object*> base_objects;
+
+	/**
+	 * @brief SmartVector of Item pointers to all items ObjectType::Item.
+	 */
+	SmartVector<Item*> base_items;
 };
