@@ -65,7 +65,6 @@ void Session::sendPacketAsync(std::shared_ptr<PackagedPacket> packet) {
         [this, packet, self](boost::system::error_code ec, std::size_t /*length*/) {
             switch (_classifySocketError(ec, "sending packet")) {
             case SocketError::NONE:
-                std::cout << "Sent packet successfully." << std::endl;
                 break;
             case SocketError::FATAL:
                 return;

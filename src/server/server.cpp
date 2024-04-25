@@ -6,7 +6,7 @@
 #include <boost/archive/text_oarchive.hpp>
 
 #include <cassert>
-
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <ostream>
@@ -34,7 +34,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
 {
     state.objects.createObject(ObjectType::Object);
     
-    doAccept(); // start asynchronously accepting
+    _doAccept(); // start asynchronously accepting
 
     if (config.server.lobby_broadcast) {
         this->lobby_broadcaster.startBroadcasting(ServerLobbyBroadcastPacket {
@@ -49,8 +49,9 @@ EntityID Server::genNewEID() {
     return id++;
 }
 
-void Server::updateGameState(const std::vector<Event>& events) {
-    for (const Event& event : events) {
+void Server::updateGameState(const EventList& events) {
+    // TODO: remove cppcheck suppress when src_eid is being used
+    for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
         switch (event.type) {
         case EventType::MoveRelative:
             auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
@@ -64,24 +65,32 @@ void Server::updateGameState(const std::vector<Event>& events) {
     }
 }
 
-std::vector<Event> Server::getAllClientEvents() {
-    std::vector<Event> allEvents;
+EventList Server::getAllClientEvents() {
+    EventList allEvents;
 
     // Loop through each session
-    for (const auto& [eid, session] : this->sessions) { // cppcheck-suppress unusedVariable
-        // Get events from the current session
-        std::vector<Event> sessionEvents = session->getEvents();
+    for (const auto& [eid, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
+        if (auto s = session.lock()) {
+            // Get events from the current session
+            std::vector<Event> sessionEvents = s->getEvents();
 
-        // Append session events to the overall vector
-        allEvents.insert(allEvents.end(), sessionEvents.begin(), sessionEvents.end());
+            // Put events into the allEvents vector, prepending each event with the id of the 
+            // client that requested it
+            std::transform(sessionEvents.begin(), sessionEvents.end(), std::back_inserter(allEvents), 
+                [eid](const Event& e) {
+                    return std::make_pair(eid, e);
+                });
+        }
     }
 
     return allEvents;
 }
 
 void Server::sendUpdateToAllClients(Event event) {
-    for (const auto& [eid, session] : this->sessions) { // cppcheck-suppress unusedVariable
-        session->sendEventAsync(event); // SEND UPDATED GAME STATE TO CLIENTS
+    for (const auto& [_eid, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
+        if (auto s = session.lock()) {
+            s->sendEventAsync(event);
+        }
     }
 }
 
@@ -91,30 +100,29 @@ std::chrono::milliseconds Server::doTick() {
     switch (this->state.getPhase()) {
         case GamePhase::LOBBY:
             // Go through sessions and update GameState lobby info
-            // Right now just always resetting and then readding so we make sure
-            // we have the up-to-date info
-            // TODO: logic to determine if a session is dropped using std::weak_ptr
-            //       and then call state.removePlayerFromLobby if dropped.
-            for (const auto& [eid, session]: this->sessions) {
-                this->state.addPlayerToLobby(eid,
-                    session->getInfo().client_name.value_or("[UNKNOWN NAME]"));
+            // TODO: move this into updateGameState or something else
+            for (const auto& [eid, ip, session]: this->sessions) {
+                if (auto s = session.lock()) {
+                    this->state.addPlayerToLobby(eid, s->getInfo().client_name.value_or("UNKNOWN NAME"));
+                } else {
+                    this->state.removePlayerFromLobby(eid);
+                }
             }
 
             if (this->state.getLobbyPlayers().size() >= this->state.getLobbyMaxPlayers()) {
                 this->state.setPhase(GamePhase::GAME);
+            } else {
+                std::cout << "Only have " << this->state.getLobbyPlayers().size() << "/" << this->state.getLobbyMaxPlayers() << "\n";
             }
 
+            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
             // Tell each client the current lobby status
-            for (const auto& [eid, session]: this->sessions) { // cppcheck-suppress unusedVariable
-                session->sendEventAsync(Event(this->world_eid,
-                    EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
-            };
 
             std::cout << "waiting for " << this->state.getLobbyMaxPlayers() << " players" << std::endl;
 
             break;
         case GamePhase::GAME: {
-            std::vector<Event> allClientEvents = getAllClientEvents();
+            EventList allClientEvents = getAllClientEvents();
 
             updateGameState(allClientEvents);
 
@@ -122,39 +130,75 @@ std::chrono::milliseconds Server::doTick() {
             break;
         }
         default:
-            std::cerr << "Non Lobby State not implemented on server side yet" << std::endl;
+            std::cerr << "Invalid GamePhase on server:" << static_cast<int>(this->state.getPhase()) << std::endl;
             std::exit(1);
     }
 
+    // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
-
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(
         this->state.getTimestepLength() - (stop - start));
-
     assert(wait.count() > 0);
     return wait;
 }
 
-void Server::doAccept() {
+void Server::_doAccept() {
     this->acceptor.async_accept(this->socket,
         [this](boost::system::error_code ec) {
             if (!ec) {
-                EntityID eid = Server::genNewEID();
-                auto session = std::make_shared<Session>(std::move(this->socket), SessionInfo {
-                    .client_name = {},
-                    .client_eid = eid
-                });
+                auto addr = this->socket.remote_endpoint().address();
+                auto new_session = this->_handleNewSession(addr);
 
-                session->startListen();
-
-                this->sessions.insert({eid, session});
-
-                session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
-                    ServerAssignEIDPacket { .eid = eid }));
+                new_session->startListen();
+                std::cout << "about to send server assign id packet" <<std::endl;
+                new_session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
+                    ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value() }));
             } else {
                 std::cerr << "Error accepting tcp connection: " << ec << std::endl;
             }
 
-            doAccept();
+            this->_doAccept();
         });
+}
+
+std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr) {
+    auto& by_ip = this->sessions.get<IndexByIP>();
+    auto old_session = by_ip.find(addr);
+    if (old_session != by_ip.end()) {
+        // We already had a session with this IP
+        if (old_session->session.expired()) {
+            EntityID old_id = old_session->id;
+
+            // The old session is expired, so create new one
+            auto new_session = std::make_shared<Session>(std::move(this->socket),
+                SessionInfo({}, old_id));
+            by_ip.replace(old_session, SessionEntry(old_id, addr, new_session));
+
+            std::cout << "Reestablished connection with " << addr 
+                << ", which was previously assigned eid " << old_id << std::endl;
+            
+            return new_session;
+
+        } else {
+            // Some some reason the session is still alive, but we are getting
+            // a connection request from the host?
+            std::cerr << "Error: incoming connection request from " << addr
+                << " with which we already have an active session" << std::endl;
+
+            return old_session->session.lock();
+        }
+    }
+
+    // Brand new connection
+    // TODO: reject connection if not in LOBBY GamePhase
+    EntityID id = Server::genNewEID();
+    auto session = std::make_shared<Session>(std::move(this->socket),
+        SessionInfo({}, id));
+
+    this->sessions.insert(SessionEntry(id, addr, session));
+
+    std::cout << "Established new connection with " << addr << ", which was assigned eid "
+        << id << std::endl;
+
+    return session;
 }
