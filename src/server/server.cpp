@@ -50,7 +50,8 @@ EntityID Server::genNewEID() {
 }
 
 void Server::updateGameState(const EventList& events) {
-    for (const auto& [src_eid, event] : events) {
+    // TODO: remove cppcheck suppress when src_eid is being used
+    for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
         switch (event.type) {
         case EventType::MoveRelative:
             auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
@@ -68,7 +69,7 @@ EventList Server::getAllClientEvents() {
     EventList allEvents;
 
     // Loop through each session
-    for (const auto& [eid, _ip, session] : this->sessions) {
+    for (const auto& [_eid, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
         if (auto s = session.lock()) {
             // Get events from the current session
             std::vector<Event> sessionEvents = s->getEvents();
@@ -86,7 +87,7 @@ EventList Server::getAllClientEvents() {
 }
 
 void Server::sendUpdateToAllClients(Event event) {
-    for (const auto& [_eid, _ip, session] : this->sessions) {
+    for (const auto& [_eid, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
         if (auto s = session.lock()) {
             s->sendEventAsync(event);
         }
