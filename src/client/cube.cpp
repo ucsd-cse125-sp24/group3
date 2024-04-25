@@ -138,8 +138,6 @@ Cube::~Cube() {
 
 void Cube::draw(glm::mat4 viewProjMat, GLuint shader) {
     // actiavte the shader program
-    // std::cout << "draw" << std::endl;
-
     glUseProgram(shader);
 
     // Currently 'hardcoding' camera logic in
@@ -161,13 +159,6 @@ void Cube::draw(glm::mat4 viewProjMat, GLuint shader) {
 
     // Compute perspective projection matrix
     glm::mat4 project = glm::perspective(glm::radians(FOV), Aspect, NearClip, FarClip);
-
-    // Compute final view-projection matrix
-    // std::cout << glm::to_string(viewProjMat) << std::endl;
-
-    // viewProjMat = project * view;
-
-    // std::cout << glm::to_string(viewProjMat) << std::endl;
 
     // get the locations and send the uniforms to the shader
     glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, reinterpret_cast<float*>(&viewProjMat));

@@ -7,8 +7,6 @@ Camera::Camera() {
     nearClip = 0.1f;
     farClip = 100.0f;
 
-    // std::cout << "nc: " << nearClip << ", fc: " << farClip << std::endl;
-
     yaw   = -90.0f; // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
     pitch =  0.0f;
     lastX =  800.0f / 2.0;
@@ -73,11 +71,13 @@ void Camera::update(float xpos, float ypos) {
     viewProjMat = projection * view;
 }
 
-void Camera::move(bool is_x_axis, float dir) {
+glm::vec3 Camera::move(bool is_x_axis, float dir) {
     if (is_x_axis) {
         glm::vec3 effCameraFront = glm::normalize(cameraFront - cameraFront.y);
         cameraPos += dir * speed * effCameraFront;
+        return dir * speed * effCameraFront;
     } else {
         cameraPos += dir * glm::normalize(glm::cross(cameraFront, cameraUp)) * speed;
+        return dir * glm::normalize(glm::cross(cameraFront, cameraUp)) * speed;
     }
 }

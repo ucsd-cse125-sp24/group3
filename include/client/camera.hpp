@@ -25,7 +25,7 @@ public:
     void setAspect(float a) { aspect = a; }
 
     void update(float xpos, float ypos);
-    void move(bool is_x_axis, float dir);
+    glm::vec3 move(bool is_x_axis, float dir);
 
     glm::mat4 getViewProj();
 

@@ -131,15 +131,15 @@ void Client::idleCallback(boost::asio::io_context& context) {
     if(is_held_down)
         movement.value() += glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
 
+    std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
     if(cam_is_held_right)
-        cam->move(false, 1.0f);
+        cam_movement.value() += cam->move(false, 1.0f);
     if(cam_is_held_left)
-        cam->move(false, -1.0f);
+        cam_movement.value() += cam->move(false, -1.0f);
     if(cam_is_held_up)
-        cam->move(true, 1.0f);
+        cam_movement.value() += cam->move(true, 1.0f);
     if(cam_is_held_down)
-        cam->move(true, -1.0f);
-
+        cam_movement.value() += cam->move(true, -1.0f);
 
     cam->update(mouse_xpos, mouse_ypos);
 
@@ -173,7 +173,7 @@ void Client::draw() {
         if (sharedObject == nullptr)
             continue;
 
-        std::cout << "got an object" << std::endl;
+        // std::cout << "got an object" << std::endl;
         //  tmp: all objects are cubes
         Cube* cube = new Cube();
         cube->update(sharedObject->physics.position);
