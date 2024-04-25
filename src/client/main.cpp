@@ -50,17 +50,11 @@ int main(int argc, char* argv[])
     LobbyFinder lobby_finder(context, config);
     Client client(context, config);
     if (config.client.lobby_discovery) {
-        // TODO: once we have UI, there should be a way to connect based on
-        // this. Right now, there isn't really a way to react to the information
-        // the LobbyFinder is gathering.
-        std::cerr << "Error: lobby discovery not enabled yet for client-side."
-            << std::endl;
-        std::exit(1);
-        // lobby_finder.startSearching();
-    } else {
-        client.connectAndListen(config.network.server_ip);
+        lobby_finder.startSearching();
     }
-
+    // } else {
+    //     client.connectAndListen(config.network.server_ip);
+    // }
 
     if (client.init() == -1) {
         exit(EXIT_FAILURE);
