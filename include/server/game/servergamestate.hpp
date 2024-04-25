@@ -6,6 +6,7 @@
 #include "shared/utilities/smartvector.hpp"
 #include "server/game/object.hpp"
 #include "server/game/objectmanager.hpp"
+#include "shared/game/event.hpp"
 
 #include <string>
 #include <vector>
@@ -15,6 +16,9 @@
 
 //	From sharedgamestate.hpp
 //struct SharedGameState;
+
+/// Represents a list of events from a certain client with a specified ID
+using EventList = std::vector<std::pair<EntityID, Event>>;
 
 /**
  * @brief The ServerGameState class contains all abstract game state data and
@@ -51,7 +55,7 @@ public:
 	 * @brief Updates this ServerGameState from the current timestep to the
      * next one.
 	 */
-	void update();
+	void update(const EventList& events);
 
 	//	TODO: Add specific update methods (E.g., updateMovement() to update
 	//	object movement)

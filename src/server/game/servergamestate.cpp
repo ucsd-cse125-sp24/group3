@@ -45,7 +45,21 @@ SharedGameState ServerGameState::generateSharedGameState() {
 
 /*	Update methods	*/
 
-void ServerGameState::update() {
+void ServerGameState::update(const EventList& events) {
+
+	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
+        switch (event.type) {
+        case EventType::MoveRelative:
+			//currently just sets the velocity to given 
+            auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
+            Object* obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
+            obj->physics.velocity += moveRelativeEvent.movement;
+            break;
+            // default:
+            //     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
+        }
+    }
+
 	//	TODO: fill update() method with updating object movement
 	useItem();
 	updateMovement();
@@ -71,11 +85,13 @@ void ServerGameState::updateMovement() {
 			//	object position [meters]
 			//	= old position [meters] + (velocity [meters / timestep] * 1 timestep)
 			object->physics.shared.position += object->physics.velocity;
+			object->physics.velocity -= object->physics.velocity;
+
 
 			//	Object velocity [meters / timestep]
 			//	=	old velocity [meters / timestep]
 			//		+ (acceleration [meters / timestep^2] * 1 timestep)
-			object->physics.velocity += object->physics.acceleration;
+			//object->physics.velocity += object->physics.acceleration;
 		}
 	}
 }
