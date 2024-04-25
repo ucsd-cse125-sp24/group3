@@ -5,7 +5,6 @@ set(FILES
     camera.cpp
     client.cpp
     cube.cpp
-    main.cpp
     util.cpp
     lobbyfinder.cpp
     ${imgui-source}
