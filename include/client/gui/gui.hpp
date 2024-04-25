@@ -1,12 +1,16 @@
-#include "client/core.hpp"
+#pragma once
+
+// #include "client/core.hpp"
 
 namespace gui {
-    class Window {
-        public:
-            Window();
 
-            void render(GLUint shader);
+class Window {
+    public:
+        Window();
 
-        private:
-    };
+        void render();
+
+    private:
+};
+
 }
