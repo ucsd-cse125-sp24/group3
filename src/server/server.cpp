@@ -69,7 +69,7 @@ EventList Server::getAllClientEvents() {
     EventList allEvents;
 
     // Loop through each session
-    for (const auto& [_eid, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
+    for (const auto& [eid, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
         if (auto s = session.lock()) {
             // Get events from the current session
             std::vector<Event> sessionEvents = s->getEvents();
