@@ -2,8 +2,6 @@ include(FetchContent)
 
 FetchContent_Declare(imgui 
     URL https://github.com/ocornut/imgui/archive/refs/tags/v1.90.4.zip
-    URL_HASH SHA256=c6b91ff89ecdef2ef568a2eda87d3d9f5421c619a2cdfa9836752ee84aabaf2b
-    DOWNLOAD_EXTRACT_TIMESTAMP true
 )
 
 FetchContent_MakeAvailable(imgui)

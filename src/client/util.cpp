@@ -9,8 +9,6 @@ GLuint LoadSingleShader(const std::string shaderFilePath, ShaderType type) {
     // Create a shader id.
     GLuint shaderID = 0;
 
-    GLenum err = glewInit(); 
-
     if (type == vertex)
         shaderID = glCreateShader(GL_VERTEX_SHADER);
     else if (type == fragment)

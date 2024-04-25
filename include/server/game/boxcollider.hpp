@@ -1,6 +1,6 @@
 #pragma once
 
-#include "collider.hpp"
+#include "server/game/collider.hpp"
 
 class BoxCollider : public Collider {
 public:
@@ -14,9 +14,9 @@ public:
 	BoxCollider(glm::vec3 minPos, glm::vec3 maxPos);
 	~BoxCollider();
 
-	bool detectCollision(Collider* otherBoundary);
-	bool resolveCollision(Collider* otherBoundary);
-	Shape getShape();
+	bool detectCollision(Collider* otherBoundary) override;
+	bool resolveCollision(Collider* otherBoundary) override;
+	Shape getShape() override;
 
 private:
 
