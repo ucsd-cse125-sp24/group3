@@ -1,5 +1,5 @@
-#include "client/boxcollider.hpp"
-#include "client/spherecollider.hpp"
+#include "server/game/boxcollider.hpp"
+#include "server/game/spherecollider.hpp"
 #include <math.h> 
 #include <algorithm>
 

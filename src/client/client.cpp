@@ -21,15 +21,12 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     config(config),
     gameState(GamePhase::TITLE_SCREEN, config)
 {
-    
 }
 
 void Client::connectAndListen(std::string ip_addr) {
     this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
-    this->session = std::make_shared<Session>(std::move(this->socket), SessionInfo {
-        .client_name = this->config.client.default_name,
-        .client_eid = {}
-    });
+    this->session = std::make_shared<Session>(std::move(this->socket),
+        SessionInfo(this->config.client.default_name, {}));
 
     this->session->connectTo(this->endpoints);
 
@@ -101,7 +98,7 @@ int Client::start(boost::asio::io_context& context) {
         glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (this->gameState.getPhase() == GamePhase::GAME) {
+        if (this->gameState.phase == GamePhase::GAME) {
             this->draw();
         }
 
@@ -149,26 +146,23 @@ void Client::processServerInput(boost::asio::io_context& context) {
     // the game state
 
     for (Event event : this->session->getEvents()) {
-        std::cout << "Event Received: " << event << std::endl;
         if (event.type == EventType::LoadGameState) {
             this->gameState = boost::get<LoadGameStateEvent>(event.data).state;
-
-            // for (const auto& [eid, player] : data.state.getLobbyPlayers()) {
-            //     std::cout << "\tPlayer " << eid << ": " << player << "\n";
-            // }
-            // std::cout << "\tThere are " <<
-            //     data.state.getLobbyMaxPlayers() - data.state.getLobbyPlayers().size() <<
-            //     " slots remaining in this lobby\n";
         }
     }
 }
 
 void Client::draw() {
-    for(const Object& obj: this->gameState.getObjects()) {
+    for (int i = 0; i < this->gameState.objects.size(); i++) {
+        std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
+
+        if (sharedObject == nullptr)
+            continue;
+
         std::cout << "got an object" << std::endl;
-        // tmp: all objects are cubes
+        //  tmp: all objects are cubes
         Cube* cube = new Cube();
-        cube->update(obj.position);
+        cube->update(sharedObject->physics.position);
         cube->draw(this->shaderProgram);
     }
 }
