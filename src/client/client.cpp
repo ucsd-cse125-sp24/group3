@@ -1,6 +1,5 @@
 #include "client/client.hpp"
 #include <GLFW/glfw3.h>
-
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -15,6 +14,12 @@
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
+// Flags
+bool Client::is_held_up = false;
+bool Client::is_held_down = false;
+bool Client::is_held_right = false;
+bool Client::is_held_left = false;
+
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
     socket(io_context),
@@ -25,10 +30,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
 
 void Client::connectAndListen(std::string ip_addr) {
     this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
-    this->session = std::make_shared<Session>(std::move(this->socket), SessionInfo {
-        .client_name = this->config.client.default_name,
-        .client_eid = {}
-    });
+    this->session = std::make_shared<Session>(std::move(this->socket),
+        SessionInfo(this->config.client.default_name, {}));
 
     this->session->connectTo(this->endpoints);
 
@@ -44,8 +47,9 @@ Client::~Client() {
 
 }
 
+// TODO: error flags / output for broken init
 int Client::init() {
-    /* Initialize the library */
+    /* Initialize glfw library */
     if (!glfwInit())
         return -1;
 
@@ -62,13 +66,10 @@ int Client::init() {
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    // https://stackoverflow.com/questions/12329082/glcreateshader-is-crashing#comment43358404_23541855
-    #ifndef __APPLE__ // GLew not needed on OSX systems
     GLenum err = glewInit() ; 
     if (GLEW_OK != err) { 
         std::cerr << "Error: " << glewGetString(err) << std::endl; 
     } 
-    #endif
 
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
@@ -86,57 +87,44 @@ int Client::init() {
     return 0;
 }
 
-// Remember to do error message output for later
-int Client::start(boost::asio::io_context& context) {
-    init();
-
-    // Constrain framerate
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
-        processClientInput();
-        processServerInput(context);
-        /* Render here */
-        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        if (this->gameState.phase == GamePhase::GAME) {
-            this->draw();
-        }
-
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-        /* Poll for and process events */
-        glfwPollEvents();
-
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-
-    glfwTerminate();
-
+int Client::cleanup() {
     glDeleteProgram(shaderProgram);
     return 0;
 }
 
-void Client::processClientInput() {
-    std::optional<glm::vec3> movement;
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-    if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-    if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-       movement = glm::vec3(cubeMovementDelta, 0.0f, 0.0f);
-    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-       movement = glm::vec3(-cubeMovementDelta, 0.0f, 0.0f);
-    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        movement = glm::vec3(0.0f, cubeMovementDelta, 0.0f);
-    if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        movement = glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
+// Handles all rendering
+void Client::displayCallback() {
+    /* Render here */
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (this->gameState.phase == GamePhase::GAME) {
+        this->draw();
+    }
+
+    /* Poll for and process events */
+    glfwPollEvents();
+    glfwSwapBuffers(window);
+}
+
+// Handle any updates 
+void Client::idleCallback(boost::asio::io_context& context) {
+    std::optional<glm::vec3> movement = glm::vec3(0.0f);
+
+    if(is_held_right)
+        movement.value() += glm::vec3(cubeMovementDelta, 0.0f, 0.0f);
+    if(is_held_left)
+        movement.value() += glm::vec3(-cubeMovementDelta, 0.0f, 0.0f);
+    if(is_held_up)
+        movement.value() += glm::vec3(0.0f, cubeMovementDelta, 0.0f);
+    if(is_held_down)
+        movement.value() += glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
 
     if (movement.has_value()) {
         auto eid = 0; 
         this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
     }
+
+    processServerInput(context);
 }
 
 void Client::processServerInput(boost::asio::io_context& context) {
@@ -148,28 +136,13 @@ void Client::processServerInput(boost::asio::io_context& context) {
     // the game state
 
     for (Event event : this->session->getEvents()) {
-        std::cout << "Event Received: " << event << std::endl;
         if (event.type == EventType::LoadGameState) {
             this->gameState = boost::get<LoadGameStateEvent>(event.data).state;
-
-            // for (const auto& [eid, player] : data.state.getLobbyPlayers()) {
-            //     std::cout << "\tPlayer " << eid << ": " << player << "\n";
-            // }
-            // std::cout << "\tThere are " <<
-            //     data.state.getLobbyMaxPlayers() - data.state.getLobbyPlayers().size() <<
-            //     " slots remaining in this lobby\n";
         }
     }
 }
 
 void Client::draw() {
-    //for(const Object& obj: this->gameState.getObjects()) {
-    //    std::cout << "got an object" << std::endl;
-    //    // tmp: all objects are cubes
-    //    Cube* cube = new Cube();
-    //    cube->update(obj.position);
-    //    cube->draw(this->shaderProgram);
-    //}
     for (int i = 0; i < this->gameState.objects.size(); i++) {
         std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
 
@@ -183,3 +156,59 @@ void Client::draw() {
         cube->draw(this->shaderProgram);
     }
 }
+
+// callbacks - for Interaction
+void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+  // Check for a key press.
+    if (action == GLFW_PRESS) {
+        switch (key) {
+        case GLFW_KEY_ESCAPE:
+            // Close the window. This causes the program to also terminate.
+            glfwSetWindowShouldClose(window, GL_TRUE);
+            break;
+
+        case GLFW_KEY_DOWN:
+            is_held_down = true;
+            break;
+
+        case GLFW_KEY_UP:
+            is_held_up = true;
+            break;
+
+        case GLFW_KEY_LEFT:
+            is_held_left = true;
+            break;
+
+        case GLFW_KEY_RIGHT:
+            is_held_right = true;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    if (action == GLFW_RELEASE) {
+        switch (key) {
+        case GLFW_KEY_DOWN:
+            is_held_down = false;
+            break;
+
+        case GLFW_KEY_UP:
+            is_held_up = false;
+            break;
+
+        case GLFW_KEY_LEFT:
+            is_held_left = false;
+            break;
+
+        case GLFW_KEY_RIGHT:
+            is_held_right = false;
+            break;
+
+        default:
+            break;
+        }
+    }
+}
+

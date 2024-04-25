@@ -1,5 +1,9 @@
 #pragma once
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+
 #include <iostream>
 #include <boost/asio.hpp>
 #include <memory>
@@ -29,6 +33,7 @@ enum SocketError {
     RETRY,
 };
 
+
 /**
  * Info about the client and server associated with this session.
  * 
@@ -37,9 +42,14 @@ enum SocketError {
  * them to the "None" value.
  */
 struct SessionInfo {
+    SessionInfo(std::optional<std::string> client_name,
+        std::optional<EntityID> client_eid)
+        : client_name(client_name), client_eid(client_eid) {}
+
     std::optional<std::string> client_name;
     std::optional<EntityID> client_eid;
 };
+
 
 /**
  * A class which wraps around the concept of a Client <-> Server relationship. This
@@ -127,3 +137,65 @@ private:
      */
     SocketError _classifySocketError(boost::system::error_code ec, const char* where);
 };
+
+/**
+ * Used by server and client as the data stored in a boost::multi_index container
+ */
+struct SessionEntry {
+    SessionEntry(EntityID id, 
+        boost::asio::ip::address ip, 
+        std::shared_ptr<Session> session)
+        : id(id), ip(ip), session(session) {}
+
+    EntityID id;
+    boost::asio::ip::address ip;
+    std::weak_ptr<Session> session;
+};
+
+/**
+ * Hash function for a tcp ip address in boost, passed into the multi_index container
+ * down below.
+ * Borrowed from: https://stackoverflow.com/questions/22746359/unordered-map-with-ip-address-as-a-key
+ */
+struct ip_address_hash {
+    size_t operator()(const boost::asio::ip::address& v) const { 
+        if (v.is_v4())
+            return v.to_v4().to_ulong();
+        if (v.is_v6()) {
+            auto const& range = v.to_v6().to_bytes();
+            return boost::hash_range(range.begin(), range.end());
+        }
+        if (v.is_unspecified()) {
+            // guaranteed to be random: chosen by fair dice roll
+            return static_cast<size_t>(0x4751301174351161ul); 
+        }
+        return boost::hash_value(v.to_string());
+    }
+};
+
+// Tag structs to let you index into a Sessions Multi_index map by a name
+struct IndexByID {};
+// Tag structs to let you index into a Sessions Multi_index map by a name
+struct IndexByIP {};
+
+/**
+ * This creates a data structure which allows us to query for a Session by either
+ * the id of the player associated with it, or by that player's tcp::endpoint information.
+ * 
+ * This stackoverflow post was helpful in understanding how to use boost::multi_index
+ * https://stackoverflow.com/questions/39510143/how-to-use-create-boostmulti-index
+ */
+using Sessions = boost::multi_index_container<
+    SessionEntry,
+    boost::multi_index::indexed_by<
+        boost::multi_index::hashed_unique<
+            boost::multi_index::tag<IndexByID>,
+            boost::multi_index::member<SessionEntry, EntityID, &SessionEntry::id>
+        >,
+        boost::multi_index::hashed_unique<
+            boost::multi_index::tag<IndexByIP>,
+            boost::multi_index::member<SessionEntry, boost::asio::ip::address, &SessionEntry::ip>,
+            ip_address_hash
+        >
+    >
+>;
