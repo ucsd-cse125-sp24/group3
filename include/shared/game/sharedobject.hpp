@@ -6,14 +6,15 @@
 //#include "server/game/object.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/utilities/typedefs.hpp"
-//#include "server/game/creature.hpp" // stats
 
 /**
  * @brief An enum for the type of an object; the fields here should match all
  * class names in the inheritance tree in which Object is the root.
  */
 enum class ObjectType {
-	Object	//	Generic object type (base class)
+	Object,	//	Generic object type (base class)
+	Player,
+	Enemy
 };
 
 /**

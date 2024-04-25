@@ -3,6 +3,8 @@
 #include <memory>
 
 #include "server/game/object.hpp"
+#include "server/game/player.hpp"
+#include "server/game/enemy.hpp"
 
 #include "shared/utilities/smartvector.hpp"
 
@@ -104,4 +106,16 @@ private:
 	 * ObjectType::Object.
 	 */
 	SmartVector<Object*> base_objects;
+
+	/**
+	 * @brief SmartVector of Player pointers to all objects whose ObjectType is
+	 * ObjectType::Player.
+	 */
+	SmartVector<Player*> player_objects;
+
+	/**
+	 * @brief SmartVector of Enemy pointers to all objects whose ObjectType is
+	 * ObjectType::Enemy.
+	 */
+	SmartVector<Enemy*> enemy_objects;
 };

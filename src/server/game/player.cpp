@@ -5,3 +5,11 @@ SharedObject Player::toShared() {
     auto so = Creature::toShared();
     return so;
 }
+
+Player::Player() {
+
+}
+
+Player::~Player() {
+
+}

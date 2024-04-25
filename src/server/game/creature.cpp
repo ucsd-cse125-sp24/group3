@@ -3,6 +3,9 @@
 
 SharedObject Creature::toShared() {
     auto so = Object::toShared();
-    so.stats = this->stats;
     return so;
 }
+
+Creature::Creature() {}
+
+Creature::~Creature() {}

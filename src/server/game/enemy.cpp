@@ -5,3 +5,7 @@ SharedObject Enemy::toShared() {
     auto so = Creature::toShared();
     return so;
 }
+
+Enemy::Enemy() {}
+
+Enemy::~Enemy() {}
