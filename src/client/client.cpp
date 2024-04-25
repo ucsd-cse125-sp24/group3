@@ -14,11 +14,6 @@
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
-// float Client::cubeMovementDelta = 0.05;
-// Cube* Client::cube;
-// GLFWwindow* Client::window;
-// GLuint Client::shaderProgram;
-
 // Flags
 bool Client::is_held_up = false;
 bool Client::is_held_down = false;
@@ -101,9 +96,7 @@ int Client::cleanup() {
 
 // Handles all rendering
 void Client::displayCallback() {
-    // processInput();
     /* Render here */
-    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (this->gameState.phase == GamePhase::GAME) {
@@ -117,18 +110,21 @@ void Client::displayCallback() {
 
 // Handle any updates 
 void Client::idleCallback(boost::asio::io_context& context) {
-    glm::vec3 movement(0.0f);
-    if(is_held_right)
-        movement += glm::vec3(cubeMovementDelta, 0.0f, 0.0f);
-    if(is_held_left)
-        movement += glm::vec3(-cubeMovementDelta, 0.0f, 0.0f);
-    if(is_held_up)
-        movement += glm::vec3(0.0f, cubeMovementDelta, 0.0f);
-    if(is_held_down)
-        movement += glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
+    std::optional<glm::vec3> movement = glm::vec3(0.0f);
 
-    auto eid = 0; 
-    this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement)));
+    if(is_held_right)
+        movement.value() += glm::vec3(cubeMovementDelta, 0.0f, 0.0f);
+    if(is_held_left)
+        movement.value() += glm::vec3(-cubeMovementDelta, 0.0f, 0.0f);
+    if(is_held_up)
+        movement.value() += glm::vec3(0.0f, cubeMovementDelta, 0.0f);
+    if(is_held_down)
+        movement.value() += glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
+
+    if (movement.has_value()) {
+        auto eid = 0; 
+        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
+    }
 
     processServerInput(context);
 }
@@ -157,13 +153,6 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
-    //for(const Object& obj: this->gameState.getObjects()) {
-    //    std::cout << "got an object" << std::endl;
-    //    // tmp: all objects are cubes
-    //    Cube* cube = new Cube();
-    //    cube->update(obj.position);
-    //    cube->draw(this->shaderProgram);
-    //}
     for (int i = 0; i < this->gameState.objects.size(); i++) {
         std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
 

@@ -17,6 +17,7 @@ void error_callback(int error, const char* description) {
 void set_callbacks(GLFWwindow* window) {
     // Set the error callback.
     glfwSetErrorCallback(error_callback);
+
     // Set the window resize callback.
     // glfwSetWindowSizeCallback(window, client.resizeCallback);
 
@@ -31,13 +32,15 @@ void set_callbacks(GLFWwindow* window) {
 void set_opengl_settings() {
     // Enable depth buffering.
     glEnable(GL_DEPTH_TEST);
+
     // Related to shaders and z value comparisons for the depth buffer.
     glDepthFunc(GL_LEQUAL);
+
     // Set polygon drawing mode to fill front and back of each polygon.
-    // glColor3f(1.0f, 255, 255);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
     // Set clear color to black.
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
 }
 
 int main(int argc, char* argv[])
@@ -70,11 +73,6 @@ int main(int argc, char* argv[])
     set_callbacks(window);
     // Setup OpenGL settings.
     set_opengl_settings();
-
-    // Initialize the shader program; exit if initialization fails.
-    // if (!Window::initializeProgram()) exit(EXIT_FAILURE);
-    // Initialize objects/pointers for rendering; exit if initialization fails.
-    // if (!Window::initializeObjects(argc, argv)) exit(EXIT_FAILURE);
 
     // Loop while GLFW window should stay open.
     while (!glfwWindowShouldClose(window)) {
