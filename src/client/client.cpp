@@ -28,7 +28,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
     socket(io_context),
     config(config),
-    gameState(GamePhase::TITLE_SCREEN, config)
+    gameState(GamePhase::TITLE_SCREEN, config),
+    session(nullptr)
 {
 }
 
@@ -117,11 +118,12 @@ void Client::displayCallback() {
     /* Render here */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        ImGui::ShowDemoWindow(); // Show demo window! :)
+        
     } else if (this->gameState.phase == GamePhase::GAME) {
         this->draw();
     }
@@ -147,12 +149,14 @@ void Client::idleCallback(boost::asio::io_context& context) {
     if(is_held_down)
         movement.value() += glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
 
-    if (movement.has_value()) {
+    if (movement.has_value() && this->session != nullptr) {
         auto eid = 0; 
         this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
     }
 
-    processServerInput(context);
+    if (this->session != nullptr) {
+        processServerInput(context);
+    }
 }
 
 void Client::processServerInput(boost::asio::io_context& context) {

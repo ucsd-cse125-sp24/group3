@@ -17,15 +17,9 @@ set(IMGUI_INCLUDE_DIRS
 )
 
 set(IMGUI_SOURCES
-    ${imgui-directory}/imconfig.h
-	${imgui-directory}/imgui.h
 	${imgui-directory}/imgui.cpp
 	${imgui-directory}/imgui_draw.cpp
-	${imgui-directory}/imgui_internal.h
 	${imgui-directory}/imgui_widgets.cpp
-	${imgui-directory}/imstb_rectpack.h
-	${imgui-directory}/imstb_textedit.h
-	${imgui-directory}/imstb_truetype.h
     ${imgui-directory}/imgui_tables.cpp
 	${imgui-directory}/imgui_demo.cpp
 	${imgui-directory}/backends/imgui_impl_glfw.cpp

@@ -49,9 +49,9 @@ int main(int argc, char* argv[])
     boost::asio::io_context context;
     LobbyFinder lobby_finder(context, config);
     Client client(context, config);
-    if (config.client.lobby_discovery) {
-        lobby_finder.startSearching();
-    }
+    // if (config.client.lobby_discovery) {
+    //     lobby_finder.startSearching();
+    // }
     // } else {
     //     client.connectAndListen(config.network.server_ip);
     // }
