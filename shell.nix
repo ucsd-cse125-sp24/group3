@@ -28,6 +28,7 @@ mkShell {
 
     doxygen
     clang-tools_14
+    cppcheck
   ];
   nativeBuildInputs = with pkgs; [
         pkg-config

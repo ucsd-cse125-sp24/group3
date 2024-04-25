@@ -1,6 +1,6 @@
 #pragma once
 
-#include "constants.hpp"
+#include "server/game/constants.hpp"
 
 class Collider {
 public:

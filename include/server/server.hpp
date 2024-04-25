@@ -13,6 +13,7 @@
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "server/game/servergamestate.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -34,7 +35,7 @@ public:
 
     EventList getAllClientEvents();
 
-    void updateGameState(EventList events);
+    void updateGameState(const EventList& events);
 
     void sendUpdateToAllClients(Event event);
 
@@ -68,6 +69,6 @@ private:
     /// @brief Mapping from either player id or ip to session
     Sessions sessions;
 
-    /// @brief Master copy of the GameState, living on the server
-    GameState state;
+    /// @brief Master copy of the ServerGameState, living on the server
+    ServerGameState state;
 };

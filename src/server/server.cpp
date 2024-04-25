@@ -15,7 +15,8 @@
 
 #include "boost/variant/get.hpp"
 #include "shared/game/event.hpp"
-#include "shared/game/gamelogic/object.hpp"
+#include "server/game/servergamestate.hpp"
+#include "server/game/object.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
@@ -29,10 +30,9 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      acceptor(io_context, tcp::endpoint(tcp::v4(), config.network.server_port)),
      socket(io_context),
      world_eid(0),
-     state(GameState(GamePhase::LOBBY, config))
+     state(ServerGameState(GamePhase::LOBBY, config))
 {
-    Object* obj = state.createObject();
-    obj->position = glm::vec3(0.0f, 0.0f, 0.0f);
+    state.objects.createObject(ObjectType::Object);
     
     _doAccept(); // start asynchronously accepting
 
@@ -49,13 +49,14 @@ EntityID Server::genNewEID() {
     return id++;
 }
 
-void Server::updateGameState(EventList events) {
-    for (const auto& [src_id, event] : events) {
+void Server::updateGameState(const EventList& events) {
+    for (const auto& [src_eid, event] : events) {
         switch (event.type) {
         case EventType::MoveRelative:
             auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-            Object* obj = state.getObject(moveRelativeEvent.entity_to_move);
-            obj->setPosition(obj->position + moveRelativeEvent.movement);
+            Object* obj = state.objects.getObject(moveRelativeEvent.entity_to_move);
+            //obj->setPosition(obj->position + moveRelativeEvent.movement);
+            obj->physics.shared.position += moveRelativeEvent.movement;
             break;
             // default:
             //     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
@@ -107,20 +108,24 @@ std::chrono::milliseconds Server::doTick() {
                 }
             }
 
-            if (this->state.enoughPlayers()) {
+            if (this->state.getLobbyPlayers().size() >= this->state.getLobbyMaxPlayers()) {
                 this->state.setPhase(GamePhase::GAME);
             } else {
                 std::cout << "Only have " << this->state.getLobbyPlayers().size() << "/" << this->state.getLobbyMaxPlayers() << "\n";
             }
 
-            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
+            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
+            // Tell each client the current lobby status
+
+            std::cout << "waiting for " << this->state.getLobbyMaxPlayers() << " players" << std::endl;
+
             break;
         case GamePhase::GAME: {
             EventList allClientEvents = getAllClientEvents();
 
             updateGameState(allClientEvents);
 
-            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state)));
+            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
             break;
         }
         default:

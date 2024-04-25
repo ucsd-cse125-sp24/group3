@@ -33,7 +33,7 @@ void Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpo
     tcp::endpoint endpt = boost::asio::connect(socket, endpoints);
 }
 
-void Session::_handleReceivedPacket(PacketType type, std::string data) {
+void Session::_handleReceivedPacket(PacketType type, const std::string& data) {
     // First figure out if packet is event or non-event
     if (type == PacketType::Event) {
         auto event = deserialize<EventPacket>(data).event;
@@ -76,8 +76,6 @@ void Session::sendPacketAsync(std::shared_ptr<PackagedPacket> packet) {
 }
 
 void Session::sendEventAsync(Event event) {
-    std::shared_ptr<PackagedPacket> packet = nullptr;
-
     this->sendPacketAsync(PackagedPacket::make_shared(PacketType::Event, EventPacket(event)));
 }
 

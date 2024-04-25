@@ -20,7 +20,7 @@ public:
     /**
      * Instantiates the Lobby Broadcast but does not start broadcasting yet
      */
-    LobbyBroadcaster(boost::asio::io_context& io_context, GameConfig config);
+    LobbyBroadcaster(boost::asio::io_context& io_context, const GameConfig& config);
 
     /**
      * Calls LobbyFinder::stopBroadcasting(), if it hasn't already been called.
@@ -31,13 +31,13 @@ public:
      * Start broadcasting that this lobby is available to join, if it isn't already
      * broadcasting.
      */
-    void startBroadcasting(ServerLobbyBroadcastPacket bcast_info);
+    void startBroadcasting(const ServerLobbyBroadcastPacket& bcast_info);
 
     /**
      * Tell the broadcaster the current state of the lobby so it can broadcast
      * updated messages.
      */
-    void setLobbyInfo(ServerLobbyBroadcastPacket bcast_info);
+    void setLobbyInfo(const ServerLobbyBroadcastPacket& bcast_info);
 
     /**
      * Tells the LobbyBroadcaster to stop advertising that there is a lobby open.

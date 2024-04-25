@@ -1,5 +1,5 @@
-#include "client/boxcollider.hpp"
-#include "client/spherecollider.hpp"
+#include "server/game/boxcollider.hpp"
+#include "server/game/spherecollider.hpp"
 #include <math.h> 
 #include <algorithm>
 
@@ -27,7 +27,7 @@ bool BoxCollider::detectCollision(Collider* otherCollider) {
 					this->min_position.z <= otherC->max_position.z);
 		}
 		case Sphere: {
-			SphereCollider* otherC = dynamic_cast<SphereCollider*>(otherCollider);
+			const SphereCollider* otherC = dynamic_cast<SphereCollider*>(otherCollider);
 			float x = fmaxf(this->min_position.x, fminf(otherC->center.x, this->max_position.x));
 			float y = fmaxf(this->min_position.y, fminf(otherC->center.y, this->max_position.y));
 			float z = fmaxf(this->min_position.z, fminf(otherC->center.z, this->max_position.z));

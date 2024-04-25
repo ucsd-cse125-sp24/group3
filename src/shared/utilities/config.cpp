@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-GameConfig GameConfig::parse(int argc, char** argv) {
+GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress constParameter
     if (argc > 2) {
         std::cerr << "Expected use:\n";
         std::cerr << "   (1) ./" << argv[0] << "\n";
@@ -29,7 +29,7 @@ GameConfig GameConfig::parse(int argc, char** argv) {
     try {
         std::fstream stream(filepath.c_str());
         json = nlohmann::json::parse(stream);
-    } catch (std::exception ex) {
+    } catch (std::exception& ex) {
         std::cerr << "Failed to parse config file, aborting.\n";
         std::cerr << "Most likely, you need specify the filepath to the config like so:\n";
         std::cerr << "    " << argv[0] << " [path_to_config]\n";
@@ -57,7 +57,7 @@ GameConfig GameConfig::parse(int argc, char** argv) {
                 .lobby_discovery = json.at("client").at("lobby_discovery")
             }
         };
-    } catch (nlohmann::json::exception ex) {
+    } catch (nlohmann::json::exception& ex) {
         std::cerr << "Error parsing config file: " << ex.what() << std::endl;
         std::exit(1);
     }

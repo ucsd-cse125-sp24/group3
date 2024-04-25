@@ -6,7 +6,7 @@ set(FILES
 )
 
 add_executable(${TARGET_NAME} ${FILES})
-target_link_libraries(${TARGET_NAME} PRIVATE game_shared_lib)
+target_link_libraries(${TARGET_NAME} PRIVATE game_shared_lib game_server_lib)
 
 target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORY})
 target_include_directories(${TARGET_NAME} PRIVATE ${BOOST_LIBRARY_INCLUDES})
