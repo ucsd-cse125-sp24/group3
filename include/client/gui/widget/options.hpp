@@ -1,6 +1,6 @@
 #pragma once
 
-namespace gui {
+namespace gui::widget {
 
 enum class HAlign {
     LEFT,

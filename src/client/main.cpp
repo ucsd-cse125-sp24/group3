@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 
+
 #include <boost/asio/io_context.hpp>
 
 #include "client/client.hpp"
@@ -59,6 +60,8 @@ int main(int argc, char* argv[])
     if (client.init() == -1) {
         exit(EXIT_FAILURE);
     }
+
+
     
     GLFWwindow* window = client.getWindow();
     if (!window) exit(EXIT_FAILURE);

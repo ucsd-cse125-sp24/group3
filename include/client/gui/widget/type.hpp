@@ -1,11 +1,9 @@
 #pragma once
 
-namespace gui {
-namespace widget {
+namespace gui::widget {
 
 enum class Type {
     DynText
 };
 
-}
 }

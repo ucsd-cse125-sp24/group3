@@ -3,16 +3,15 @@
 #include <string>
 
 #include "client/gui/widget/widget.hpp"
-#include "client/gui/font.hpp"
+#include "client/gui/font/font.hpp"
 
-namespace gui {
-namespace widget {
+namespace gui::widget {
 
 class DynText : public Widget {
 public:
     struct Options {
-        Font font {Font::READABLE};
-        FontSize font_size {FontSize::MEDIUM};
+        font::Font font {font::Font::TEXT};
+        font::FontSizePx font_size {font::FontSizePx::MEDIUM};
     };
 
     DynText(std::string text, Options options = {});
@@ -24,5 +23,4 @@ private:
 
 };
 
-}
 }

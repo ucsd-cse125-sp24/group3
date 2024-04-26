@@ -1,6 +1,6 @@
 #include "shared/utilities/config.hpp"
 
-#include <boost/dll/runtime_symbol_info.hpp>
+#include "shared/utilities/root_path.hpp"
 
 #include <nlohmann/json.hpp>
 #include <iostream>
@@ -16,11 +16,7 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
         exit(1);
     }
 
-    // With the cmake setup we know the executables are three directories down from the root of the
-    // repository, where the config file lives
-    boost::filesystem::path root_path = boost::dll::program_location().parent_path().parent_path().parent_path();
-
-    boost::filesystem::path filepath = root_path / "config.json";
+    boost::filesystem::path filepath = getRepoRoot() / "config.json";
     if (argc == 2) {
         filepath = argv[1];
     }

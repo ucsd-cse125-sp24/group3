@@ -8,8 +8,7 @@
 #include <functional>
 #include <unordered_map>
 
-namespace gui {
-namespace widget {
+namespace gui::widget {
 
 using Callback = std::function<void()>;
 using CallbackHandle = std::size_t;
@@ -50,5 +49,4 @@ private:
     CallbackHandle next_hover_handle {0};
 };
 
-}
 }
