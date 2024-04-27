@@ -9,6 +9,7 @@ mkShell {
     gnumake
     gcc13
     gdb
+    zlib
 
     wayland
     wayland-scanner
