@@ -179,18 +179,6 @@ struct SpawnEntityEvent {
 };
 
 /**
- * Filler Event (For client movement / dummy event)
- */
-struct FillerEvent {
-    FillerEvent() {}
-
-    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        // TODO:
-    }
-
-};
-
-/**
  * All of the different kinds of events in a tagged union, so we can
  * easily pull out the actual data for a specific Event
  */
@@ -202,8 +190,7 @@ using EventData = boost::variant<
     VerticalKeyUpEvent,
     HorizontalKeyUpEvent,
     MoveAbsoluteEvent,
-    SpawnEntityEvent,
-    FillerEvent
+    SpawnEntityEvent
 >;
 
 /**

@@ -21,12 +21,13 @@ bool Client::is_held_down = false;
 bool Client::is_held_right = false;
 bool Client::is_held_left = false;
 
-Event previousVertical = Event(0, EventType::Filler, FillerEvent());
-Event previousHorizontal = Event(0, EventType::Filler, FillerEvent());
+// For checking previous movement inputs / allows removal of repeated movement event
+EventType previousVertical = EventType::Filler;
+EventType previousHorizontal = EventType::Filler;
 
 enum Direction { up, down, right, left };
-Direction prevVerticalDirection = left;
-Direction prevHorizontalDirection = up;
+Direction prevVerticalDirection = left; // set to unrelated direction
+Direction prevHorizontalDirection = up; // set to unrelated direction
 
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
@@ -115,6 +116,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
     std::optional<glm::vec3> horizontal = glm::vec3(0.0f);
     std::optional<glm::vec3> vertical = glm::vec3(0.0f);
 
+    // Sets a direction vector
     if(is_held_right)
         horizontal.value() += glm::vec3(1.0f, 0.0f, 0.0f);
     if(is_held_left)
@@ -124,38 +126,53 @@ void Client::idleCallback(boost::asio::io_context& context) {
     if(is_held_down)
         vertical.value() += glm::vec3(0.0f, -1.0f, 0.0f);
 
+    // Checks for right/left key inputs
     while(true){
+        // don't send any event if same key is pressed
+        if (previousHorizontal == EventType::HorizontalKeyDown && ((prevHorizontalDirection == right && is_held_right) || (prevHorizontalDirection == left && is_held_left))){break;}
+        
+        // sends event if key is pressed
         if (is_held_right) {
-            if (previousHorizontal.type == EventType::HorizontalKeyDown && prevHorizontalDirection == right) { break; } 
-            auto eid = 0; 
+            auto eid = 0; // TODO: later set eid to player id or etc.
             this->session->sendEventAsync(Event(eid, EventType::HorizontalKeyDown, HorizontalKeyDownEvent(eid, horizontal.value())));
-            previousHorizontal = Event(0, EventType::HorizontalKeyDown, FillerEvent());
+            previousHorizontal = EventType::HorizontalKeyDown;
             prevHorizontalDirection = right;
         } else if (is_held_left) {
-            if (previousHorizontal.type == EventType::HorizontalKeyDown && prevHorizontalDirection == left) { break; } 
             auto eid = 0; 
             this->session->sendEventAsync(Event(eid, EventType::HorizontalKeyDown, HorizontalKeyDownEvent(eid, horizontal.value())));
-            previousHorizontal = Event(0, EventType::HorizontalKeyDown, FillerEvent());
+            previousHorizontal = EventType::HorizontalKeyDown;
             prevHorizontalDirection = left;
-        } else {
-            if (previousHorizontal.type == EventType::HorizontalKeyUp) { break; }
+        } else { // if both left/right key is up, stop horizontal movement
+            if (previousHorizontal == EventType::HorizontalKeyUp) { break; }
             auto eid = 0;
             this->session->sendEventAsync(Event(eid, EventType::HorizontalKeyUp, HorizontalKeyUpEvent(eid, horizontal.value())));
-            previousHorizontal = Event(0, EventType::HorizontalKeyUp, FillerEvent());
+            previousHorizontal = EventType::HorizontalKeyUp;
+            prevHorizontalDirection = up; // reset prev direction to unrelated direction
         }
     }
 
+    // Checks for up/down key inputs
     while(true){
-        if (is_held_up || is_held_down) {
-            if (previousVertical.type == EventType::VerticalKeyDown) { break; }
+        // don't send any event if same key is pressed
+        if (previousVertical == EventType::VerticalKeyDown && ((prevVerticalDirection == up && is_held_up) || (prevVerticalDirection == down && is_held_down))) { break; }
+        
+        // sends event if key is pressed
+        if (is_held_up) {
             auto eid = 0; 
             this->session->sendEventAsync(Event(eid, EventType::VerticalKeyDown, VerticalKeyDownEvent(eid, vertical.value())));
-            previousVertical = Event(0, EventType::VerticalKeyDown, FillerEvent());
-        } else {
-            if (previousVertical.type == EventType::VerticalKeyUp) { break; }
+            previousVertical = EventType::VerticalKeyDown;
+            prevVerticalDirection = up;
+        } else if (is_held_down) {
+            auto eid = 0;
+            this->session->sendEventAsync(Event(eid, EventType::VerticalKeyDown, VerticalKeyDownEvent(eid, vertical.value())));
+            previousVertical = EventType::VerticalKeyDown;
+            prevVerticalDirection = down;
+        } else { // if both up/down key is up, stop vertical movement
+            if (previousVertical == EventType::VerticalKeyUp) { break; }
             auto eid = 0;
             this->session->sendEventAsync(Event(eid, EventType::VerticalKeyUp, VerticalKeyUpEvent(eid, vertical.value())));
-            previousVertical = Event(0, EventType::VerticalKeyUp, FillerEvent());
+            previousVertical = EventType::VerticalKeyUp;
+            prevVerticalDirection = left; // reset prev direction to unrelated direction
         }
     }
 

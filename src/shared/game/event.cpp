@@ -21,7 +21,6 @@ std::ostream& operator<<(std::ostream& os, const EventType& type) {
         TO_STR(HorizontalKeyUp);
         TO_STR(MoveAbsolute);
         TO_STR(SpawnEntity);
-        TO_STR(Filler);
         default: 
             os << "Unknown EventType";
             break;
