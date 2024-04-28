@@ -121,6 +121,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
     if (is_held_right || is_held_left || is_held_up || is_held_down) {
         if (prevEvent.type == EventType::MoveRelative) {
+            processServerInput(context);
             return;
         }
         auto eid = 0; 
@@ -129,6 +130,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
     }
     else {
         if (prevEvent.type == EventType::MoveKeyUp) {
+            processServerInput(context);
             return;
         }
         auto eid = 0;
