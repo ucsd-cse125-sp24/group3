@@ -30,6 +30,8 @@ mkShell {
     doxygen
     clang-tools_14
     cppcheck
+
+    python310Packages.gdown
   ];
   nativeBuildInputs = with pkgs; [
         pkg-config

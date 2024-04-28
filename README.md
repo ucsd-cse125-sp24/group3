@@ -127,6 +127,10 @@ Depending on where you need to link the library (client, server, shared), you wi
 - [C++ Intellisense](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools)
 - [General Productivity](https://marketplace.visualstudio.com/items?itemName=jirkavrba.subway-surfers)
 
+## Models
+
+You can download models from our Google Drive folder [here](https://drive.google.com/drive/folders/1N7a5cDgMcXbPO0RtgznnEo-1XUfdMScM?usp=sharing) and place them in `src/client/models`. Alternatively, you can install [gdown](https://github.com/wkentaro/gdown) and run `make pull_models` to automatically pull them.
+
 ## Documentation
 
 View deployed documentation [here](https://cse125.ucsd.edu/2024/cse125g3/site/docs/html/)
