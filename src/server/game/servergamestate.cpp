@@ -50,18 +50,33 @@ void ServerGameState::update(const EventList& events) {
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
 		std::cout << event << std::endl;
 		Object* obj;
+		float speedFactor = 0.05; // temperary speed factor for movement
         switch (event.type) {
 
-		case EventType::MoveRelative: {	// if key down, set the velocity to given 
-			auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-			obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
-			obj->physics.velocity = moveRelativeEvent.movement;
+		case EventType::HorizontalKeyDown: {	// if left/right key down, set the velocity to given 
+			auto horizontalEvent = boost::get<HorizontalKeyDownEvent>(event.data);
+			obj = this->objects.getObject(horizontalEvent.entity_to_move);
+			obj->physics.velocity = obj->physics.velocity * glm::vec3(0.0f, 1.0f, 1.0f);
+			obj->physics.velocity += horizontalEvent.movement * speedFactor;
 			break;
 		}
-		case EventType::MoveKeyUp: { // if key is off, stop moving	
-			auto stopMove = boost::get<MoveKeyUpEvent>(event.data);
-			obj = this->objects.getObject(stopMove.entity_to_move);
-			obj->physics.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+		case EventType::VerticalKeyDown: {	// if up/down key down, set the velocity to given 
+			auto verticalEvent = boost::get<VerticalKeyDownEvent>(event.data);
+			obj = this->objects.getObject(verticalEvent.entity_to_move);
+			obj->physics.velocity = obj->physics.velocity * glm::vec3(1.0f, 0.0f, 1.0f);
+			obj->physics.velocity += verticalEvent.movement * speedFactor;
+			break;
+		}
+		case EventType::HorizontalKeyUp: { // if key is off, stop moving horizontally
+			auto stopHorizontalEvent = boost::get<HorizontalKeyUpEvent>(event.data);
+			obj = this->objects.getObject(stopHorizontalEvent.entity_to_move);
+			obj->physics.velocity = obj->physics.velocity * glm::vec3(0.0f, 1.0f, 1.0f);
+			break;
+		}
+		case EventType::VerticalKeyUp: { // if key is off, stop moving vertically
+			auto stopVerticalEvent = boost::get<VerticalKeyUpEvent>(event.data);
+			obj = this->objects.getObject(stopVerticalEvent.entity_to_move);
+			obj->physics.velocity = obj->physics.velocity * glm::vec3(1.0f, 0.0f, 1.0f);
 			break;
 		}
 

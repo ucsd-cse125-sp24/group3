@@ -15,8 +15,10 @@ std::ostream& operator<<(std::ostream& os, const EventType& type) {
     switch (type) {
         TO_STR(LobbyAction);
         TO_STR(LoadGameState);
-        TO_STR(MoveRelative);
-        TO_STR(MoveKeyUp);
+        TO_STR(VerticalKeyDown);
+        TO_STR(HorizontalKeyDown);
+        TO_STR(VerticalKeyUp);
+        TO_STR(HorizontalKeyUp);
         TO_STR(MoveAbsolute);
         TO_STR(SpawnEntity);
         TO_STR(Filler);

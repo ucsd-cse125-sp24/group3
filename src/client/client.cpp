@@ -21,7 +21,12 @@ bool Client::is_held_down = false;
 bool Client::is_held_right = false;
 bool Client::is_held_left = false;
 
-Event prevEvent = Event(0, EventType::Filler, FillerEvent());
+Event previousVertical = Event(0, EventType::Filler, FillerEvent());
+Event previousHorizontal = Event(0, EventType::Filler, FillerEvent());
+
+enum Direction { up, down, right, left };
+Direction prevVerticalDirection = left;
+Direction prevHorizontalDirection = up;
 
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
@@ -107,35 +112,51 @@ void Client::displayCallback() {
 
 // Handle any updates 
 void Client::idleCallback(boost::asio::io_context& context) {
-    std::optional<glm::vec3> movement = glm::vec3(0.0f);
+    std::optional<glm::vec3> horizontal = glm::vec3(0.0f);
+    std::optional<glm::vec3> vertical = glm::vec3(0.0f);
 
     if(is_held_right)
-        movement.value() += glm::vec3(cubeMovementDelta, 0.0f, 0.0f);
+        horizontal.value() += glm::vec3(1.0f, 0.0f, 0.0f);
     if(is_held_left)
-        movement.value() += glm::vec3(-cubeMovementDelta, 0.0f, 0.0f);
+        horizontal.value() += glm::vec3(-1.0f, 0.0f, 0.0f);
     if(is_held_up)
-        movement.value() += glm::vec3(0.0f, cubeMovementDelta, 0.0f);
+        vertical.value() += glm::vec3(0.0f, 1.0f, 0.0f);
     if(is_held_down)
-        movement.value() += glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
+        vertical.value() += glm::vec3(0.0f, -1.0f, 0.0f);
 
-
-    if (is_held_right || is_held_left || is_held_up || is_held_down) {
-        if (prevEvent.type == EventType::MoveRelative) {
-            processServerInput(context);
-            return;
+    while(true){
+        if (is_held_right) {
+            if (previousHorizontal.type == EventType::HorizontalKeyDown && prevHorizontalDirection == right) { break; } 
+            auto eid = 0; 
+            this->session->sendEventAsync(Event(eid, EventType::HorizontalKeyDown, HorizontalKeyDownEvent(eid, horizontal.value())));
+            previousHorizontal = Event(0, EventType::HorizontalKeyDown, FillerEvent());
+            prevHorizontalDirection = right;
+        } else if (is_held_left) {
+            if (previousHorizontal.type == EventType::HorizontalKeyDown && prevHorizontalDirection == left) { break; } 
+            auto eid = 0; 
+            this->session->sendEventAsync(Event(eid, EventType::HorizontalKeyDown, HorizontalKeyDownEvent(eid, horizontal.value())));
+            previousHorizontal = Event(0, EventType::HorizontalKeyDown, FillerEvent());
+            prevHorizontalDirection = left;
+        } else {
+            if (previousHorizontal.type == EventType::HorizontalKeyUp) { break; }
+            auto eid = 0;
+            this->session->sendEventAsync(Event(eid, EventType::HorizontalKeyUp, HorizontalKeyUpEvent(eid, horizontal.value())));
+            previousHorizontal = Event(0, EventType::HorizontalKeyUp, FillerEvent());
         }
-        auto eid = 0; 
-        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
-        prevEvent = Event(0, EventType::MoveRelative, FillerEvent());
     }
-    else {
-        if (prevEvent.type == EventType::MoveKeyUp) {
-            processServerInput(context);
-            return;
+
+    while(true){
+        if (is_held_up || is_held_down) {
+            if (previousVertical.type == EventType::VerticalKeyDown) { break; }
+            auto eid = 0; 
+            this->session->sendEventAsync(Event(eid, EventType::VerticalKeyDown, VerticalKeyDownEvent(eid, vertical.value())));
+            previousVertical = Event(0, EventType::VerticalKeyDown, FillerEvent());
+        } else {
+            if (previousVertical.type == EventType::VerticalKeyUp) { break; }
+            auto eid = 0;
+            this->session->sendEventAsync(Event(eid, EventType::VerticalKeyUp, VerticalKeyUpEvent(eid, vertical.value())));
+            previousVertical = Event(0, EventType::VerticalKeyUp, FillerEvent());
         }
-        auto eid = 0;
-        this->session->sendEventAsync(Event(eid, EventType::MoveKeyUp, MoveKeyUpEvent(eid)));
-        prevEvent = Event(0, EventType::MoveKeyUp, FillerEvent());
     }
 
     processServerInput(context);

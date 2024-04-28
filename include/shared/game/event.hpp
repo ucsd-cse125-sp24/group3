@@ -28,8 +28,10 @@
 enum class EventType {
     LobbyAction,
     LoadGameState,
-    MoveRelative,
-    MoveKeyUp,
+    VerticalKeyDown,
+    HorizontalKeyDown,
+    VerticalKeyUp,
+    HorizontalKeyUp,
     MoveAbsolute,
     SpawnEntity,
     Filler
@@ -79,9 +81,9 @@ struct LoadGameStateEvent {
 /**
  * Event for an entity moving a relative distance
  */
-struct MoveRelativeEvent {
-    MoveRelativeEvent() {}
-    MoveRelativeEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
+struct VerticalKeyDownEvent {
+    VerticalKeyDownEvent() {}
+    VerticalKeyDownEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
 
     glm::vec3 movement;
     EntityID entity_to_move;
@@ -93,16 +95,50 @@ struct MoveRelativeEvent {
 };
 
 /**
- * Event when moving key is back up
+ * Event for an entity moving a relative distance
  */
-struct MoveKeyUpEvent {
-    MoveKeyUpEvent() {}
-    MoveKeyUpEvent(EntityID entity_to_move) : entity_to_move(entity_to_move) { }
+struct HorizontalKeyDownEvent {
+    HorizontalKeyDownEvent() {}
+    HorizontalKeyDownEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
 
+    glm::vec3 movement;
     EntityID entity_to_move;
+    /// some velocity / movement information...
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& entity_to_move;
+        ar & entity_to_move & movement;
+    }
+};
+
+/**
+ * Event when vertical movement (up/down) moving key is back up
+ */
+struct VerticalKeyUpEvent {
+    VerticalKeyUpEvent() {}
+    VerticalKeyUpEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
+
+    glm::vec3 movement;
+    EntityID entity_to_move;
+    /// some velocity / movement information...
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & entity_to_move & movement;
+    }
+};
+
+/**
+ * Event when horizontal movement (left/right) key is back up
+ */
+struct HorizontalKeyUpEvent {
+    HorizontalKeyUpEvent() {}
+    HorizontalKeyUpEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
+
+    glm::vec3 movement;
+    EntityID entity_to_move;
+    /// some velocity / movement information...
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & entity_to_move & movement;
     }
 };
 
@@ -161,8 +197,10 @@ struct FillerEvent {
 using EventData = boost::variant<
     LobbyActionEvent,
     LoadGameStateEvent,
-    MoveRelativeEvent,
-    MoveKeyUpEvent,
+    VerticalKeyDownEvent,
+    HorizontalKeyDownEvent,
+    VerticalKeyUpEvent,
+    HorizontalKeyUpEvent,
     MoveAbsoluteEvent,
     SpawnEntityEvent,
     FillerEvent
