@@ -182,7 +182,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
-    EntityID id = Server::genNewEID();
+    EntityID id = this->state.objects.createObject(ObjectType::Player);
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, id));
 
