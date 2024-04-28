@@ -21,6 +21,8 @@ bool Client::is_held_down = false;
 bool Client::is_held_right = false;
 bool Client::is_held_left = false;
 
+Event prevEvent = Event(0, EventType::Filler, FillerEvent());
+
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
     socket(io_context),
@@ -116,9 +118,22 @@ void Client::idleCallback(boost::asio::io_context& context) {
     if(is_held_down)
         movement.value() += glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
 
-    if (movement.has_value()) {
+
+    if (is_held_right || is_held_left || is_held_up || is_held_down) {
+        if (prevEvent.type == EventType::MoveRelative) {
+            return;
+        }
         auto eid = 0; 
         this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
+        prevEvent = Event(0, EventType::MoveRelative, FillerEvent());
+    }
+    else {
+        if (prevEvent.type == EventType::MoveKeyUp) {
+            return;
+        }
+        auto eid = 0;
+        this->session->sendEventAsync(Event(eid, EventType::MoveKeyUp, MoveKeyUpEvent(eid)));
+        prevEvent = Event(0, EventType::MoveKeyUp, FillerEvent());
     }
 
     processServerInput(context);

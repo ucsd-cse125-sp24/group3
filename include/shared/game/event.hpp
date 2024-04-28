@@ -29,8 +29,10 @@ enum class EventType {
     LobbyAction,
     LoadGameState,
     MoveRelative,
+    MoveKeyUp,
     MoveAbsolute,
     SpawnEntity,
+    Filler
 };
 
 /**
@@ -91,6 +93,20 @@ struct MoveRelativeEvent {
 };
 
 /**
+ * Event when moving key is back up
+ */
+struct MoveKeyUpEvent {
+    MoveKeyUpEvent() {}
+    MoveKeyUpEvent(EntityID entity_to_move) : entity_to_move(entity_to_move) { }
+
+    EntityID entity_to_move;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& entity_to_move;
+    }
+};
+
+/**
  * Event for an entity moving to some new absolute location
  */
 struct MoveAbsoluteEvent {
@@ -127,6 +143,18 @@ struct SpawnEntityEvent {
 };
 
 /**
+ * Filler Event (For client movement / dummy event)
+ */
+struct FillerEvent {
+    FillerEvent() {}
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        // TODO:
+    }
+
+};
+
+/**
  * All of the different kinds of events in a tagged union, so we can
  * easily pull out the actual data for a specific Event
  */
@@ -134,8 +162,10 @@ using EventData = boost::variant<
     LobbyActionEvent,
     LoadGameStateEvent,
     MoveRelativeEvent,
+    MoveKeyUpEvent,
     MoveAbsoluteEvent,
-    SpawnEntityEvent
+    SpawnEntityEvent,
+    FillerEvent
 >;
 
 /**

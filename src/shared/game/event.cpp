@@ -16,8 +16,10 @@ std::ostream& operator<<(std::ostream& os, const EventType& type) {
         TO_STR(LobbyAction);
         TO_STR(LoadGameState);
         TO_STR(MoveRelative);
+        TO_STR(MoveKeyUp);
         TO_STR(MoveAbsolute);
         TO_STR(SpawnEntity);
+        TO_STR(Filler);
         default: 
             os << "Unknown EventType";
             break;

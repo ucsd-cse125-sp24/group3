@@ -48,15 +48,25 @@ SharedGameState ServerGameState::generateSharedGameState() {
 void ServerGameState::update(const EventList& events) {
 
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
+		std::cout << event << std::endl;
+		Object* obj;
         switch (event.type) {
-        case EventType::MoveRelative:
-			//currently just sets the velocity to given 
-            auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-            Object* obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
-            obj->physics.velocity += moveRelativeEvent.movement;
-            break;
-            // default:
-            //     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
+
+		case EventType::MoveRelative: {	// if key down, set the velocity to given 
+			auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
+			obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
+			obj->physics.velocity = moveRelativeEvent.movement;
+			break;
+		}
+		case EventType::MoveKeyUp: { // if key is off, stop moving	
+			auto stopMove = boost::get<MoveKeyUpEvent>(event.data);
+			obj = this->objects.getObject(stopMove.entity_to_move);
+			obj->physics.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+			break;
+		}
+
+		default: {}
+		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
         }
     }
 
@@ -85,7 +95,6 @@ void ServerGameState::updateMovement() {
 			//	object position [meters]
 			//	= old position [meters] + (velocity [meters / timestep] * 1 timestep)
 			object->physics.shared.position += object->physics.velocity;
-			object->physics.velocity -= object->physics.velocity;
 
 
 			//	Object velocity [meters / timestep]
