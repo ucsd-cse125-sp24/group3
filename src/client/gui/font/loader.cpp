@@ -10,21 +10,20 @@
 
 namespace gui::font {
 
-std::size_t font_pair_hash::operator()(const std::pair<Font, FontSizePx>& p) {
+std::size_t font_pair_hash::operator()(const std::pair<Font, FontSizePx>& p) const {
     // idk if this is actually doing what I think it is doing
-    return std::hash<std::size_t>(static_cast<int>(p.first) << 32 ^ p.second);
+    return (static_cast<int>(p.first) << 32 ^ p.second);
 }
 
 bool Loader::init() {
-    FT_Library ft;
-    if (FT_Init_FreeType(&ft)) {
+    if (FT_Init_FreeType(&this->ft)) {
         std::cerr << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
         return false;
     }
 
     // we mess with some alignment when creating the textures, 
     // so this is supposed to prevent seg faults related to that
-    glPixelStorei(GL_UNPACK_ALIGNMVkxENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     if (!this->_loadFont(Font::MENU)) {
         return false;
@@ -33,16 +32,20 @@ bool Loader::init() {
         return false;
     }
 
+    FT_Done_FreeType(this->ft); // done loading fonts, so can release these resources
+
     return true;
 }
 
 bool Loader::_loadFont(Font font) {
     auto path = font::getFilepath(font);
 
+    std::cout << "Loading font: " << path << "\n";
+
     FT_Face face;
-    if (FT_New_Face(ft, path, 0, &face)) {
+    if (FT_New_Face(this->ft, path.c_str(), 0, &face)) {
         std::cout << "ERROR::FREETYPE: Failed to load font at " << path << std::endl;  
-        return -1;
+        return false;
     }
 
     for (auto font_size : {FontSizePx::SMALL, FontSizePx::MEDIUM, FontSizePx::LARGE}) {
@@ -89,7 +92,6 @@ bool Loader::_loadFont(Font font) {
     }
 
     FT_Done_Face(face);
-    FT_Done_FreeType(ft);
 
     return true;
 }

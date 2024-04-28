@@ -13,6 +13,7 @@
 #include "client/cube.hpp"
 #include "client/util.hpp"
 #include "client/lobbyfinder.hpp"
+#include "client/gui/gui.hpp"
 
 //#include "shared/game/gamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -53,6 +54,8 @@ private:
 
     GLFWwindow *window;
     GLuint shaderProgram;
+
+    gui::GUI gui;
 
     // Flags
     static bool is_held_up;

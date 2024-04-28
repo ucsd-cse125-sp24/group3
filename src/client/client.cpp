@@ -86,24 +86,18 @@ int Client::init() {
     // Check the shader program.
     if (!shaderProgram) {
         std::cerr << "Failed to initialize shader program" << std::endl;
-        return false;
+        return -1;
     }
 
-    FT_Library ft;
-    if (FT_Init_FreeType(&ft)) {
-        std::cerr << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
-        return false;
+    if (!this->gui.init()) {
+        std::cerr << "GUI failed to init" << std::endl;
+        return -1;
     }
-
 
     return 0;
 }
 
 int Client::cleanup() {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
     glDeleteProgram(shaderProgram);
     return 0;
 }
@@ -113,18 +107,11 @@ void Client::displayCallback() {
     /* Render here */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
         
     } else if (this->gameState.phase == GamePhase::GAME) {
         this->draw();
     }
-
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     /* Poll for and process events */
     glfwPollEvents();

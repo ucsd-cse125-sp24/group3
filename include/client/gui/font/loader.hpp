@@ -3,6 +3,10 @@
 #include "client/core.hpp"
 #include "client/gui/font/font.hpp"
 
+// freetype needs this extra include for whatever unholy reason
+#include <ft2build.h>
+#include FT_FREETYPE_H  
+
 #include <unordered_map>
 
 namespace gui::font {
@@ -18,7 +22,7 @@ struct Character {
 
 struct font_pair_hash {
     std::size_t operator()(const std::pair<Font, FontSizePx>& p) const;
-}
+};
 
 class Loader {
 public:
@@ -27,7 +31,9 @@ public:
     bool init();
 
 private:
-    void _loadFont(Font font);
+    FT_Library ft;
+
+    bool _loadFont(Font font);
 
     std::unordered_map<
         std::pair<Font, FontSizePx>,

@@ -15,6 +15,12 @@ set(FILES
     cube.cpp
     util.cpp
     lobbyfinder.cpp
+
+    gui/font/font.cpp
+    gui/font/loader.cpp
+    gui/widget/widget.cpp
+    gui/gui.cpp
+
     ${IMGUI_SOURCES}
 )
 
