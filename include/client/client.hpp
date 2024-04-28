@@ -9,8 +9,11 @@
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_service.hpp>
+#include <boost/filesystem.hpp>
 
 #include "client/cube.hpp"
+#include "client/shader.hpp"
+#include "client/model.hpp"
 #include "client/util.hpp"
 #include "client/lobbyfinder.hpp"
 
@@ -51,8 +54,10 @@ private:
 
     SharedGameState gameState;
 
-    GLuint cubeShaderProgram;
-    float cubeMovementDelta = 0.05f;
+    std::shared_ptr<Shader> cubeShader;
+
+    std::unique_ptr<Model> playerModel;
+    float playerMovementDelta = 0.05f;
 
     GLFWwindow *window;
 
@@ -69,5 +74,7 @@ private:
     /// @brief Generate endpoints the client can connect to
     basic_resolver_results<class boost::asio::ip::tcp> endpoints;
     std::shared_ptr<Session> session;
+
+    boost::filesystem::path root_path;
 };
 

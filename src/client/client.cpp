@@ -1,12 +1,16 @@
 #include "client/client.hpp"
+
+#include <iostream>
+#include <memory>
+
 #include <GLFW/glfw3.h>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/archive/text_iarchive.hpp>
-#include <iostream>
-#include <thread>
+#include <boost/dll/runtime_symbol_info.hpp>
 
-#include "client/shaders.hpp"
+#include "client/shader.hpp"
+#include "client/model.hpp"
 #include "shared/game/event.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
@@ -25,8 +29,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
     socket(io_context),
     config(config),
-    gameState(GamePhase::TITLE_SCREEN, config)
-{
+    gameState(GamePhase::TITLE_SCREEN, config) {
+    this->root_path = boost::dll::program_location().parent_path().parent_path().parent_path();
 }
 
 void Client::connectAndListen(std::string ip_addr) {
@@ -57,7 +61,7 @@ bool Client::init() {
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(640, 480, "Arcana", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return false;
@@ -75,17 +79,27 @@ bool Client::init() {
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
 
-    this->cubeShaderProgram = loadCubeShaders();
-    if (!this->cubeShaderProgram) {
-        std::cout << "Failed to load cube shader files" << std::endl; 
+
+    boost::filesystem::path vertFilepath = this->root_path / "src/client/shaders/shader.vert";
+    boost::filesystem::path fragFilepath = this->root_path / "src/client/shaders/shader.frag";
+    this->cubeShader = std::make_shared<Shader>(vertFilepath.c_str(), fragFilepath.c_str());
+    if (!this->cubeShader) {
+        std::cout << "Could not load cube shader" << std::endl;
         return false;
     }
+
+    boost::filesystem::path playerModelFilepath = this->root_path / "src/client/models/bear-sp22.obj";
+    this->playerModel = std::make_unique<Model>(playerModelFilepath.string());
+    if (!this->playerModel) {
+        std::cout << "Could not load player model" << std::endl;
+        return false;
+    }
+    this->playerModel->Scale(0.25);
 
     return true;
 }
 
 bool Client::cleanup() {
-    glDeleteProgram(this->cubeShaderProgram);
     return true;
 }
 
@@ -108,13 +122,13 @@ void Client::idleCallback(boost::asio::io_context& context) {
     std::optional<glm::vec3> movement = glm::vec3(0.0f);
 
     if(is_held_right)
-        movement.value() += glm::vec3(cubeMovementDelta, 0.0f, 0.0f);
+        movement.value() += glm::vec3(playerMovementDelta, 0.0f, 0.0f);
     if(is_held_left)
-        movement.value() += glm::vec3(-cubeMovementDelta, 0.0f, 0.0f);
+        movement.value() += glm::vec3(-playerMovementDelta, 0.0f, 0.0f);
     if(is_held_up)
-        movement.value() += glm::vec3(0.0f, cubeMovementDelta, 0.0f);
+        movement.value() += glm::vec3(0.0f, playerMovementDelta, 0.0f);
     if(is_held_down)
-        movement.value() += glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
+        movement.value() += glm::vec3(0.0f, -playerMovementDelta, 0.0f);
 
     if (movement.has_value()) {
         auto eid = 0; 
@@ -143,14 +157,12 @@ void Client::draw() {
     for (int i = 0; i < this->gameState.objects.size(); i++) {
         std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
 
-        if (sharedObject == nullptr)
+        if (sharedObject == nullptr) {
             continue;
-
-        std::cout << "got an object" << std::endl;
-        //  tmp: all objects are cubes
-        Cube* cube = new Cube();
-        cube->update(sharedObject->physics.position);
-        cube->draw(this->cubeShaderProgram);
+        }
+        // all objects are players for now
+        this->playerModel->Update(sharedObject->physics.position);
+        this->playerModel->Draw(this->cubeShader);
     }
 }
 
