@@ -10,6 +10,7 @@ ObjectManager::ObjectManager() {
 
 	//	Initialize type-specific SmartVectors
 	this->base_objects = SmartVector<Object*>();
+	this->base_items = SmartVector<Item*>();
 }
 
 ObjectManager::~ObjectManager() {
@@ -82,6 +83,10 @@ Object* ObjectManager::getObject(EntityID globalID) {
 
 SmartVector<Object*> ObjectManager::getObjects() {
 	return this->objects;
+}
+
+SmartVector<Item*> ObjectManager::getItems() {
+	return this->base_items;
 }
 
 /*	SharedGameState generation	*/

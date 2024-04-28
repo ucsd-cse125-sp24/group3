@@ -84,10 +84,17 @@ public:
 		//	step - call GameState::update() once on the given state instance.
 		//	step n - call update() n times.
 
+		//	TODO: Figure out how to incorporate clientside events to the 
+		//	debugger (perhaps this can be simulated by sending events via the 
+		//	command line which would be handled by the ServerGameState when the
+		//	StepCommand is called by the debugger user)
+		//	For now, just pass in an empty EventList
+		EventList incoming_events;
+
 		if (arguments.size() == 1) {
 			//	step variation
 			//	Update to the next timestep
-			state.update();
+			state.update(incoming_events);
 			std::cout << "Current timestep: " << state.getTimestep() << std::endl;
 		}
 		else if (arguments.size() == 2) {
@@ -105,7 +112,7 @@ public:
 
 			//	Call update() n times
 			for (unsigned int i = 0; i < n; i++) {
-				state.update();
+				state.update(incoming_events);
 			}
 
 			std::cout << "Called update() " << arguments.at(1) << " times." << std::endl;

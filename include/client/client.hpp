@@ -38,8 +38,10 @@ public:
 
     Client(boost::asio::io_service& io_service, GameConfig config);
     ~Client();
-    int init();
-    int cleanup();
+
+    bool init();
+    bool cleanup();
+
     void draw();
     void connectAndListen(std::string ip_addr);
 
@@ -49,10 +51,10 @@ private:
 
     SharedGameState gameState;
 
+    GLuint cubeShaderProgram;
     float cubeMovementDelta = 0.05f;
 
     GLFWwindow *window;
-    GLuint shaderProgram;
 
     // Flags
     static bool is_held_up;

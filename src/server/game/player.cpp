@@ -6,7 +6,7 @@ SharedObject Player::toShared() {
     return so;
 }
 
-Player::Player() {
+Player::Player() : Creature(ObjectType::Player) {
 
 }
 

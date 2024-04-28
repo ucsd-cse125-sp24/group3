@@ -6,6 +6,6 @@ SharedObject Creature::toShared() {
     return so;
 }
 
-Creature::Creature() {}
+Creature::Creature(ObjectType type) : Object(type) {}
 
 Creature::~Creature() {}

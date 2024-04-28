@@ -29,6 +29,16 @@ struct Stats {
 	float speed;
 };
 
+struct ItemInfo {
+	enum ItemType { healing, swiftness, invisible, key };
+
+	bool held; // for rendering
+	bool used;
+	float scalar;
+	float timer;
+	ItemType type;
+};
+
 struct SharedPhysics {
 	/**
 	 * @brief 3-D vector that denotes this object's current position.
@@ -52,6 +62,7 @@ public:
 	SharedPhysics physics;
 
 	std::optional<Stats> stats;	
+	std::optional<ItemInfo> iteminfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
