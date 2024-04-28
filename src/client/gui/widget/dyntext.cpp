@@ -34,7 +34,7 @@ void DynText::render(GLuint shader, float x, float y) {
     glUseProgram(shader);
 
     // todo move to gui
-    glm::mat4 projection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
+    glm::mat4 projection = glm::ortho(0.0f, 640.0f, 0.0f, 480.0f);
     glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
     glUniform3f(glGetUniformLocation(shader, "textColor"),
         this->options.color.x, this->options.color.y, this->options.color.z);

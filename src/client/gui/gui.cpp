@@ -1,6 +1,7 @@
 #include "client/gui/gui.hpp"
 
 #include <iostream>
+#include "shared/utilities/rng.hpp"
 
 namespace gui {
 
@@ -32,7 +33,12 @@ void GUI::render() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
     for (auto& t : this->text) {
-        t.render(this->text_shader, 0, 0);
+        // originally tried 0,0 which should be bottom left corner i think
+        // now trying to render it to random coordinates to see if 
+        // it flickers maybe and im using the wrong coords at 0,0?
+        t.render(this->text_shader,
+            static_cast<float>(randomInt(-640, 640)),
+            static_cast<float>(randomInt(-480, 480)));
     }
 
     glDisable(GL_BLEND);
