@@ -30,6 +30,8 @@ public:
 
     bool init();
 
+    [[nodiscard]] const Character& loadChar(char c, Font font, FontSizePx size) const;
+
 private:
     FT_Library ft;
 

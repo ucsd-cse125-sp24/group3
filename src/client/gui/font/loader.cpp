@@ -12,7 +12,7 @@ namespace gui::font {
 
 std::size_t font_pair_hash::operator()(const std::pair<Font, FontSizePx>& p) const {
     // idk if this is actually doing what I think it is doing
-    return (static_cast<int>(p.first) << 32 ^ p.second);
+    return (static_cast<std::size_t>(p.first) << 32 ^ p.second);
 }
 
 bool Loader::init() {
@@ -35,6 +35,14 @@ bool Loader::init() {
     FT_Done_FreeType(this->ft); // done loading fonts, so can release these resources
 
     return true;
+}
+
+const Character& Loader::loadChar(char c, Font font, FontSizePx size) const {
+    if (!this->font_map.contains({font, size}) || !this->font_map.at({font, size}).contains(c)) {
+        return this->font_map.at({Font::TEXT, FontSizePx::MEDIUM}).at('?');
+    }
+
+    return this->font_map.at({font, size}).at(c);
 }
 
 bool Loader::_loadFont(Font font) {
@@ -83,7 +91,7 @@ bool Loader::_loadFont(Font font) {
                 texture, 
                 glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
                 glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-                face->glyph->advance.x
+                static_cast<unsigned int>(face->glyph->advance.x)
             };
             characters.insert({c, character});
         }

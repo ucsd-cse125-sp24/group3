@@ -1,7 +1,6 @@
 #include "client/gui/widget/widget.hpp"
 
-namespace gui {
-namespace widget {
+namespace gui::widget {
 
 Widget::Widget(Type type):
     type(type)
@@ -60,5 +59,4 @@ Type Widget::getType() const {
     return this->type;
 }
 
-}
 }

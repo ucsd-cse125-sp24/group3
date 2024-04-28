@@ -14,6 +14,7 @@
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
+#include "shared/utilities/root_path.hpp"
 
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
@@ -29,7 +30,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     socket(io_context),
     config(config),
     gameState(GamePhase::TITLE_SCREEN, config),
-    session(nullptr)
+    session(nullptr),
+    gui()
 {
 }
 
@@ -81,15 +83,22 @@ int Client::init() {
 
     /* Load shader programs */
     std::cout << "loading shader" << std::endl;
-    shaderProgram = LoadShaders("../src/client/shaders/shader.vert", "../src/client/shaders/shader.frag");
+    auto shader_path = getRepoRoot() / "src" / "client" / "shaders";
+    shaderProgram = LoadShaders((shader_path / "shader.vert").c_str(), (shader_path / "shader.frag").c_str());
+    auto textShaderProgram = LoadShaders((shader_path / "text.vert").c_str(), (shader_path / "text.frag").c_str());
 
-    // Check the shader program.
     if (!shaderProgram) {
         std::cerr << "Failed to initialize shader program" << std::endl;
         return -1;
     }
 
-    if (!this->gui.init()) {
+    if (!textShaderProgram) {
+        std::cerr << "Failed to initialize text shader program" << std::endl;
+        return -1;
+    }
+
+    // Init GUI (e.g. load in all fonts)
+    if (!this->gui.init(textShaderProgram)) {
         std::cerr << "GUI failed to init" << std::endl;
         return -1;
     }
@@ -106,6 +115,8 @@ int Client::cleanup() {
 void Client::displayCallback() {
     /* Render here */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    this->gui.render();
 
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
         

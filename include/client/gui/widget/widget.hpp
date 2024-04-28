@@ -1,6 +1,6 @@
 #pragma once
 
-// #include "client/core.hpp"
+#include "client/core.hpp"
 #include "client/gui/widget/type.hpp"
 #include "client/gui/widget/options.hpp"
 
@@ -29,7 +29,7 @@ public:
     void removeOnClick(CallbackHandle handle);
     void removeOnHover(CallbackHandle handle);
 
-    virtual void render() = 0;
+    virtual void render(GLuint shader, float x, float y) = 0;
 
     [[nodiscard]] Type getType() const;
 

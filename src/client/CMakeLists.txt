@@ -19,6 +19,7 @@ set(FILES
     gui/font/font.cpp
     gui/font/loader.cpp
     gui/widget/widget.cpp
+    gui/widget/dyntext.cpp
     gui/gui.cpp
 
     ${IMGUI_SOURCES}

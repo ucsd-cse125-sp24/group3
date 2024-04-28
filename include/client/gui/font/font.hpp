@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shared/utilities/root_path.hpp"
+#include "client/core.hpp"
 
 #include <cstddef>
 #include <string>
@@ -25,5 +25,7 @@ enum class FontColor {
 };
 
 std::string getFilepath(Font font);
+
+glm::vec3 getRGB(FontColor color);
 
 }
