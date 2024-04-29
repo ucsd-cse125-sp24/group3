@@ -50,7 +50,7 @@ void ServerGameState::update(const EventList& events) {
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
 		std::cout << event << std::endl;
 		Object* obj;
-		float speedFactor = 0.05; // temperary speed factor for movement
+		float speedFactor = 0.05; // temporary speed factor for movement
         switch (event.type) {
 
 		case EventType::HorizontalKeyDown: {	// if left/right key down, set the velocity to given 
@@ -107,15 +107,9 @@ void ServerGameState::updateMovement() {
 			continue;
 		
 		if (object->physics.movable) {
-			//	object position [meters]
-			//	= old position [meters] + (velocity [meters / timestep] * 1 timestep)
+			//TODO : check for collision at position to move, if so, dont change position
+
 			object->physics.shared.position += object->physics.velocity;
-
-
-			//	Object velocity [meters / timestep]
-			//	=	old velocity [meters / timestep]
-			//		+ (acceleration [meters / timestep^2] * 1 timestep)
-			//object->physics.velocity += object->physics.acceleration;
 		}
 	}
 }
