@@ -4,6 +4,7 @@
 
 #include "server/game/object.hpp"
 #include "server/game/item.hpp"
+#include "server/game/solidsurface.hpp"
 
 #include "shared/utilities/smartvector.hpp"
 
@@ -57,6 +58,14 @@ public:
 	 * instance.
 	 */
 	SmartVector<Item*> getItems();
+
+	/**
+	 * @brief Get a list of all SolidSurfaces in this game instance at the
+	 * current timestep.
+	 * @return SmartVector of SolidSurface pointers of all SolidSurface objects
+	 * in the game instance.
+	 */
+	SmartVector<SolidSurface*> getSolidSurfaces();
 
 	/*	SharedGameState generation	*/
 	
@@ -115,7 +124,12 @@ private:
 	SmartVector<Object*> base_objects;
 
 	/**
-	 * @brief SmartVector of Item pointers to all items ObjectType::Item.
+	 * @brief SmartVector of Item pointers to all Item objects.
 	 */
-	SmartVector<Item*> base_items;
+	SmartVector<Item*> items;
+
+	/**
+	 * @brief SmartVector of SolidSurface pointers to all SolidSurface objects.
+	 */
+	SmartVector<SolidSurface*> solid_surfaces;
 };
