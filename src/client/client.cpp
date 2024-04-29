@@ -5,6 +5,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <iostream>
 #include <thread>
+#include <SDL_audio.h>
 
 #include "client/shaders.hpp"
 #include "shared/game/event.hpp"
