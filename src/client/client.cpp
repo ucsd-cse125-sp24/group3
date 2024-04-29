@@ -83,17 +83,9 @@ bool Client::init() {
     boost::filesystem::path vertFilepath = this->root_path / "src/client/shaders/shader.vert";
     boost::filesystem::path fragFilepath = this->root_path / "src/client/shaders/shader.frag";
     this->cubeShader = std::make_shared<Shader>(vertFilepath.c_str(), fragFilepath.c_str());
-    if (!this->cubeShader) {
-        std::cout << "Could not load cube shader" << std::endl;
-        return false;
-    }
 
     boost::filesystem::path playerModelFilepath = this->root_path / "src/client/models/bear-sp22.obj";
     this->playerModel = std::make_unique<Model>(playerModelFilepath.string());
-    if (!this->playerModel) {
-        std::cout << "Could not load player model" << std::endl;
-        return false;
-    }
     this->playerModel->Scale(0.25);
 
     return true;
@@ -161,7 +153,7 @@ void Client::draw() {
             continue;
         }
         // all objects are players for now
-        this->playerModel->Update(sharedObject->physics.position);
+        this->playerModel->TranslateTo(sharedObject->physics.position);
         this->playerModel->Draw(this->cubeShader);
     }
 }
