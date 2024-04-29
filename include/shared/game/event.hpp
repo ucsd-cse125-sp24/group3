@@ -10,21 +10,21 @@
 
 
 /****************************************************
- * 
+ *
  * Important notes for adding new events:
- * 
+ *
  * 1. Make sure you correctly define the serialization function for all data members
  * 2. Make sure you define two constructors: one "dummy" default constructor which
  *    does nothing, and one constructor to actually make the Events. The dummy constructor
  *    is needed to make everything compile.
  * 3. Make sure you add the new struct you make to the EventData boost::variant typedef
  *    further down.
- * 
+ *
  ***************************************************/
 
-/**
- * Tag for the different kind of events there are
- */
+ /**
+  * Tag for the different kind of events there are
+  */
 enum class EventType {
     LobbyAction,
     LoadGameState,
@@ -32,6 +32,7 @@ enum class EventType {
     HorizontalKeyDown,
     VerticalKeyUp,
     HorizontalKeyUp,
+    Jump,
     MoveAbsolute,
     SpawnEntity,
     Filler
@@ -58,7 +59,7 @@ struct LobbyActionEvent {
     Action action;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & action;
+        ar& action;
     }
 };
 
@@ -68,13 +69,13 @@ struct LobbyActionEvent {
  */
 struct LoadGameStateEvent {
     // Dummy value doesn't matter because will be overridden with whatever you deserialize
-    LoadGameStateEvent() : state(SharedGameState(GamePhase::TITLE_SCREEN, GameConfig{})){}
+    LoadGameStateEvent() : state(SharedGameState(GamePhase::TITLE_SCREEN, GameConfig{})) {}
     explicit LoadGameStateEvent(const SharedGameState& state) : state(state) {}
 
     SharedGameState state;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & state;
+        ar& state;
     }
 };
 
@@ -90,7 +91,7 @@ struct VerticalKeyDownEvent {
     /// some velocity / movement information...
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & entity_to_move & movement;
+        ar& entity_to_move& movement;
     }
 };
 
@@ -106,7 +107,7 @@ struct HorizontalKeyDownEvent {
     /// some velocity / movement information...
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & entity_to_move & movement;
+        ar& entity_to_move& movement;
     }
 };
 
@@ -122,7 +123,7 @@ struct VerticalKeyUpEvent {
     /// some velocity / movement information...
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & entity_to_move & movement;
+        ar& entity_to_move& movement;
     }
 };
 
@@ -138,7 +139,23 @@ struct HorizontalKeyUpEvent {
     /// some velocity / movement information...
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & entity_to_move & movement;
+        ar& entity_to_move& movement;
+    }
+};
+
+/**
+ * Event when jump (space)
+ */
+struct JumpEvent {
+    JumpEvent() {}
+    JumpEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
+
+    glm::vec3 movement;
+    EntityID entity_to_move;
+    /// some velocity / movement information...
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& entity_to_move& movement;
     }
 };
 
@@ -189,12 +206,13 @@ using EventData = boost::variant<
     HorizontalKeyDownEvent,
     VerticalKeyUpEvent,
     HorizontalKeyUpEvent,
+    JumpEvent,
     MoveAbsoluteEvent,
     SpawnEntityEvent
 >;
 
 /**
- * Struct to represent any possible event that could happen in our game. 
+ * Struct to represent any possible event that could happen in our game.
  */
 struct Event {
     Event() {}
@@ -212,13 +230,13 @@ struct Event {
     EventData data;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & evt_source & type & data;
+        ar& evt_source& type& data;
     }
 };
 
 /**
  * Allow us to std::cout an Event
- * 
+ *
  * TODO: actually output the data for the EventData
  */
 std::ostream& operator<<(std::ostream& os, const Event& evt);

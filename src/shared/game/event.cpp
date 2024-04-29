@@ -1,7 +1,7 @@
 #include "shared/game/event.hpp"
 
 std::ostream& operator<<(std::ostream& os, const Event& evt) {
-    os << "Event { .evt_source=" << evt.evt_source 
+    os << "Event { .evt_source=" << evt.evt_source
         << " .type=" << evt.type << "}";
     return os;
 }
@@ -19,11 +19,12 @@ std::ostream& operator<<(std::ostream& os, const EventType& type) {
         TO_STR(HorizontalKeyDown);
         TO_STR(VerticalKeyUp);
         TO_STR(HorizontalKeyUp);
+        TO_STR(Jump);
         TO_STR(MoveAbsolute);
         TO_STR(SpawnEntity);
-        default: 
-            os << "Unknown EventType";
-            break;
+    default:
+        os << "Unknown EventType";
+        break;
     }
     return os;
 }

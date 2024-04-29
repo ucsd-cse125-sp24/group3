@@ -50,9 +50,16 @@ void ServerGameState::update(const EventList& events) {
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
 		std::cout << event << std::endl;
 		Object* obj;
-		float speedFactor = 0.05; // temporary speed factor for movement
+		float speedFactor = 0.05; // temporary speed factor for movement (later should be in creature)
         switch (event.type) {
 
+		case EventType::Jump: {
+			auto jumpEvent = boost::get<JumpEvent>(event.data);
+			obj = this->objects.getObject(jumpEvent.entity_to_move);
+			if (obj->physics.velocity.y != 0) { break; }
+			obj->physics.velocity += jumpEvent.movement * speedFactor * 2.0f;
+			break;
+		}
 		case EventType::HorizontalKeyDown: {	// if left/right key down, set the velocity to given 
 			auto horizontalEvent = boost::get<HorizontalKeyDownEvent>(event.data);
 			obj = this->objects.getObject(horizontalEvent.entity_to_move);
@@ -63,7 +70,7 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::VerticalKeyDown: {	// if up/down key down, set the velocity to given 
 			auto verticalEvent = boost::get<VerticalKeyDownEvent>(event.data);
 			obj = this->objects.getObject(verticalEvent.entity_to_move);
-			obj->physics.velocity = obj->physics.velocity * glm::vec3(1.0f, 0.0f, 1.0f);
+			obj->physics.velocity = obj->physics.velocity * glm::vec3(1.0f, 1.0f, 0.0f);
 			obj->physics.velocity += verticalEvent.movement * speedFactor;
 			break;
 		}
@@ -76,7 +83,7 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::VerticalKeyUp: { // if key is off, stop moving vertically
 			auto stopVerticalEvent = boost::get<VerticalKeyUpEvent>(event.data);
 			obj = this->objects.getObject(stopVerticalEvent.entity_to_move);
-			obj->physics.velocity = obj->physics.velocity * glm::vec3(1.0f, 0.0f, 1.0f);
+			obj->physics.velocity = obj->physics.velocity * glm::vec3(1.0f, 1.0f, 0.0f);
 			break;
 		}
 
@@ -110,6 +117,13 @@ void ServerGameState::updateMovement() {
 			//TODO : check for collision at position to move, if so, dont change position
 
 			object->physics.shared.position += object->physics.velocity;
+
+			// update gravity factor
+			if ((object->physics.shared.position).y >= 0) {
+				object->physics.velocity.y -= GRAVITY;
+			} else {
+				object->physics.velocity.y = 0.0f;
+			}
 		}
 	}
 }

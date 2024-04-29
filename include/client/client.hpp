@@ -61,6 +61,7 @@ private:
     static bool is_held_down;
     static bool is_held_right;
     static bool is_held_left;
+    static bool is_held_space;
 
     GameConfig config;
     tcp::resolver resolver;
