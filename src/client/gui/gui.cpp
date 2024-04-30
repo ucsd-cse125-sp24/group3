@@ -21,7 +21,7 @@ bool GUI::init(GLuint text_shader)
 
     this->text_shader = text_shader;
 
-    this->text.push_back(widget::DynText("abcdefg", this->fonts));
+    this->text.push_back(widget::DynText("Arcana", this->fonts));
 
     std::cout << "Initialized GUI\n";
     return true;
@@ -32,6 +32,8 @@ void GUI::render() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
     glEnable(GL_CULL_FACE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 
     for (auto& t : this->text) {
         t.render(this->text_shader, 0.0f, 0.0f);

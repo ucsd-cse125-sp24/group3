@@ -5,7 +5,6 @@ set(LIB_NAME game_client_lib)
 # potential review later
 add_subdirectory(../../dependencies/glfw ${CMAKE_BINARY_DIR}/glfw)
 add_subdirectory(../../dependencies/glm ${CMAKE_BINARY_DIR}/glm)
-add_subdirectory(../../dependencies/imgui ${CMAKE_BINARY_DIR}/imgui)
 add_subdirectory(../../dependencies/glew ${CMAKE_BINARY_DIR}/glew)
 add_subdirectory(../../dependencies/freetype ${CMAKE_BINARY_DIR}/freetype)
 
@@ -22,7 +21,6 @@ set(FILES
     gui/widget/dyntext.cpp
     gui/gui.cpp
 
-    ${IMGUI_SOURCES}
 )
 
 # OpenGL
@@ -42,13 +40,13 @@ target_link_libraries(${LIB_NAME}
     Boost::serialization
     nlohmann_json::nlohmann_json
 )
-target_include_directories(${LIB_NAME} PRIVATE ${OPENGL_INCLUDE_DIRS} glfw glm ${IMGUI_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS} "${CMAKE_BINARY_DIR}/_deps/glew-src/include")
+target_include_directories(${LIB_NAME} PRIVATE ${OPENGL_INCLUDE_DIRS} glfw glm ${FREETYPE_INCLUDE_DIRS} "${CMAKE_BINARY_DIR}/_deps/glew-src/include")
 target_link_libraries(${LIB_NAME} PRIVATE glm glfw libglew_static freetype)
 
 add_executable(${TARGET_NAME} main.cpp)
 
 target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_DIRECTORY})
-target_include_directories(${TARGET_NAME} PRIVATE ${OPENGL_INCLUDE_DIRS} glfw glm ${IMGUI_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS} "${CMAKE_BINARY_DIR}/_deps/glew-src/include")
+target_include_directories(${TARGET_NAME} PRIVATE ${OPENGL_INCLUDE_DIRS} glfw glm ${FREETYPE_INCLUDE_DIRS} "${CMAKE_BINARY_DIR}/_deps/glew-src/include")
 target_link_libraries(${TARGET_NAME} PRIVATE game_shared_lib ${LIB_NAME})
 target_link_libraries(${TARGET_NAME} PRIVATE glm glfw libglew_static freetype)
 
