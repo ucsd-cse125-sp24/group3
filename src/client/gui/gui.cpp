@@ -23,6 +23,8 @@ bool GUI::init(GLuint text_shader)
 
     this->text_shader = text_shader;
 
+    this->addWidget(std::make_unique<widget::DynText>("Arcana", this->fonts), 0.0f, 0.0f);
+
     std::cout << "Initialized GUI\n";
     return true;
 }
@@ -32,6 +34,8 @@ void GUI::render() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
     glEnable(GL_CULL_FACE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 
     for (auto& [_handle, widget] : this->widgets) {
         widget->render(this->text_shader, 0.0f, 0.0f);
