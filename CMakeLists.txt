@@ -42,7 +42,6 @@ SET(INCLUDE_DIRECTORY ${PROJECT_SOURCE_DIR}/include)
 add_subdirectory(dependencies/boost) # include boost libraries that we use
 add_subdirectory(dependencies/json) # include boost libraries that we use
 add_subdirectory(dependencies/glm) # include glm library
-add_subdirectory(dependencies/sfml)
 
 add_subdirectory(src/shared) # define game_shared_lib
 add_subdirectory(src/client) # create client executable
