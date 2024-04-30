@@ -26,7 +26,7 @@ jobs:
     - name: Install OpenGL
       run: sudo apt-get update && sudo apt-get install --fix-missing cmake pkg-config mesa-utils libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev libxkbcommon-dev libxinerama-dev libxcursor-dev libxi-dev xvfb
     - name: Install SFML
-      run: sudo apt-get update && sudo apt-get install libudev-dev libopenal-dev libvorbis-dev flac libfreetype-dev
+      run: sudo apt-get update && sudo apt-get install libudev-dev libopenal-dev libvorbis-dev libflac-dev libfreetype-dev
     - uses: actions/checkout@v4
     - name: Create build dir
       run: mkdir -p build
@@ -53,7 +53,7 @@ jobs:
     - name: Install OpenGL
       run: sudo apt-get update && sudo apt-get install --fix-missing cmake pkg-config mesa-utils libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev libxkbcommon-dev libxinerama-dev libxcursor-dev libxi-dev xvfb
     - name: Install SFML
-      run: sudo apt-get update && sudo apt-get install libudev-dev libopenal-dev libvorbis-dev flac libfreetype-dev
+      run: sudo apt-get update && sudo apt-get install libudev-dev libopenal-dev libvorbis-dev libflac-dev libfreetype-dev
     - uses: actions/checkout@v4
     - name: Create build dir
       run: mkdir -p build
