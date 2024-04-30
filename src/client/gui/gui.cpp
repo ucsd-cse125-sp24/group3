@@ -3,6 +3,7 @@
 #include <memory>
 #include <iostream>
 #include "shared/utilities/rng.hpp"
+#include "client/client.hpp"
 
 
 namespace gui {
@@ -23,7 +24,10 @@ bool GUI::init(GLuint text_shader)
 
     this->text_shader = text_shader;
 
-    this->addWidget(std::make_unique<widget::DynText>("Arcana", this->fonts), 0.0f, 0.0f);
+    auto title = std::make_unique<widget::DynText>("Arcana", this->fonts);
+    title->addOnClick([](){std::cout << "Clickie click\n";});
+
+    this->addWidget(std::move(title), 0.0f, 0.0f);
 
     std::cout << "Initialized GUI\n";
     return true;
@@ -36,9 +40,9 @@ void GUI::render() {
     glEnable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-
-    for (auto& [_handle, widget] : this->widgets) {
-        widget->render(this->text_shader, 0.0f, 0.0f);
+    for (auto& [handle, widget] : this->widgets) {
+        const auto& [bottom_left, _] = this->bboxes.at(handle);
+        widget->render(this->text_shader, bottom_left.x, bottom_left.y);
     }
 
     glDisable(GL_CULL_FACE);
@@ -65,6 +69,9 @@ std::unique_ptr<widget::Widget> GUI::removeWidget(WidgetHandle handle) {
 // TODO: reduce copied code between these two functions
 
 void GUI::handleClick(float x, float y) {
+    // convert to gui coords, where (0,0) is bottome left
+    y = WINDOW_HEIGHT - y;
+
     for (const auto& [handle, bbox] : this->bboxes) {
         const auto& [bottom_left, top_right] = bbox;
         if (x > bottom_left.x && x < top_right.x && y > bottom_left.y && y < top_right.y) {
@@ -74,6 +81,9 @@ void GUI::handleClick(float x, float y) {
 }
 
 void GUI::handleHover(float x, float y) {
+    // convert to gui coords, where (0,0) is bottome left
+    y = WINDOW_HEIGHT - y;
+
     for (const auto& [handle, bbox] : this->bboxes) {
         const auto& [bottom_left, top_right] = bbox;
         if (x > bottom_left.x && x < top_right.x && y > bottom_left.y && y < top_right.y) {

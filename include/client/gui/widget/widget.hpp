@@ -17,14 +17,8 @@ class Widget {
 public:
     explicit Widget(Type type);
 
-    Widget& setSize(std::size_t width, std::size_t height);
-    Widget& setAlign(VAlign valign, HAlign halign);
-    Widget& setAlign(VAlign valign);
-    Widget& setAlign(HAlign halign);
-    Widget& addOnClick(Callback callback, CallbackHandle& handle);
-    Widget& addOnClick(Callback callback);
-    Widget& addOnHover(Callback callback, CallbackHandle& handle);
-    Widget& addOnHover(Callback callback);
+    CallbackHandle addOnClick(Callback callback);
+    CallbackHandle addOnHover(Callback callback);
 
     void removeOnClick(CallbackHandle handle);
     void removeOnHover(CallbackHandle handle);

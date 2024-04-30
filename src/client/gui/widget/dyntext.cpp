@@ -2,8 +2,10 @@
 #include "client/gui/font/font.hpp"
 #include "client/gui/font/loader.hpp"
 #include "client/core.hpp"
+#include "client/client.hpp"
 
 #include <string>
+#include <algorithm>
 #include <memory>
 #include <iostream>
 
@@ -21,7 +23,20 @@ DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts,
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);      
+    glBindVertexArray(0);
+
+    // Calculate size of string of text
+    this->width = 0;
+    this->height = 0;
+    for (int i = 0; i < text.size(); i++) {
+        font::Character ch = this->fonts->loadChar(this->text[i], this->options.font, this->options.font_size);
+        this->height = std::max(this->height, static_cast<std::size_t>(ch.size.y));
+        if (i != text.size() - 1 && i != 0) {
+            this->width += ch.advance * 64;
+        } else {
+            this->width += ch.size.x;
+        }
+    }
 }
 
 DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts):
@@ -39,7 +54,7 @@ void DynText::render(GLuint shader, float x, float y) {
     glUseProgram(shader);
 
     // todo move to gui
-    glm::mat4 projection = glm::ortho(0.0f, 640.0f, 0.0f, 480.0f);
+    glm::mat4 projection = glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT);
     glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
     glUniform3f(glGetUniformLocation(shader, "textColor"),
         this->options.color.x, this->options.color.y, this->options.color.z);

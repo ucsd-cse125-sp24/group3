@@ -26,7 +26,7 @@ void set_callbacks(GLFWwindow* window) {
     glfwSetKeyCallback(window, Client::keyCallback);
 
     // Set the mouse and cursor callbacks
-    // glfwSetMouseButtonCallback(window, Client::mouseCallback);
+    glfwSetMouseButtonCallback(window, Client::mouseButtonCallback);
     glfwSetCursorPosCallback(window, Client::mouseCallback);
 }
 
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     //     lobby_finder.startSearching();
     // }
     // } else {
-    //     client.connectAndListen(config.network.server_ip);
+    // client.connectAndListen(config.network.server_ip);
     // }
 
     if (client.init() == -1) {

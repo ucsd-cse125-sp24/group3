@@ -29,6 +29,7 @@ bool Client::cam_is_held_up = false;
 bool Client::cam_is_held_down = false;
 bool Client::cam_is_held_right = false;
 bool Client::cam_is_held_left = false;
+bool Client::is_left_mouse_down = false;
 
 float Client::mouse_xpos = 0.0f;
 float Client::mouse_ypos = 0.0f;
@@ -72,18 +73,19 @@ int Client::init() {
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Arcana", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
         return -1;
     }
+    glfwSetWindowSizeLimits(window, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
     // tell GLFW to capture our mouse
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     GLenum err = glewInit() ; 
     if (GLEW_OK != err) { 
@@ -131,7 +133,7 @@ void Client::displayCallback() {
     this->gui.render();
 
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
-        
+
     } else if (this->gameState.phase == GamePhase::GAME) {
         this->draw();
     }
@@ -143,6 +145,10 @@ void Client::displayCallback() {
 
 // Handle any updates 
 void Client::idleCallback(boost::asio::io_context& context) {
+    if (is_left_mouse_down) {
+        this->gui.handleClick(mouse_xpos, mouse_ypos);
+    }
+
     std::optional<glm::vec3> movement = glm::vec3(0.0f);
 
     if(is_held_right)
@@ -297,4 +303,15 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
     mouse_xpos = static_cast<float>(xposIn);
     mouse_ypos = static_cast<float>(yposIn);
+}
+
+void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (action == GLFW_PRESS) {
+            std::cout << mouse_xpos << ", " << mouse_ypos << "\n";
+            is_left_mouse_down = true;
+        } else if (action == GLFW_RELEASE) {
+            is_left_mouse_down = false;
+        }
+    }
 }

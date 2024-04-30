@@ -22,6 +22,9 @@
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
 
+#define WINDOW_WIDTH  1280
+#define WINDOW_HEIGHT 960
+
 using namespace boost::asio::ip;
 
 class Client {
@@ -34,6 +37,7 @@ public:
     // Bound window callbacks
     static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
     static void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
+    static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
     // Getter / Setters
     GLFWwindow* getWindow() { return window; }
@@ -68,6 +72,7 @@ private:
     static bool cam_is_held_right;
     static bool cam_is_held_left;
 
+    static bool is_left_mouse_down;
     static float mouse_xpos;
     static float mouse_ypos;
 
