@@ -16,7 +16,7 @@ Object::Object(ObjectType type) {
 	this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
 
 	this->physics.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
-	this->physics.acceleration = glm::vec3(0.0f, 0.0f, 0.0f);
+	this->physics.acceleration = glm::vec3(1.0f, 1.0f, 1.0f);
 	this->physics.movable = true;
 
 	//	By default, the object is not assigned a collider (must be explicitly

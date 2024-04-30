@@ -21,14 +21,15 @@ bool Client::is_held_down = false;
 bool Client::is_held_right = false;
 bool Client::is_held_left = false;
 bool Client::is_held_space = false;
+bool Client::is_held_shift = false;
 
-// For checking previous movement inputs / allows removal of repeated movement event
-EventType previousVertical = EventType::Filler;
-EventType previousHorizontal = EventType::Filler;
-
-enum Direction { up, down, right, left };
-Direction prevVerticalDirection = left; // set to unrelated direction
-Direction prevHorizontalDirection = up; // set to unrelated direction
+// Checker for events sent / later can be made in an array
+bool upEvent = false;
+bool downEvent = false;
+bool rightEvent = false;
+bool leftEvent = false;
+bool spaceEvent = false;
+bool shiftEvent = false;
 
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
@@ -130,78 +131,44 @@ void Client::idleCallback(boost::asio::io_context& context) {
     if (is_held_space)
         jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
 
-    while (true) {
-        if (is_held_space) {
-            auto eid = 0;
-            this->session->sendEventAsync(Event(eid, EventType::Jump, JumpEvent(eid, jump.value())));
-            break;
-        }
-        else {
-            break;
-        }
+    // Send jump action
+    if (is_held_space) {
+        auto eid = 0;
+        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), GLFW_KEY_SPACE)));
+        spaceEvent = true;
+    }
+    
+    // If sprint/un-sprint, resend movement action
+    if ((is_held_shift && !shiftEvent) || (!is_held_shift && shiftEvent)) {
+        rightEvent = false;
+        leftEvent = false;
+        upEvent = false;
+        downEvent = false;
     }
 
-    // Checks for right/left key inputs
-    while (true) {
-        // don't send any event if same key is pressed
-        if (previousHorizontal == EventType::HorizontalKeyDown && ((prevHorizontalDirection == right && is_held_right) || (prevHorizontalDirection == left && is_held_left))) { break; }
-
-        // sends event if key is pressed
-        if (is_held_right) {
-            auto eid = 0; // TODO: later set eid to player id or etc.
-            this->session->sendEventAsync(Event(eid, EventType::HorizontalKeyDown, HorizontalKeyDownEvent(eid, horizontal.value())));
-            previousHorizontal = EventType::HorizontalKeyDown;
-            prevHorizontalDirection = right;
-
-        }
-        else if (is_held_left) {
-            auto eid = 0;
-            this->session->sendEventAsync(Event(eid, EventType::HorizontalKeyDown, HorizontalKeyDownEvent(eid, horizontal.value())));
-            previousHorizontal = EventType::HorizontalKeyDown;
-            prevHorizontalDirection = left;
-            break;
-        }
-        else { // if both left/right key is up, stop horizontal movement
-            if (previousHorizontal == EventType::HorizontalKeyUp) { break; }
-            auto eid = 0;
-            this->session->sendEventAsync(Event(eid, EventType::HorizontalKeyUp, HorizontalKeyUpEvent(eid, horizontal.value())));
-            previousHorizontal = EventType::HorizontalKeyUp;
-            prevHorizontalDirection = up; // reset prev direction to unrelated direction
-            break;
-        }
-    }
-
-    // Checks for up/down key inputs
-    while (true) {
-        // don't send any event if same key is pressed
-        if (previousVertical == EventType::VerticalKeyDown && ((prevVerticalDirection == up && is_held_up) || (prevVerticalDirection == down && is_held_down))) { break; }
-
-        // sends event if key is pressed
-        if (is_held_up) {
-            auto eid = 0;
-            this->session->sendEventAsync(Event(eid, EventType::VerticalKeyDown, VerticalKeyDownEvent(eid, vertical.value())));
-            previousVertical = EventType::VerticalKeyDown;
-            prevVerticalDirection = up;
-            break;
-        }
-        else if (is_held_down) {
-            auto eid = 0;
-            this->session->sendEventAsync(Event(eid, EventType::VerticalKeyDown, VerticalKeyDownEvent(eid, vertical.value())));
-            previousVertical = EventType::VerticalKeyDown;
-            prevVerticalDirection = down;
-            break;
-        }
-        else { // if both up/down key is up, stop vertical movement
-            if (previousVertical == EventType::VerticalKeyUp) { break; }
-            auto eid = 0;
-            this->session->sendEventAsync(Event(eid, EventType::VerticalKeyUp, VerticalKeyUpEvent(eid, vertical.value())));
-            previousVertical = EventType::VerticalKeyUp;
-            prevVerticalDirection = left; // reset prev direction to unrelated direction
-            break;
-        }
-    }
+    // Handles individual keys
+    handleKeys(0, GLFW_KEY_LEFT_SHIFT, is_held_shift, &shiftEvent);
+    handleKeys(0, GLFW_KEY_RIGHT, is_held_right, &rightEvent, horizontal.value());
+    handleKeys(0, GLFW_KEY_LEFT, is_held_left, &leftEvent, horizontal.value());
+    handleKeys(0, GLFW_KEY_UP, is_held_up, &upEvent, vertical.value());
+    handleKeys(0, GLFW_KEY_DOWN, is_held_down, &downEvent, vertical.value());
 
     processServerInput(context);
+}
+
+// Handles given key
+// send startAction key is held but not sent
+// send stopAction when unheld
+void Client::handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement){
+    if (keyHeld == *eventSent) { return; }
+    if (keyHeld && !*eventSent) {
+        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, movement, keyType)));
+        *eventSent = true;
+    }
+    if (!keyHeld && eventSent) {
+        this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, movement, keyType)));
+        *eventSent = false;
+    }
 }
 
 void Client::processServerInput(boost::asio::io_context& context) {
@@ -264,6 +231,10 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             is_held_space = true;
             break;
 
+        case GLFW_KEY_LEFT_SHIFT:
+            is_held_shift = true;
+            break;
+
         default:
             break;
         }
@@ -289,6 +260,10 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
         case GLFW_KEY_SPACE:
             is_held_space = false;
+            break;
+
+        case GLFW_KEY_LEFT_SHIFT:
+            is_held_shift = false;
             break;
 
         default:

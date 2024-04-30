@@ -28,11 +28,14 @@
 enum class EventType {
     LobbyAction,
     LoadGameState,
+    StartAction,
+    StopAction, 
     VerticalKeyDown,
     HorizontalKeyDown,
     VerticalKeyUp,
     HorizontalKeyUp,
     Jump,
+    Sprint,
     MoveAbsolute,
     SpawnEntity,
     Filler
@@ -80,82 +83,34 @@ struct LoadGameStateEvent {
 };
 
 /**
- * Event for an entity moving a relative distance
+ * Event for action to start for generic key pressed / Can be updated to action type enum later
  */
-struct VerticalKeyDownEvent {
-    VerticalKeyDownEvent() {}
-    VerticalKeyDownEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
+struct StartActionEvent {
+    StartActionEvent() {}
+    StartActionEvent(EntityID entity_to_act, glm::vec3 movement, int glfw_key) : entity_to_act(entity_to_act), movement(movement), glfw_key(glfw_key) { }
 
+    EntityID entity_to_act;
     glm::vec3 movement;
-    EntityID entity_to_move;
-    /// some velocity / movement information...
+    int glfw_key;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& entity_to_move& movement;
+        ar& entity_to_act& movement& glfw_key;
     }
 };
 
 /**
- * Event for an entity moving a relative distance
+ * Event for action to stop for generic key pressed
  */
-struct HorizontalKeyDownEvent {
-    HorizontalKeyDownEvent() {}
-    HorizontalKeyDownEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
+struct StopActionEvent {
+    StopActionEvent() {}
+    StopActionEvent(EntityID entity_to_act, glm::vec3 movement, int glfw_key) : entity_to_act(entity_to_act), movement(movement), glfw_key(glfw_key) { }
 
+    EntityID entity_to_act;
     glm::vec3 movement;
-    EntityID entity_to_move;
-    /// some velocity / movement information...
+    int glfw_key;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& entity_to_move& movement;
-    }
-};
-
-/**
- * Event when vertical movement (up/down) moving key is back up
- */
-struct VerticalKeyUpEvent {
-    VerticalKeyUpEvent() {}
-    VerticalKeyUpEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
-
-    glm::vec3 movement;
-    EntityID entity_to_move;
-    /// some velocity / movement information...
-
-    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& entity_to_move& movement;
-    }
-};
-
-/**
- * Event when horizontal movement (left/right) key is back up
- */
-struct HorizontalKeyUpEvent {
-    HorizontalKeyUpEvent() {}
-    HorizontalKeyUpEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
-
-    glm::vec3 movement;
-    EntityID entity_to_move;
-    /// some velocity / movement information...
-
-    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& entity_to_move& movement;
-    }
-};
-
-/**
- * Event when jump (space)
- */
-struct JumpEvent {
-    JumpEvent() {}
-    JumpEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
-
-    glm::vec3 movement;
-    EntityID entity_to_move;
-    /// some velocity / movement information...
-
-    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& entity_to_move& movement;
+        ar& entity_to_act& movement& glfw_key;
     }
 };
 
@@ -202,11 +157,14 @@ struct SpawnEntityEvent {
 using EventData = boost::variant<
     LobbyActionEvent,
     LoadGameStateEvent,
+    StartActionEvent,
+    StopActionEvent,
     VerticalKeyDownEvent,
     HorizontalKeyDownEvent,
     VerticalKeyUpEvent,
     HorizontalKeyUpEvent,
     JumpEvent,
+    SprintEvent,
     MoveAbsoluteEvent,
     SpawnEntityEvent
 >;

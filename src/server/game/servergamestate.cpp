@@ -1,5 +1,6 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
+#include <GLFW/glfw3.h>
 
 /*	Constructors and Destructors	*/
 
@@ -52,41 +53,70 @@ void ServerGameState::update(const EventList& events) {
 		Object* obj;
 	
         switch (event.type) {
-
-		case EventType::Jump: {
-			auto jumpEvent = boost::get<JumpEvent>(event.data);
-			obj = this->objects.getObject(jumpEvent.entity_to_move);
-			if (obj->physics.velocity.y != 0) { break; }
-			obj->physics.velocity += jumpEvent.movement * PLAYER_SPEED * 2.0f;
+	
+		case EventType::StartAction: {
+			auto startAction = boost::get<StartActionEvent>(event.data);
+			obj = this->objects.getObject(startAction.entity_to_act);
+			//switch case for action (currently using keys)
+			switch (startAction.glfw_key) {
+			case GLFW_KEY_DOWN:
+			case GLFW_KEY_UP: {
+				obj->physics.velocity = obj->physics.velocity * glm::vec3(1.0f, 1.0f, 0.0f);
+				obj->physics.velocity += startAction.movement * obj->physics.acceleration * PLAYER_SPEED;
+				break;
+			}
+			case GLFW_KEY_RIGHT:
+			case GLFW_KEY_LEFT: {
+				obj->physics.velocity.x = obj->physics.velocity.x * 0.0f;
+				obj->physics.velocity += startAction.movement * obj->physics.acceleration * PLAYER_SPEED;
+				break;
+			}
+			case GLFW_KEY_SPACE: {
+				if (obj->physics.velocity.y != 0) { break; }
+				obj->physics.velocity += startAction.movement * obj->physics.acceleration * PLAYER_SPEED * 2.0f;
+				break;
+			}
+			case GLFW_KEY_LEFT_SHIFT: {
+				obj->physics.acceleration = glm::vec3(1.5f, 1.1f, 1.5f);
+				break;
+			}
+			default: {}
+			}
 			break;
 		}
-		case EventType::HorizontalKeyDown: {	// if left/right key down, set the velocity to given 
-			auto horizontalEvent = boost::get<HorizontalKeyDownEvent>(event.data);
-			obj = this->objects.getObject(horizontalEvent.entity_to_move);
-			obj->physics.velocity = obj->physics.velocity * glm::vec3(0.0f, 1.0f, 1.0f);
-			obj->physics.velocity += horizontalEvent.movement * PLAYER_SPEED;
+		case EventType::StopAction: {
+			auto stopAction = boost::get<StopActionEvent>(event.data);
+			obj = this->objects.getObject(stopAction.entity_to_act);
+			//switch case for action (currently using keys)
+			switch (stopAction.glfw_key) {
+			case GLFW_KEY_DOWN:
+			case GLFW_KEY_UP: {
+				if (obj->physics.velocity.z == 0.0f) {
+					obj->physics.velocity += stopAction.movement * obj->physics.acceleration * PLAYER_SPEED;
+				}
+				else {
+					obj->physics.velocity.z = 0.0f;
+				}
+				break;
+			}
+			case GLFW_KEY_RIGHT:
+			case GLFW_KEY_LEFT: {
+				if (obj->physics.velocity.x == 0.0f) { 
+					obj->physics.velocity += stopAction.movement * obj->physics.acceleration * PLAYER_SPEED;
+				}
+				else {
+					obj->physics.velocity.x = 0.0f;
+				}
+				break;
+			}
+			case GLFW_KEY_LEFT_SHIFT: {
+				obj->physics.acceleration = glm::vec3(1.0f, 1.0f, 1.0f);
+				break;
+			}
+			default: { break; }
+			}
 			break;
 		}
-		case EventType::VerticalKeyDown: {	// if up/down key down, set the velocity to given 
-			auto verticalEvent = boost::get<VerticalKeyDownEvent>(event.data);
-			obj = this->objects.getObject(verticalEvent.entity_to_move);
-			obj->physics.velocity = obj->physics.velocity * glm::vec3(1.0f, 1.0f, 0.0f);
-			obj->physics.velocity += verticalEvent.movement * PLAYER_SPEED;
-			break;
-		}
-		case EventType::HorizontalKeyUp: { // if key is off, stop moving horizontally
-			auto stopHorizontalEvent = boost::get<HorizontalKeyUpEvent>(event.data);
-			obj = this->objects.getObject(stopHorizontalEvent.entity_to_move);
-			obj->physics.velocity = obj->physics.velocity * glm::vec3(0.0f, 1.0f, 1.0f);
-			break;
-		}
-		case EventType::VerticalKeyUp: { // if key is off, stop moving vertically
-			auto stopVerticalEvent = boost::get<VerticalKeyUpEvent>(event.data);
-			obj = this->objects.getObject(stopVerticalEvent.entity_to_move);
-			obj->physics.velocity = obj->physics.velocity * glm::vec3(1.0f, 1.0f, 0.0f);
-			break;
-		}
-
 		default: {}
 		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
         }
