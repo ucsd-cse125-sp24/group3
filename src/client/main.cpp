@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     if (!window) exit(EXIT_FAILURE);
 
     // Setup callbacks.
-    set_callbacks(window);
+    set_callbacks(window, &client);
     // Setup OpenGL settings.
     set_opengl_settings(window);
 

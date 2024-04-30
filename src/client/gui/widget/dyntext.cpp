@@ -11,9 +11,9 @@
 
 namespace gui::widget {
 
-DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts,
-    DynText::Options options):
-    text(text), options(options), fonts(fonts), Widget(Type::DynText)
+DynText::DynText(glm::vec2 origin, std::string text, 
+    std::shared_ptr<gui::font::Loader> fonts, DynText::Options options):
+    text(text), options(options), fonts(fonts), Widget(Type::DynText, origin)
 {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -39,18 +39,21 @@ DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts,
     }
 }
 
-DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts):
-    DynText(text, fonts, DynText::Options {
+DynText::DynText(glm::vec2 origin, std::string text, std::shared_ptr<gui::font::Loader> fonts):
+    DynText(origin, text, fonts, DynText::Options {
         .font {font::Font::TEXT},
         .font_size {font::FontSizePx::MEDIUM},
         .color {font::getRGB(font::FontColor::BLACK)},
         .scale {1.0},
-    })
-{
-    // let the default values take over for options
-}
+    }) {}
 
-void DynText::render(GLuint shader, float x, float y) {
+DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts):
+    DynText({0.0f, 0.0f}, text, fonts) {}
+
+DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts, DynText::Options options):
+    DynText({0.0f, 0.0f}, text, fonts, options) {}
+
+void DynText::render(GLuint shader) {
     glUseProgram(shader);
 
     // todo move to gui
@@ -60,6 +63,9 @@ void DynText::render(GLuint shader, float x, float y) {
         this->options.color.x, this->options.color.y, this->options.color.z);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
+
+    float x = this->origin.x;
+    float y = this->origin.y;
 
     // iterate through all characters
     for (const char& c : this->text)

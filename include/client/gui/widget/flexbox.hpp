@@ -2,7 +2,6 @@
 
 #include "client/gui/widget/widget.hpp"
 
-#include <initializer_list>
 #include <vector>
 #include <memory>
 
@@ -10,26 +9,29 @@ namespace gui::widget {
 
 class Flexbox : public Widget {
 public:
+    using Ptr = std::unique_ptr<Flexbox>;
+
     struct Options {
         JustifyContent direction;
     };
 
-    static std::unique_ptr<Widget> make(Options options) {
-        return std::make_unique<Flexbox>(options);
-    }
+    static Ptr make(glm::vec2 origin, Options options);
+    static Ptr make(glm::vec2 origin);
 
-    Flexbox(Options options):
-        Widget(Type::Flexbox), options(options)
-    {
-    }
+    Flexbox(glm::vec2 origin, Options options);
+    explicit Flexbox(glm::vec2 origin);
 
-    void addItem(std::unique_ptr<Widget> widget);
+    void doClick(float x, float y) override;
+    void doHover(float x, float y) override;
 
-    void render(GLuint shader, float x, float y) override;
+    void push(Widget::Ptr&& widget);
+
+    void render(GLuint shader) override;
 
 private:
     Options options;
     std::vector<std::unique_ptr<Widget>> widgets;
 };
+
 
 }

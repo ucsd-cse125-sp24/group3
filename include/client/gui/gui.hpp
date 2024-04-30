@@ -27,7 +27,7 @@ public:
 
     void render();
 
-    WidgetHandle addWidget(std::unique_ptr<widget::Widget> widget, float x, float y);
+    WidgetHandle addWidget(widget::Widget::Ptr&& widget, float x, float y);
     std::unique_ptr<widget::Widget> removeWidget(WidgetHandle handle);
 
     void handleClick(float x, float y);
@@ -35,8 +35,7 @@ public:
 
 private:
     WidgetHandle next_handle {0};
-    std::unordered_map<WidgetHandle, std::unique_ptr<widget::Widget>> widgets;
-    std::unordered_map<WidgetHandle, std::pair<glm::vec2, glm::vec2>> bboxes;
+    std::unordered_map<WidgetHandle, widget::Widget::Ptr> widgets;
     GLuint text_shader;
 
     std::shared_ptr<font::Loader> fonts;

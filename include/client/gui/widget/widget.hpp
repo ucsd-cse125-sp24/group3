@@ -4,6 +4,7 @@
 #include "client/gui/widget/type.hpp"
 #include "client/gui/widget/options.hpp"
 
+#include <memory>
 #include <string>
 #include <functional>
 #include <unordered_map>
@@ -15,7 +16,12 @@ using CallbackHandle = std::size_t;
 
 class Widget {
 public:
-    explicit Widget(Type type);
+    using Ptr = std::unique_ptr<Widget>;
+
+    explicit Widget(Type type, glm::vec2 origin);
+
+    void setOrigin(glm::vec2 origin);
+    const glm::vec2& getOrigin() const;
 
     CallbackHandle addOnClick(Callback callback);
     CallbackHandle addOnHover(Callback callback);
@@ -23,10 +29,10 @@ public:
     void removeOnClick(CallbackHandle handle);
     void removeOnHover(CallbackHandle handle);
 
-    virtual void render(GLuint shader, float x, float y) = 0;
+    virtual void render(GLuint shader) = 0;
 
-    void doClick();
-    void doHover();
+    virtual void doClick(float x, float y);
+    virtual void doHover(float x, float y);
 
     [[nodiscard]] Type getType() const;
 
@@ -34,6 +40,7 @@ public:
 
 protected:
     Type type;
+    glm::vec2 origin;
     std::size_t width  {0};
     std::size_t height {0};
 
@@ -43,6 +50,9 @@ protected:
 private:
     CallbackHandle next_click_handle {0};
     CallbackHandle next_hover_handle {0};
+
+    bool _doesIntersect(float x, float y) const;
 };
+
 
 }

@@ -12,6 +12,8 @@ namespace gui::widget {
 
 class DynText : public Widget {
 public:
+    using Ptr = std::unique_ptr<DynText>;
+
     struct Options {
         font::Font font {font::Font::TEXT};
         font::FontSizePx font_size {font::FontSizePx::MEDIUM};
@@ -20,14 +22,17 @@ public:
     };
 
     template <typename... Params>
-    static std::unique_ptr<Widget> make(Params&&... params) {
+    static Ptr make(Params&&... params) {
         return std::make_unique<DynText>(std::forward<Params>(params)...);
     }
 
+    DynText(glm::vec2 origin, std::string text, std::shared_ptr<gui::font::Loader> loader, Options options);
+    DynText(glm::vec2 origin, std::string text, std::shared_ptr<gui::font::Loader> loader);
     DynText(std::string text, std::shared_ptr<gui::font::Loader> loader, Options options);
     DynText(std::string text, std::shared_ptr<gui::font::Loader> loader);
 
-    void render(GLuint shader, float x, float y) override;
+    void render(GLuint shader) override;
+
 
 private:
     Options options;

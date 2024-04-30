@@ -30,7 +30,9 @@ bool GUI::init(GLuint text_shader)
     auto option = widget::DynText::make("Start Game", this->fonts);
     option->addOnClick([](){std::cout << "click on option\n";});
 
-    auto flexbox = widget::Flexbox::make(std::move(title), std::move(option));
+    auto flexbox = widget::Flexbox::make(glm::vec2(0.0f, 0.0f));
+    flexbox->push(std::move(title));
+    flexbox->push(std::move(option));
 
     this->addWidget(std::move(flexbox), 0.0f, 0.0f);
 
@@ -46,28 +48,23 @@ void GUI::render() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     for (auto& [handle, widget] : this->widgets) {
-        const auto& [bottom_left, _] = this->bboxes.at(handle);
-        widget->render(this->text_shader, bottom_left.x, bottom_left.y);
+        widget->render(this->text_shader);
     }
 
     glDisable(GL_CULL_FACE);
     glDisable(GL_BLEND);
 }
 
-WidgetHandle GUI::addWidget(std::unique_ptr<widget::Widget> widget, float x, float y) {
+WidgetHandle GUI::addWidget(widget::Widget::Ptr&& widget, float x, float y) {
     WidgetHandle handle = this->next_handle++;
-    glm::vec2 bottom_left(x, y);
     const auto& [width, height] = widget->getSize();
-    glm::vec2 top_right(x + width, y + height);
     this->widgets.insert({handle, std::move(widget)});
-    this->bboxes.insert({handle, {bottom_left, top_right}});
     return handle;
 }
 
 std::unique_ptr<widget::Widget> GUI::removeWidget(WidgetHandle handle) {
     auto widget = std::move(this->widgets.at(handle));
     this->widgets.erase(handle);
-    this->bboxes.erase(handle);
     return widget;
 }
 
@@ -77,11 +74,8 @@ void GUI::handleClick(float x, float y) {
     // convert to gui coords, where (0,0) is bottome left
     y = WINDOW_HEIGHT - y;
 
-    for (const auto& [handle, bbox] : this->bboxes) {
-        const auto& [bottom_left, top_right] = bbox;
-        if (x > bottom_left.x && x < top_right.x && y > bottom_left.y && y < top_right.y) {
-            this->widgets.at(handle)->doClick();
-        }
+    for (const auto& [_, widget] : this->widgets) {
+        widget->doClick(x, y);
     }
 }
 
@@ -89,11 +83,8 @@ void GUI::handleHover(float x, float y) {
     // convert to gui coords, where (0,0) is bottome left
     y = WINDOW_HEIGHT - y;
 
-    for (const auto& [handle, bbox] : this->bboxes) {
-        const auto& [bottom_left, top_right] = bbox;
-        if (x > bottom_left.x && x < top_right.x && y > bottom_left.y && y < top_right.y) {
-            this->widgets.at(handle)->doHover();
-        }
+    for (const auto& [_, widget] : this->widgets) {
+        widget->doHover(x, y);
     }
 }
 
