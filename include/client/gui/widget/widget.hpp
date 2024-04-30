@@ -31,7 +31,12 @@ public:
 
     virtual void render(GLuint shader, float x, float y) = 0;
 
+    void doClick();
+    void doHover();
+
     [[nodiscard]] Type getType() const;
+
+    [[nodiscard]] std::pair<std::size_t, std::size_t> getSize() const;
 
 protected:
     Type type;

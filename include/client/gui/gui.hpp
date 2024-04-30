@@ -11,19 +11,31 @@
 #include "client/gui/font/loader.hpp"
 
 #include <memory>
+#include <unordered_map>
 
 namespace gui {
 
+using WidgetHandle = std::size_t;
+
 class GUI {
 public:
+
     GUI();
 
     bool init(GLuint text_shader);
 
     void render();
 
+    WidgetHandle addWidget(std::unique_ptr<widget::Widget> widget, float x, float y);
+    std::unique_ptr<widget::Widget> removeWidget(WidgetHandle handle);
+
+    void handleClick(float x, float y);
+    void handleHover(float x, float y);
+
 private:
-    std::vector<widget::DynText> text;
+    WidgetHandle next_handle {0};
+    std::unordered_map<WidgetHandle, std::unique_ptr<widget::Widget>> widgets;
+    std::unordered_map<WidgetHandle, std::pair<glm::vec2, glm::vec2>> bboxes;
     GLuint text_shader;
 
     std::shared_ptr<font::Loader> fonts;

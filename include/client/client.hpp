@@ -33,7 +33,6 @@ public:
     // Bound window callbacks
     static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
-
     // Getter / Setters
     GLFWwindow* getWindow() { return window; }
 
