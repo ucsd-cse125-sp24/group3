@@ -74,10 +74,14 @@ void Camera::update(float xpos, float ypos) {
 glm::vec3 Camera::move(bool is_x_axis, float dir) {
     if (is_x_axis) {
         glm::vec3 effCameraFront = glm::normalize(cameraFront - cameraFront.y);
-        cameraPos += dir * speed * effCameraFront;
+        // cameraPos += dir * speed * effCameraFront;
         return dir * speed * effCameraFront;
     } else {
-        cameraPos += dir * glm::normalize(glm::cross(cameraFront, cameraUp)) * speed;
+        // cameraPos += dir * glm::normalize(glm::cross(cameraFront, cameraUp)) * speed;
         return dir * glm::normalize(glm::cross(cameraFront, cameraUp)) * speed;
     }
+}
+
+void Camera::updatePos(glm::vec3 pos) {
+    cameraPos = pos;
 }

@@ -56,7 +56,7 @@ private:
     float cubeMovementDelta = 0.05f;
 
     GLFWwindow *window;
-    GLuint shaderProgram;
+    GLuint cubeShaderProgram;
 
     Camera *cam;
 

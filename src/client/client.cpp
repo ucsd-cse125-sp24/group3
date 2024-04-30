@@ -138,11 +138,24 @@ void Client::idleCallback(boost::asio::io_context& context) {
     if(cam_is_held_down)
         cam_movement.value() += cam->move(true, -1.0f);
 
+
     cam->update(mouse_xpos, mouse_ypos);
 
     if (movement.has_value()) {
         auto eid = 0; 
         this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
+    }
+
+    // Send 'player' movement
+    if (cam_movement.has_value() && this->session->getInfo().client_eid.has_value()) {
+        auto eid = this->session->getInfo().client_eid.value(); 
+        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, cam_movement.value())));
+    }
+
+    // Send camera angle
+    if (this->session->getInfo().client_eid.has_value()) {
+        auto eid = this->session->getInfo().client_eid.value(); 
+        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, cam_movement.value())));
     }
 
     processServerInput(context);
@@ -170,12 +183,17 @@ void Client::draw() {
         if (sharedObject == nullptr)
             continue;
 
-        // std::cout << "got an object" << std::endl;
+        // Get camera position from server, update position and don't render player object (or special handling)
+        if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+            cam->updatePos(sharedObject->physics.position);
+            continue;
+        }
+
         //  tmp: all objects are cubes
         Cube* cube = new Cube();
         cube->update(sharedObject->physics.position);
         
-        cube->draw(this->cam->getViewProj(), this->shaderProgram);
+        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram);
     }
 }
 
