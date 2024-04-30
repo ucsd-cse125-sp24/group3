@@ -24,10 +24,9 @@ bool Client::is_held_space = false;
 bool Client::is_held_shift = false;
 
 // Checker for events sent / later can be made in an array
-bool upEvent = false;
-bool downEvent = false;
-bool rightEvent = false;
-bool leftEvent = false;
+glm::vec3 sentHorizontalMovement = glm::vec3(-1.0f);
+glm::vec3 sentVerticalMovement = glm::vec3(-1.0f);
+
 bool spaceEvent = false;
 bool shiftEvent = false;
 
@@ -134,24 +133,24 @@ void Client::idleCallback(boost::asio::io_context& context) {
     // Send jump action
     if (is_held_space) {
         auto eid = 0;
-        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), GLFW_KEY_SPACE)));
+        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), ActionType::Jump)));
         spaceEvent = true;
-    }
-    
-    // If sprint/un-sprint, resend movement action
-    if ((is_held_shift && !shiftEvent) || (!is_held_shift && shiftEvent)) {
-        rightEvent = false;
-        leftEvent = false;
-        upEvent = false;
-        downEvent = false;
     }
 
     // Handles individual keys
     handleKeys(0, GLFW_KEY_LEFT_SHIFT, is_held_shift, &shiftEvent);
-    handleKeys(0, GLFW_KEY_RIGHT, is_held_right, &rightEvent, horizontal.value());
-    handleKeys(0, GLFW_KEY_LEFT, is_held_left, &leftEvent, horizontal.value());
-    handleKeys(0, GLFW_KEY_UP, is_held_up, &upEvent, vertical.value());
-    handleKeys(0, GLFW_KEY_DOWN, is_held_down, &downEvent, vertical.value());
+
+    if (sentHorizontalMovement != horizontal.value()){
+        auto eid = 0;
+        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, horizontal.value(), ActionType::MoveHorizontal)));
+        sentHorizontalMovement = horizontal.value();
+    }
+
+    if (sentVerticalMovement != vertical.value()){
+        auto eid = 0;
+        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, vertical.value(), ActionType::MoveVertical)));
+        sentVerticalMovement = vertical.value();
+    }
 
     processServerInput(context);
 }
@@ -161,12 +160,19 @@ void Client::idleCallback(boost::asio::io_context& context) {
 // send stopAction when unheld
 void Client::handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement){
     if (keyHeld == *eventSent) { return; }
+    
+    ActionType sendAction;
+    switch(keyType) {
+        case GLFW_KEY_LEFT_SHIFT:
+            sendAction = ActionType::Sprint;
+            break;
+    }
     if (keyHeld && !*eventSent) {
-        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, movement, keyType)));
+        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, movement, sendAction)));
         *eventSent = true;
     }
     if (!keyHeld && eventSent) {
-        this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, movement, keyType)));
+        this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, movement, sendAction)));
         *eventSent = false;
     }
 }
@@ -195,9 +201,16 @@ void Client::draw() {
 
         std::cout << "got an object" << std::endl;
         //  tmp: all objects are cubes
-        Cube* cube = new Cube();
-        cube->update(sharedObject->physics.position);
-        cube->draw(this->cubeShaderProgram);
+        if(i == 0){
+            Cube* cube = new Cube(glm::vec3( 0.0f, 1.0f, 1.0f ));
+            cube->update(sharedObject->physics.position);
+            cube->draw(this->cubeShaderProgram, true);
+        } else {
+            Cube* cube1 = new Cube(glm::vec3( 0.3f, 0.3f, 0.3f ), glm::vec3( 20.0f, 0.2f, 20.0f ));
+            cube1->update(sharedObject->physics.position);
+            cube1->draw(this->cubeShaderProgram, true);
+        }
+        
     }
 }
 

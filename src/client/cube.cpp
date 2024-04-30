@@ -1,6 +1,6 @@
 #include "client/cube.hpp"
 
-Cube::Cube() {
+Cube::Cube(glm::vec3 newColor, glm::vec3 scale) {
     // create a vertex buffer for positions and normals
     // insert the data into these buffers
     // initialize model matrix
@@ -8,9 +8,10 @@ Cube::Cube() {
     glm::vec3 cubeMin = glm::vec3(-1.0f, -1.0f, -1.0f);
     glm::vec3 cubeMax = glm::vec3(1.0f, 1.0f, 1.0f);
     model = glm::mat4(1.0f);
+    model = glm::scale(model, scale);
 
     // The color of the cube. Try setting it to something else!
-    color = glm::vec3(0.0f, 1.0f, 1.0f);
+    color = newColor;
 
     // Specify vertex positions
     positions = {
@@ -136,7 +137,7 @@ Cube::~Cube() {
     glDeleteVertexArrays(1, &VAO);
 }
 
-void Cube::draw(GLuint shader) {
+void Cube::draw(GLuint shader, bool fill) {
     // actiavte the shader program
     // std::cout << "draw" << std::endl;
 
@@ -174,8 +175,11 @@ void Cube::draw(GLuint shader) {
     glBindVertexArray(VAO);
 
     // Drawing mode for cube (wireframe vs filled)
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    if(fill){
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
 
     // draw the points using triangles, indexed with the EBO
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

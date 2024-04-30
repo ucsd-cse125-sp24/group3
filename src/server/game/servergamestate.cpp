@@ -1,6 +1,5 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
-#include <GLFW/glfw3.h>
 
 /*	Constructors and Destructors	*/
 
@@ -58,25 +57,21 @@ void ServerGameState::update(const EventList& events) {
 			auto startAction = boost::get<StartActionEvent>(event.data);
 			obj = this->objects.getObject(startAction.entity_to_act);
 			//switch case for action (currently using keys)
-			switch (startAction.glfw_key) {
-			case GLFW_KEY_DOWN:
-			case GLFW_KEY_UP: {
-				obj->physics.velocity = obj->physics.velocity * glm::vec3(1.0f, 1.0f, 0.0f);
-				obj->physics.velocity += startAction.movement * obj->physics.acceleration * PLAYER_SPEED;
+			switch (startAction.action) {
+			case ActionType::MoveVertical: {
+				obj->physics.velocity.z = (startAction.movement * PLAYER_SPEED).z;
 				break;
 			}
-			case GLFW_KEY_RIGHT:
-			case GLFW_KEY_LEFT: {
-				obj->physics.velocity.x = obj->physics.velocity.x * 0.0f;
-				obj->physics.velocity += startAction.movement * obj->physics.acceleration * PLAYER_SPEED;
+			case ActionType::MoveHorizontal: {
+				obj->physics.velocity.x = (startAction.movement * PLAYER_SPEED).x;
 				break;
 			}
-			case GLFW_KEY_SPACE: {
+			case ActionType::Jump: {
 				if (obj->physics.velocity.y != 0) { break; }
-				obj->physics.velocity += startAction.movement * obj->physics.acceleration * PLAYER_SPEED * 2.0f;
+				obj->physics.velocity.y += (startAction.movement * PLAYER_SPEED * 2.0f).y;
 				break;
 			}
-			case GLFW_KEY_LEFT_SHIFT: {
+			case ActionType::Sprint: {
 				obj->physics.acceleration = glm::vec3(1.5f, 1.1f, 1.5f);
 				break;
 			}
@@ -88,28 +83,8 @@ void ServerGameState::update(const EventList& events) {
 			auto stopAction = boost::get<StopActionEvent>(event.data);
 			obj = this->objects.getObject(stopAction.entity_to_act);
 			//switch case for action (currently using keys)
-			switch (stopAction.glfw_key) {
-			case GLFW_KEY_DOWN:
-			case GLFW_KEY_UP: {
-				if (obj->physics.velocity.z == 0.0f) {
-					obj->physics.velocity += stopAction.movement * obj->physics.acceleration * PLAYER_SPEED;
-				}
-				else {
-					obj->physics.velocity.z = 0.0f;
-				}
-				break;
-			}
-			case GLFW_KEY_RIGHT:
-			case GLFW_KEY_LEFT: {
-				if (obj->physics.velocity.x == 0.0f) { 
-					obj->physics.velocity += stopAction.movement * obj->physics.acceleration * PLAYER_SPEED;
-				}
-				else {
-					obj->physics.velocity.x = 0.0f;
-				}
-				break;
-			}
-			case GLFW_KEY_LEFT_SHIFT: {
+			switch (stopAction.action) {
+			case ActionType::Sprint: {
 				obj->physics.acceleration = glm::vec3(1.0f, 1.0f, 1.0f);
 				break;
 			}
@@ -146,7 +121,7 @@ void ServerGameState::updateMovement() {
 		if (object->physics.movable) {
 			//TODO : check for collision at position to move, if so, dont change position
 
-			object->physics.shared.position += object->physics.velocity;
+			object->physics.shared.position += object->physics.velocity * object->physics.acceleration;
 
 			// update gravity factor
 			if ((object->physics.shared.position).y >= 0) {

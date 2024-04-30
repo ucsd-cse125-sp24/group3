@@ -34,6 +34,13 @@ enum class EventType {
     SpawnEntity,
 };
 
+enum class ActionType {
+    MoveHorizontal,
+    MoveVertical,
+    Jump,
+    Sprint,
+};
+
 /**
  * Override << so we can std::cout << EventType_var;
  */
@@ -80,14 +87,14 @@ struct LoadGameStateEvent {
  */
 struct StartActionEvent {
     StartActionEvent() {}
-    StartActionEvent(EntityID entity_to_act, glm::vec3 movement, int glfw_key) : entity_to_act(entity_to_act), movement(movement), glfw_key(glfw_key) { }
+    StartActionEvent(EntityID entity_to_act, glm::vec3 movement, ActionType action) : entity_to_act(entity_to_act), movement(movement), action(action) { }
 
     EntityID entity_to_act;
     glm::vec3 movement;
-    int glfw_key;
+    ActionType action;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& entity_to_act& movement& glfw_key;
+        ar& entity_to_act& movement& action;
     }
 };
 
@@ -96,14 +103,14 @@ struct StartActionEvent {
  */
 struct StopActionEvent {
     StopActionEvent() {}
-    StopActionEvent(EntityID entity_to_act, glm::vec3 movement, int glfw_key) : entity_to_act(entity_to_act), movement(movement), glfw_key(glfw_key) { }
+    StopActionEvent(EntityID entity_to_act, glm::vec3 movement, ActionType action) : entity_to_act(entity_to_act), movement(movement), action(action) { }
 
     EntityID entity_to_act;
     glm::vec3 movement;
-    int glfw_key;
+    ActionType action;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& entity_to_act& movement& glfw_key;
+        ar& entity_to_act& movement& action;
     }
 };
 
