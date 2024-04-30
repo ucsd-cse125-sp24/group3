@@ -30,15 +30,8 @@ enum class EventType {
     LoadGameState,
     StartAction,
     StopAction, 
-    VerticalKeyDown,
-    HorizontalKeyDown,
-    VerticalKeyUp,
-    HorizontalKeyUp,
-    Jump,
-    Sprint,
     MoveAbsolute,
     SpawnEntity,
-    Filler
 };
 
 /**
@@ -159,12 +152,6 @@ using EventData = boost::variant<
     LoadGameStateEvent,
     StartActionEvent,
     StopActionEvent,
-    VerticalKeyDownEvent,
-    HorizontalKeyDownEvent,
-    VerticalKeyUpEvent,
-    HorizontalKeyUpEvent,
-    JumpEvent,
-    SprintEvent,
     MoveAbsoluteEvent,
     SpawnEntityEvent
 >;
