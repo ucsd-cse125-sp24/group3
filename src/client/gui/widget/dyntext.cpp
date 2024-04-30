@@ -32,7 +32,7 @@ DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts,
         font::Character ch = this->fonts->loadChar(this->text[i], this->options.font, this->options.font_size);
         this->height = std::max(this->height, static_cast<std::size_t>(ch.size.y));
         if (i != text.size() - 1 && i != 0) {
-            this->width += ch.advance * 64;
+            this->width += ch.advance / 64.0;
         } else {
             this->width += ch.size.x;
         }
