@@ -87,9 +87,10 @@ int main(int argc, char* argv[])
     // Setup OpenGL settings.
     set_opengl_settings();
 
+    boost::filesystem::path soundFilepath = client.getRootPath() / "src/client/sounds/collide.wav";
 
     sf::SoundBuffer buffer;
-    if (!buffer.loadFromFile("C:\\Users\\Edward\\Source\\Repos\\group3\\src\\client\\sounds\\collide.wav"))
+    if (!buffer.loadFromFile(soundFilepath.string()))
         return -1;
 
     sf::Sound sound;
