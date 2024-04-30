@@ -35,7 +35,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     state.objects.createObject(ObjectType::Object);
     
     EntityID floorID = state.objects.createObject(ObjectType::Object);
-    Object* floor = (Object*)state.objects.getObject(floorID);
+    Object* floor = state.objects.getObject(floorID);
     floor->physics.shared.position = glm::vec3(0.0f, -1.3f, 0.0f);
     
     _doAccept(); // start asynchronously accepting

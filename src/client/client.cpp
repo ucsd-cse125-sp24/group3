@@ -202,7 +202,7 @@ void Client::draw() {
         std::cout << "got an object" << std::endl;
         //  tmp: all objects are cubes
         if(i == 0){
-            Cube* cube = new Cube(glm::vec3( 0.0f, 1.0f, 1.0f ));
+            Cube* cube = new Cube(glm::vec3( 0.0f, 1.0f, 1.0f ), glm::vec3( 1.0f ));
             cube->update(sharedObject->physics.position);
             cube->draw(this->cubeShaderProgram, true);
         } else {

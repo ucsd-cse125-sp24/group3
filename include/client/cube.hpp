@@ -13,7 +13,7 @@
 
 class Cube {
 public:
-    Cube(glm::vec3 newColor, glm::vec3 scale = glm::vec3(1.0f));
+    Cube(glm::vec3 newColor, glm::vec3 scale);
     ~Cube();
     void draw(GLuint shader, bool fill);
     void update(glm::vec3 new_pos);
