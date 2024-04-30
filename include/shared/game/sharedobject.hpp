@@ -98,9 +98,9 @@ public:
 	ObjectType type;
 	SharedPhysics physics;
 
-	std::optional<Stats> stats;	
-	std::optional<ItemInfo> iteminfo;
-	std::optional<SharedSolidSurface> solidSurface;
+	boost::optional<Stats> stats;	
+	boost::optional<ItemInfo> iteminfo;
+	boost::optional<SharedSolidSurface> solidSurface;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
