@@ -82,7 +82,7 @@ bool Client::init() {
 
     boost::filesystem::path vertFilepath = this->root_path / "src/client/shaders/shader.vert";
     boost::filesystem::path fragFilepath = this->root_path / "src/client/shaders/shader.frag";
-    this->cubeShader = std::make_shared<Shader>(vertFilepath.c_str(), fragFilepath.c_str());
+    this->cubeShader = std::make_shared<Shader>(vertFilepath.string(), fragFilepath.string());
 
     boost::filesystem::path playerModelFilepath = this->root_path / "src/client/models/bear-sp22.obj";
     this->playerModel = std::make_unique<Model>(playerModelFilepath.string());
