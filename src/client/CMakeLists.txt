@@ -2,7 +2,7 @@ set(TARGET_NAME client)
 set(LIB_NAME game_client_lib)
 
 set(FILES
-    audio.cpp
+    sound.cpp
     camera.cpp
     client.cpp
     cube.cpp
@@ -24,7 +24,6 @@ add_subdirectory(../../dependencies/glfw ${CMAKE_BINARY_DIR}/glfw)
 add_subdirectory(../../dependencies/glm ${CMAKE_BINARY_DIR}/glm)
 add_subdirectory(../../dependencies/imgui ${CMAKE_BINARY_DIR}/imgui)
 add_subdirectory(../../dependencies/glew ${CMAKE_BINARY_DIR}/glew)
-# add_subdirectory(../../dependencies/sdl ${CMAKE_BINARY_DIR}/sdl)
 
 add_library(${LIB_NAME} STATIC ${FILES})
 target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIRECTORY})

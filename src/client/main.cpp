@@ -2,10 +2,12 @@
 #include <chrono>
 
 #include <boost/asio/io_context.hpp>
+#include <SDL.h>
 
 #include "client/client.hpp"
 #include "shared/utilities/rng.hpp"
 #include "shared/utilities/config.hpp"
+#include "client/sound.hpp"
 
 using namespace std::chrono_literals;
 
@@ -61,6 +63,16 @@ int main(int argc, char* argv[])
         client.connectAndListen(config.network.server_ip);
     }
 
+    if (SDL_Init(SDL_INIT_AUDIO) < 0)
+        return 1;
+
+    Sound* CollisionSound = new Sound("./sounds/collide.wav");
+
+    CollisionSound->SetupDevice();
+
+    CollisionSound->PlaySound();
+
+    delete CollisionSound;
 
     if (!client.init()) {
         exit(EXIT_FAILURE);

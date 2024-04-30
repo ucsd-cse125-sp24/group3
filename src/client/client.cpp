@@ -5,13 +5,13 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <iostream>
 #include <thread>
-#include <SDL_audio.h>
 
 #include "client/shaders.hpp"
 #include "shared/game/event.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
+#include "client/sound.hpp"
 
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
@@ -81,6 +81,14 @@ bool Client::init() {
         std::cout << "Failed to load cube shader files" << std::endl; 
         return false;
     }
+
+    //Sound* CollisionSound = new Sound("./sounds/collide.wav");
+
+    //CollisionSound->SetupDevice();
+
+    //CollisionSound->PlaySound();
+
+    //delete CollisionSound;
 
     return true;
 }
