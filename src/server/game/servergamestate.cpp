@@ -50,28 +50,28 @@ void ServerGameState::update(const EventList& events) {
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
 		std::cout << event << std::endl;
 		Object* obj;
-		float speedFactor = 0.05; // temporary speed factor for movement (later should be in creature)
+	
         switch (event.type) {
 
 		case EventType::Jump: {
 			auto jumpEvent = boost::get<JumpEvent>(event.data);
 			obj = this->objects.getObject(jumpEvent.entity_to_move);
 			if (obj->physics.velocity.y != 0) { break; }
-			obj->physics.velocity += jumpEvent.movement * speedFactor * 2.0f;
+			obj->physics.velocity += jumpEvent.movement * PLAYER_SPEED * 2.0f;
 			break;
 		}
 		case EventType::HorizontalKeyDown: {	// if left/right key down, set the velocity to given 
 			auto horizontalEvent = boost::get<HorizontalKeyDownEvent>(event.data);
 			obj = this->objects.getObject(horizontalEvent.entity_to_move);
 			obj->physics.velocity = obj->physics.velocity * glm::vec3(0.0f, 1.0f, 1.0f);
-			obj->physics.velocity += horizontalEvent.movement * speedFactor;
+			obj->physics.velocity += horizontalEvent.movement * PLAYER_SPEED;
 			break;
 		}
 		case EventType::VerticalKeyDown: {	// if up/down key down, set the velocity to given 
 			auto verticalEvent = boost::get<VerticalKeyDownEvent>(event.data);
 			obj = this->objects.getObject(verticalEvent.entity_to_move);
 			obj->physics.velocity = obj->physics.velocity * glm::vec3(1.0f, 1.0f, 0.0f);
-			obj->physics.velocity += verticalEvent.movement * speedFactor;
+			obj->physics.velocity += verticalEvent.movement * PLAYER_SPEED;
 			break;
 		}
 		case EventType::HorizontalKeyUp: { // if key is off, stop moving horizontally

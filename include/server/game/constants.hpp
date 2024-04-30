@@ -23,3 +23,4 @@
 
 /*	Game	*/
 #define	GRAVITY					0.005f
+#define	PLAYER_SPEED 			0.05f
