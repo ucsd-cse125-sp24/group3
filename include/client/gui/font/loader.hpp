@@ -39,7 +39,7 @@ private:
 
     std::unordered_map<
         std::pair<Font, FontSizePx>,
-        std::unordered_map<char, Character>,
+        std::unordered_map<unsigned char, Character>,
         font_pair_hash
     > font_map;
 };

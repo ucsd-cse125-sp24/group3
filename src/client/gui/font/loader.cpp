@@ -58,7 +58,7 @@ bool Loader::_loadFont(Font font) {
 
     for (auto font_size : {FontSizePx::SMALL, FontSizePx::MEDIUM, FontSizePx::LARGE}) {
         FT_Set_Pixel_Sizes(face, 0, font_size);
-        std::unordered_map<char, Character> characters;
+        std::unordered_map<unsigned char, Character> characters;
         for (unsigned char c = 0; c < 128; c++) {
             // load character glyph 
             if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {

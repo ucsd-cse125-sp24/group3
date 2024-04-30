@@ -25,7 +25,12 @@ DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts,
 }
 
 DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts):
-    text(text), fonts(fonts), Widget(Type::DynText)
+    DynText(text, fonts, DynText::Options {
+        .font {font::Font::TEXT},
+        .font_size {font::FontSizePx::MEDIUM},
+        .color {font::getRGB(font::FontColor::BLACK)},
+        .scale {1.0},
+    })
 {
     // let the default values take over for options
 }
