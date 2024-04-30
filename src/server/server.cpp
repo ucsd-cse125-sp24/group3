@@ -51,18 +51,9 @@ EntityID Server::genNewEID() {
 
 void Server::updateGameState(const EventList& events) {
     // TODO: remove cppcheck suppress when src_eid is being used
-    for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
-        switch (event.type) {
-        case EventType::MoveRelative:
-            auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-            Object* obj = state.objects.getObject(moveRelativeEvent.entity_to_move);
-            //obj->setPosition(obj->position + moveRelativeEvent.movement);
-            obj->physics.shared.position += moveRelativeEvent.movement;
-            break;
-            // default:
-            //     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
-        }
-    }
+
+    // TODO : validate events if necessary
+    this->state.update(events);
 }
 
 EventList Server::getAllClientEvents() {
@@ -191,7 +182,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
-    EntityID id = Server::genNewEID();
+    EntityID id = this->state.objects.createObject(ObjectType::Player);
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, id));
 

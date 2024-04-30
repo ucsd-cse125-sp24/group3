@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     }
 
 
-    if (client.init() == -1) {
+    if (!client.init()) {
         exit(EXIT_FAILURE);
     }
     

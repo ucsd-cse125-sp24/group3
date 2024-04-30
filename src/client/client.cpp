@@ -6,6 +6,7 @@
 #include <iostream>
 #include <thread>
 
+#include "client/shaders.hpp"
 #include "shared/game/event.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
@@ -57,19 +58,18 @@ Client::~Client() {
 }
 
 // TODO: error flags / output for broken init
-int Client::init() {
+bool Client::init() {
     /* Initialize glfw library */
     if (!glfwInit())
-        return -1;
+        return false;
 
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-    if (!window)
-    {
+    if (!window) {
         glfwTerminate();
-        return -1;
+        return false;
     }
 
     /* Make the window's context current */
@@ -80,28 +80,25 @@ int Client::init() {
 
     GLenum err = glewInit() ; 
     if (GLEW_OK != err) { 
-        std::cerr << "Error: " << glewGetString(err) << std::endl; 
+        std::cerr << "Error loading GLEW: " << glewGetString(err) << std::endl; 
+        return false;
     } 
 
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
 
-    /* Load shader programs */
-    std::cout << "loading shader" << std::endl;
-    shaderProgram = LoadShaders("../src/client/shaders/shader.vert", "../src/client/shaders/shader.frag");
-
-    // Check the shader program.
-    if (!shaderProgram) {
-        std::cerr << "Failed to initialize shader program" << std::endl;
+    this->cubeShaderProgram = loadCubeShaders();
+    if (!this->cubeShaderProgram) {
+        std::cout << "Failed to load cube shader files" << std::endl; 
         return false;
     }
 
-    return 0;
+    return true;
 }
 
-int Client::cleanup() {
-    glDeleteProgram(shaderProgram);
-    return 0;
+bool Client::cleanup() {
+    glDeleteProgram(this->cubeShaderProgram);
+    return true;
 }
 
 // Handles all rendering

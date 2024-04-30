@@ -6,14 +6,15 @@
 //#include "server/game/object.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/utilities/typedefs.hpp"
-//#include "server/game/creature.hpp" // stats
 
 /**
  * @brief An enum for the type of an object; the fields here should match all
  * class names in the inheritance tree in which Object is the root.
  */
 enum class ObjectType {
-	Object	//	Generic object type (base class)
+	Object,	//	Generic object type (base class)
+	Player,
+	Enemy
 };
 
 /**
@@ -26,6 +27,16 @@ std::string objectTypeString(ObjectType type);
 struct Stats {
 	float health;
 	float speed;
+};
+
+struct ItemInfo {
+	enum ItemType { healing, swiftness, invisible, key };
+
+	bool held; // for rendering
+	bool used;
+	float scalar;
+	float timer;
+	ItemType type;
 };
 
 struct SharedPhysics {
@@ -51,6 +62,7 @@ public:
 	SharedPhysics physics;
 
 	std::optional<Stats> stats;	
+	std::optional<ItemInfo> iteminfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}

@@ -4,10 +4,13 @@
 #include "server/game/object.hpp"
 #include "shared/game/sharedobject.hpp"
 
-class Creature : public Object {
+class Item : public Object {
 public:
-	Creature(ObjectType type);
-	~Creature();
+
+	ItemInfo iteminfo;
+
+	Item();
+	~Item();
 
 	virtual SharedObject toShared() override;
 private:

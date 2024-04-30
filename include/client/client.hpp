@@ -40,14 +40,18 @@ public:
 
     Client(boost::asio::io_service& io_service, GameConfig config);
     ~Client();
-    int init();
-    int cleanup();
+
+    bool init();
+    bool cleanup();
+
     void draw();
     void connectAndListen(std::string ip_addr);
 
 private:
     void processClientInput();
     void processServerInput(boost::asio::io_context& context);
+
+    SharedGameState gameState;
 
     float cubeMovementDelta = 0.05f;
 
@@ -70,7 +74,6 @@ private:
     static float mouse_xpos;
     static float mouse_ypos;
 
-    SharedGameState gameState;
     GameConfig config;
     tcp::resolver resolver;
     tcp::socket socket;
