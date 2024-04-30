@@ -2,7 +2,8 @@
 #include <chrono>
 
 #include <boost/asio/io_context.hpp>
-#include <SDL.h>
+// #include <SDL.h>
+#include <SFML/Audio.hpp>
 
 #include "client/client.hpp"
 #include "shared/utilities/rng.hpp"
@@ -63,21 +64,21 @@ int main(int argc, char* argv[])
         client.connectAndListen(config.network.server_ip);
     }
 
-    if (SDL_Init(SDL_INIT_AUDIO) < 0)
-        return 1;
-
-    Sound* CollisionSound = new Sound("./sounds/collide.wav");
-
-    CollisionSound->SetupDevice();
-
-    CollisionSound->PlaySound();
-
-    delete CollisionSound;
+    //if (SDL_Init(SDL_INIT_AUDIO) < 0)
+    //    return 1;
 
     if (!client.init()) {
         exit(EXIT_FAILURE);
     }
-    
+
+    // Sound* CollisionSound = new Sound("./sounds/collide.wav");
+
+    //CollisionSound->SetupDevice();
+
+    //CollisionSound->PlaySound();
+
+    //delete CollisionSound;
+
     GLFWwindow* window = client.getWindow();
     if (!window) exit(EXIT_FAILURE);
 
@@ -86,6 +87,14 @@ int main(int argc, char* argv[])
     // Setup OpenGL settings.
     set_opengl_settings();
 
+
+    sf::SoundBuffer buffer;
+    if (!buffer.loadFromFile("C:\\Users\\Edward\\Source\\Repos\\group3\\src\\client\\sounds\\collide.wav"))
+        return -1;
+
+    sf::Sound sound;
+    sound.setBuffer(buffer);
+
     // Loop while GLFW window should stay open.
     while (!glfwWindowShouldClose(window)) {
         // Main render display callback. Rendering of objects is done here.
@@ -93,6 +102,8 @@ int main(int argc, char* argv[])
 
         // Idle callback. Updating objects, etc. can be done here.
         client.idleCallback(context);
+
+        sound.play();
     }
 
     client.cleanup();

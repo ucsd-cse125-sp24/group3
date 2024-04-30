@@ -82,13 +82,7 @@ bool Client::init() {
         return false;
     }
 
-    //Sound* CollisionSound = new Sound("./sounds/collide.wav");
-
-    //CollisionSound->SetupDevice();
-
-    //CollisionSound->PlaySound();
-
-    //delete CollisionSound;
+    // SDL_Init(SDL_INIT_AUDIO);
 
     return true;
 }
