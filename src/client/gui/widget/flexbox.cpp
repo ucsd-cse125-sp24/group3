@@ -8,7 +8,7 @@
 namespace gui::widget {
 
 Flexbox::Ptr Flexbox::make(glm::vec2 origin, Flexbox::Options options) {
-    return std::make_unique<Flexbox>(options, origin);
+    return std::make_unique<Flexbox>(origin, options);
 }
 
 Flexbox::Ptr Flexbox::make(glm::vec2 origin) {
