@@ -21,7 +21,15 @@ bool GUI::init(GLuint text_shader)
 
     this->text_shader = text_shader;
 
-    this->text.push_back(widget::DynText("Arcana", this->fonts));
+    this->text.push_back(
+        widget::DynText("Arcana", 
+            this->fonts,
+            widget::DynText::Options {
+                .font = font::Font::MENU,
+                .font_size = font::FontSizePx::LARGE,
+                .color = font::getRGB(font::FontColor::BLACK),
+                .scale = 1.0f,
+            }));
 
     std::cout << "Initialized GUI\n";
     return true;
@@ -32,15 +40,13 @@ void GUI::render() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
+    glEnable(GL_CULL_FACE);
+
     for (auto& t : this->text) {
-        // originally tried 0,0 which should be bottom left corner i think
-        // now trying to render it to random coordinates to see if 
-        // it flickers maybe and im using the wrong coords at 0,0?
-        t.render(this->text_shader,
-            static_cast<float>(randomInt(-640, 640)),
-            static_cast<float>(randomInt(-480, 480)));
+        t.render(this->text_shader, 0.0f, 0.0f);
     }
 
+    glDisable(GL_CULL_FACE);
     glDisable(GL_BLEND);
 }
 

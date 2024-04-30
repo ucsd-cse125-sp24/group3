@@ -22,7 +22,7 @@ glm::vec3 getRGB(FontColor color) {
             return {0.0f, 0.0f, 1.0f};
         default:
         case FontColor::BLACK:
-            return {1.0f, 1.0f, 1.0f};
+            return {0.0f, 0.0f, 0.0f};
     }
 }
 
