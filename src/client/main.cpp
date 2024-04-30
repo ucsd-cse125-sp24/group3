@@ -15,7 +15,7 @@ void error_callback(int error, const char* description) {
     std::cerr << description << std::endl;
 }
 
-void set_callbacks(GLFWwindow* window) {
+void set_callbacks(GLFWwindow* window, Client* client) {
     // Set the error callback.
     glfwSetErrorCallback(error_callback);
 
@@ -63,8 +63,6 @@ int main(int argc, char* argv[])
     if (client.init() == -1) {
         exit(EXIT_FAILURE);
     }
-
-
     
     GLFWwindow* window = client.getWindow();
     if (!window) exit(EXIT_FAILURE);

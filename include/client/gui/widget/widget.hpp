@@ -37,9 +37,6 @@ protected:
     std::size_t width  {0};
     std::size_t height {0};
 
-    VAlign valign {VAlign::NONE};
-    HAlign halign {HAlign::NONE};
-
     std::unordered_map<CallbackHandle, Callback> on_clicks;
     std::unordered_map<CallbackHandle, Callback> on_hovers;
 

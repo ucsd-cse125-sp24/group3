@@ -147,6 +147,7 @@ void Client::displayCallback() {
 void Client::idleCallback(boost::asio::io_context& context) {
     if (is_left_mouse_down) {
         this->gui.handleClick(mouse_xpos, mouse_ypos);
+        is_left_mouse_down = false;
     }
 
     std::optional<glm::vec3> movement = glm::vec3(0.0f);

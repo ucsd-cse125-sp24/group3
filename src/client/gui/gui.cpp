@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <iostream>
+#include <vector>
 #include "shared/utilities/rng.hpp"
 #include "client/client.hpp"
 
@@ -24,10 +25,14 @@ bool GUI::init(GLuint text_shader)
 
     this->text_shader = text_shader;
 
-    auto title = std::make_unique<widget::DynText>("Arcana", this->fonts);
-    title->addOnClick([](){std::cout << "Clickie click\n";});
+    auto title = widget::DynText::make("Arcana", this->fonts);
+    title->addOnClick([](){std::cout << "Clickie click on title\n";});
+    auto option = widget::DynText::make("Start Game", this->fonts);
+    option->addOnClick([](){std::cout << "click on option\n";});
 
-    this->addWidget(std::move(title), 0.0f, 0.0f);
+    auto flexbox = widget::Flexbox::make(std::move(title), std::move(option));
+
+    this->addWidget(std::move(flexbox), 0.0f, 0.0f);
 
     std::cout << "Initialized GUI\n";
     return true;

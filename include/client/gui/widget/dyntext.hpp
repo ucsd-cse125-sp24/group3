@@ -18,7 +18,11 @@ public:
         glm::vec3 color {font::getRGB(font::FontColor::BLACK)};
         float scale {1.0};
     };
-    // TODO: way to make certain words within the dyntext different colors?
+
+    template <typename... Params>
+    static std::unique_ptr<Widget> make(Params&&... params) {
+        return std::make_unique<DynText>(std::forward<Params>(params)...);
+    }
 
     DynText(std::string text, std::shared_ptr<gui::font::Loader> loader, Options options);
     DynText(std::string text, std::shared_ptr<gui::font::Loader> loader);

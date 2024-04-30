@@ -73,6 +73,7 @@ private:
     static bool cam_is_held_left;
 
     static bool is_left_mouse_down;
+    static bool is_click_available;
     static float mouse_xpos;
     static float mouse_ypos;
 

@@ -19,6 +19,7 @@ set(FILES
     gui/font/loader.cpp
     gui/widget/widget.cpp
     gui/widget/dyntext.cpp
+    gui/widget/flexbox.cpp
     gui/gui.cpp
 
 )
