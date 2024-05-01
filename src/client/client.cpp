@@ -15,28 +15,12 @@
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
-// Flags
-bool Client::is_held_up = false;
-bool Client::is_held_down = false;
-bool Client::is_held_right = false;
-bool Client::is_held_left = false;
-
-bool Client::cam_is_held_up = false;
-bool Client::cam_is_held_down = false;
-bool Client::cam_is_held_right = false;
-bool Client::cam_is_held_left = false;
-
-float Client::mouse_xpos = 0.0f;
-float Client::mouse_ypos = 0.0f;
-
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
     socket(io_context),
     config(config),
-    gameState(GamePhase::TITLE_SCREEN, config)
-{
-    cam = new Camera();
-}
+    gameState(GamePhase::TITLE_SCREEN, config),
+    cam(new Camera()) {}
 
 void Client::connectAndListen(std::string ip_addr) {
     this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
@@ -53,14 +37,13 @@ void Client::connectAndListen(std::string ip_addr) {
     this->session->startListen();
 }
 
-Client::~Client() {
-
-}
+Client::~Client() {}
 
 // TODO: error flags / output for broken init
 bool Client::init() {
     /* Initialize glfw library */
     if (!glfwInit())
+
         return false;
 
     /* Create a windowed mode window and its OpenGL context */
@@ -98,6 +81,13 @@ bool Client::init() {
 
 bool Client::cleanup() {
     glDeleteProgram(this->cubeShaderProgram);
+    cam.reset(nullptr);
+
+    // Destroy the window.
+    glfwDestroyWindow(window);
+    // Terminate GLFW.
+    glfwTerminate();
+
     return true;
 }
 
@@ -119,15 +109,6 @@ void Client::displayCallback() {
 void Client::idleCallback(boost::asio::io_context& context) {
     std::optional<glm::vec3> movement = glm::vec3(0.0f);
 
-    if(is_held_right)
-        movement.value() += glm::vec3(cubeMovementDelta, 0.0f, 0.0f);
-    if(is_held_left)
-        movement.value() += glm::vec3(-cubeMovementDelta, 0.0f, 0.0f);
-    if(is_held_up)
-        movement.value() += glm::vec3(0.0f, cubeMovementDelta, 0.0f);
-    if(is_held_down)
-        movement.value() += glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
-
     std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
     if(cam_is_held_right)
         cam_movement.value() += cam->move(false, 1.0f);
@@ -138,24 +119,20 @@ void Client::idleCallback(boost::asio::io_context& context) {
     if(cam_is_held_down)
         cam_movement.value() += cam->move(true, -1.0f);
 
-
+    // Update camera direction
     cam->update(mouse_xpos, mouse_ypos);
 
-    if (movement.has_value()) {
-        auto eid = 0; 
-        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
-    }
-
-    // Send 'player' movement
-    if (cam_movement.has_value() && this->session->getInfo().client_eid.has_value()) {
-        auto eid = this->session->getInfo().client_eid.value(); 
-        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, cam_movement.value())));
-    }
-
-    // Send camera angle
+    // Send player movement and facing direction
     if (this->session->getInfo().client_eid.has_value()) {
         auto eid = this->session->getInfo().client_eid.value(); 
-        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, cam_movement.value())));
+
+        // Only send relative movement if player moved
+        if (cam_movement.has_value()) {
+            this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, cam_movement.value())));
+        }
+
+        // Always send facing direction, may change to only send if facing direction is different from previous frame
+        this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam->getFacing())));
     }
 
     processServerInput(context);
@@ -189,7 +166,8 @@ void Client::draw() {
             continue;
         }
 
-        //  tmp: all objects are cubes
+        // tmp: all objects are cubes
+        // In the future, abstract draw methods for the sharedObject and render
         Cube* cube = new Cube();
         cube->update(sharedObject->physics.position);
         
@@ -197,7 +175,6 @@ void Client::draw() {
     }
 }
 
-// callbacks - for Interaction
 void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
   // Check for a key press.
     if (action == GLFW_PRESS) {
@@ -205,22 +182,6 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_ESCAPE:
             // Close the window. This causes the program to also terminate.
             glfwSetWindowShouldClose(window, GL_TRUE);
-            break;
-
-        case GLFW_KEY_DOWN:
-            is_held_down = true;
-            break;
-
-        case GLFW_KEY_UP:
-            is_held_up = true;
-            break;
-
-        case GLFW_KEY_LEFT:
-            is_held_left = true;
-            break;
-
-        case GLFW_KEY_RIGHT:
-            is_held_right = true;
             break;
 
         case GLFW_KEY_S:
@@ -246,22 +207,6 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
     if (action == GLFW_RELEASE) {
         switch (key) {
-        case GLFW_KEY_DOWN:
-            is_held_down = false;
-            break;
-
-        case GLFW_KEY_UP:
-            is_held_up = false;
-            break;
-
-        case GLFW_KEY_LEFT:
-            is_held_left = false;
-            break;
-
-        case GLFW_KEY_RIGHT:
-            is_held_right = false;
-            break;
-
         case GLFW_KEY_S:
             cam_is_held_down = false;
             break;
@@ -284,7 +229,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     }
 }
 
-void Client::mouseCallback(GLFWwindow *window, double xposIn, double yposIn) { // cppcheck-suppress constParameterPointer
+void Client::mouseCallback(GLFWwindow *window, double xposIn, double yposIn) {
     mouse_xpos = static_cast<float>(xposIn);
     mouse_ypos = static_cast<float>(yposIn);
 }

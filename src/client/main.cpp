@@ -22,11 +22,15 @@ void set_callbacks(GLFWwindow* window) {
     // glfwSetWindowSizeCallback(window, client.resizeCallback);
 
     // Set the key callback.
-    glfwSetKeyCallback(window, Client::keyCallback);
+    glfwSetKeyCallback(window, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
+        static_cast<Client*>(glfwGetWindowUserPointer(w))->keyCallback(w, key, scancode, action, mods);
+    });
 
     // Set the mouse and cursor callbacks
     // glfwSetMouseButtonCallback(window, Client::mouseCallback);
-    glfwSetCursorPosCallback(window, Client::mouseCallback);
+    glfwSetCursorPosCallback(window, [](GLFWwindow* w, double xposIn, double yposIn) {
+        static_cast<Client*>(glfwGetWindowUserPointer(w))->mouseCallback(w, xposIn, yposIn);
+    });
 }
 
 void set_opengl_settings(GLFWwindow* window) {
@@ -51,7 +55,7 @@ int main(int argc, char* argv[])
     auto config = GameConfig::parse(argc, argv);
     boost::asio::io_context context;
     LobbyFinder lobby_finder(context, config);
-    Client client(context, config);
+    std::unique_ptr<Client> client(new Client(context, config));
     if (config.client.lobby_discovery) {
         // TODO: once we have UI, there should be a way to connect based on
         // this. Right now, there isn't really a way to react to the information
@@ -61,17 +65,18 @@ int main(int argc, char* argv[])
         std::exit(1);
         // lobby_finder.startSearching();
     } else {
-        client.connectAndListen(config.network.server_ip);
+        client->connectAndListen(config.network.server_ip);
     }
 
-
-    if (!client.init()) {
+    if (!client->init()) {
         exit(EXIT_FAILURE);
     }
     
-    GLFWwindow* window = client.getWindow();
+    GLFWwindow* window = client->getWindow();
     if (!window) exit(EXIT_FAILURE);
 
+    // Set the user pointer for the glfw window
+    glfwSetWindowUserPointer(window, client.get());
     // Setup callbacks.
     set_callbacks(window);
     // Setup OpenGL settings.
@@ -80,18 +85,13 @@ int main(int argc, char* argv[])
     // Loop while GLFW window should stay open.
     while (!glfwWindowShouldClose(window)) {
         // Main render display callback. Rendering of objects is done here.
-        client.displayCallback();
+        client->displayCallback();
 
         // Idle callback. Updating objects, etc. can be done here.
-        client.idleCallback(context);
+        client->idleCallback(context);
     }
 
-    client.cleanup();
-
-    // Destroy the window.
-    glfwDestroyWindow(window);
-    // Terminate GLFW.
-    glfwTerminate();
+    client->cleanup();
 
     exit(EXIT_SUCCESS);
 
