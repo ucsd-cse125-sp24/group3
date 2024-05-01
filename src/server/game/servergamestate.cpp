@@ -27,7 +27,9 @@ ServerGameState::ServerGameState(std::string maze_file) {
 	this->lobby.max_players = MAX_PLAYERS;
 	this->maze_file = maze_file;
 
-	//	TODO: Initialize maze here
+	//	Load maze (Note: This only happens in THIS constructor! All other
+	//	ServerGameState constructors MUST call this constructor to load the
+	//	maze environment from a file)
 	this->loadMaze();
 }
 
@@ -167,17 +169,11 @@ void ServerGameState::loadMaze() {
 	//	Step 1:	Attempt to open maze file for reading.
 
 	//	Generate maze file path
-	std::cout << "Project directory: " << getRepoRoot() << std::endl;
-
 	auto maze_file_path = getRepoRoot() / "maps" / this->maze_file;
-	
-	std::cout << "Maze file path: " << maze_file_path.string() << std::endl;
 
 	std::ifstream file;
 
 	file.open(maze_file_path.string(), std::ifstream::in);
-	
-	std::cout << "File opened? " << file.fail() << std::endl;
 
 	//	Check that maze file was successfully opened
 	assert(file.is_open());
