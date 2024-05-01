@@ -7,6 +7,7 @@
 #include "server/game/object.hpp"
 #include "server/game/objectmanager.hpp"
 #include "shared/game/event.hpp"
+#include "server/game/grid.hpp"
 
 #include <string>
 #include <vector>
@@ -48,6 +49,16 @@ public:
 	explicit ServerGameState(GamePhase start_phase);
 
 	ServerGameState(GamePhase start_phase, GameConfig config);
+
+	/**
+	 * @brief This is the ONLY constructor that initializes the maze from a
+	 * maze_file argument. All other constructors must call it.
+	 * @param maze_file Name of maze file to load. (should be in maps/
+	 * directory).
+	 */
+	ServerGameState(std::string maze_file);
+
+	ServerGameState(GamePhase start_phase, GameConfig config, std::string maze_file);
 
 	~ServerGameState();
 
@@ -123,6 +134,14 @@ public:
 	 */
 	int getLobbyMaxPlayers() const;
 
+	/*	Maze initialization	*/
+	
+	/**
+	 * @brief Reads from maze file and initializes this ServerGameState's
+	 * Grid instance, as well as creating all necessary environment objects.
+	 */
+	void loadMaze();
+
 	/*	Debugger Methods	*/
 
 	/**
@@ -152,6 +171,16 @@ private:
 	 * @brief The current phase of this game instance.
 	 */
 	GamePhase phase;
+
+	/**
+	 * @brief File name of maze file path.
+	 */
+	std::string maze_file;
+
+	/**
+	 * @brief 2-D Grid of GridCells (filled after loadMaze() is called).
+	 */
+	Grid grid;
 
 	//	TODO: Add reference to passed-in Event queue.
 };
