@@ -7,4 +7,10 @@ enum class JustifyContent {
     HORIZONTAL
 };
 
+enum class AlignItems {
+    CENTER,
+    LEFT,
+    RIGHT
+};
+
 }

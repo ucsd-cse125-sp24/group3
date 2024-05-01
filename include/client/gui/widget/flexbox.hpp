@@ -13,6 +13,7 @@ public:
 
     struct Options {
         JustifyContent direction;
+        AlignItems     alignment;
     };
 
     static Ptr make(glm::vec2 origin, Options options);

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <memory>
+#include <iostream>
 
 #include "client/core.hpp"
 
@@ -20,7 +21,10 @@ Flexbox::Flexbox(glm::vec2 origin, Flexbox::Options options):
     options(options) {}
 
 Flexbox::Flexbox(glm::vec2 origin):
-    Flexbox(origin, Flexbox::Options { .direction=JustifyContent::HORIZONTAL }) {}
+    Flexbox(origin, Flexbox::Options { 
+        .direction = JustifyContent::HORIZONTAL,
+        .alignment = AlignItems::LEFT,
+    }) {}
 
 void Flexbox::doClick(float x, float y) {
     Widget::doClick(x, y);
@@ -38,6 +42,8 @@ void Flexbox::doHover(float x, float y) {
 
 void Flexbox::push(Widget::Ptr&& widget) {
     const auto& [new_width, new_height] = widget->getSize();
+
+    // Bless this mess!
 
     glm::vec2 prev_origin;
     std::size_t prev_width;
@@ -64,6 +70,20 @@ void Flexbox::push(Widget::Ptr&& widget) {
         glm::vec2 new_origin(prev_origin.x, prev_origin.y + prev_height);
         widget->setOrigin(new_origin);
     }
+
+    if (this->options.alignment == AlignItems::CENTER) {
+        if (this->options.direction == JustifyContent::HORIZONTAL) {
+            std::cerr << "Note: center alignment not yet implemented for horizontal justify. Doing nothing\n";
+        } else if (this->options.direction == JustifyContent::VERTICAL) {
+            for (auto& widget : this->widgets) {
+                const auto [curr_width, _] = widget->getSize();
+                glm::vec2 new_origin(this->origin.x + ((this->width - curr_width) / 2.0f), widget->getOrigin().y);
+                widget->setOrigin(new_origin);
+            }
+        }
+    } else if (this->options.alignment == AlignItems::RIGHT) {
+        std::cerr << "Note: right alignment not yet implemented. Doing nothing\n";
+    } // else it is align left, which is default behavior and requires no more messing
 
     this->widgets.push_back(std::move(widget));
 }

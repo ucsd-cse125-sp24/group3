@@ -33,7 +33,8 @@ bool GUI::init(GLuint text_shader)
     auto flexbox = widget::Flexbox::make(
         glm::vec2(0.0f, 0.0f),
         widget::Flexbox::Options {
-            .direction = widget::JustifyContent::VERTICAL
+            .direction { widget::JustifyContent::VERTICAL },
+            .alignment { widget::AlignItems::CENTER },
         });
     flexbox->push(std::move(title));
     flexbox->push(std::move(option));
