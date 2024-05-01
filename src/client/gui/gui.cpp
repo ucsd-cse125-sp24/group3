@@ -23,12 +23,17 @@ bool GUI::init(GLuint text_shader)
         return false;
     }
 
+    if (!this->images.init()) {
+        return false;
+    }
+
     this->text_shader = text_shader;
 
     auto title = widget::DynText::make("Arcana", this->fonts);
     title->addOnClick([](){std::cout << "Clickie click on title\n";});
     auto option = widget::DynText::make("Start Game", this->fonts);
     option->addOnClick([](){std::cout << "click on option\n";});
+    auto img = widget::StaticImg::make(this->images.getImg(img::ImgID::Yoshi));
 
     auto flexbox = widget::Flexbox::make(
         glm::vec2(0.0f, 0.0f),
@@ -38,6 +43,7 @@ bool GUI::init(GLuint text_shader)
         });
     flexbox->push(std::move(title));
     flexbox->push(std::move(option));
+    flexbox->push(std::move(img));
 
     this->addWidget(std::move(flexbox), 0.0f, 0.0f);
 

@@ -17,13 +17,14 @@ public:
         return std::make_unique<StaticImg>(std::forward<Params>(params)...);
     }
 
-    StaticImg(glm::vec2 origin, gui::img::Img img, std::shared_ptr<gui::img::Loader> loader);
+    StaticImg(glm::vec2 origin, gui::img::Img img);
+    StaticImg(gui::img::Img img);
 
     void render(GLuint shader) override;
 
 private:
-    std::shared_ptr<gui::img::Loader> loader;
-
+    gui::img::Img img;
+    GLuint VBO, VAO, EBO;
 };
 
 }

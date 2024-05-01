@@ -12,10 +12,12 @@ public:
 
     bool init();
 
+    const Img& getImg(ImgID img_id) const;
+
 private:
     std::unordered_map<ImgID, Img> img_map; 
 
-    void _loadImg();
+    bool _loadImg(ImgID id);
 };
 
 }

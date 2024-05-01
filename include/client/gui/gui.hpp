@@ -12,6 +12,8 @@
 #include "client/gui/widget/staticimg.hpp"
 #include "client/gui/font/font.hpp"
 #include "client/gui/font/loader.hpp"
+#include "client/gui/img/img.hpp"
+#include "client/gui/img/loader.hpp"
 
 #include <memory>
 #include <unordered_map>
@@ -40,6 +42,7 @@ private:
     GLuint text_shader;
 
     std::shared_ptr<font::Loader> fonts;
+    img::Loader images;
 };
 
 using namespace gui;
