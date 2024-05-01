@@ -30,7 +30,11 @@ bool GUI::init(GLuint text_shader)
     auto option = widget::DynText::make("Start Game", this->fonts);
     option->addOnClick([](){std::cout << "click on option\n";});
 
-    auto flexbox = widget::Flexbox::make(glm::vec2(0.0f, 0.0f));
+    auto flexbox = widget::Flexbox::make(
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options {
+            .direction = widget::JustifyContent::VERTICAL
+        });
     flexbox->push(std::move(title));
     flexbox->push(std::move(option));
 

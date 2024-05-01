@@ -2,6 +2,7 @@
 
 // #include "client/core.hpp"
 
+
 // Include all gui headers so everyone else just needs to include this file
 #include "client/gui/widget/options.hpp"
 #include "client/gui/widget/type.hpp"
@@ -20,7 +21,6 @@ using WidgetHandle = std::size_t;
 
 class GUI {
 public:
-
     GUI();
 
     bool init(GLuint text_shader);
@@ -40,5 +40,7 @@ private:
 
     std::shared_ptr<font::Loader> fonts;
 };
+
+using namespace gui;
 
 }

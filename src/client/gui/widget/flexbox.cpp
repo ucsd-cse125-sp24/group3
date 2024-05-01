@@ -50,7 +50,7 @@ void Flexbox::push(Widget::Ptr&& widget) {
         Widget::Ptr& prev_widget = this->widgets[this->widgets.size() - 1];
         prev_origin = prev_widget->getOrigin();
         prev_width = prev_widget->getSize().first;
-        prev_width = prev_widget->getSize().second;
+        prev_height = prev_widget->getSize().second;
     }
 
     if (this->options.direction == JustifyContent::HORIZONTAL) {
