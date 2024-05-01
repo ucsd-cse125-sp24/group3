@@ -33,6 +33,53 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      state(ServerGameState(GamePhase::LOBBY, config))
 {
     state.objects.createObject(ObjectType::Object);
+
+    //  Create a room
+    EntityID wall1ID = state.objects.createObject(ObjectType::SolidSurface);
+    EntityID wall2ID = state.objects.createObject(ObjectType::SolidSurface);
+    EntityID wall3ID = state.objects.createObject(ObjectType::SolidSurface);
+    EntityID wall4ID = state.objects.createObject(ObjectType::SolidSurface);
+    EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
+
+    //  Specify wall positions
+    //  Configuration: 40 (x) x 32 (y) room example
+    //  ##1##
+    //  #   #
+    //  2   3
+    //  #   #
+    //  ##4##
+
+    SolidSurface* wall1 = (SolidSurface*)state.objects.getObject(wall1ID);
+    SolidSurface* wall2 = (SolidSurface*)state.objects.getObject(wall2ID);
+    SolidSurface* wall3 = (SolidSurface*)state.objects.getObject(wall3ID);
+    SolidSurface* wall4 = (SolidSurface*)state.objects.getObject(wall4ID);
+    SolidSurface* floor = (SolidSurface*)state.objects.getObject(floorID);
+
+    //  Wall1 has dimensions (40, 1, 4) and position (0, 15.5, 2)
+    wall1->shared.dimensions = glm::vec3(40, 1, 4);
+    wall1->physics.shared.position = glm::vec3(0, 15.5, 2);
+    wall1->physics.movable = false;
+
+    //  Wall2 has dimensions (30, 1, 4) and position (-19.5, 0, 2)
+    wall2->shared.dimensions = glm::vec3(30, 1, 4);
+    wall2->physics.shared.position = glm::vec3(-19.5, 0, 2);
+    wall2->physics.movable = false;
+
+    //  Wall3 has dimensions (30, 1, 4) and position (19.5, 0, 2)
+    wall3->shared.dimensions = glm::vec3(30, 1, 4);
+    wall3->physics.shared.position = glm::vec3(19.5, 0, 2);
+    wall3->physics.movable = false;
+
+    //  Wall4 has dimensions (40, 1, 4) and position (0, -15.5, 2)
+    wall4->shared.dimensions = glm::vec3(40, 1, 4);
+    wall4->physics.shared.position = glm::vec3(0, -15.5, 2);
+    wall4->physics.movable = false;
+
+    //  floor has dimensions (40, 32, 1) and position (0, 0, -0.5)
+    floor->shared.dimensions = glm::vec3(40, 32, 1);
+    floor->physics.shared.position = glm::vec3(0, 0, -0.5);
+    floor->physics.movable = false;
+
     
     _doAccept(); // start asynchronously accepting
 
@@ -44,6 +91,8 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     }
 }
 
+//  Note: This method should probably be removed since EntityIDs for objects
+//  are assigned by the ObjectManager
 EntityID Server::genNewEID() {
     static EntityID id = 1;
     return id++;

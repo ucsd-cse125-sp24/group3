@@ -27,11 +27,11 @@ void set_callbacks(GLFWwindow* window) {
     glfwSetKeyCallback(window, Client::keyCallback);
 
     // Set the mouse and cursor callbacks
-    // glfwSetMouseButtonCallback(window, client.mouse_callback);
-    // glfwSetCursorPosCallback(window, client.cursor_callback);
+    // glfwSetMouseButtonCallback(window, Client::mouseCallback);
+    glfwSetCursorPosCallback(window, Client::mouseCallback);
 }
 
-void set_opengl_settings() {
+void set_opengl_settings(GLFWwindow* window) {
     // Enable depth buffering.
     glEnable(GL_DEPTH_TEST);
 
@@ -43,6 +43,9 @@ void set_opengl_settings() {
 
     // Set clear color to black.
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+
+    // Set cursor position to (0, 0)
+    glfwSetCursorPos(window, 0, 0);
 }
 
 int main(int argc, char* argv[])
@@ -73,9 +76,9 @@ int main(int argc, char* argv[])
     // Setup callbacks.
     set_callbacks(window);
     // Setup OpenGL settings.
-    set_opengl_settings();
+    set_opengl_settings(window);
 
-    boost::filesystem::path soundFilepath = client.getRootPath() / "src/client/sounds/happy.wav";
+    boost::filesystem::path soundFilepath = client.getRootPath() / "src/client/sounds/piano.wav";
 
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile(soundFilepath.string()))
