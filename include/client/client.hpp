@@ -13,6 +13,7 @@
 #include "client/cube.hpp"
 #include "client/util.hpp"
 #include "client/lobbyfinder.hpp"
+#include "client/camera.hpp"
 
 //#include "shared/game/gamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -32,6 +33,7 @@ public:
 
     // Bound window callbacks
     static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+    static void mouseCallback(GLFWwindow *window, double xposIn, double yposIn);
 
 
     // Getter / Setters
@@ -52,10 +54,12 @@ private:
 
     SharedGameState gameState;
 
-    GLuint cubeShaderProgram;
     float cubeMovementDelta = 0.05f;
 
     GLFWwindow *window;
+    GLuint cubeShaderProgram;
+
+    Camera *cam;
 
     // Flags
     static bool is_held_up;
@@ -64,6 +68,14 @@ private:
     static bool is_held_left;
     static bool is_held_space;
     static bool is_held_shift;
+
+    static bool cam_is_held_up;
+    static bool cam_is_held_down;
+    static bool cam_is_held_right;
+    static bool cam_is_held_left;
+
+    static float mouse_xpos;
+    static float mouse_ypos;
 
     GameConfig config;
     tcp::resolver resolver;

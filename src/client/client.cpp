@@ -30,12 +30,21 @@ glm::vec3 sentVerticalMovement = glm::vec3(-1.0f);
 bool spaceEvent = false;
 bool shiftEvent = false;
 
+bool Client::cam_is_held_up = false;
+bool Client::cam_is_held_down = false;
+bool Client::cam_is_held_right = false;
+bool Client::cam_is_held_left = false;
+
+float Client::mouse_xpos = 0.0f;
+float Client::mouse_ypos = 0.0f;
+
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
     socket(io_context),
     config(config),
     gameState(GamePhase::TITLE_SCREEN, config)
 {
+    cam = new Camera();
 }
 
 void Client::connectAndListen(std::string ip_addr) {
@@ -74,6 +83,9 @@ bool Client::init() {
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+
+    // tell GLFW to capture our mouse
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     GLenum err = glewInit() ; 
     if (GLEW_OK != err) { 
@@ -117,39 +129,48 @@ void Client::idleCallback(boost::asio::io_context& context) {
     std::optional<glm::vec3> horizontal = glm::vec3(0.0f);
     std::optional<glm::vec3> vertical = glm::vec3(0.0f);
     std::optional<glm::vec3> jump = glm::vec3(0.0f);
+    std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
 
     // Sets a direction vector
-    if(is_held_right)
+    if(cam_is_held_right)
         horizontal.value() += glm::vec3(1.0f, 0.0f, 0.0f);
-    if(is_held_left)
+        cam_movement.value() += cam->move(false, 1.0f);
+    if(cam_is_held_left)
         horizontal.value() += glm::vec3(-1.0f, 0.0f, 0.0f);
-    if (is_held_up)
+        cam_movement.value() += cam->move(false, -1.0f);
+    if (cam_is_held_up)
         vertical.value() += glm::vec3(0.0f, 0.0f, -1.0f);
-    if (is_held_down)
+        cam_movement.value() += cam->move(true, 1.0f);
+    if (cam_is_held_down)
         vertical.value() += glm::vec3(0.0f, 0.0f, 1.0f);
+        cam_movement.value() += cam->move(true, -1.0f);
     if (is_held_space)
         jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
 
-    // Send jump action
-    if (is_held_space) {
-        auto eid = 0;
-        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), ActionType::Jump)));
-        spaceEvent = true;
-    }
+    cam->update(mouse_xpos, mouse_ypos);
 
-    // Handles individual keys
-    handleKeys(0, GLFW_KEY_LEFT_SHIFT, is_held_shift, &shiftEvent);
+    // IF PLAYER, allow moving
+    if (this->session->getInfo().client_eid.has_value()) {
+        auto eid = this->session->getInfo().client_eid.value(); 
+        this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam_movement.value())));
+        // Send jump action
+        if (is_held_space) {
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), ActionType::Jump)));
+            spaceEvent = true;
+        }
 
-    if (sentHorizontalMovement != horizontal.value()){
-        auto eid = 0;
-        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, horizontal.value(), ActionType::MoveHorizontal)));
-        sentHorizontalMovement = horizontal.value();
-    }
+        // Handles individual keys
+        handleKeys(eid, GLFW_KEY_LEFT_SHIFT, is_held_shift, &shiftEvent);
 
-    if (sentVerticalMovement != vertical.value()){
-        auto eid = 0;
-        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, vertical.value(), ActionType::MoveVertical)));
-        sentVerticalMovement = vertical.value();
+        if (sentHorizontalMovement != horizontal.value()){
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, horizontal.value(), ActionType::MoveHorizontal)));
+            sentHorizontalMovement = horizontal.value();
+        }
+
+        if (sentVerticalMovement != vertical.value()){
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, vertical.value(), ActionType::MoveVertical)));
+            sentVerticalMovement = vertical.value();
+        }
     }
 
     processServerInput(context);
@@ -199,18 +220,24 @@ void Client::draw() {
         if (sharedObject == nullptr)
             continue;
 
-        std::cout << "got an object" << std::endl;
-        //  tmp: all objects are cubes
-        if(i == 0){
-            Cube* cube = new Cube(glm::vec3( 0.0f, 1.0f, 1.0f ), glm::vec3( 1.0f ));
-            cube->update(sharedObject->physics.position);
-            cube->draw(this->cubeShaderProgram, true);
-        } else {
-            Cube* cube1 = new Cube(glm::vec3( 0.3f, 0.3f, 0.3f ), glm::vec3( 20.0f, 0.2f, 20.0f ));
-            cube1->update(sharedObject->physics.position);
-            cube1->draw(this->cubeShaderProgram, true);
+        // Get camera position from server, update position and don't render player object (or special handling)
+        if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+            cam->updatePos(sharedObject->physics.position);
+            continue;
         }
-        
+
+        // If solidsurface, scale cube to given dimensions
+        if(sharedObject->solidSurface.has_value()){
+            Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f), sharedObject->solidSurface->dimensions);
+            cube->update(sharedObject->physics.position);
+            cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
+            continue;
+        }
+
+        //  tmp: all objects are cubes
+        Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f), glm::vec3(1.0f));
+        cube->update(sharedObject->physics.position);
+        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);
     }
 }
 
@@ -238,6 +265,22 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
         case GLFW_KEY_RIGHT:
             is_held_right = true;
+            break;
+
+        case GLFW_KEY_S:
+            cam_is_held_down = true;
+            break;
+
+        case GLFW_KEY_W:
+            cam_is_held_up = true;
+            break;
+
+        case GLFW_KEY_A:
+            cam_is_held_left = true;
+            break;
+
+        case GLFW_KEY_D:
+            cam_is_held_right = true;
             break;
 
         case GLFW_KEY_SPACE:
@@ -271,6 +314,22 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             is_held_right = false;
             break;
 
+        case GLFW_KEY_S:
+            cam_is_held_down = false;
+            break;
+
+        case GLFW_KEY_W:
+            cam_is_held_up = false;
+            break;
+
+        case GLFW_KEY_A:
+            cam_is_held_left = false;
+            break;
+
+        case GLFW_KEY_D:
+            cam_is_held_right = false;
+            break;
+            
         case GLFW_KEY_SPACE:
             is_held_space = false;
             break;
@@ -285,3 +344,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     }
 }
 
+void Client::mouseCallback(GLFWwindow *window, double xposIn, double yposIn) { // cppcheck-suppress constParameterPointer
+    mouse_xpos = static_cast<float>(xposIn);
+    mouse_ypos = static_cast<float>(yposIn);
+}

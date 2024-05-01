@@ -34,6 +34,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
 {
     state.objects.createObject(ObjectType::Object);
 
+    
     //  Create a room
     EntityID wall1ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall2ID = state.objects.createObject(ObjectType::SolidSurface);
@@ -42,10 +43,11 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
 
     //  Specify wall positions
-    //  Configuration: 40 (x) x 32 (y) room example
+    //  Configuration: 40 (z) x 32 (x) room example
+    // (z-axis)
     //  ##1##
     //  #   #
-    //  2   3
+    //  2   3 (x-axis)
     //  #   #
     //  ##4##
 
@@ -56,34 +58,29 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     SolidSurface* floor = (SolidSurface*)state.objects.getObject(floorID);
 
     //  Wall1 has dimensions (40, 1, 4) and position (0, 15.5, 2)
-    wall1->shared.dimensions = glm::vec3(40, 1, 4);
-    wall1->physics.shared.position = glm::vec3(0, 15.5, 2);
+    wall1->shared.dimensions = glm::vec3(20, 4, 1);
+    wall1->physics.shared.position = glm::vec3(0, 0, -19.5);
     wall1->physics.movable = false;
 
     //  Wall2 has dimensions (30, 1, 4) and position (-19.5, 0, 2)
-    wall2->shared.dimensions = glm::vec3(30, 1, 4);
-    wall2->physics.shared.position = glm::vec3(-19.5, 0, 2);
+    wall2->shared.dimensions = glm::vec3(1, 4, 18);
+    wall2->physics.shared.position = glm::vec3(-19.5, 0, 0);
     wall2->physics.movable = false;
 
     //  Wall3 has dimensions (30, 1, 4) and position (19.5, 0, 2)
-    wall3->shared.dimensions = glm::vec3(30, 1, 4);
-    wall3->physics.shared.position = glm::vec3(19.5, 0, 2);
+    wall3->shared.dimensions = glm::vec3(1, 4, 18);
+    wall3->physics.shared.position = glm::vec3(19.5, 0, 0);
     wall3->physics.movable = false;
 
     //  Wall4 has dimensions (40, 1, 4) and position (0, -15.5, 2)
-    wall4->shared.dimensions = glm::vec3(40, 1, 4);
-    wall4->physics.shared.position = glm::vec3(0, -15.5, 2);
+    wall4->shared.dimensions = glm::vec3(20, 4, 1);
+    wall4->physics.shared.position = glm::vec3(0, 0, 19.5);
     wall4->physics.movable = false;
 
     //  floor has dimensions (40, 32, 1) and position (0, 0, -0.5)
-    floor->shared.dimensions = glm::vec3(40, 32, 1);
-    floor->physics.shared.position = glm::vec3(0, 0, -0.5);
-    floor->physics.movable = false;
-
-    
-    EntityID floorID = state.objects.createObject(ObjectType::Object);
-    Object* floor = state.objects.getObject(floorID);
+    floor->shared.dimensions = glm::vec3(20.0f, 0.1f, 20.0f);
     floor->physics.shared.position = glm::vec3(0.0f, -1.3f, 0.0f);
+    floor->physics.movable = false;
     
     _doAccept(); // start asynchronously accepting
 
@@ -235,7 +232,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
-    EntityID id = Server::genNewEID();
+    EntityID id = this->state.objects.createObject(ObjectType::Player);
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, id));
 

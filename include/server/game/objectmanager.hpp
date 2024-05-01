@@ -4,6 +4,8 @@
 
 #include "server/game/object.hpp"
 #include "server/game/item.hpp"
+#include "server/game/player.hpp"
+#include "server/game/enemy.hpp"
 #include "server/game/solidsurface.hpp"
 
 #include "shared/utilities/smartvector.hpp"
@@ -132,4 +134,16 @@ private:
 	 * @brief SmartVector of SolidSurface pointers to all SolidSurface objects.
 	 */
 	SmartVector<SolidSurface*> solid_surfaces;
+
+	/**
+	 * @brief SmartVector of Player pointers to all objects whose ObjectType is
+	 * ObjectType::Player.
+	 */
+	SmartVector<Player*> player_objects;
+
+	/**
+	 * @brief SmartVector of Enemy pointers to all objects whose ObjectType is
+	 * ObjectType::Enemy.
+	 */
+	SmartVector<Enemy*> enemy_objects;
 };

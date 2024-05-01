@@ -25,54 +25,91 @@ EntityID ObjectManager::createObject(ObjectType type) {
 	SpecificID typeID;
 
 	switch (type) {
-		case ObjectType::Object: {
-			//	Create a new object of type Object
-			Object* object = new Object(ObjectType::Object);
+	case ObjectType::Object: {
+		//	Create a new object of type Object
+		Object* object = new Object(ObjectType::Object);
 
-			//	TODO: Maybe change SmartVector's index return value? size_t is
-			//	larger than uint32 (which is what SpecificID and EntityID are
-			//	defined as)
-			//	Push to type-specific base_objects vector
-			typeID = (SpecificID)this->base_objects.push(object);
+		//	TODO: Maybe change SmartVector's index return value? size_t is
+		//	larger than uint32 (which is what SpecificID and EntityID are
+		//	defined as)
+		//	Push to type-specific base_objects vector
+		typeID = (SpecificID)this->base_objects.push(object);
 
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(object);
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(object);
 
-			//	Set object's type and global IDs
-			object->typeID = typeID;
-			object->globalID = globalID;
-			break;
-		}
-		case ObjectType::Item: {
-			//	Create a new object of type Item
-			Item* item = new Item();
+		//	Set object's type and global IDs
+		object->typeID = typeID;
+		object->globalID = globalID;
+		break;
+	}
+	case ObjectType::Item: {
+		//	Create a new object of type Item
+		Item* item = new Item();
 
-			//	Push to type-specific items vector
-			typeID = (SpecificID)this->items.push(item);
+		//	Push to type-specific items vector
+		typeID = (SpecificID)this->items.push(item);
 
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(item);
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(item);
 
-			//	Set items' type and global IDs
-			item->typeID = typeID;
-			item->globalID = globalID;
-			break;
-		}
-		case ObjectType::SolidSurface: {
-			//	Create a new object of type SolidSurface
-			SolidSurface* solidSurface = new SolidSurface();
+		//	Set items' type and global IDs
+		item->typeID = typeID;
+		item->globalID = globalID;
+		break;
+	}
+	case ObjectType::SolidSurface: {
+		//	Create a new object of type SolidSurface
+		SolidSurface* solidSurface = new SolidSurface();
 
-			//	Push to type-specific solid_surfaces vector
-			typeID = (SpecificID)this->solid_surfaces.push(solidSurface);
+		//	Push to type-specific solid_surfaces vector
+		typeID = (SpecificID)this->solid_surfaces.push(solidSurface);
 
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(solidSurface);
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(solidSurface);
 
-			//	Set solidSurface's type and global IDs
-			solidSurface->typeID = typeID;
-			solidSurface->globalID = globalID;
-			break;
-		}
+		//	Set solidSurface's type and global IDs
+		solidSurface->typeID = typeID;
+		solidSurface->globalID = globalID;
+		break;
+	}
+	case ObjectType::Player: {
+		
+		//	Create a new object of type Player
+		Player* player = new Player();
+
+		//	TODO: Maybe change SmartVector's index return value? size_t is
+		//	larger than uint32 (which is what SpecificID and EntityID are
+		//	defined as)
+		//	Push to type-specific base_objects vector
+		typeID = (SpecificID)this->player_objects.push(player);
+
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(player);
+
+		//	Set object's type and global IDs
+		player->typeID = typeID;
+		player->globalID = globalID;
+		break;
+	}
+	default: {
+		//	Create a new object of type Object
+		Object* object = new Object(ObjectType::Object);
+
+		//	TODO: Maybe change SmartVector's index return value? size_t is
+		//	larger than uint32 (which is what SpecificID and EntityID are
+		//	defined as)
+		//	Push to type-specific base_objects vector
+		typeID = (SpecificID)this->base_objects.push(object);
+
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(object);
+
+		//	Set object's type and global IDs
+		object->typeID = typeID;
+		object->globalID = globalID;
+		break;
+	}
 	}
 
 	//	Return new object's global EntityID
