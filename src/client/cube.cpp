@@ -137,8 +137,7 @@ Cube::~Cube() {
     glDeleteVertexArrays(1, &VAO);
 }
 
-//void Cube::draw(GLuint shader, bool fill) {
-void Cube::draw(glm::mat4 viewProjMat, GLuint shader) {
+void Cube::draw(glm::mat4 viewProjMat, GLuint shader, bool fill) {
     // actiavte the shader program
     glUseProgram(shader);
 

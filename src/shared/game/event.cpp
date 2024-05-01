@@ -17,6 +17,7 @@ std::ostream& operator<<(std::ostream& os, const EventType& type) {
         TO_STR(LoadGameState);
         TO_STR(StartAction);
         TO_STR(StopAction);
+        TO_STR(MoveRelative);
         TO_STR(MoveAbsolute);
         TO_STR(SpawnEntity);
     default:

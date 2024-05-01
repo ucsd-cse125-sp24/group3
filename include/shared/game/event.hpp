@@ -31,6 +31,7 @@ enum class EventType {
     LoadGameState,
     StartAction,
     StopAction, 
+    MoveRelative,
     MoveAbsolute,
     SpawnEntity,
 };
@@ -132,6 +133,22 @@ struct StopActionEvent {
 };
 
 /**
+ * Event for an entity moving a relative distance
+ */
+struct MoveRelativeEvent {
+    MoveRelativeEvent() {}
+    MoveRelativeEvent(EntityID entity_to_move, glm::vec3 movement) : entity_to_move(entity_to_move), movement(movement) { }
+
+    glm::vec3 movement;
+    EntityID entity_to_move;
+    /// some velocity / movement information...
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & entity_to_move & movement;
+    }
+};
+
+/**
  * Event for an entity moving to some new absolute location
  */
 struct MoveAbsoluteEvent {
@@ -177,6 +194,7 @@ using EventData = boost::variant<
     LoadGameStateEvent,
     StartActionEvent,
     StopActionEvent,
+    MoveRelativeEvent,
     MoveAbsoluteEvent,
     SpawnEntityEvent
 >;

@@ -34,6 +34,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
 {
     state.objects.createObject(ObjectType::Object);
 
+    /*
     //  Create a room
     EntityID wall1ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall2ID = state.objects.createObject(ObjectType::SolidSurface);
@@ -78,7 +79,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     //  floor has dimensions (40, 32, 1) and position (0, 0, -0.5)
     floor->shared.dimensions = glm::vec3(40, 32, 1);
     floor->physics.shared.position = glm::vec3(0, 0, -0.5);
-    floor->physics.movable = false;
+    floor->physics.movable = false;*/
 
     
     EntityID floorID = state.objects.createObject(ObjectType::Object);

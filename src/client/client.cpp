@@ -158,6 +158,12 @@ void Client::idleCallback(boost::asio::io_context& context) {
         sentHorizontalMovement = horizontal.value();
     }
 
+    if (sentVerticalMovement != vertical.value()){
+        auto eid = 0;
+        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, vertical.value(), ActionType::MoveVertical)));
+        sentVerticalMovement = vertical.value();
+    }
+
     std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
     if(cam_is_held_right)
         cam_movement.value() += cam->move(false, 1.0f);
@@ -170,11 +176,6 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
 
     cam->update(mouse_xpos, mouse_ypos);
-
-    if (movement.has_value()) {
-        auto eid = 0; 
-        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
-    }
 
     // Send 'player' movement
     if (cam_movement.has_value() && this->session->getInfo().client_eid.has_value()) {
@@ -242,10 +243,10 @@ void Client::draw() {
         }
 
         //  tmp: all objects are cubes
-        Cube* cube = new Cube();
+        Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f), glm::vec3(1.0f));
         cube->update(sharedObject->physics.position);
         
-        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram);
+        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);
     }
 }
 

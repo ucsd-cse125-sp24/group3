@@ -92,8 +92,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
-		default: {}
-		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
+	
         case EventType::MoveRelative:
 		{
 			//currently just sets the velocity to given 

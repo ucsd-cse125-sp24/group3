@@ -16,8 +16,7 @@ public:
     Cube(glm::vec3 newColor, glm::vec3 scale);
     ~Cube();
 
-    //void draw(GLuint shader, bool fill);
-    void draw(glm::mat4 viewProjMat, GLuint shader);
+    void draw(glm::mat4 viewProjMat, GLuint shader, bool fill);
     void update(glm::vec3 new_pos);
     void update_delta(glm::vec3 delta);
 
