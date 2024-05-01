@@ -24,8 +24,7 @@ bool Client::is_held_space = false;
 bool Client::is_held_shift = false;
 
 // Checker for events sent / later can be made in an array
-glm::vec3 sentHorizontalMovement = glm::vec3(-1.0f);
-glm::vec3 sentVerticalMovement = glm::vec3(-1.0f);
+glm::vec3 sentCamMovement = glm::vec3(-1.0f);
 
 bool spaceEvent = false;
 bool shiftEvent = false;
@@ -126,23 +125,17 @@ void Client::displayCallback() {
 
 // Handle any updates 
 void Client::idleCallback(boost::asio::io_context& context) {
-    std::optional<glm::vec3> horizontal = glm::vec3(0.0f);
-    std::optional<glm::vec3> vertical = glm::vec3(0.0f);
     std::optional<glm::vec3> jump = glm::vec3(0.0f);
     std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
 
     // Sets a direction vector
     if(cam_is_held_right)
-        horizontal.value() += glm::vec3(1.0f, 0.0f, 0.0f);
         cam_movement.value() += cam->move(false, 1.0f);
     if(cam_is_held_left)
-        horizontal.value() += glm::vec3(-1.0f, 0.0f, 0.0f);
         cam_movement.value() += cam->move(false, -1.0f);
     if (cam_is_held_up)
-        vertical.value() += glm::vec3(0.0f, 0.0f, -1.0f);
         cam_movement.value() += cam->move(true, 1.0f);
     if (cam_is_held_down)
-        vertical.value() += glm::vec3(0.0f, 0.0f, 1.0f);
         cam_movement.value() += cam->move(true, -1.0f);
     if (is_held_space)
         jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
@@ -151,8 +144,10 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
     // IF PLAYER, allow moving
     if (this->session->getInfo().client_eid.has_value()) {
-        auto eid = this->session->getInfo().client_eid.value(); 
+        auto eid = this->session->getInfo().client_eid.value();
+
         this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam_movement.value())));
+
         // Send jump action
         if (is_held_space) {
             this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), ActionType::Jump)));
@@ -162,14 +157,15 @@ void Client::idleCallback(boost::asio::io_context& context) {
         // Handles individual keys
         handleKeys(eid, GLFW_KEY_LEFT_SHIFT, is_held_shift, &shiftEvent);
 
-        if (sentHorizontalMovement != horizontal.value()){
-            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, horizontal.value(), ActionType::MoveHorizontal)));
-            sentHorizontalMovement = horizontal.value();
+        // If movement 0, send stopevent
+        if ((sentCamMovement != cam_movement.value()) && cam_movement.value() == glm::vec3(0.0f)) {
+            this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
+            sentCamMovement = cam_movement.value();
         }
-
-        if (sentVerticalMovement != vertical.value()){
-            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, vertical.value(), ActionType::MoveVertical)));
-            sentVerticalMovement = vertical.value();
+        // If movement detected, different from previous, send start event
+        else if (sentCamMovement != cam_movement.value()) {
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
+            sentCamMovement = cam_movement.value();
         }
     }
 

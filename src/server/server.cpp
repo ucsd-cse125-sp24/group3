@@ -42,7 +42,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     EntityID wall4ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
 
-    //  Specify wall positions
+    //  Specify wall positions (RECREATED TO MATCH AXIS)
     //  Configuration: 40 (z) x 32 (x) room example
     // (z-axis)
     //  ##1##
@@ -57,27 +57,27 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     SolidSurface* wall4 = (SolidSurface*)state.objects.getObject(wall4ID);
     SolidSurface* floor = (SolidSurface*)state.objects.getObject(floorID);
 
-    //  Wall1 has dimensions (40, 1, 4) and position (0, 15.5, 2)
+    //  Wall1 has dimensions (20, 4, 1); and position (0, 0, -19.5)
     wall1->shared.dimensions = glm::vec3(20, 4, 1);
     wall1->physics.shared.position = glm::vec3(0, 0, -19.5);
     wall1->physics.movable = false;
 
-    //  Wall2 has dimensions (30, 1, 4) and position (-19.5, 0, 2)
+    //  Wall2 has dimensions (1, 4, 18) and position (-19.5, 0, 0)
     wall2->shared.dimensions = glm::vec3(1, 4, 18);
     wall2->physics.shared.position = glm::vec3(-19.5, 0, 0);
     wall2->physics.movable = false;
 
-    //  Wall3 has dimensions (30, 1, 4) and position (19.5, 0, 2)
+    //  Wall3 has dimensions (1, 4, 18) and position (19.5, 0, 0)
     wall3->shared.dimensions = glm::vec3(1, 4, 18);
     wall3->physics.shared.position = glm::vec3(19.5, 0, 0);
     wall3->physics.movable = false;
 
-    //  Wall4 has dimensions (40, 1, 4) and position (0, -15.5, 2)
+    //  Wall4 has dimensions (20, 4, 1) and position (0, 0, 19.5)
     wall4->shared.dimensions = glm::vec3(20, 4, 1);
     wall4->physics.shared.position = glm::vec3(0, 0, 19.5);
     wall4->physics.movable = false;
 
-    //  floor has dimensions (40, 32, 1) and position (0, 0, -0.5)
+    //  floor has dimensions (20, 0.1, 20) and position (0, -1.3, 0)
     floor->shared.dimensions = glm::vec3(20.0f, 0.1f, 20.0f);
     floor->physics.shared.position = glm::vec3(0.0f, -1.3f, 0.0f);
     floor->physics.movable = false;

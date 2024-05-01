@@ -48,13 +48,11 @@ SharedGameState ServerGameState::generateSharedGameState() {
 void ServerGameState::update(const EventList& events) {
 
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
-		std::cout << event << std::endl;
+		//std::cout << event << std::endl;
 		Object* obj;
 	
         switch (event.type) {
-		case EventType::ChangeFacing:
-		{
-			//currently just sets the velocity to given 
+		case EventType::ChangeFacing: {
             auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
             Object* objChangeFace = this->objects.getObject(changeFacingEvent.entity_to_change_face);
             objChangeFace->physics.shared.facing = changeFacingEvent.facing;
@@ -66,17 +64,14 @@ void ServerGameState::update(const EventList& events) {
 			obj = this->objects.getObject(startAction.entity_to_act);
 			//switch case for action (currently using keys)
 			switch (startAction.action) {
-			case ActionType::MoveVertical: {
-				obj->physics.velocity.z = (startAction.movement * PLAYER_SPEED).z;
-				break;
-			}
-			case ActionType::MoveHorizontal: {
+			case ActionType::MoveCam: {
 				obj->physics.velocity.x = (startAction.movement * PLAYER_SPEED).x;
+				obj->physics.velocity.z = (startAction.movement * PLAYER_SPEED).z;
 				break;
 			}
 			case ActionType::Jump: {
 				if (obj->physics.velocity.y != 0) { break; }
-				obj->physics.velocity.y += (startAction.movement * PLAYER_SPEED * 2.0f).y;
+				obj->physics.velocity.y += (startAction.movement * PLAYER_SPEED / 2.0f).y;
 				break;
 			}
 			case ActionType::Sprint: {
@@ -87,11 +82,17 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
+
 		case EventType::StopAction: {
 			auto stopAction = boost::get<StopActionEvent>(event.data);
 			obj = this->objects.getObject(stopAction.entity_to_act);
 			//switch case for action (currently using keys)
 			switch (stopAction.action) {
+			case ActionType::MoveCam: {
+				obj->physics.velocity.x = 0.0f;
+				obj->physics.velocity.z = 0.0f;
+				break;
+			}
 			case ActionType::Sprint: {
 				obj->physics.acceleration = glm::vec3(1.0f, 1.0f, 1.0f);
 				break;
@@ -139,7 +140,7 @@ void ServerGameState::updateMovement() {
 		if (object->physics.movable) {
 			//TODO : check for collision at position to move, if so, dont change position
 
-			object->physics.shared.position += object->physics.velocity * object->physics.acceleration * object->physics.shared.facing;
+			object->physics.shared.position += object->physics.velocity * object->physics.acceleration;
 
 			// update gravity factor
 			if ((object->physics.shared.position).y >= 0) {

@@ -13,6 +13,7 @@ std::ostream& operator<<(std::ostream& os, const Event& evt) {
 
 std::ostream& operator<<(std::ostream& os, const EventType& type) {
     switch (type) {
+        TO_STR(ChangeFacing);
         TO_STR(LobbyAction);
         TO_STR(LoadGameState);
         TO_STR(StartAction);

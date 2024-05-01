@@ -37,8 +37,7 @@ enum class EventType {
 };
 
 enum class ActionType {
-    MoveHorizontal,
-    MoveVertical,
+    MoveCam,
     Jump,
     Sprint,
 };
