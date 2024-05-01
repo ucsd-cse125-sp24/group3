@@ -284,7 +284,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     }
 }
 
-void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
+void Client::mouseCallback(GLFWwindow *window, double xposIn, double yposIn) { // cppcheck-suppress constParameterPointer
     mouse_xpos = static_cast<float>(xposIn);
     mouse_ypos = static_cast<float>(yposIn);
 }
