@@ -38,6 +38,11 @@ class Client {
 public:
     // Callbacks
     void displayCallback();
+
+    // set up ui for a specific screen
+    void createLobbyFinderGUI();
+    void createLobbyGUI();
+
     void idleCallback(boost::asio::io_context& context);
 
     // Bound window callbacks

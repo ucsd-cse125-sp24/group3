@@ -1,7 +1,6 @@
 #pragma once
 
 #include "client/gui/widget/widget.hpp"
-#include "client/gui/gui.hpp"
 
 #include <vector>
 #include <memory>
@@ -17,7 +16,6 @@ public:
         AlignItems     alignment;
         float          padding;
     };
-
 
     template <typename... Params>
     static Ptr make(Params&&... params) {
@@ -41,7 +39,7 @@ public:
 
 private:
     Options options;
-    std::vector<std::unique_ptr<Widget>> widgets;
+    std::vector<Widget::Ptr> widgets;
 };
 
 

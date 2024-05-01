@@ -10,6 +10,7 @@
 #include "client/gui/widget/dyntext.hpp"
 #include "client/gui/widget/flexbox.hpp"
 #include "client/gui/widget/staticimg.hpp"
+#include "client/gui/widget/centertext.hpp"
 #include "client/gui/font/font.hpp"
 #include "client/gui/font/loader.hpp"
 #include "client/gui/img/img.hpp"
@@ -30,7 +31,7 @@ public:
 
     void beginFrame();
     void renderFrame();
-    void endFrame();
+    void endFrame(float mouse_xpos, float mouse_ypos, bool is_left_mouse_down);
 
     widget::Handle addWidget(widget::Widget::Ptr&& widget);
     std::unique_ptr<widget::Widget> removeWidget(widget::Handle handle);

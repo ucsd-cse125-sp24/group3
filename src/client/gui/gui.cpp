@@ -54,7 +54,12 @@ void GUI::renderFrame() {
     glDisable(GL_BLEND);
 }
 
-void GUI::endFrame() {
+void GUI::endFrame(float mouse_xpos, float mouse_ypos, bool is_left_mouse_down) {
+    if (is_left_mouse_down) {
+        this->handleClick(mouse_xpos, mouse_ypos);
+        is_left_mouse_down = false;
+    }
+    this->handleHover(mouse_xpos, mouse_ypos);
 }
 
 widget::Handle GUI::addWidget(widget::Widget::Ptr&& widget) {

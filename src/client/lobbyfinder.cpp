@@ -16,18 +16,6 @@ LobbyFinder::LobbyFinder(boost::asio::io_context& io_context, const GameConfig& 
     keep_searching(false),
     lobby_info_buf()
 {
-    this->lobbies_avail.insert(std::make_pair(boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string("100.80.1.2"), 9999), 
-        ServerLobbyBroadcastPacket{
-            .lobby_name = "Test 1",
-            .slots_taken = 0,
-            .slots_avail = 1
-        }));
-    this->lobbies_avail.insert(std::make_pair(boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string("100.80.1.3"), 9999), 
-        ServerLobbyBroadcastPacket{
-            .lobby_name = "Test 2",
-            .slots_taken = 0,
-            .slots_avail = 1
-        }));
 }
 
 LobbyFinder::~LobbyFinder() {
