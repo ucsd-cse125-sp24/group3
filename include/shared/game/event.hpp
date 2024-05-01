@@ -26,6 +26,7 @@
   * Tag for the different kind of events there are
   */
 enum class EventType {
+    ChangeFacing,
     LobbyAction,
     LoadGameState,
     StartAction,
@@ -45,6 +46,22 @@ enum class ActionType {
  * Override << so we can std::cout << EventType_var;
  */
 std::ostream& operator<<(std::ostream& os, const EventType& type);
+
+/**
+ * Event for an entity changing their facing direction
+ */
+struct ChangeFacingEvent {
+    ChangeFacingEvent() {}
+    ChangeFacingEvent(EntityID entity_to_change_face, glm::vec3 facing) : entity_to_change_face(entity_to_change_face), facing(facing) { }
+
+    glm::vec3 facing;
+    EntityID entity_to_change_face;
+    /// some velocity / movement information...
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & entity_to_change_face & facing;
+    }
+};
 
 /**
  * Event representing an action a player can take during the lobby screen
@@ -155,6 +172,7 @@ struct SpawnEntityEvent {
  * easily pull out the actual data for a specific Event
  */
 using EventData = boost::variant<
+    ChangeFacingEvent,
     LobbyActionEvent,
     LoadGameStateEvent,
     StartActionEvent,

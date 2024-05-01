@@ -8,9 +8,12 @@ set(FILES
     game/spherecollider.cpp
     game/creature.cpp
     game/item.cpp
+    game/solidsurface.cpp
     game/object.cpp
     game/servergamestate.cpp
     game/objectmanager.cpp
+    game/player.cpp
+    game/enemy.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})
