@@ -10,7 +10,7 @@ std::string getFilepath(Font font) {
     switch (font) {
         case Font::MENU: return (dir / "AncientModernTales-a7Po.ttf").string();
         default:
-        case Font::TEXT: return (dir / "AncientModernTales-a7Po.ttf").string();
+        case Font::TEXT: return (dir / "Lato-Regular.ttf").string();
     } 
 }
 

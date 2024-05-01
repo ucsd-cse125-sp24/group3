@@ -51,7 +51,6 @@ int main(int argc, char* argv[])
 {
     auto config = GameConfig::parse(argc, argv);
     boost::asio::io_context context;
-    LobbyFinder lobby_finder(context, config);
     Client client(context, config);
     // if (config.client.lobby_discovery) {
     //     lobby_finder.startSearching();

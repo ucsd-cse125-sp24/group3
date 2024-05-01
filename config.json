@@ -8,11 +8,11 @@
     },
     "server": {
         "lobby_name": "My Test Lobby",
-        "lobby_broadcast": false,
+        "lobby_broadcast": true,
         "max_players": 1
     },
     "client": {
         "default_name": "Player",
-        "lobby_discovery": false 
+        "lobby_discovery": true 
     }
 }

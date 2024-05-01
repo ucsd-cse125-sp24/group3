@@ -28,13 +28,19 @@ public:
 
     bool init(GLuint text_shader);
 
-    void render();
+    void beginFrame();
+    void renderFrame();
+    void endFrame();
 
-    WidgetHandle addWidget(widget::Widget::Ptr&& widget, float x, float y);
+    WidgetHandle addWidget(widget::Widget::Ptr&& widget);
     std::unique_ptr<widget::Widget> removeWidget(WidgetHandle handle);
 
     void handleClick(float x, float y);
     void handleHover(float x, float y);
+
+    void clearAll();
+
+    std::shared_ptr<font::Loader> getFonts();
 
 private:
     WidgetHandle next_handle {0};
