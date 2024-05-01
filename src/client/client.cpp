@@ -148,6 +148,7 @@ void Client::displayCallback() {
             widget::Flexbox::Options {
                 .direction = widget::JustifyContent::VERTICAL,
                 .alignment = widget::AlignItems::CENTER,
+                .padding   = 0.0f,
             });
         auto title = widget::DynText::make(
             "Lobbies",
@@ -162,11 +163,12 @@ void Client::displayCallback() {
         this->gui.addWidget(std::move(title_flex));
 
         auto lobbies_flex = widget::Flexbox::make(
-            glm::vec2(0.0f, WINDOW_HEIGHT / 2.0f),
+            glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
             glm::vec2(WINDOW_WIDTH, 0.0f),
             widget::Flexbox::Options {
                 .direction = widget::JustifyContent::VERTICAL,
                 .alignment = widget::AlignItems::CENTER,
+                .padding   = 10.0f,
             });
 
         for (const auto& [ip, packet]: this->lobby_finder.getFoundLobbies()) {
@@ -183,9 +185,13 @@ void Client::displayCallback() {
             entry->addOnClick([ip](){
                 std::cout << "Clicked on " << ip.address().to_string() << "\n";
             });
+            entry->addOnHover([](){
+                std::cout << "hover\n";
+            });
             lobbies_flex->push(std::move(entry));
-            this->gui.addWidget(std::move(lobbies_flex));
         }
+
+        this->gui.addWidget(std::move(lobbies_flex));
     } else if (this->gameState.phase == GamePhase::GAME) {
         this->draw();
     }
@@ -204,6 +210,8 @@ void Client::idleCallback(boost::asio::io_context& context) {
         this->gui.handleClick(mouse_xpos, mouse_ypos);
         is_left_mouse_down = false;
     }
+
+    this->gui.handleHover(mouse_xpos, mouse_ypos);
 
     std::optional<glm::vec3> movement = glm::vec3(0.0f);
 

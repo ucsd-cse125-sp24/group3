@@ -14,6 +14,7 @@ public:
     struct Options {
         JustifyContent direction;
         AlignItems     alignment;
+        float          padding;
     };
 
 

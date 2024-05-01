@@ -22,6 +22,7 @@ Flexbox::Flexbox(glm::vec2 origin, glm::vec2 size):
     Flexbox(origin, size, Flexbox::Options { 
         .direction = JustifyContent::HORIZONTAL,
         .alignment = AlignItems::LEFT,
+        .padding   = 0
     }) {}
 
 Flexbox::Flexbox(glm::vec2 origin):
@@ -61,14 +62,14 @@ void Flexbox::push(Widget::Ptr&& widget) {
     }
 
     if (this->options.direction == JustifyContent::HORIZONTAL) {
-        this->width += new_width;
+        this->width += new_width + this->options.padding;
         this->height = std::max(this->height, new_height);
-        glm::vec2 new_origin(prev_origin.x + prev_width, prev_origin.y);
+        glm::vec2 new_origin(prev_origin.x + prev_width + this->options.padding, prev_origin.y);
         widget->setOrigin(new_origin);
     } else if (this->options.direction == JustifyContent::VERTICAL) {
-        this->height += new_height;
+        this->height += new_height + this->options.padding;
         this->width = std::max(this->width, new_width);
-        glm::vec2 new_origin(prev_origin.x, prev_origin.y + prev_height);
+        glm::vec2 new_origin(prev_origin.x, prev_origin.y + prev_height + this->options.padding);
         widget->setOrigin(new_origin);
     }
 
