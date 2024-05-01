@@ -35,11 +35,11 @@ public:
     widget::Handle addWidget(widget::Widget::Ptr&& widget);
     std::unique_ptr<widget::Widget> removeWidget(widget::Handle handle);
 
-    // template <typename W>
-    widget::Widget* borrowWidget(widget::Handle handle) {
+    template <typename W>
+    W* borrowWidget(widget::Handle handle) {
         for (const auto& [_, widget] : this->widgets) {
             if (widget->hasHandle(handle)) {
-                return (widget->borrow(handle));
+                return dynamic_cast<W*>(widget->borrow(handle));
             }
         }
 

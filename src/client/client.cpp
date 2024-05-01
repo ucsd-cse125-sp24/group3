@@ -186,7 +186,7 @@ void Client::displayCallback() {
                 std::cout << "Clicked on " << ip.address().to_string() << "\n";
             });
             entry->addOnHover([this](widget::Handle handle){
-                auto widget = dynamic_cast<widget::DynText*>(this->gui.borrowWidget(handle));
+                auto widget = this->gui.borrowWidget<widget::DynText>(handle);
                 widget->changeColor(font::FontColor::BLUE);
             });
             lobbies_flex->push(std::move(entry));
