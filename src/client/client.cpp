@@ -36,6 +36,8 @@ bool Client::is_left_mouse_down = false;
 float Client::mouse_xpos = 0.0f;
 float Client::mouse_ypos = 0.0f;
 
+using namespace gui;
+
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
     socket(io_context),
@@ -140,35 +142,49 @@ void Client::displayCallback() {
     this->gui.beginFrame();
 
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
-        auto flexbox = gui::widget::Flexbox::make(
-            glm::vec2(0.0f, 100.0f),
+        auto title_flex = widget::Flexbox::make(
+            glm::vec2(0.0f, WINDOW_HEIGHT - font::FontSizePx::LARGE),
             glm::vec2(WINDOW_WIDTH, 0.0f),
-            gui::widget::Flexbox::Options {
-                .direction = gui::widget::JustifyContent::VERTICAL,
-                .alignment = gui::widget::AlignItems::CENTER,
+            widget::Flexbox::Options {
+                .direction = widget::JustifyContent::VERTICAL,
+                .alignment = widget::AlignItems::CENTER,
+            });
+        auto title = widget::DynText::make(
+            "Lobbies",
+            this->gui.getFonts(),
+            widget::DynText::Options {
+                .font  = font::Font::MENU,
+                .font_size = font::FontSizePx::LARGE,
+                .color = font::getRGB(font::FontColor::BLACK),
+                .scale = 1.0f
+            });
+        title_flex->push(std::move(title));
+        this->gui.addWidget(std::move(title_flex));
+
+        auto lobbies_flex = widget::Flexbox::make(
+            glm::vec2(0.0f, WINDOW_HEIGHT / 2.0f),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options {
+                .direction = widget::JustifyContent::VERTICAL,
+                .alignment = widget::AlignItems::CENTER,
             });
 
         for (const auto& [ip, packet]: this->lobby_finder.getFoundLobbies()) {
-            auto entry = gui::widget::DynText::make(ip.address().to_string(), 
-                this->gui.getFonts(), gui::widget::DynText::Options {
-                    .font  = gui::font::Font::MENU,
-                    .font_size = gui::font::FontSizePx::SMALL,
-                    .color = gui::font::getRGB(gui::font::FontColor::BLACK),
-                    .scale = 1.0f
-                });
-            auto entry2 = gui::widget::DynText::make(ip.address().to_string(), 
-                this->gui.getFonts(), gui::widget::DynText::Options {
-                    .font  = gui::font::Font::MENU,
-                    .font_size = gui::font::FontSizePx::SMALL,
-                    .color = gui::font::getRGB(gui::font::FontColor::BLACK),
+            std::stringstream ss;
+            ss << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken;
+
+            auto entry = widget::DynText::make(ss.str(),
+                this->gui.getFonts(), widget::DynText::Options {
+                    .font  = font::Font::MENU,
+                    .font_size = font::FontSizePx::SMALL,
+                    .color = font::getRGB(font::FontColor::BLACK),
                     .scale = 1.0f
                 });
             entry->addOnClick([ip](){
                 std::cout << "Clicked on " << ip.address().to_string() << "\n";
             });
-            flexbox->push(std::move(entry));
-            flexbox->push(std::move(entry2));
-            this->gui.addWidget(std::move(flexbox));
+            lobbies_flex->push(std::move(entry));
+            this->gui.addWidget(std::move(lobbies_flex));
         }
     } else if (this->gameState.phase == GamePhase::GAME) {
         this->draw();

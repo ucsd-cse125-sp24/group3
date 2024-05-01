@@ -9,7 +9,7 @@
 namespace gui::widget {
 
 Flexbox::Flexbox(glm::vec2 origin, glm::vec2 size, Flexbox::Options options):
-    Widget(Type::Flexbox, origin)
+    Widget(Type::Flexbox, origin), options(options)
 {
     this->width = size.x;
     this->height = size.y;

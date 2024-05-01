@@ -34,7 +34,8 @@ bool GUI::init(GLuint text_shader)
 }
 
 void GUI::beginFrame() {
-
+    std::unordered_map<WidgetHandle, widget::Widget::Ptr> empty;
+    std::swap(this->widgets, empty);
 }
 
 
@@ -54,8 +55,6 @@ void GUI::renderFrame() {
 }
 
 void GUI::endFrame() {
-    std::unordered_map<WidgetHandle, widget::Widget::Ptr> empty;
-    std::swap(this->widgets, empty);
 }
 
 WidgetHandle GUI::addWidget(widget::Widget::Ptr&& widget) {

@@ -14,8 +14,8 @@ enum class Font {
 
 enum FontSizePx {
     SMALL = 64,
-    MEDIUM = 128,
-    LARGE = 256 
+    MEDIUM = 96,
+    LARGE = 128 
 };
 
 enum class FontColor {
