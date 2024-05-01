@@ -52,6 +52,14 @@ void ServerGameState::update(const EventList& events) {
 		Object* obj;
 	
         switch (event.type) {
+		case EventType::ChangeFacing:
+		{
+			//currently just sets the velocity to given 
+            auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
+            Object* objChangeFace = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+            objChangeFace->physics.shared.facing = changeFacingEvent.facing;
+            break;
+		}
 	
 		case EventType::StartAction: {
 			auto startAction = boost::get<StartActionEvent>(event.data);
@@ -102,15 +110,6 @@ void ServerGameState::update(const EventList& events) {
             break;
 		}
 
-        case EventType::ChangeFacing:
-		{
-			//currently just sets the velocity to given 
-            auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
-            Object* objChangeFace = this->objects.getObject(changeFacingEvent.entity_to_change_face);
-            objChangeFace->physics.shared.facing = changeFacingEvent.facing;
-            break;
-		}
-
 		// default:
 		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
         }
@@ -140,7 +139,7 @@ void ServerGameState::updateMovement() {
 		if (object->physics.movable) {
 			//TODO : check for collision at position to move, if so, dont change position
 
-			object->physics.shared.position += object->physics.velocity * object->physics.acceleration;
+			object->physics.shared.position += object->physics.velocity * object->physics.acceleration * object->physics.shared.facing;
 
 			// update gravity factor
 			if ((object->physics.shared.position).y >= 0) {

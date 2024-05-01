@@ -129,64 +129,48 @@ void Client::idleCallback(boost::asio::io_context& context) {
     std::optional<glm::vec3> horizontal = glm::vec3(0.0f);
     std::optional<glm::vec3> vertical = glm::vec3(0.0f);
     std::optional<glm::vec3> jump = glm::vec3(0.0f);
+    std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
 
     // Sets a direction vector
-    if(is_held_right)
+    if(cam_is_held_right)
         horizontal.value() += glm::vec3(1.0f, 0.0f, 0.0f);
-    if(is_held_left)
+        cam_movement.value() += cam->move(false, 1.0f);
+    if(cam_is_held_left)
         horizontal.value() += glm::vec3(-1.0f, 0.0f, 0.0f);
-    if (is_held_up)
+        cam_movement.value() += cam->move(false, -1.0f);
+    if (cam_is_held_up)
         vertical.value() += glm::vec3(0.0f, 0.0f, -1.0f);
-    if (is_held_down)
+        cam_movement.value() += cam->move(true, 1.0f);
+    if (cam_is_held_down)
         vertical.value() += glm::vec3(0.0f, 0.0f, 1.0f);
+        cam_movement.value() += cam->move(true, -1.0f);
     if (is_held_space)
         jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
 
-    // Send jump action
-    if (is_held_space) {
-        auto eid = 0;
-        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), ActionType::Jump)));
-        spaceEvent = true;
-    }
-
-    // Handles individual keys
-    handleKeys(0, GLFW_KEY_LEFT_SHIFT, is_held_shift, &shiftEvent);
-
-    if (sentHorizontalMovement != horizontal.value()){
-        auto eid = 0;
-        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, horizontal.value(), ActionType::MoveHorizontal)));
-        sentHorizontalMovement = horizontal.value();
-    }
-
-    if (sentVerticalMovement != vertical.value()){
-        auto eid = 0;
-        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, vertical.value(), ActionType::MoveVertical)));
-        sentVerticalMovement = vertical.value();
-    }
-
-    std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
-    if(cam_is_held_right)
-        cam_movement.value() += cam->move(false, 1.0f);
-    if(cam_is_held_left)
-        cam_movement.value() += cam->move(false, -1.0f);
-    if(cam_is_held_up)
-        cam_movement.value() += cam->move(true, 1.0f);
-    if(cam_is_held_down)
-        cam_movement.value() += cam->move(true, -1.0f);
-
-
     cam->update(mouse_xpos, mouse_ypos);
 
-    // Send 'player' movement
-    if (cam_movement.has_value() && this->session->getInfo().client_eid.has_value()) {
-        auto eid = this->session->getInfo().client_eid.value(); 
-        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, cam_movement.value())));
-    }
-
-    // Send camera angle
+    // IF PLAYER, allow moving
     if (this->session->getInfo().client_eid.has_value()) {
         auto eid = this->session->getInfo().client_eid.value(); 
-        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, cam_movement.value())));
+        this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam_movement.value())));
+        // Send jump action
+        if (is_held_space) {
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), ActionType::Jump)));
+            spaceEvent = true;
+        }
+
+        // Handles individual keys
+        handleKeys(eid, GLFW_KEY_LEFT_SHIFT, is_held_shift, &shiftEvent);
+
+        if (sentHorizontalMovement != horizontal.value()){
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, horizontal.value(), ActionType::MoveHorizontal)));
+            sentHorizontalMovement = horizontal.value();
+        }
+
+        if (sentVerticalMovement != vertical.value()){
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, vertical.value(), ActionType::MoveVertical)));
+            sentVerticalMovement = vertical.value();
+        }
     }
 
     processServerInput(context);
@@ -242,10 +226,17 @@ void Client::draw() {
             continue;
         }
 
+        // If solidsurface, scale cube to given dimensions
+        if(sharedObject->solidSurface.has_value()){
+            Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f), sharedObject->solidSurface->dimensions);
+            cube->update(sharedObject->physics.position);
+            cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
+            continue;
+        }
+
         //  tmp: all objects are cubes
         Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f), glm::vec3(1.0f));
         cube->update(sharedObject->physics.position);
-        
         cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);
     }
 }
