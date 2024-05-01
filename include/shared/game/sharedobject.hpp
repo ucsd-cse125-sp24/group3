@@ -13,7 +13,9 @@
  * class names in the inheritance tree in which Object is the root.
  */
 enum class ObjectType {
-	Object	//	Generic object type (base class)
+	Object,	//	Generic object type (base class)
+	Item,
+	SolidSurface
 };
 
 /**
@@ -26,6 +28,10 @@ std::string objectTypeString(ObjectType type);
 struct Stats {
 	float health;
 	float speed;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& health& speed;
+	}
 };
 
 struct ItemInfo {
@@ -36,6 +42,34 @@ struct ItemInfo {
 	float scalar;
 	float timer;
 	ItemType type;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& held& used& scalar& timer& type;
+	}
+};
+
+enum class SurfaceType {
+	Wall,
+	Floor,
+	Ceiling
+};
+
+struct SharedSolidSurface {
+	/**
+	 * @brief Dimensions of the solid surface in 3 dimensions. The position of
+	 * the SolidSurface object is at the center of the object.
+	 */
+	glm::vec3 dimensions;
+
+	/**
+	 * @brief Type of solid surface, e.g. wall, floor, ceiling, etc.(relevant
+	 * for rendering)
+	 */
+	SurfaceType surfaceType;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& dimensions& surfaceType;
+	}
 };
 
 struct SharedPhysics {
@@ -48,6 +82,10 @@ struct SharedPhysics {
 	 * @brief 3-D vector that denotes this object's facing direction.
 	 */
 	glm::vec3 facing;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& position& facing;
+	}
 };
 
 /**
@@ -60,14 +98,15 @@ public:
 	ObjectType type;
 	SharedPhysics physics;
 
-	std::optional<Stats> stats;	
-	std::optional<ItemInfo> iteminfo;
+	boost::optional<Stats> stats;	
+	boost::optional<ItemInfo> iteminfo;
+	boost::optional<SharedSolidSurface> solidSurface;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
-
+	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& globalID & type& physics.position & physics.facing;
+		ar& globalID & type& physics & stats & iteminfo & solidSurface;
 	}
 private:
 };
