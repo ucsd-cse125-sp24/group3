@@ -3,7 +3,7 @@
 namespace gui::widget {
 
 enum class Type {
-    DynText, Flexbox
+    DynText, Flexbox, StaticImg
 };
 
 }

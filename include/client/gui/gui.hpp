@@ -9,6 +9,7 @@
 #include "client/gui/widget/widget.hpp"
 #include "client/gui/widget/dyntext.hpp"
 #include "client/gui/widget/flexbox.hpp"
+#include "client/gui/widget/staticimg.hpp"
 #include "client/gui/font/font.hpp"
 #include "client/gui/font/loader.hpp"
 

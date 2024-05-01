@@ -8,9 +8,9 @@ namespace gui::font {
 std::string getFilepath(Font font) {
     auto dir = getRepoRoot() / "fonts";
     switch (font) {
-        case Font::MENU: return (dir / "Lato-Regular.ttf").string();
+        case Font::MENU: return (dir / "AncientModernTales-a7Po.ttf").string();
         default:
-        case Font::TEXT: return (dir / "Lato-Regular.ttf").string();
+        case Font::TEXT: return (dir / "AncientModernTales-a7Po.ttf").string();
     } 
 }
 
