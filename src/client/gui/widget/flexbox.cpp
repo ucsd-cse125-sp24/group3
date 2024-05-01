@@ -8,23 +8,24 @@
 
 namespace gui::widget {
 
-Flexbox::Ptr Flexbox::make(glm::vec2 origin, Flexbox::Options options) {
-    return std::make_unique<Flexbox>(origin, options);
-}
-
-Flexbox::Ptr Flexbox::make(glm::vec2 origin) {
-    return std::make_unique<Flexbox>(origin);
+Flexbox::Flexbox(glm::vec2 origin, glm::vec2 size, Flexbox::Options options):
+    Widget(Type::Flexbox, origin)
+{
+    this->width = size.x;
+    this->height = size.y;
 }
 
 Flexbox::Flexbox(glm::vec2 origin, Flexbox::Options options):
-    Widget(Type::Flexbox, origin),
-    options(options) {}
+    Flexbox(origin, {0.0f, 0.0f}, options) {}
 
-Flexbox::Flexbox(glm::vec2 origin):
-    Flexbox(origin, Flexbox::Options { 
+Flexbox::Flexbox(glm::vec2 origin, glm::vec2 size):
+    Flexbox(origin, size, Flexbox::Options { 
         .direction = JustifyContent::HORIZONTAL,
         .alignment = AlignItems::LEFT,
     }) {}
+
+Flexbox::Flexbox(glm::vec2 origin):
+    Flexbox(origin, {0.0f, 0.0f}) {}
 
 void Flexbox::doClick(float x, float y) {
     Widget::doClick(x, y);
@@ -71,6 +72,8 @@ void Flexbox::push(Widget::Ptr&& widget) {
         widget->setOrigin(new_origin);
     }
 
+    this->widgets.push_back(std::move(widget));
+
     if (this->options.alignment == AlignItems::CENTER) {
         if (this->options.direction == JustifyContent::HORIZONTAL) {
             std::cerr << "Note: center alignment not yet implemented for horizontal justify. Doing nothing\n";
@@ -85,7 +88,6 @@ void Flexbox::push(Widget::Ptr&& widget) {
         std::cerr << "Note: right alignment not yet implemented. Doing nothing\n";
     } // else it is align left, which is default behavior and requires no more messing
 
-    this->widgets.push_back(std::move(widget));
 }
 
 void Flexbox::render(GLuint shader) {

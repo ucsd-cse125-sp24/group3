@@ -1,4 +1,5 @@
 #include "client/gui/widget/widget.hpp"
+#include "client/client.hpp"
 
 namespace gui::widget {
 

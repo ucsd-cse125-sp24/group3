@@ -16,9 +16,14 @@ public:
         AlignItems     alignment;
     };
 
-    static Ptr make(glm::vec2 origin, Options options);
-    static Ptr make(glm::vec2 origin);
 
+    template <typename... Params>
+    static Ptr make(Params&&... params) {
+        return std::make_unique<Flexbox>(std::forward<Params>(params)...);
+    }
+
+    Flexbox(glm::vec2 origin, glm::vec2 size, Options options);
+    Flexbox(glm::vec2 origin, glm::vec2 size);
     Flexbox(glm::vec2 origin, Options options);
     explicit Flexbox(glm::vec2 origin);
 

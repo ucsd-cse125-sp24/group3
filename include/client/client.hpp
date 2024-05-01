@@ -22,8 +22,8 @@
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
 
-#define WINDOW_WIDTH  1280
-#define WINDOW_HEIGHT 960
+#define WINDOW_WIDTH  1920
+#define WINDOW_HEIGHT 1080
 
 using namespace boost::asio::ip;
 
