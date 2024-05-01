@@ -104,4 +104,8 @@ void DynText::render(GLuint shader) {
     glUseProgram(0);
 }
 
+void DynText::changeColor(font::FontColor new_color) {
+    this->options.color = font::getRGB(new_color);
+}
+
 }

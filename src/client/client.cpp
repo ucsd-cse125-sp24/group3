@@ -182,11 +182,12 @@ void Client::displayCallback() {
                     .color = font::getRGB(font::FontColor::BLACK),
                     .scale = 1.0f
                 });
-            entry->addOnClick([ip](){
+            entry->addOnClick([ip, this](widget::Handle handle){
                 std::cout << "Clicked on " << ip.address().to_string() << "\n";
             });
-            entry->addOnHover([](){
-                std::cout << "hover\n";
+            entry->addOnHover([this](widget::Handle handle){
+                auto widget = dynamic_cast<widget::DynText*>(this->gui.borrowWidget(handle));
+                widget->changeColor(font::FontColor::BLUE);
             });
             lobbies_flex->push(std::move(entry));
         }
@@ -195,6 +196,13 @@ void Client::displayCallback() {
     } else if (this->gameState.phase == GamePhase::GAME) {
         this->draw();
     }
+
+    if (is_left_mouse_down) {
+        this->gui.handleClick(mouse_xpos, mouse_ypos);
+        is_left_mouse_down = false;
+    }
+
+    this->gui.handleHover(mouse_xpos, mouse_ypos);
 
     this->gui.renderFrame();
     this->gui.endFrame();
@@ -206,12 +214,6 @@ void Client::displayCallback() {
 
 // Handle any updates 
 void Client::idleCallback(boost::asio::io_context& context) {
-    if (is_left_mouse_down) {
-        this->gui.handleClick(mouse_xpos, mouse_ypos);
-        is_left_mouse_down = false;
-    }
-
-    this->gui.handleHover(mouse_xpos, mouse_ypos);
 
     std::optional<glm::vec3> movement = glm::vec3(0.0f);
 

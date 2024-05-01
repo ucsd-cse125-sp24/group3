@@ -5,14 +5,18 @@
 #include "client/gui/widget/options.hpp"
 
 #include <memory>
+#include <unordered_set>
 #include <string>
 #include <functional>
 #include <unordered_map>
 
 namespace gui::widget {
 
-using Callback = std::function<void()>;
+class GUI;
+
+using Handle = std::size_t;
 using CallbackHandle = std::size_t;
+using Callback = std::function<void(Handle)>;
 
 class Widget {
 public:
@@ -21,7 +25,7 @@ public:
     explicit Widget(Type type, glm::vec2 origin);
 
     void setOrigin(glm::vec2 origin);
-    const glm::vec2& getOrigin() const;
+    [[nodiscard]] const glm::vec2& getOrigin() const;
 
     CallbackHandle addOnClick(Callback callback);
     CallbackHandle addOnHover(Callback callback);
@@ -38,7 +42,14 @@ public:
 
     [[nodiscard]] std::pair<std::size_t, std::size_t> getSize() const;
 
+    [[nodiscard]] Handle getHandle() const;
+    [[nodiscard]] virtual bool hasHandle(Handle handle) const;
+    [[nodiscard]] virtual Widget* borrow(Handle handle);
+
 protected:
+    Handle handle;
+    static std::size_t num_widgets;
+
     Type type;
     glm::vec2 origin;
     std::size_t width  {0};

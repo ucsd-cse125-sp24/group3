@@ -1,12 +1,15 @@
 #include "client/gui/widget/widget.hpp"
 #include "client/client.hpp"
+#include "client/gui/gui.hpp"
 
 namespace gui::widget {
+
+std::size_t Widget::num_widgets = 0;
 
 Widget::Widget(Type type, glm::vec2 origin):
     type(type), origin(origin)
 {
-
+    this->handle = num_widgets++;
 }
 
 void Widget::setOrigin(glm::vec2 origin) {
@@ -41,7 +44,7 @@ void Widget::removeOnHover(CallbackHandle handle) {
 void Widget::doClick(float x, float y) {
     if (this->_doesIntersect(x, y)) {
         for (const auto& [_handle, callback] : this->on_clicks) {
-            callback();
+            callback(handle);
         }
     }
 }
@@ -49,7 +52,7 @@ void Widget::doClick(float x, float y) {
 void Widget::doHover(float x, float y) {
     if (this->_doesIntersect(x, y)) {
         for (const auto& [_handle, callback] : this->on_hovers) {
-            callback();
+            callback(handle);
         }
     }
 }
@@ -69,6 +72,25 @@ bool Widget::_doesIntersect(float x, float y) const {
         x < this->origin.x + this->width &&
         y < this->origin.y + this->height
     );
+}
+
+Handle Widget::getHandle() const {
+    return this->handle;
+}
+
+bool Widget::hasHandle(Handle handle) const {
+    return this->handle == handle;
+}
+
+Widget* Widget::borrow(Handle handle) {
+    if (this->handle != handle) {
+        std::cerr << "UI ERROR: Trying to borrow from Widget with invalid handle\n"
+            << "This should never happen, and this means that we are doing something\n" 
+            << "very wrong." << std::endl;
+        std::exit(1);
+    }
+
+    return this;
 }
 
 }

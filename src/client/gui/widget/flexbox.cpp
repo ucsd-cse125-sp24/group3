@@ -99,6 +99,32 @@ void Flexbox::render(GLuint shader) {
     }
 }
 
+Widget* Flexbox::borrow(Handle handle) {
+    for (auto& widget : this->widgets) {
+        if (widget->getHandle() == handle) {
+            return widget.get();
+        }
+    }
+
+    if (handle != this->handle) {
+        std::cerr << "UI ERROR: Trying to borrow from Flexbox with invalid handle\n"
+            << "This should never happen, and this means that we are doing something\n" 
+            << "very wrong." << std::endl;
+        std::exit(1);
+    }
+
+    return this;
+}
+
+bool Flexbox::hasHandle(Handle handle) const {
+    for (auto& widget : this->widgets) {
+        if (widget->getHandle() == handle) {
+            return true;
+        }
+    }
+
+    return this->handle == handle;
+}
 
 }
 

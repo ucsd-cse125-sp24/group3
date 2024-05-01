@@ -1,6 +1,7 @@
 #pragma once
 
 #include "client/gui/widget/widget.hpp"
+#include "client/gui/gui.hpp"
 
 #include <vector>
 #include <memory>
@@ -34,6 +35,9 @@ public:
     void push(Widget::Ptr&& widget);
 
     void render(GLuint shader) override;
+    
+    Widget* borrow(Handle handle) override;
+    bool hasHandle(Handle handle) const override;
 
 private:
     Options options;

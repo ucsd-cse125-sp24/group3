@@ -33,6 +33,7 @@ public:
 
     void render(GLuint shader) override;
 
+    void changeColor(font::FontColor new_color);
 
 private:
     Options options;

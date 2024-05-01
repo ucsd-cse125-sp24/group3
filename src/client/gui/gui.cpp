@@ -34,7 +34,7 @@ bool GUI::init(GLuint text_shader)
 }
 
 void GUI::beginFrame() {
-    std::unordered_map<WidgetHandle, widget::Widget::Ptr> empty;
+    std::unordered_map<widget::Handle, widget::Widget::Ptr> empty;
     std::swap(this->widgets, empty);
 }
 
@@ -57,13 +57,13 @@ void GUI::renderFrame() {
 void GUI::endFrame() {
 }
 
-WidgetHandle GUI::addWidget(widget::Widget::Ptr&& widget) {
-    WidgetHandle handle = this->next_handle++;
+widget::Handle GUI::addWidget(widget::Widget::Ptr&& widget) {
+    widget::Handle handle = this->next_handle++;
     this->widgets.insert({handle, std::move(widget)});
     return handle;
 }
 
-std::unique_ptr<widget::Widget> GUI::removeWidget(WidgetHandle handle) {
+std::unique_ptr<widget::Widget> GUI::removeWidget(widget::Handle handle) {
     auto widget = std::move(this->widgets.at(handle));
     this->widgets.erase(handle);
     return widget;
