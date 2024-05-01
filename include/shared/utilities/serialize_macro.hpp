@@ -10,6 +10,7 @@
 #include <boost/serialization/unique_ptr.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/optional.hpp>
 
 // Helper macro to reduce boilerplate in making boost::serialize-able structs
 #define DEF_SERIALIZE \

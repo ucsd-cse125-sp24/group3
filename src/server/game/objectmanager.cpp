@@ -10,7 +10,7 @@ ObjectManager::ObjectManager() {
 
 	//	Initialize type-specific SmartVectors
 	this->base_objects = SmartVector<Object*>();
-	this->base_items = SmartVector<Item*>();
+	this->items = SmartVector<Item*>();
 }
 
 ObjectManager::~ObjectManager() {
@@ -41,6 +41,36 @@ EntityID ObjectManager::createObject(ObjectType type) {
 		//	Set object's type and global IDs
 		object->typeID = typeID;
 		object->globalID = globalID;
+		break;
+	}
+	case ObjectType::Item: {
+		//	Create a new object of type Item
+		Item* item = new Item();
+
+		//	Push to type-specific items vector
+		typeID = (SpecificID)this->items.push(item);
+
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(item);
+
+		//	Set items' type and global IDs
+		item->typeID = typeID;
+		item->globalID = globalID;
+		break;
+	}
+	case ObjectType::SolidSurface: {
+		//	Create a new object of type SolidSurface
+		SolidSurface* solidSurface = new SolidSurface();
+
+		//	Push to type-specific solid_surfaces vector
+		typeID = (SpecificID)this->solid_surfaces.push(solidSurface);
+
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(solidSurface);
+
+		//	Set solidSurface's type and global IDs
+		solidSurface->typeID = typeID;
+		solidSurface->globalID = globalID;
 		break;
 	}
 	case ObjectType::Player: {
@@ -124,7 +154,11 @@ SmartVector<Object*> ObjectManager::getObjects() {
 }
 
 SmartVector<Item*> ObjectManager::getItems() {
-	return this->base_items;
+	return this->items;
+}
+
+SmartVector<SolidSurface*> ObjectManager::getSolidSurfaces() {
+	return this->solid_surfaces;
 }
 
 /*	SharedGameState generation	*/
