@@ -20,3 +20,6 @@
 //	SmartVector capacities
 #define	MAX_NUM_OBJECTS			100
 #define MAX_NUM_BASE_OBJECTS	100
+
+// Player Stat Constants
+#define INITIAL_HEALTH 100

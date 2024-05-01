@@ -50,13 +50,25 @@ void ServerGameState::update(const EventList& events) {
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
         switch (event.type) {
         case EventType::MoveRelative:
+		{
 			//currently just sets the velocity to given 
             auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-            Object* obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
-            obj->physics.velocity += moveRelativeEvent.movement;
+            Object* objMoveRel = this->objects.getObject(moveRelativeEvent.entity_to_move);
+            objMoveRel->physics.velocity += moveRelativeEvent.movement;
             break;
-            // default:
-            //     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
+		}
+
+        case EventType::ChangeFacing:
+		{
+			//currently just sets the velocity to given 
+            auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
+            Object* objChangeFace = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+            objChangeFace->physics.shared.facing = changeFacingEvent.facing;
+            break;
+		}
+
+		// default:
+		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
         }
     }
 
