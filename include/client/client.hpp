@@ -30,6 +30,7 @@ public:
     // Callbacks
     void displayCallback();
     void idleCallback(boost::asio::io_context& context);
+    void handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement = glm::vec3(0.0f));
 
     // Bound window callbacks
     static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
@@ -68,6 +69,8 @@ private:
     static bool is_held_down;
     static bool is_held_right;
     static bool is_held_left;
+    static bool is_held_space;
+    static bool is_held_shift;
 
     static bool cam_is_held_up;
     static bool cam_is_held_down;
