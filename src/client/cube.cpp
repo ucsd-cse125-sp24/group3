@@ -8,6 +8,8 @@ Cube::Cube(glm::vec3 newColor, glm::vec3 scale) {
     glm::vec3 cubeMin = glm::vec3(-1.0f, -1.0f, -1.0f);
     glm::vec3 cubeMax = glm::vec3(1.0f, 1.0f, 1.0f);
     model = glm::mat4(1.0f);
+
+    //scale the cube to with given vector
     model = glm::scale(model, scale);
 
     // The color of the cube. Try setting it to something else!

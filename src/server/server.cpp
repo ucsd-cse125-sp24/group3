@@ -43,7 +43,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
 
     //  Specify wall positions (RECREATED TO MATCH AXIS)
-    //  Configuration: 40 (z) x 32 (x) room example
+    //  Configuration: 18 (z) x 20 (x) room example
     // (z-axis)
     //  ##1##
     //  #   #

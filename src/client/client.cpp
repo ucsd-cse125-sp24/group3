@@ -26,7 +26,6 @@ bool Client::is_held_shift = false;
 // Checker for events sent / later can be made in an array
 glm::vec3 sentCamMovement = glm::vec3(-1.0f);
 
-bool spaceEvent = false;
 bool shiftEvent = false;
 
 bool Client::cam_is_held_up = false;
@@ -151,7 +150,6 @@ void Client::idleCallback(boost::asio::io_context& context) {
         // Send jump action
         if (is_held_space) {
             this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), ActionType::Jump)));
-            spaceEvent = true;
         }
 
         // Handles individual keys
@@ -188,7 +186,7 @@ void Client::handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm
         this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, movement, sendAction)));
         *eventSent = true;
     }
-    if (!keyHeld && eventSent) {
+    if (!keyHeld && *eventSent) {
         this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, movement, sendAction)));
         *eventSent = false;
     }
