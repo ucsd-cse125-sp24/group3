@@ -76,8 +76,13 @@ void Client::connectAndListen(std::string ip_addr) {
 
     this->session->connectTo(this->endpoints);
 
+    auto name = this->gui.getCapturedKeyboardInput();
+    if (name == "") {
+        name = config.client.default_name;
+    } 
+
     auto packet = PackagedPacket::make_shared(PacketType::ClientDeclareInfo,
-        ClientDeclareInfoPacket { .player_name = config.client.default_name });
+        ClientDeclareInfoPacket { .player_name = name });
 
     this->session->sendPacketAsync(packet);
 

@@ -7,12 +7,12 @@
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "Tyler's Lobby",
+        "lobby_name": "Unnamed Lobby",
         "lobby_broadcast": true,
-        "max_players": 1
+        "max_players": 2
     },
     "client": {
-        "default_name": "Tyler",
+        "default_name": "John Doe",
         "lobby_discovery": true 
     }
 }

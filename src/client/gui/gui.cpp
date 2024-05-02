@@ -103,6 +103,10 @@ void GUI::setCaptureKeystrokes(bool should_capture) {
     this->capture_keystrokes = should_capture;
 }
 
+void GUI::clearCapturedKeyboardInput() {
+    this->keyboard_input = "";
+}
+
 // TODO: reduce copied code between these two functions
 
 void GUI::handleClick(float x, float y) {
@@ -240,18 +244,18 @@ void GUI::_layoutLobbyBrowser() {
 
     this->addWidget(std::move(lobbies_flex));
 
-    // this->addWidget(widget::TextInput::make(
-    //     glm::vec2(300.0f, 300.0f),
-    //     "Enter a name",
-    //     this,
-    //     fonts,
-    //     widget::DynText::Options {
-    //         .font = font::Font::TEXT,
-    //         .font_size = font::FontSizePx::SMALL,
-    //         .color = font::getRGB(font::FontColor::BLACK),
-    //         .scale = 1.0f
-    //     }
-    // ));
+    this->addWidget(widget::TextInput::make(
+        glm::vec2(FRAC_WINDOW_WIDTH(2, 5), FRAC_WINDOW_HEIGHT(1, 6)),
+        "Enter a name",
+        this,
+        fonts,
+        widget::DynText::Options {
+            .font = font::Font::TEXT,
+            .font_size = font::FontSizePx::SMALL,
+            .color = font::getRGB(font::FontColor::BLACK),
+            .scale = 1.0f
+        }
+    ));
 }
 
 void GUI::_layoutLobby() {

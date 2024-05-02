@@ -39,6 +39,10 @@ TextInput::TextInput(glm::vec2 origin,
     this->dyntext->addOnClick([gui](widget::Handle handle) {
         gui->setCaptureKeystrokes(true);
     });
+
+    auto [width, height] = this->dyntext->getSize();
+    this->width = width;
+    this->height = height;
 }
 
 TextInput::TextInput(glm::vec2 origin,

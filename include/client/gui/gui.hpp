@@ -52,6 +52,7 @@ public:
     void setCaptureKeystrokes(bool should_capture);
     void captureKeystroke(char c);
     void captureBackspace();
+    void clearCapturedKeyboardInput();
     std::string getCapturedKeyboardInput() const;
 
     template <typename W>
