@@ -18,6 +18,7 @@ bool GUI::init(GLuint text_shader)
     std::cout << "Initializing GUI...\n";
 
     this->fonts = std::make_shared<font::Loader>();
+    this->capture_keystrokes = false;
 
     if (!this->fonts->init()) {
         return false;
@@ -54,7 +55,7 @@ void GUI::renderFrame() {
     glDisable(GL_BLEND);
 }
 
-void GUI::endFrame(float mouse_xpos, float mouse_ypos, bool is_left_mouse_down) {
+void GUI::endFrame(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down) {
     if (is_left_mouse_down) {
         this->handleClick(mouse_xpos, mouse_ypos);
         is_left_mouse_down = false;
@@ -72,6 +73,34 @@ std::unique_ptr<widget::Widget> GUI::removeWidget(widget::Handle handle) {
     auto widget = std::move(this->widgets.at(handle));
     this->widgets.erase(handle);
     return widget;
+}
+
+void GUI::captureBackspace() {
+    if (this->shouldCaptureKeystrokes()) {
+        if (!this->keyboard_input.empty()) {
+            this->keyboard_input.pop_back();
+        }
+    }
+}
+
+void GUI::captureKeystroke(char c) {
+    if (this->shouldCaptureKeystrokes()) {
+        if (c >= 32 && c <= 126) { // meaningful character
+            this->keyboard_input.push_back(c);
+        }
+    }
+}
+
+std::string GUI::getCapturedKeyboardInput() const {
+    return this->keyboard_input.c_str();
+}
+
+bool GUI::shouldCaptureKeystrokes() const {
+    return this->capture_keystrokes;
+}
+
+void GUI::setCaptureKeystrokes(bool should_capture) {
+    this->capture_keystrokes = should_capture;
 }
 
 // TODO: reduce copied code between these two functions

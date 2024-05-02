@@ -11,6 +11,7 @@
 #include "client/gui/widget/flexbox.hpp"
 #include "client/gui/widget/staticimg.hpp"
 #include "client/gui/widget/centertext.hpp"
+#include "client/gui/widget/textinput.hpp"
 #include "client/gui/font/font.hpp"
 #include "client/gui/font/loader.hpp"
 #include "client/gui/img/img.hpp"
@@ -31,10 +32,16 @@ public:
 
     void beginFrame();
     void renderFrame();
-    void endFrame(float mouse_xpos, float mouse_ypos, bool is_left_mouse_down);
+    void endFrame(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down);
 
     widget::Handle addWidget(widget::Widget::Ptr&& widget);
     std::unique_ptr<widget::Widget> removeWidget(widget::Handle handle);
+
+    bool shouldCaptureKeystrokes() const;
+    void setCaptureKeystrokes(bool should_capture);
+    void captureKeystroke(char c);
+    void captureBackspace();
+    std::string getCapturedKeyboardInput() const;
 
     template <typename W>
     W* borrowWidget(widget::Handle handle) {
@@ -64,6 +71,9 @@ private:
 
     std::shared_ptr<font::Loader> fonts;
     img::Loader images;
+
+    bool capture_keystrokes;
+    std::string keyboard_input;
 };
 
 using namespace gui;

@@ -21,7 +21,8 @@ enum FontSizePx {
 enum class FontColor {
     BLACK,
     RED,
-    BLUE
+    BLUE,
+    GRAY
 };
 
 std::string getFilepath(Font font);

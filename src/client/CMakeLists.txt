@@ -20,6 +20,7 @@ set(FILES
     gui/font/font.cpp
     gui/font/loader.cpp
     gui/widget/centertext.cpp
+    gui/widget/textinput.cpp
     gui/widget/widget.cpp
     gui/widget/dyntext.cpp
     gui/widget/flexbox.cpp

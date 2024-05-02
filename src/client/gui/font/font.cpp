@@ -20,6 +20,8 @@ glm::vec3 getRGB(FontColor color) {
             return {1.0f, 0.0f, 0.0f};
         case FontColor::BLUE:
             return {0.0f, 0.0f, 1.0f};
+        case FontColor::GRAY:
+            return {0.5f, 0.5f, 0.5f};
         default:
         case FontColor::BLACK:
             return {0.0f, 0.0f, 0.0f};

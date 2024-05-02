@@ -199,6 +199,19 @@ void Client::createLobbyFinderGUI() {
     }
 
     this->gui.addWidget(std::move(lobbies_flex));
+
+    this->gui.addWidget(widget::TextInput::make(
+        glm::vec2(0.0f, 0.0f),
+        "Enter a name",
+        &this->gui,
+        this->gui.getFonts(),
+        widget::DynText::Options {
+            .font = font::Font::TEXT,
+            .font_size = font::FontSizePx::SMALL,
+            .color = font::getRGB(font::FontColor::BLACK),
+            .scale = 1.0f
+        }
+    ));
 }
 
 void Client::createLobbyGUI() {
@@ -274,12 +287,22 @@ void Client::draw() {
 
 // callbacks - for Interaction
 void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-  // Check for a key press.
+    Client* client = static_cast<Client*>(glfwGetWindowUserPointer(window));
+
+    // Check for a key press.
     if (action == GLFW_PRESS) {
         switch (key) {
         case GLFW_KEY_ESCAPE:
             // Close the window. This causes the program to also terminate.
-            glfwSetWindowShouldClose(window, GL_TRUE);
+            client->gui.setCaptureKeystrokes(false);
+            break;
+        
+        case GLFW_KEY_TAB:
+            client->gui.setCaptureKeystrokes(true);
+            break;
+        
+        case GLFW_KEY_BACKSPACE:
+            client->gui.captureBackspace();
             break;
 
         case GLFW_KEY_DOWN:
@@ -373,4 +396,10 @@ void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int
             is_left_mouse_down = false;
         }
     }
+}
+
+void Client::charCallback(GLFWwindow* window, unsigned int codepoint) {
+    Client* client = static_cast<Client*>(glfwGetWindowUserPointer(window));
+
+    client->gui.captureKeystroke(static_cast<char>(codepoint));
 }

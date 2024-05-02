@@ -28,6 +28,8 @@ void set_callbacks(GLFWwindow* window, Client* client) {
     // Set the mouse and cursor callbacks
     glfwSetMouseButtonCallback(window, Client::mouseButtonCallback);
     glfwSetCursorPosCallback(window, Client::mouseCallback);
+
+    glfwSetCharCallback(window, Client::charCallback);
 }
 
 void set_opengl_settings(GLFWwindow* window) {
@@ -52,12 +54,6 @@ int main(int argc, char* argv[])
     auto config = GameConfig::parse(argc, argv);
     boost::asio::io_context context;
     Client client(context, config);
-    // if (config.client.lobby_discovery) {
-    //     lobby_finder.startSearching();
-    // }
-    // } else {
-    // client.connectAndListen(config.network.server_ip);
-    // }
 
     if (client.init() == -1) {
         exit(EXIT_FAILURE);
@@ -65,6 +61,8 @@ int main(int argc, char* argv[])
     
     GLFWwindow* window = client.getWindow();
     if (!window) exit(EXIT_FAILURE);
+
+    glfwSetWindowUserPointer(window, &client);
 
     // Setup callbacks.
     set_callbacks(window, &client);

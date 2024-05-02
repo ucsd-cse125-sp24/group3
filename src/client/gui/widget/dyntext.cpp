@@ -41,7 +41,7 @@ DynText::DynText(glm::vec2 origin, std::string text,
 
 DynText::DynText(glm::vec2 origin, std::string text, std::shared_ptr<gui::font::Loader> fonts):
     DynText(origin, text, fonts, DynText::Options {
-        .font {font::Font::TEXT},
+        .font {font::Font::MENU},
         .font_size {font::FontSizePx::MEDIUM},
         .color {font::getRGB(font::FontColor::BLACK)},
         .scale {1.0},
