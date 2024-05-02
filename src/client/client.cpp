@@ -245,19 +245,19 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
 
         case GLFW_KEY_S:
-            cam_is_held_down = true;
+            is_held_down = true;
             break;
 
         case GLFW_KEY_W:
-            cam_is_held_up = true;
+            is_held_up = true;
             break;
 
         case GLFW_KEY_A:
-            cam_is_held_left = true;
+            is_held_left = true;
             break;
 
         case GLFW_KEY_D:
-            cam_is_held_right = true;
+            is_held_right = true;
             break;
 
         case GLFW_KEY_SPACE:
@@ -276,19 +276,19 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     if (action == GLFW_RELEASE) {
         switch (key) {
         case GLFW_KEY_S:
-            cam_is_held_down = false;
+            is_held_down = false;
             break;
 
         case GLFW_KEY_W:
-            cam_is_held_up = false;
+            is_held_up = false;
             break;
 
         case GLFW_KEY_A:
-            cam_is_held_left = false;
+            is_held_left = false;
             break;
 
         case GLFW_KEY_D:
-            cam_is_held_right = false;
+            is_held_right = false;
             break;
             
         case GLFW_KEY_SPACE:
