@@ -334,7 +334,7 @@ void ServerGameState::loadMaze() {
 
 	floor->physics.shared.position =
 		glm::vec3(floor->shared.dimensions.x / 2, 
-			-0.5,
+			-0.05,
 			floor->shared.dimensions.z / 2);
 	floor->physics.movable = false;
 
