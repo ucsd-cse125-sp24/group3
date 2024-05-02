@@ -242,6 +242,19 @@ void GUI::_layoutLobbyBrowser() {
         lobbies_flex->push(std::move(entry));
     }
 
+    if (client->lobby_finder.getFoundLobbies().empty()) {
+        lobbies_flex->push(widget::DynText::make(
+            "No lobbies found...",
+            this->fonts,
+            widget::DynText::Options {
+                .font = font::Font::MENU,
+                .font_size = font::FontSizePx::SMALL,
+                .color = font::getRGB(font::FontColor::BLACK),
+                .scale = 1.0f
+            }
+        ));
+    }
+
     this->addWidget(std::move(lobbies_flex));
 
     this->addWidget(widget::TextInput::make(
