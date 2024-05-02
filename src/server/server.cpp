@@ -152,6 +152,7 @@ std::chrono::milliseconds Server::doTick() {
 
             if (this->state.getLobbyPlayers().size() >= this->state.getLobbyMaxPlayers()) {
                 this->state.setPhase(GamePhase::GAME);
+                this->lobby_broadcaster.stopBroadcasting();
             } else {
                 std::cout << "Only have " << this->state.getLobbyPlayers().size() << "/" << this->state.getLobbyMaxPlayers() << "\n";
             }

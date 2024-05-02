@@ -107,8 +107,6 @@ bool Client::init() {
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    // tell GLFW to capture our mouse
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     GLenum err = glewInit() ; 
     if (GLEW_OK != err) { 
@@ -161,6 +159,8 @@ void Client::displayCallback() {
     } else if (this->gameState.phase == GamePhase::LOBBY) {
         this->createLobbyGUI();
     } else if (this->gameState.phase == GamePhase::GAME) {
+        // tell GLFW to capture our mouse
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         this->draw();
     }
 
