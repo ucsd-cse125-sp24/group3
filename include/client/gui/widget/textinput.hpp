@@ -14,6 +14,11 @@ namespace gui {
 
 namespace gui::widget {
 
+/**
+ *  Widget to capture text input.
+ *  NOTE: with the current implementation, there can only be one of these active in the GUI
+ *  at one time. If there are multiple, they will both affect each other.
+ */
 class TextInput : public Widget {
 public:
     using Ptr = std::unique_ptr<TextInput>;
@@ -42,6 +47,8 @@ public:
     void doHover(float x, float y) override;
 
 private:
+    static std::string prev_input;
+
     widget::DynText::Ptr dyntext;
     gui::GUI* gui;
 };

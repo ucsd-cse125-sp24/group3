@@ -6,6 +6,7 @@
 #include <ostream>
 #include <utility>
 #include <unordered_map>
+#include <chrono>
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_service.hpp>
@@ -50,6 +51,7 @@ public:
     static void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
     static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
     static void charCallback(GLFWwindow* window, unsigned int codepoint);
+    static time_t getTimeOfLastKeystroke();
 
     // Getter / Setters
     GLFWwindow* getWindow() { return window; }
@@ -88,6 +90,8 @@ private:
     static bool is_click_available;
     static float mouse_xpos;
     static float mouse_ypos;
+
+    static time_t time_of_last_keystroke;
 
     SharedGameState gameState;
     GameConfig config;

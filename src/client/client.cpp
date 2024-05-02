@@ -17,6 +17,7 @@
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/root_path.hpp"
+#include "shared/utilities/time.hpp"
 
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
@@ -35,6 +36,8 @@ bool Client::is_left_mouse_down = false;
 
 float Client::mouse_xpos = 0.0f;
 float Client::mouse_ypos = 0.0f;
+
+time_t Client::time_of_last_keystroke = 0;
 
 using namespace gui;
 
@@ -303,6 +306,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         
         case GLFW_KEY_BACKSPACE:
             client->gui.captureBackspace();
+            Client::time_of_last_keystroke = getMsSinceEpoch();
             break;
 
         case GLFW_KEY_DOWN:
@@ -402,4 +406,9 @@ void Client::charCallback(GLFWwindow* window, unsigned int codepoint) {
     Client* client = static_cast<Client*>(glfwGetWindowUserPointer(window));
 
     client->gui.captureKeystroke(static_cast<char>(codepoint));
+    Client::time_of_last_keystroke = getMsSinceEpoch();
+}
+
+time_t Client::getTimeOfLastKeystroke() {
+    return Client::time_of_last_keystroke;
 }

@@ -1,9 +1,15 @@
 #include "client/gui/widget/textinput.hpp"
 #include "client/core.hpp"
 #include "client/gui/gui.hpp"
+#include "client/client.hpp"
+#include "shared/utilities/time.hpp"
+
 #include <string>
+#include <chrono>
 
 namespace gui::widget {
+
+std::string TextInput::prev_input = "";
 
 TextInput::TextInput(glm::vec2 origin,
     std::string placeholder,
@@ -20,6 +26,13 @@ TextInput::TextInput(glm::vec2 origin,
         options.color = font::getRGB(font::FontColor::GRAY);
     } else {
         text_to_display = captured_input;
+    }
+
+    auto ms_since_epoch = getMsSinceEpoch();
+    if (Client::getTimeOfLastKeystroke() + 1000 > ms_since_epoch || ms_since_epoch % 2000 > 1000) {
+        if (gui->shouldCaptureKeystrokes()) {
+            text_to_display += '|';
+        }
     }
 
     this->dyntext = DynText::make(origin, text_to_display, fonts, options);
