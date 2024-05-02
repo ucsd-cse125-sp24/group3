@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
     // Setup OpenGL settings.
     set_opengl_settings(window);
 
-    boost::filesystem::path soundFilepath = client.getRootPath() / "src/client/sounds/piano.wav";
+    boost::filesystem::path soundFilepath = client.getRootPath() / "assets/sounds/piano.wav";
 
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile(soundFilepath.string()))
