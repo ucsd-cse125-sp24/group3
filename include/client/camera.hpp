@@ -28,6 +28,7 @@ public:
     glm::vec3 move(bool is_x_axis, float dir);
 
     glm::mat4 getViewProj();
+    void updatePos(glm::vec3 pos);
 
 private:
     // Perspective controls

@@ -1,7 +1,7 @@
 #include "client/camera.hpp"
 // Code adapted from https://learnopengl.com/Getting-started/Camera
 
-Camera::Camera() {
+Camera::Camera() : cameraPos(glm::vec3(0.0f)), cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)), cameraUp(glm::vec3(0.0f, 1.0f, 0.0f)), viewProjMat(glm::mat4(1.0f)) {
     FOV = 45.0f;
     aspect = 1.33f;
     nearClip = 0.1f;
@@ -16,13 +16,13 @@ Camera::Camera() {
     sensitivity = 0.1f;
     firstMouse = true;
 
-    cameraPos   = glm::vec3(0.0f, 0.0f, 10.0f);
-    cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
+    // cameraPos   = glm::vec3(0.0f);
+    // cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    // cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
 
     speed = 0.125f;
 
-    viewProjMat = glm::mat4(1.0f);
+    // viewProjMat = glm::mat4(1.0f);
 }
 
 Camera::~Camera() {
@@ -74,10 +74,14 @@ void Camera::update(float xpos, float ypos) {
 glm::vec3 Camera::move(bool is_x_axis, float dir) {
     if (is_x_axis) {
         glm::vec3 effCameraFront = glm::normalize(cameraFront - cameraFront.y);
-        cameraPos += dir * speed * effCameraFront;
+        // cameraPos += dir * speed * effCameraFront;
         return dir * speed * effCameraFront;
     } else {
-        cameraPos += dir * glm::normalize(glm::cross(cameraFront, cameraUp)) * speed;
+        // cameraPos += dir * glm::normalize(glm::cross(cameraFront, cameraUp)) * speed;
         return dir * glm::normalize(glm::cross(cameraFront, cameraUp)) * speed;
     }
+}
+
+void Camera::updatePos(glm::vec3 pos) {
+    cameraPos = pos;
 }

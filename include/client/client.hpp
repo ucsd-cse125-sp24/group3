@@ -10,6 +10,7 @@
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_service.hpp>
+#include <boost/filesystem.hpp>
 
 #include "client/cube.hpp"
 #include "client/util.hpp"
@@ -45,6 +46,7 @@ public:
     void createLobbyGUI();
 
     void idleCallback(boost::asio::io_context& context);
+    void handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement = glm::vec3(0.0f));
 
     // Bound window callbacks
     static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
@@ -53,13 +55,16 @@ public:
     static void charCallback(GLFWwindow* window, unsigned int codepoint);
     static time_t getTimeOfLastKeystroke();
 
+
     // Getter / Setters
     GLFWwindow* getWindow() { return window; }
 
     Client(boost::asio::io_service& io_service, GameConfig config);
     ~Client();
-    int init();
-    int cleanup();
+
+    bool init();
+    bool cleanup();
+
     void draw();
     void connectAndListen(std::string ip_addr);
 
@@ -67,10 +72,12 @@ private:
     void processClientInput();
     void processServerInput(boost::asio::io_context& context);
 
+    SharedGameState gameState;
+
     float cubeMovementDelta = 0.05f;
 
     GLFWwindow *window;
-    GLuint shaderProgram;
+    GLuint cubeShaderProgram;
 
     gui::GUI gui;
     Camera *cam;
@@ -80,6 +87,8 @@ private:
     static bool is_held_down;
     static bool is_held_right;
     static bool is_held_left;
+    static bool is_held_space;
+    static bool is_held_shift;
 
     static bool cam_is_held_up;
     static bool cam_is_held_down;
@@ -93,7 +102,6 @@ private:
 
     static time_t time_of_last_keystroke;
 
-    SharedGameState gameState;
     GameConfig config;
     tcp::resolver resolver;
     tcp::socket socket;
@@ -103,5 +111,7 @@ private:
     /// @brief Generate endpoints the client can connect to
     basic_resolver_results<class boost::asio::ip::tcp> endpoints;
     std::shared_ptr<Session> session;
+
+    boost::filesystem::path root_path;
 };
 

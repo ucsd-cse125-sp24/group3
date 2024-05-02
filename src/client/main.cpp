@@ -3,10 +3,13 @@
 
 
 #include <boost/asio/io_context.hpp>
+#include <SFML/Audio.hpp>
 
 #include "client/client.hpp"
 #include "shared/utilities/rng.hpp"
 #include "shared/utilities/config.hpp"
+#include "shared/utilities/root_path.hpp"
+#include "client/sound.hpp"
 
 using namespace std::chrono_literals;
 
@@ -58,7 +61,7 @@ int main(int argc, char* argv[])
     if (client.init() == -1) {
         exit(EXIT_FAILURE);
     }
-    
+
     GLFWwindow* window = client.getWindow();
     if (!window) exit(EXIT_FAILURE);
 
@@ -68,6 +71,19 @@ int main(int argc, char* argv[])
     set_callbacks(window, &client);
     // Setup OpenGL settings.
     set_opengl_settings(window);
+
+    boost::filesystem::path soundFilepath = getRepoRoot() / "assets/sounds/piano.wav";
+
+    sf::SoundBuffer buffer;
+    if (!buffer.loadFromFile(soundFilepath.string()))
+        return -1;
+
+    sf::Sound sound;
+    sound.setBuffer(buffer);
+
+    sound.setLoop(true);
+
+    sound.play();
 
     // Loop while GLFW window should stay open.
     while (!glfwWindowShouldClose(window)) {

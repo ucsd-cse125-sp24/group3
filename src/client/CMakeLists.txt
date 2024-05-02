@@ -7,8 +7,10 @@ add_subdirectory(../../dependencies/glfw ${CMAKE_BINARY_DIR}/glfw)
 add_subdirectory(../../dependencies/glm ${CMAKE_BINARY_DIR}/glm)
 add_subdirectory(../../dependencies/glew ${CMAKE_BINARY_DIR}/glew)
 add_subdirectory(../../dependencies/freetype ${CMAKE_BINARY_DIR}/freetype)
+add_subdirectory(../../dependencies/sfml ${CMAKE_BINARY_DIR}/sfml)
 
 set(FILES
+    sound.cpp
     camera.cpp
     client.cpp
     cube.cpp
@@ -28,11 +30,13 @@ set(FILES
     gui/gui.cpp
 
     ../../dependencies/stb/stb_image.cpp
+    shaders.cpp
 )
 
 # OpenGL
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
+
 
 add_library(${LIB_NAME} STATIC ${FILES})
 target_include_directories(${LIB_NAME} PRIVATE ../../dependencies/stb) # include stb image loading header
@@ -70,5 +74,16 @@ target_link_libraries(${TARGET_NAME}
     nlohmann_json::nlohmann_json
 )
 
+target_link_libraries(${TARGET_NAME} PRIVATE sfml-audio)
 
 add_subdirectory(tests) # define client unit tests
+
+if(WIN32)
+    add_custom_command(
+        TARGET ${TARGET_NAME}
+        COMMENT "Copy OpenAL DLL"
+        PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${SFML_SOURCE_DIR}/extlibs/bin/$<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>,x64,x86>/openal32.dll $<TARGET_FILE_DIR:${TARGET_NAME}>
+        VERBATIM)
+endif()
+
+install(TARGETS ${TARGET_NAME})

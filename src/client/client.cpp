@@ -1,17 +1,21 @@
 #include "client/client.hpp"
+
+#include <iostream>
+#include <memory>
+
 #include <GLFW/glfw3.h>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/archive/text_iarchive.hpp>
-// #include "imgui.h"
-// #include "imgui_impl_glfw.h"
-// #include "imgui_impl_opengl3.h"
 
 #include <iostream>
 #include <thread>
 #include <sstream>
 
 #include "client/gui/gui.hpp"
+#include <boost/dll/runtime_symbol_info.hpp>
+
+#include "client/shader.hpp"
 #include "shared/game/event.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
@@ -27,6 +31,13 @@ bool Client::is_held_up = false;
 bool Client::is_held_down = false;
 bool Client::is_held_right = false;
 bool Client::is_held_left = false;
+bool Client::is_held_space = false;
+bool Client::is_held_shift = false;
+
+// Checker for events sent / later can be made in an array
+glm::vec3 sentCamMovement = glm::vec3(-1.0f);
+
+bool shiftEvent = false;
 
 bool Client::cam_is_held_up = false;
 bool Client::cam_is_held_down = false;
@@ -77,10 +88,10 @@ Client::~Client() {
 }
 
 // TODO: error flags / output for broken init
-int Client::init() {
+bool Client::init() {
     /* Initialize glfw library */
     if (!glfwInit())
-        return -1;
+        return false;
 
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -89,7 +100,7 @@ int Client::init() {
     if (!window)
     {
         glfwTerminate();
-        return -1;
+        return false;
     }
     glfwSetWindowSizeLimits(window, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -101,7 +112,8 @@ int Client::init() {
 
     GLenum err = glewInit() ; 
     if (GLEW_OK != err) { 
-        std::cerr << "Error: " << glewGetString(err) << std::endl; 
+        std::cerr << "Error loading GLEW: " << glewGetString(err) << std::endl; 
+        return false;
     } 
 
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
@@ -110,13 +122,7 @@ int Client::init() {
     /* Load shader programs */
     std::cout << "loading shader" << std::endl;
     auto shader_path = getRepoRoot() / "src" / "client" / "shaders";
-    shaderProgram = LoadShaders((shader_path / "shader.vert").c_str(), (shader_path / "shader.frag").c_str());
     auto textShaderProgram = LoadShaders((shader_path / "text.vert").c_str(), (shader_path / "text.frag").c_str());
-
-    if (!shaderProgram) {
-        std::cerr << "Failed to initialize shader program" << std::endl;
-        return -1;
-    }
 
     if (!textShaderProgram) {
         std::cerr << "Failed to initialize text shader program" << std::endl;
@@ -129,12 +135,18 @@ int Client::init() {
         return -1;
     }
 
-    return 0;
+    this->cubeShaderProgram = loadCubeShaders();
+    if (!this->cubeShaderProgram) {
+        std::cout << "Failed to load cube shader files" << std::endl; 
+        return false;
+    }
+
+    return true;
 }
 
-int Client::cleanup() {
-    glDeleteProgram(shaderProgram);
-    return 0;
+bool Client::cleanup() {
+    glDeleteProgram(this->cubeShaderProgram);
+    return true;
 }
 
 // Handles all rendering
@@ -223,37 +235,73 @@ void Client::createLobbyGUI() {
 
 // Handle any updates 
 void Client::idleCallback(boost::asio::io_context& context) {
-
-    std::optional<glm::vec3> movement = glm::vec3(0.0f);
-
-    if(is_held_right)
-        movement.value() += glm::vec3(cubeMovementDelta, 0.0f, 0.0f);
-    if(is_held_left)
-        movement.value() += glm::vec3(-cubeMovementDelta, 0.0f, 0.0f);
-    if(is_held_up)
-        movement.value() += glm::vec3(0.0f, cubeMovementDelta, 0.0f);
-    if(is_held_down)
-        movement.value() += glm::vec3(0.0f, -cubeMovementDelta, 0.0f);
-
+    std::optional<glm::vec3> jump = glm::vec3(0.0f);
     std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
+
+    // Sets a direction vector
     if(cam_is_held_right)
         cam_movement.value() += cam->move(false, 1.0f);
     if(cam_is_held_left)
         cam_movement.value() += cam->move(false, -1.0f);
-    if(cam_is_held_up)
+    if (cam_is_held_up)
         cam_movement.value() += cam->move(true, 1.0f);
-    if(cam_is_held_down)
+    if (cam_is_held_down)
         cam_movement.value() += cam->move(true, -1.0f);
+    if (is_held_space)
+        jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
 
     cam->update(mouse_xpos, mouse_ypos);
 
-    if (movement.has_value() && this->session != nullptr) {
-        auto eid = 0; 
-        this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, movement.value())));
+    // IF PLAYER, allow moving
+    if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
+        auto eid = this->session->getInfo().client_eid.value();
+
+        this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam_movement.value())));
+
+        // Send jump action
+        if (is_held_space) {
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), ActionType::Jump)));
+        }
+
+        // Handles individual keys
+        handleKeys(eid, GLFW_KEY_LEFT_SHIFT, is_held_shift, &shiftEvent);
+
+        // If movement 0, send stopevent
+        if ((sentCamMovement != cam_movement.value()) && cam_movement.value() == glm::vec3(0.0f)) {
+            this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
+            sentCamMovement = cam_movement.value();
+        }
+        // If movement detected, different from previous, send start event
+        else if (sentCamMovement != cam_movement.value()) {
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
+            sentCamMovement = cam_movement.value();
+        }
     }
 
     if (this->session != nullptr) {
         processServerInput(context);
+    }
+}
+
+// Handles given key
+// send startAction key is held but not sent
+// send stopAction when unheld
+void Client::handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement){
+    if (keyHeld == *eventSent) { return; }
+    
+    ActionType sendAction;
+    switch(keyType) {
+        case GLFW_KEY_LEFT_SHIFT:
+            sendAction = ActionType::Sprint;
+            break;
+    }
+    if (keyHeld && !*eventSent) {
+        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, movement, sendAction)));
+        *eventSent = true;
+    }
+    if (!keyHeld && *eventSent) {
+        this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, movement, sendAction)));
+        *eventSent = false;
     }
 }
 
@@ -279,12 +327,24 @@ void Client::draw() {
         if (sharedObject == nullptr)
             continue;
 
-        // std::cout << "got an object" << std::endl;
+        // Get camera position from server, update position and don't render player object (or special handling)
+        if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+            cam->updatePos(sharedObject->physics.position);
+            continue;
+        }
+
+        // If solidsurface, scale cube to given dimensions
+        if(sharedObject->solidSurface.has_value()){
+            Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f), sharedObject->solidSurface->dimensions);
+            cube->update(sharedObject->physics.position);
+            cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
+            continue;
+        }
+
         //  tmp: all objects are cubes
-        Cube* cube = new Cube();
+        Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f), glm::vec3(1.0f));
         cube->update(sharedObject->physics.position);
-        
-        cube->draw(this->cam->getViewProj(), this->shaderProgram);
+        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);
     }
 }
 
@@ -340,6 +400,14 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             cam_is_held_right = true;
             break;
 
+        case GLFW_KEY_SPACE:
+            is_held_space = true;
+            break;
+
+        case GLFW_KEY_LEFT_SHIFT:
+            is_held_shift = true;
+            break;
+
         default:
             break;
         }
@@ -379,6 +447,14 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             cam_is_held_right = false;
             break;
             
+        case GLFW_KEY_SPACE:
+            is_held_space = false;
+            break;
+
+        case GLFW_KEY_LEFT_SHIFT:
+            is_held_shift = false;
+            break;
+
         default:
             break;
         }
@@ -395,7 +471,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     }
 }
 
-void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
+void Client::mouseCallback(GLFWwindow *window, double xposIn, double yposIn) { // cppcheck-suppress constParameterPointer
     mouse_xpos = static_cast<float>(xposIn);
     mouse_ypos = static_cast<float>(yposIn);
 }
