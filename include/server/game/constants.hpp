@@ -23,13 +23,17 @@
 
 /*	Maze Constants */
 #define	MAZE_DIRECTORY			"maps"
-#define DEFAULT_MAZE_FILE		"default_maze.maze"
+#define DEFAULT_MAZE_FILE		"maze2.maze"
 #define	MAX_MAZE_COLUMNS		1024
 #define	MAZE_CEILING_HEIGHT		10	// Maze ceiling height in meters
 
 /*	GridCell Constants	*/
-#define DEFAULT_GRIDCELL_WIDTH	3
+#define DEFAULT_GRIDCELL_WIDTH	1
 #define MAX_NUM_BASE_OBJECTS	100
 
 // Player Stat Constants
 #define INITIAL_HEALTH 100
+
+/*	Game	*/
+#define	GRAVITY					0.03f
+#define	PLAYER_SPEED 			0.5f

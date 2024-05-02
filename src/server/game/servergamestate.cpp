@@ -69,22 +69,66 @@ SharedGameState ServerGameState::generateSharedGameState() {
 void ServerGameState::update(const EventList& events) {
 
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
+		//std::cout << event << std::endl;
+		Object* obj;
+	
         switch (event.type) {
+		case EventType::ChangeFacing: {
+            auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
+            Object* objChangeFace = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+            objChangeFace->physics.shared.facing = changeFacingEvent.facing;
+            break;
+		}
+	
+		case EventType::StartAction: {
+			auto startAction = boost::get<StartActionEvent>(event.data);
+			obj = this->objects.getObject(startAction.entity_to_act);
+			//switch case for action (currently using keys)
+			switch (startAction.action) {
+			case ActionType::MoveCam: {
+				obj->physics.velocity.x = (startAction.movement * PLAYER_SPEED).x;
+				obj->physics.velocity.z = (startAction.movement * PLAYER_SPEED).z;
+				break;
+			}
+			case ActionType::Jump: {
+				if (obj->physics.velocity.y != 0) { break; }
+				obj->physics.velocity.y += (startAction.movement * PLAYER_SPEED / 2.0f).y;
+				break;
+			}
+			case ActionType::Sprint: {
+				obj->physics.acceleration = glm::vec3(1.5f, 1.1f, 1.5f);
+				break;
+			}
+			default: {}
+			}
+			break;
+		}
+
+		case EventType::StopAction: {
+			auto stopAction = boost::get<StopActionEvent>(event.data);
+			obj = this->objects.getObject(stopAction.entity_to_act);
+			//switch case for action (currently using keys)
+			switch (stopAction.action) {
+			case ActionType::MoveCam: {
+				obj->physics.velocity.x = 0.0f;
+				obj->physics.velocity.z = 0.0f;
+				break;
+			}
+			case ActionType::Sprint: {
+				obj->physics.acceleration = glm::vec3(1.0f, 1.0f, 1.0f);
+				break;
+			}
+			default: { break; }
+			}
+			break;
+		}
+	
         case EventType::MoveRelative:
 		{
 			//currently just sets the velocity to given 
             auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
             Object* objMoveRel = this->objects.getObject(moveRelativeEvent.entity_to_move);
             objMoveRel->physics.velocity += moveRelativeEvent.movement;
-            break;
-		}
-
-        case EventType::ChangeFacing:
-		{
-			//currently just sets the velocity to given 
-            auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
-            Object* objChangeFace = this->objects.getObject(changeFacingEvent.entity_to_change_face);
-            objChangeFace->physics.shared.facing = changeFacingEvent.facing;
             break;
 		}
 
@@ -115,16 +159,16 @@ void ServerGameState::updateMovement() {
 			continue;
 		
 		if (object->physics.movable) {
-			//	object position [meters]
-			//	= old position [meters] + (velocity [meters / timestep] * 1 timestep)
-			object->physics.shared.position += object->physics.velocity;
-			object->physics.velocity -= object->physics.velocity;
+			//TODO : check for collision at position to move, if so, dont change position
 
+			object->physics.shared.position += object->physics.velocity * object->physics.acceleration;
 
-			//	Object velocity [meters / timestep]
-			//	=	old velocity [meters / timestep]
-			//		+ (acceleration [meters / timestep^2] * 1 timestep)
-			//object->physics.velocity += object->physics.acceleration;
+			// update gravity factor
+			if ((object->physics.shared.position).y >= 0) {
+				object->physics.velocity.y -= GRAVITY;
+			} else {
+				object->physics.velocity.y = 0.0f;
+			}
 		}
 	}
 }
@@ -282,9 +326,10 @@ void ServerGameState::loadMaze() {
 	SolidSurface* ceiling = (SolidSurface*)this->objects.getObject(ceilingID);
 
 	//	Set floor and ceiling's x and z dimensions equal to grid dimensions
+	
 	floor->shared.dimensions =
 		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(),
-			1,
+			0.1,
 			this->grid.getRows() * this->grid.getGridCellWidth());
 
 	floor->physics.shared.position =
@@ -295,15 +340,16 @@ void ServerGameState::loadMaze() {
 
 	ceiling->shared.dimensions = 
 		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(),
-			1,
+			0.1,
 			this->grid.getRows() * this->grid.getGridCellWidth());
 
 	ceiling->physics.shared.position =
 		glm::vec3(floor->shared.dimensions.x / 2, 
-			MAZE_CEILING_HEIGHT + 0.5,
+			MAZE_CEILING_HEIGHT + 0.05,
 			floor->shared.dimensions.z / 2);
 
 	ceiling->physics.movable = false;
+	
 
 	//	Step 6:	For each GridCell, add an object (if not empty) at the 
 	//	GridCell's position.

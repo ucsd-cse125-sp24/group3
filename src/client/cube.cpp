@@ -1,16 +1,19 @@
 #include "client/cube.hpp"
 
-Cube::Cube() {
+Cube::Cube(glm::vec3 newColor, glm::vec3 scale) {
     // create a vertex buffer for positions and normals
     // insert the data into these buffers
     // initialize model matrix
     // Model matrix.
-    glm::vec3 cubeMin = glm::vec3(-1.0f, -1.0f, -1.0f);
-    glm::vec3 cubeMax = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 cubeMin = glm::vec3(-0.5f, -0.5f, -0.5f);
+    glm::vec3 cubeMax = glm::vec3(0.5f, 0.5f, 0.5f);
     model = glm::mat4(1.0f);
 
+    //scale the cube to with given vector
+    model = glm::scale(model, scale);
+
     // The color of the cube. Try setting it to something else!
-    color = glm::vec3(0.0f, 1.0f, 1.0f);
+    color = newColor;
 
     // Specify vertex positions
     positions = {
@@ -136,29 +139,10 @@ Cube::~Cube() {
     glDeleteVertexArrays(1, &VAO);
 }
 
-void Cube::draw(glm::mat4 viewProjMat, GLuint shader) {
+void Cube::draw(glm::mat4 viewProjMat, GLuint shader, bool fill) {
     // actiavte the shader program
     glUseProgram(shader);
 
-    // Currently 'hardcoding' camera logic in
-    float FOV = 45.0f;
-    float Aspect = 1.33f;
-    float NearClip = 0.1f;
-    float FarClip = 100.0f;
-
-    float Distance = 10.0f;
-    float Azimuth = 0.0f;
-    float Incline = 20.0f;
-
-    glm::mat4 world(1);
-    world[3][2] = Distance;
-    world = glm::eulerAngleY(glm::radians(-Azimuth)) * glm::eulerAngleX(glm::radians(-Incline)) * world;
-
-    // Compute view matrix (inverse of world matrix)
-    glm::mat4 view = glm::inverse(world);
-
-    // Compute perspective projection matrix
-    glm::mat4 project = glm::perspective(glm::radians(FOV), Aspect, NearClip, FarClip);
 
     // get the locations and send the uniforms to the shader
     glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, reinterpret_cast<float*>(&viewProjMat));
@@ -169,8 +153,11 @@ void Cube::draw(glm::mat4 viewProjMat, GLuint shader) {
     glBindVertexArray(VAO);
 
     // Drawing mode for cube (wireframe vs filled)
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    if(fill){
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
 
     // draw the points using triangles, indexed with the EBO
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
