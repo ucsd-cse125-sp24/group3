@@ -264,6 +264,50 @@ void GUI::_layoutLobby() {
         WINDOW_HEIGHT - font::FontSizePx::LARGE
     );
     this->addWidget(std::move(lobby_title));
+    std::stringstream ss;
+    ss << this->client->gameState.lobby.players.size() << " / " << this->client->gameState.lobby.max_players;
+    auto player_count = widget::CenterText::make(
+        ss.str(),
+        font::Font::MENU,
+        font::FontSizePx::MEDIUM,
+        font::FontColor::BLACK,
+        this->fonts,
+        WINDOW_HEIGHT - (2 * font::FontSizePx::LARGE) - 10.0f
+    );
+    this->addWidget(std::move(player_count));
+
+    auto players_flex = widget::Flexbox::make(
+        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 5)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options {
+            .direction = widget::JustifyContent::VERTICAL,
+            .alignment = widget::AlignItems::CENTER,
+            .padding = 10.0f
+        }
+    );
+    for (const auto& [_eid, player_name] : this->client->gameState.lobby.players) {
+        players_flex->push(widget::DynText::make(
+            player_name,
+            this->fonts,
+            widget::DynText::Options {
+                .font = font::Font::MENU,
+                .font_size = font::FontSizePx::MEDIUM,
+                .color = font::getRGB(font::FontColor::BLACK),
+                .scale = 1.0f
+            }
+        ));
+    }
+    this->addWidget(std::move(players_flex));
+
+    auto waiting_msg = widget::CenterText::make(
+        "Waiting for players...",
+        font::Font::MENU,
+        font::FontSizePx::MEDIUM,
+        font::FontColor::GRAY,
+        this->fonts,
+        30.0f
+    );
+    this->addWidget(std::move(waiting_msg));
 }
 
 void GUI::_layoutGameHUD() {

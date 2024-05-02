@@ -196,6 +196,10 @@ const std::unordered_map<EntityID, std::string>& ServerGameState::getLobbyPlayer
 	return this->lobby.players;
 }
 
+const std::string& ServerGameState::getLobbyName() const {
+	return this->lobby.name;
+}
+
 int ServerGameState::getLobbyMaxPlayers() const {
 	return this->lobby.max_players;
 }

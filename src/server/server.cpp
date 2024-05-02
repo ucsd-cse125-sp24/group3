@@ -158,6 +158,12 @@ std::chrono::milliseconds Server::doTick() {
                 std::cout << "Only have " << this->state.getLobbyPlayers().size() << "/" << this->state.getLobbyMaxPlayers() << "\n";
             }
 
+            this->lobby_broadcaster.setLobbyInfo(ServerLobbyBroadcastPacket {
+                .lobby_name = this->state.getLobbyName(),
+                .slots_taken = static_cast<int>(this->state.getLobbyPlayers().size()),
+                .slots_avail = this->state.getLobbyMaxPlayers() - static_cast<int>(this->state.getLobbyPlayers().size()),
+            });
+
             sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
             // Tell each client the current lobby status
 
