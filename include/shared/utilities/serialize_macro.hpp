@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/serialization/string.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/variant.hpp>

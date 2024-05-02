@@ -1,5 +1,11 @@
 #pragma once
 
+#include <memory>
+#include <string>
+#include <chrono>
+#include <vector>
+#include <boost/serialization/string.hpp>
+
 //#include "server/game/servergamestate.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/smartvector.hpp"
@@ -7,9 +13,6 @@
 #include "shared/utilities/config.hpp"
 #include "server/game/constants.hpp"
 
-#include <memory>
-#include <chrono>
-#include <vector>
 
 enum class GamePhase {
 	TITLE_SCREEN,
@@ -26,6 +29,11 @@ struct Lobby {
 	//	Object)?
 
 	/**
+	 * @brief name of the lobby as set by the server
+	 */
+	std::string name;
+
+	/**
 	 * @brief A hash table that maps from player's EntityID to their names.
 	 */
 	std::unordered_map<EntityID, std::string> players;
@@ -34,6 +42,10 @@ struct Lobby {
 	 * @brief The maximum number of players that this game instance can support.
 	 */
 	int max_players;
+
+	DEF_SERIALIZE(Archive& ar, unsigned int version) {
+		ar & name & players & max_players;
+	}
 
 	//	TODO: Add a player role listing? I.e., which player is playing which
 	//	character and which player is playing as the Dungeon Master?
@@ -73,9 +85,10 @@ struct SharedGameState {
 		this->timestep = FIRST_TIMESTEP;
 		this->timestep_length = config.game.timestep_length_ms;
 		this->lobby.max_players = config.server.max_players;
+		this->lobby.name = config.server.lobby_name;
 	}
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & phase& lobby.max_players & lobby.players & objects;
+		ar & phase & lobby & objects;
 	}
 };

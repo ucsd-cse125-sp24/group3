@@ -8,6 +8,7 @@ ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) {
 	this->timestep = FIRST_TIMESTEP;
 	this->timestep_length = config.game.timestep_length_ms;
 	this->lobby.max_players = config.server.max_players;
+	this->lobby.name = config.server.lobby_name;
 }
 
 ServerGameState::ServerGameState(GamePhase start_phase) {
@@ -15,6 +16,7 @@ ServerGameState::ServerGameState(GamePhase start_phase) {
 	this->timestep = FIRST_TIMESTEP;
 	this->timestep_length = TIMESTEP_LEN;
 	this->lobby.max_players = MAX_PLAYERS;
+	this->lobby.name = "Unnamed Lobby";
 }
 
 ServerGameState::ServerGameState() : ServerGameState(GamePhase::LOBBY) {}

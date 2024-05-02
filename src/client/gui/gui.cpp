@@ -5,6 +5,7 @@
 #include <vector>
 #include "shared/utilities/rng.hpp"
 #include "client/client.hpp"
+#include "shared/game/sharedgamestate.hpp"
 
 
 namespace gui {
@@ -254,7 +255,15 @@ void GUI::_layoutLobbyBrowser() {
 }
 
 void GUI::_layoutLobby() {
-
+    auto lobby_title = widget::CenterText::make(
+        this->client->gameState.lobby.name,
+        font::Font::MENU,
+        font::FontSizePx::LARGE,
+        font::FontColor::BLACK,
+        this->fonts,
+        WINDOW_HEIGHT - font::FontSizePx::LARGE
+    );
+    this->addWidget(std::move(lobby_title));
 }
 
 void GUI::_layoutGameHUD() {

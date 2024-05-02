@@ -28,8 +28,8 @@
 #define WINDOW_HEIGHT 1000
 
 // position something a "frac" of the way across the screen
-// e.g. WIDTH_FRAC(4) -> a fourth of the way from the left
-//      HEIGHT_FRAC(3) -> a third of the way from the bottom
+// e.g. WIDTH_FRAC(1, 4) -> a fourth of the way from the left
+//      HEIGHT_FRAC(2, 3) -> two thirds of the way from the bottom
 #define FRAC_WINDOW_WIDTH(num, denom) WINDOW_WIDTH * static_cast<float>(num) / static_cast<float>(denom)
 #define FRAC_WINDOW_HEIGHT(num, denom) WINDOW_HEIGHT * static_cast<float>(num) / static_cast<float>(denom)
 
