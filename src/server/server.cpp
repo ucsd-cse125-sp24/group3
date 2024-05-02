@@ -150,24 +150,21 @@ std::chrono::milliseconds Server::doTick() {
                 }
             }
 
-            if (this->state.getLobbyPlayers().size() >= this->state.getLobbyMaxPlayers()) {
+            if (this->state.getLobby().players.size() >= this->state.getLobby().max_players) {
                 this->state.setPhase(GamePhase::GAME);
                 // TODO: figure out how to selectively broadcast to only the players that were already in the lobby
                 // this->lobby_broadcaster.stopBroadcasting();
             } else {
-                std::cout << "Only have " << this->state.getLobbyPlayers().size() << "/" << this->state.getLobbyMaxPlayers() << "\n";
+                std::cout << "Only have " << this->state.getLobby().players.size()
+                    << "/" << this->state.getLobby().max_players << "\n";
             }
 
-            this->lobby_broadcaster.setLobbyInfo(ServerLobbyBroadcastPacket {
-                .lobby_name = this->state.getLobbyName(),
-                .slots_taken = static_cast<int>(this->state.getLobbyPlayers().size()),
-                .slots_avail = this->state.getLobbyMaxPlayers() - static_cast<int>(this->state.getLobbyPlayers().size()),
-            });
+            this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
 
             sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
             // Tell each client the current lobby status
 
-            std::cout << "waiting for " << this->state.getLobbyMaxPlayers() << " players" << std::endl;
+            std::cout << "waiting for " << this->state.getLobby().max_players << " players" << std::endl;
 
             break;
         case GamePhase::GAME: {

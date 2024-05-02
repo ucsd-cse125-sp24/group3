@@ -114,19 +114,8 @@ public:
 	 * Removes a player from the lobby with the specified id.
 	 */
 	void removePlayerFromLobby(EntityID id);
-	/**
-	 * Getter for the mapping between entity ID and player name in the lobby
-	 */
-	const std::unordered_map<EntityID, std::string>& getLobbyPlayers() const;
 
-	/**
-	 * Getter for the lobby name
-	 */
-	const std::string& getLobbyName() const;
-	/**
-	 * Returns how many max players can be in the lobby, based on the config option
-	 */
-	int getLobbyMaxPlayers() const;
+	const Lobby& getLobby() const;
 
 	/*	Debugger Methods	*/
 

@@ -192,16 +192,8 @@ void ServerGameState::removePlayerFromLobby(EntityID id) {
 	this->lobby.players.erase(id);
 }
 
-const std::unordered_map<EntityID, std::string>& ServerGameState::getLobbyPlayers() const {
-	return this->lobby.players;
-}
-
-const std::string& ServerGameState::getLobbyName() const {
-	return this->lobby.name;
-}
-
-int ServerGameState::getLobbyMaxPlayers() const {
-	return this->lobby.max_players;
+const Lobby& ServerGameState::getLobby() const {
+	return this->lobby;
 }
 
 std::string ServerGameState::to_string() {

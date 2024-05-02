@@ -24,10 +24,6 @@ enum class GamePhase {
  * @brief Information about the current lobby of players.
  */
 struct Lobby {
-	//	TODO: Perhaps instead of a mapping from EntityID -> string, the mapping
-	//	could eventually be EntityID -> Player (where Player derives from
-	//	Object)?
-
 	/**
 	 * @brief name of the lobby as set by the server
 	 */
@@ -42,6 +38,7 @@ struct Lobby {
 	 * @brief The maximum number of players that this game instance can support.
 	 */
 	int max_players;
+
 
 	DEF_SERIALIZE(Archive& ar, unsigned int version) {
 		ar & name & players & max_players;
