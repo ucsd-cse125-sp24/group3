@@ -76,7 +76,15 @@ public:
      */
     void idleCallback(boost::asio::io_context& context);
 
-    
+    /**
+     * @brief Handles specific key events (i.e. shift key press)
+     * 
+     * @param eid 
+     * @param keyType 
+     * @param keyHeld 
+     * @param eventSent 
+     * @param movement 
+     */
     void handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement = glm::vec3(0.0f));
 
     /**
@@ -123,6 +131,11 @@ public:
      */
     void connectAndListen(std::string ip_addr);
 
+    /**
+     * @brief Returns the path to the root.
+     * 
+     * @return boost::filesystem::path 
+     */
     boost::filesystem::path getRootPath();
 
 private:
@@ -149,17 +162,12 @@ private:
     std::unique_ptr<Camera> cam;
 
     // Flags
-    static bool is_held_up;
-    static bool is_held_down;
-    static bool is_held_right;
-    static bool is_held_left;
-    static bool is_held_space;
-    static bool is_held_shift;
-
-    static bool cam_is_held_up;
-    static bool cam_is_held_down;
-    static bool cam_is_held_right;
-    static bool cam_is_held_left;
+    bool is_held_up = false;
+    bool is_held_down = false;
+    bool is_held_right = false;
+    bool is_held_left = false;
+    bool is_held_space = false;
+    bool is_held_shift = false;
 
     float mouse_xpos = 0.0f;
     float mouse_ypos = 0.0f;

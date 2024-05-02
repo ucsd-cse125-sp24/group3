@@ -18,23 +18,10 @@
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
-// Flags
-bool Client::is_held_up = false;
-bool Client::is_held_down = false;
-bool Client::is_held_right = false;
-bool Client::is_held_left = false;
-bool Client::is_held_space = false;
-bool Client::is_held_shift = false;
-
 // Checker for events sent / later can be made in an array
 glm::vec3 sentCamMovement = glm::vec3(-1.0f);
 
 bool shiftEvent = false;
-
-bool Client::cam_is_held_up = false;
-bool Client::cam_is_held_down = false;
-bool Client::cam_is_held_right = false;
-bool Client::cam_is_held_left = false;
 
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
@@ -140,13 +127,13 @@ void Client::idleCallback(boost::asio::io_context& context) {
     std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
 
     // Sets a direction vector
-    if(cam_is_held_right)
+    if(is_held_right)
         cam_movement.value() += cam->move(false, 1.0f);
-    if(cam_is_held_left)
+    if(is_held_left)
         cam_movement.value() += cam->move(false, -1.0f);
-    if (cam_is_held_up)
+    if (is_held_up)
         cam_movement.value() += cam->move(true, 1.0f);
-    if (cam_is_held_down)
+    if (is_held_down)
         cam_movement.value() += cam->move(true, -1.0f);
     if (is_held_space)
         jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
@@ -172,6 +159,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
             this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
             sentCamMovement = cam_movement.value();
         }
+
         // If movement detected, different from previous, send start event
         else if (sentCamMovement != cam_movement.value()) {
             this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
