@@ -204,7 +204,7 @@ void Client::createLobbyFinderGUI() {
     this->gui.addWidget(std::move(lobbies_flex));
 
     this->gui.addWidget(widget::TextInput::make(
-        glm::vec2(0.0f, 0.0f),
+        glm::vec2(300.0f, 300.0f),
         "Enter a name",
         &this->gui,
         this->gui.getFonts(),
@@ -296,7 +296,6 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     if (action == GLFW_PRESS) {
         switch (key) {
         case GLFW_KEY_ESCAPE:
-            // Close the window. This causes the program to also terminate.
             client->gui.setCaptureKeystrokes(false);
             break;
         
@@ -384,6 +383,16 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
         }
     }
+
+    if (action == GLFW_REPEAT) {
+        if (key == GLFW_KEY_BACKSPACE) {
+            auto ms_since_epoch = getMsSinceEpoch();
+            if (Client::time_of_last_keystroke + 100 < ms_since_epoch) {
+                Client::time_of_last_keystroke = ms_since_epoch;
+                client->gui.captureBackspace();
+            }
+        }
+    }
 }
 
 void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
@@ -394,7 +403,6 @@ void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
 void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
-            std::cout << mouse_xpos << ", " << mouse_ypos << "\n";
             is_left_mouse_down = true;
         } else if (action == GLFW_RELEASE) {
             is_left_mouse_down = false;
