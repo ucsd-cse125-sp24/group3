@@ -21,7 +21,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 # knows what it is doing... https://7tv.app/emotes/61e8fae862858c6406126ced
 
 # Add google test to CMake
-add_subdirectory(dependencies/google-test)
+add_subdirectory(dependencies/google-test) 
 
 # If we need any compiler / linker flags, add them here
 SET(GCC_COMPILE_FLAGS "")

@@ -23,3 +23,7 @@
 
 // Player Stat Constants
 #define INITIAL_HEALTH 100
+
+/*	Game	*/
+#define	GRAVITY					0.03f
+#define	PLAYER_SPEED 			0.5f

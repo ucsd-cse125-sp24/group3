@@ -9,6 +9,7 @@
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_service.hpp>
+#include <boost/filesystem.hpp>
 
 #include "client/cube.hpp"
 #include "client/util.hpp"
@@ -75,6 +76,9 @@ public:
      */
     void idleCallback(boost::asio::io_context& context);
 
+    
+    void handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement = glm::vec3(0.0f));
+
     /**
      * @brief Callback which handles keyboard inputs to the GLFWwindow. Binds to the GLFWwindow.
      * 
@@ -119,6 +123,8 @@ public:
      */
     void connectAndListen(std::string ip_addr);
 
+    boost::filesystem::path getRootPath();
+
 private:
     /**
      * @brief Processes all data received from the server and updates the SharedGameState.
@@ -142,10 +148,18 @@ private:
 
     std::unique_ptr<Camera> cam;
 
-    bool cam_is_held_up = false;
-    bool cam_is_held_down = false;
-    bool cam_is_held_right = false;
-    bool cam_is_held_left = false;
+    // Flags
+    static bool is_held_up;
+    static bool is_held_down;
+    static bool is_held_right;
+    static bool is_held_left;
+    static bool is_held_space;
+    static bool is_held_shift;
+
+    static bool cam_is_held_up;
+    static bool cam_is_held_down;
+    static bool cam_is_held_right;
+    static bool cam_is_held_left;
 
     float mouse_xpos = 0.0f;
     float mouse_ypos = 0.0f;
@@ -157,5 +171,7 @@ private:
     /// @brief Generate endpoints the client can connect to
     basic_resolver_results<class boost::asio::ip::tcp> endpoints;
     std::shared_ptr<Session> session;
+
+    boost::filesystem::path root_path;
 };
 

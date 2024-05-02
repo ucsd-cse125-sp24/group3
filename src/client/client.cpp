@@ -1,12 +1,15 @@
 #include "client/client.hpp"
+
+#include <iostream>
+#include <memory>
+
 #include <GLFW/glfw3.h>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/archive/text_iarchive.hpp>
-#include <iostream>
-#include <thread>
+#include <boost/dll/runtime_symbol_info.hpp>
 
-#include "client/shaders.hpp"
+#include "client/shader.hpp"
 #include "shared/game/event.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
@@ -15,6 +18,24 @@
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
+// Flags
+bool Client::is_held_up = false;
+bool Client::is_held_down = false;
+bool Client::is_held_right = false;
+bool Client::is_held_left = false;
+bool Client::is_held_space = false;
+bool Client::is_held_shift = false;
+
+// Checker for events sent / later can be made in an array
+glm::vec3 sentCamMovement = glm::vec3(-1.0f);
+
+bool shiftEvent = false;
+
+bool Client::cam_is_held_up = false;
+bool Client::cam_is_held_down = false;
+bool Client::cam_is_held_right = false;
+bool Client::cam_is_held_left = false;
+
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
     socket(io_context),
@@ -22,7 +43,13 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     gameState(GamePhase::TITLE_SCREEN, config),
     cam(new Camera()),
     width(640),
-    height(480) {}
+    height(480) {    
+        this->root_path = boost::dll::program_location().parent_path().parent_path().parent_path();
+}
+
+boost::filesystem::path Client::getRootPath() {
+    return this->root_path;
+}
 
 void Client::connectAndListen(std::string ip_addr) {
     this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
@@ -109,35 +136,72 @@ void Client::displayCallback() {
 
 // Handle any updates 
 void Client::idleCallback(boost::asio::io_context& context) {
-    std::optional<glm::vec3> movement = glm::vec3(0.0f);
-
+    std::optional<glm::vec3> jump = glm::vec3(0.0f);
     std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
+
+    // Sets a direction vector
     if(cam_is_held_right)
         cam_movement.value() += cam->move(false, 1.0f);
     if(cam_is_held_left)
         cam_movement.value() += cam->move(false, -1.0f);
-    if(cam_is_held_up)
+    if (cam_is_held_up)
         cam_movement.value() += cam->move(true, 1.0f);
-    if(cam_is_held_down)
+    if (cam_is_held_down)
         cam_movement.value() += cam->move(true, -1.0f);
-
+    if (is_held_space)
+        jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
     // Update camera direction
     cam->update(mouse_xpos, mouse_ypos);
 
-    // Send player movement and facing direction
+    // IF PLAYER, allow moving
     if (this->session->getInfo().client_eid.has_value()) {
-        auto eid = this->session->getInfo().client_eid.value(); 
+        auto eid = this->session->getInfo().client_eid.value();
 
-        // Only send relative movement if player moved
-        if (cam_movement.has_value()) {
-            this->session->sendEventAsync(Event(eid, EventType::MoveRelative, MoveRelativeEvent(eid, cam_movement.value())));
+        this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam_movement.value())));
+
+        // Send jump action
+        if (is_held_space) {
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), ActionType::Jump)));
         }
 
-        // Always send facing direction, may change to only send if facing direction is different from previous frame
-        this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam->getFacing())));
+        // Handles individual keys
+        handleKeys(eid, GLFW_KEY_LEFT_SHIFT, is_held_shift, &shiftEvent);
+
+        // If movement 0, send stopevent
+        if ((sentCamMovement != cam_movement.value()) && cam_movement.value() == glm::vec3(0.0f)) {
+            this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
+            sentCamMovement = cam_movement.value();
+        }
+        // If movement detected, different from previous, send start event
+        else if (sentCamMovement != cam_movement.value()) {
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
+            sentCamMovement = cam_movement.value();
+        }
     }
 
     processServerInput(context);
+}
+
+// Handles given key
+// send startAction key is held but not sent
+// send stopAction when unheld
+void Client::handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement){
+    if (keyHeld == *eventSent) { return; }
+    
+    ActionType sendAction;
+    switch(keyType) {
+        case GLFW_KEY_LEFT_SHIFT:
+            sendAction = ActionType::Sprint;
+            break;
+    }
+    if (keyHeld && !*eventSent) {
+        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, movement, sendAction)));
+        *eventSent = true;
+    }
+    if (!keyHeld && *eventSent) {
+        this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, movement, sendAction)));
+        *eventSent = false;
+    }
 }
 
 void Client::processServerInput(boost::asio::io_context& context) {
@@ -168,12 +232,18 @@ void Client::draw() {
             continue;
         }
 
-        // tmp: all objects are cubes
-        // In the future, abstract draw methods for the sharedObject and render
-        Cube* cube = new Cube();
+        // If solidsurface, scale cube to given dimensions
+        if(sharedObject->solidSurface.has_value()){
+            Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f), sharedObject->solidSurface->dimensions);
+            cube->update(sharedObject->physics.position);
+            cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
+            continue;
+        }
+
+        //  tmp: all objects are cubes
+        Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f), glm::vec3(1.0f));
         cube->update(sharedObject->physics.position);
-        
-        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram);
+        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);
     }
 }
 
@@ -202,6 +272,14 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             cam_is_held_right = true;
             break;
 
+        case GLFW_KEY_SPACE:
+            is_held_space = true;
+            break;
+
+        case GLFW_KEY_LEFT_SHIFT:
+            is_held_shift = true;
+            break;
+
         default:
             break;
         }
@@ -225,6 +303,14 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             cam_is_held_right = false;
             break;
             
+        case GLFW_KEY_SPACE:
+            is_held_space = false;
+            break;
+
+        case GLFW_KEY_LEFT_SHIFT:
+            is_held_shift = false;
+            break;
+
         default:
             break;
         }
