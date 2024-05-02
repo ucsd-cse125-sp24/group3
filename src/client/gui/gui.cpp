@@ -56,11 +56,13 @@ void GUI::renderFrame() {
 }
 
 void GUI::handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down) {
+    // convert to gui coords, where (0,0) is bottome left
+    mouse_ypos = WINDOW_HEIGHT - mouse_ypos;
     if (is_left_mouse_down) {
-        this->handleClick(mouse_xpos, mouse_ypos);
+        this->_handleClick(mouse_xpos, mouse_ypos);
         is_left_mouse_down = false;
     }
-    this->handleHover(mouse_xpos, mouse_ypos);
+    this->_handleHover(mouse_xpos, mouse_ypos);
 }
 
 widget::Handle GUI::addWidget(widget::Widget::Ptr&& widget) {
@@ -69,7 +71,7 @@ widget::Handle GUI::addWidget(widget::Widget::Ptr&& widget) {
     return handle;
 }
 
-std::unique_ptr<widget::Widget> GUI::removeWidget(widget::Handle handle) {
+widget::Widget::Ptr GUI::removeWidget(widget::Handle handle) {
     auto widget = std::move(this->widgets.at(handle));
     this->widgets.erase(handle);
     return widget;
@@ -107,25 +109,7 @@ void GUI::clearCapturedKeyboardInput() {
     this->keyboard_input = "";
 }
 
-// TODO: reduce copied code between these two functions
 
-void GUI::handleClick(float x, float y) {
-    // convert to gui coords, where (0,0) is bottome left
-    y = WINDOW_HEIGHT - y;
-
-    for (const auto& [_, widget] : this->widgets) {
-        widget->doClick(x, y);
-    }
-}
-
-void GUI::handleHover(float x, float y) {
-    // convert to gui coords, where (0,0) is bottome left
-    y = WINDOW_HEIGHT - y;
-
-    for (const auto& [_, widget] : this->widgets) {
-        widget->doHover(x, y);
-    }
-}
 
 std::shared_ptr<font::Loader> GUI::getFonts() {
     return this->fonts;
@@ -361,6 +345,18 @@ void GUI::_layoutGameEscMenu() {
     flex->push(std::move(exit_game_txt));
 
     this->addWidget(std::move(flex));
+}
+
+void GUI::_handleClick(float x, float y) {
+    for (const auto& [_, widget] : this->widgets) {
+        widget->doClick(x, y);
+    }
+}
+
+void GUI::_handleHover(float x, float y) {
+    for (const auto& [_, widget] : this->widgets) {
+        widget->doHover(x, y);
+    }
 }
 
 }
