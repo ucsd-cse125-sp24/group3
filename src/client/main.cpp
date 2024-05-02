@@ -14,12 +14,21 @@ void error_callback(int error, const char* description) {
     std::cerr << description << std::endl;
 }
 
+/**
+ * @brief Sets various callbacks for the GLFWwindow. Uses the windowUserPointer object which
+ * points to a Client object and wraps the member function calls with a lambda to pass in as
+ * the static callback.
+ * 
+ * @param window 
+ */
 void set_callbacks(GLFWwindow* window) {
     // Set the error callback.
     glfwSetErrorCallback(error_callback);
 
     // Set the window resize callback.
-    // glfwSetWindowSizeCallback(window, client.resizeCallback);
+    glfwSetWindowSizeCallback(window, [](GLFWwindow* w, int width, int height) {
+        static_cast<Client*>(glfwGetWindowUserPointer(w))->resizeCallback(w, width, height);
+    });
 
     // Set the key callback.
     glfwSetKeyCallback(window, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
@@ -43,7 +52,7 @@ void set_opengl_settings(GLFWwindow* window) {
     // Set polygon drawing mode to fill front and back of each polygon.
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    // Set clear color to black.
+    // Sets initial background color.
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
 
     // Set cursor position to (0, 0)
@@ -55,7 +64,9 @@ int main(int argc, char* argv[])
     auto config = GameConfig::parse(argc, argv);
     boost::asio::io_context context;
     LobbyFinder lobby_finder(context, config);
+
     std::unique_ptr<Client> client(new Client(context, config));
+
     if (config.client.lobby_discovery) {
         // TODO: once we have UI, there should be a way to connect based on
         // this. Right now, there isn't really a way to react to the information

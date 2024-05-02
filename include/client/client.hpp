@@ -61,19 +61,20 @@ public:
     // Callbacks
     /**
      * @brief Display callback which handles the rendering of all local objects. Abstracts
-     * the logic of the main render loop.
+     * the logic of the main render loop. All logic relating to rendering and any glfw
+     * or OpenGL calls should go in here.
      */
     void displayCallback();
 
     /**
      * @brief Callback which handles all updates to the local SharedGameState, and sends
-     * events to the server based on any local inputs.
+     * events to the server based on any local inputs. All logic relating to state updates
+     * shoud go in here.
      * 
      * @param context 
      */
     void idleCallback(boost::asio::io_context& context);
 
-    // Local bound callbacks
     /**
      * @brief Callback which handles keyboard inputs to the GLFWwindow. Binds to the GLFWwindow.
      * 
@@ -94,6 +95,14 @@ public:
      */
     void mouseCallback(GLFWwindow *window, double xposIn, double yposIn);
 
+    /**
+     * @brief Callback which handles window resizing.
+     * 
+     * @param window The GLFWwindow being monitored.
+     * @param width The new width of the window.
+     * @param height The new height of the window.
+     */
+    void resizeCallback(GLFWwindow *window, int width, int height);
 
     // Getter / Setters
     /**
@@ -126,6 +135,9 @@ private:
     SharedGameState gameState;
 
     GLFWwindow *window;
+    int width;
+    int height;
+
     GLuint cubeShaderProgram;
 
     std::unique_ptr<Camera> cam;

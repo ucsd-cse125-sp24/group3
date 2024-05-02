@@ -20,7 +20,9 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     socket(io_context),
     config(config),
     gameState(GamePhase::TITLE_SCREEN, config),
-    cam(new Camera()) {}
+    cam(new Camera()),
+    width(640),
+    height(480) {}
 
 void Client::connectAndListen(std::string ip_addr) {
     this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
@@ -49,7 +51,7 @@ bool Client::init() {
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Arcana", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return false;
@@ -232,4 +234,17 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 void Client::mouseCallback(GLFWwindow *window, double xposIn, double yposIn) {
     mouse_xpos = static_cast<float>(xposIn);
     mouse_ypos = static_cast<float>(yposIn);
+}
+
+void Client::resizeCallback(GLFWwindow *window, int width, int height) {
+    #ifdef __APPLE__
+        // In case your Mac has a retina display.
+        glfwGetFramebufferSize(window, &width, &height);
+    #endif
+    this->width = width;
+    this->height = height;
+    // Set the viewport size.
+    glViewport(0, 0, width, height);
+
+    cam->setAspect(float(width) / float(height));
 }
