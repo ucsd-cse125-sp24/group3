@@ -155,16 +155,18 @@ void Client::displayCallback() {
     this->gui.beginFrame();
 
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
-        this->createLobbyFinderGUI();
+        this->gui.layoutFrame(gui::GUIState::LOBBY_BROWSER);
     } else if (this->gameState.phase == GamePhase::LOBBY) {
-        this->createLobbyGUI();
+        this->gui.layoutFrame(gui::GUIState::LOBBY);
     } else if (this->gameState.phase == GamePhase::GAME) {
+        this->gui.layoutFrame(gui::GUIState::GAME_HUD);
+
         // tell GLFW to capture our mouse
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         this->draw();
     }
 
-    this->gui.endFrame(mouse_xpos, mouse_ypos, is_left_mouse_down);
+    this->gui.handleInputs(mouse_xpos, mouse_ypos, is_left_mouse_down);
     this->gui.renderFrame();
 
     /* Poll for and process events */
@@ -173,60 +175,6 @@ void Client::displayCallback() {
 }
 
 void Client::createLobbyFinderGUI() {
-    this->gui.addWidget(widget::CenterText::make(
-        "Lobbies",
-        font::Font::MENU,
-        font::FontSizePx::LARGE,
-        font::FontColor::BLACK,
-        this->gui.getFonts(),
-        WINDOW_HEIGHT - font::FontSizePx::LARGE
-    ));
-
-    auto lobbies_flex = widget::Flexbox::make(
-        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
-        glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options {
-            .direction = widget::JustifyContent::VERTICAL,
-            .alignment = widget::AlignItems::CENTER,
-            .padding   = 10.0f,
-        });
-
-    for (const auto& [ip, packet]: this->lobby_finder.getFoundLobbies()) {
-        std::stringstream ss;
-        ss << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken;
-
-        auto entry = widget::DynText::make(ss.str(),
-            this->gui.getFonts(), widget::DynText::Options {
-                .font  = font::Font::MENU,
-                .font_size = font::FontSizePx::SMALL,
-                .color = font::getRGB(font::FontColor::BLACK),
-                .scale = 1.0f
-            });
-        entry->addOnClick([ip, this](widget::Handle handle){
-            std::cout << "Connecting to " << ip.address() << " ...\n";
-            this->connectAndListen(ip.address().to_string());
-        });
-        entry->addOnHover([this](widget::Handle handle){
-            auto widget = this->gui.borrowWidget<widget::DynText>(handle);
-            widget->changeColor(font::FontColor::BLUE);
-        });
-        lobbies_flex->push(std::move(entry));
-    }
-
-    this->gui.addWidget(std::move(lobbies_flex));
-
-    this->gui.addWidget(widget::TextInput::make(
-        glm::vec2(300.0f, 300.0f),
-        "Enter a name",
-        &this->gui,
-        this->gui.getFonts(),
-        widget::DynText::Options {
-            .font = font::Font::TEXT,
-            .font_size = font::FontSizePx::SMALL,
-            .color = font::getRGB(font::FontColor::BLACK),
-            .scale = 1.0f
-        }
-    ));
 }
 
 void Client::createLobbyGUI() {

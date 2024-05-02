@@ -23,16 +23,25 @@
 
 namespace gui {
 
+enum class GUIState {
+    NONE,
+    TITLE_SCREEN,
+    LOBBY_BROWSER,
+    LOBBY,
+    GAME_HUD,
+    GAME_ESC_MENU
+};
 
 class GUI {
 public:
-    GUI();
+    explicit GUI(Client* client);
 
     bool init(GLuint text_shader);
 
     void beginFrame();
+    void layoutFrame(GUIState state);
+    void handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down);
     void renderFrame();
-    void endFrame(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down);
 
     widget::Handle addWidget(widget::Widget::Ptr&& widget);
     std::unique_ptr<widget::Widget> removeWidget(widget::Handle handle);
@@ -74,6 +83,14 @@ private:
 
     bool capture_keystrokes;
     std::string keyboard_input;
+
+    Client* client;
+
+    void _layoutTitleScreen();
+    void _layoutLobbyBrowser();
+    void _layoutLobby();
+    void _layoutGameHUD();
+    void _layoutGameEscMenu()
 };
 
 using namespace gui;

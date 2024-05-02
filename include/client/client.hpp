@@ -79,6 +79,7 @@ private:
     GLFWwindow *window;
     GLuint cubeShaderProgram;
 
+    friend class gui::GUI;
     gui::GUI gui;
     Camera *cam;
 
