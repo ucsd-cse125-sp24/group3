@@ -2,12 +2,24 @@
 
 #include "server/game/constants.hpp"
 #include "server/game/object.hpp"
+#include "server/game/creature.hpp"
 #include "shared/game/sharedobject.hpp"
 
-class Creature : public Object {
+struct PlayerStats {
+	int health;
+
+
+};
+
+
+class Player : public Creature {
 public:
-	Creature(ObjectType type);
-	~Creature();
+	PlayerStats stats;
+
+	// player can have items
+
+	Player();
+	~Player();
 
 	virtual SharedObject toShared() override;
 private:

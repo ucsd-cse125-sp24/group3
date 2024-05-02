@@ -71,13 +71,25 @@ void ServerGameState::update(const EventList& events) {
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
         switch (event.type) {
         case EventType::MoveRelative:
+		{
 			//currently just sets the velocity to given 
             auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-            Object* obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
-            obj->physics.velocity += moveRelativeEvent.movement;
+            Object* objMoveRel = this->objects.getObject(moveRelativeEvent.entity_to_move);
+            objMoveRel->physics.velocity += moveRelativeEvent.movement;
             break;
-            // default:
-            //     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
+		}
+
+        case EventType::ChangeFacing:
+		{
+			//currently just sets the velocity to given 
+            auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
+            Object* objChangeFace = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+            objChangeFace->physics.shared.facing = changeFacingEvent.facing;
+            break;
+		}
+
+		// default:
+		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
         }
     }
 
@@ -269,25 +281,27 @@ void ServerGameState::loadMaze() {
 	SolidSurface* floor = (SolidSurface*)this->objects.getObject(floorID);
 	SolidSurface* ceiling = (SolidSurface*)this->objects.getObject(ceilingID);
 
-	//	Set floor and ceiling's x and y dimensions equal to grid dimensions
+	//	Set floor and ceiling's x and z dimensions equal to grid dimensions
 	floor->shared.dimensions =
 		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(),
-			this->grid.getRows() * this->grid.getGridCellWidth(),
-			1);
+			1,
+			this->grid.getRows() * this->grid.getGridCellWidth());
 
 	floor->physics.shared.position =
-		glm::vec3(floor->shared.dimensions.x / 2, floor->shared.dimensions.y / 2,
-			-0.5);
+		glm::vec3(floor->shared.dimensions.x / 2, 
+			-0.5,
+			floor->shared.dimensions.z / 2);
 	floor->physics.movable = false;
 
 	ceiling->shared.dimensions = 
 		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(),
-			this->grid.getRows() * this->grid.getGridCellWidth(),
-			1);
+			1,
+			this->grid.getRows() * this->grid.getGridCellWidth());
 
 	ceiling->physics.shared.position =
-		glm::vec3(floor->shared.dimensions.x / 2, floor->shared.dimensions.y / 2,
-			MAZE_CEILING_HEIGHT + 0.5);
+		glm::vec3(floor->shared.dimensions.x / 2, 
+			MAZE_CEILING_HEIGHT + 0.5,
+			floor->shared.dimensions.z / 2);
 
 	ceiling->physics.movable = false;
 
@@ -311,13 +325,13 @@ void ServerGameState::loadMaze() {
 
 					wall->shared.dimensions =
 						glm::vec3(this->grid.getGridCellWidth(),
-							this->grid.getGridCellWidth(),
-							MAZE_CEILING_HEIGHT);
+							MAZE_CEILING_HEIGHT,
+							this->grid.getGridCellWidth());
 
 					wall->physics.shared.position =
 						glm::vec3((0.5 + cell->x) * this->grid.getGridCellWidth(),
-							(0.5 + cell->y) * this->grid.getGridCellWidth(),
-							MAZE_CEILING_HEIGHT / 2);
+							MAZE_CEILING_HEIGHT / 2,
+							(0.5 + cell->y) * this->grid.getGridCellWidth());
 					
 					wall->physics.movable = false;
 
