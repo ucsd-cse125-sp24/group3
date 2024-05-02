@@ -1,12 +1,15 @@
 #include "client/client.hpp"
+
+#include <iostream>
+#include <memory>
+
 #include <GLFW/glfw3.h>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/archive/text_iarchive.hpp>
-#include <iostream>
-#include <thread>
+#include <boost/dll/runtime_symbol_info.hpp>
 
-#include "client/shaders.hpp"
+#include "client/shader.hpp"
 #include "shared/game/event.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
@@ -36,6 +39,11 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     gameState(GamePhase::TITLE_SCREEN, config)
 {
     cam = new Camera();
+    this->root_path = boost::dll::program_location().parent_path().parent_path().parent_path();
+}
+
+boost::filesystem::path Client::getRootPath() {
+    return this->root_path;
 }
 
 void Client::connectAndListen(std::string ip_addr) {

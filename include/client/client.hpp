@@ -9,6 +9,7 @@
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_service.hpp>
+#include <boost/filesystem.hpp>
 
 #include "client/cube.hpp"
 #include "client/util.hpp"
@@ -47,6 +48,8 @@ public:
     void draw();
     void connectAndListen(std::string ip_addr);
 
+    boost::filesystem::path getRootPath();
+
 private:
     void processClientInput();
     void processServerInput(boost::asio::io_context& context);
@@ -81,5 +84,7 @@ private:
     /// @brief Generate endpoints the client can connect to
     basic_resolver_results<class boost::asio::ip::tcp> endpoints;
     std::shared_ptr<Session> session;
+
+    boost::filesystem::path root_path;
 };
 
