@@ -7,7 +7,7 @@ namespace gui::widget {
 
 class CenterText {
 public:
-    static Flexbox::Ptr make(
+    static Widget::Ptr make(
         std::string text, 
         font::Font font, 
         font::FontSizePx size,

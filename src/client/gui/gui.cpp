@@ -39,19 +39,6 @@ void GUI::beginFrame() {
     std::swap(this->widgets, empty);
 }
 
-void GUI::layoutFrame(GUIState state) {
-    switch (state) {
-        case GUIState::GAME_ESC_MENU:
-            break;
-        case GUIState::LOBBY_BROWSER:
-            break;
-        case GUIState::GAME_ESC_MENU:
-            break;
-        case GUIState::NONE:
-            break;
-    }
-}
-
 void GUI::renderFrame() {
     // for text rendering
     glEnable(GL_BLEND);
@@ -139,9 +126,73 @@ std::shared_ptr<font::Loader> GUI::getFonts() {
     return this->fonts;
 }
 
+void GUI::layoutFrame(GUIState state) {
+    switch (state) {
+        case GUIState::TITLE_SCREEN:
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            this->_layoutTitleScreen();
+            break;
+        case GUIState::GAME_ESC_MENU:
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            this->_layoutGameEscMenu();
+            break;
+        case GUIState::LOBBY_BROWSER:
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            this->_layoutLobbyBrowser();
+            break;
+        case GUIState::GAME_HUD:
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            this->_layoutGameHUD();
+            break;
+        case GUIState::LOBBY:
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            this->_layoutLobby();
+            break;
+        case GUIState::NONE:
+            break;
+    }
+}
+
 
 void GUI::_layoutTitleScreen() {
+    this->addWidget(widget::CenterText::make(
+        "Arcana",
+        font::Font::MENU,
+        font::FontSizePx::BIG_YOSHI,
+        font::FontColor::RED,
+        fonts,
+        FRAC_WINDOW_HEIGHT(2, 3)
+    ));
 
+    auto start_text = widget::DynText::make(
+        "Start Game",
+        fonts,
+        widget::DynText::Options {
+            .font = font::Font::MENU,
+            .font_size = font::FontSizePx::MEDIUM,
+            .color = font::getRGB(font::FontColor::BLACK),
+            .scale = 1.0f,
+        }
+    );
+    start_text->addOnHover([this](widget::Handle handle) {
+        auto widget = this->borrowWidget<widget::DynText>(handle);
+        widget->changeColor(font::FontColor::RED);
+    });
+    start_text->addOnClick([this](widget::Handle handle) {
+        client->gui_state = GUIState::LOBBY_BROWSER;
+    });
+    auto start_flex = widget::Flexbox::make(
+        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options {
+            .direction = widget::JustifyContent::VERTICAL,
+            .alignment = widget::AlignItems::CENTER,
+            .padding = 0.0f,
+        }
+    );
+    start_flex->push(std::move(start_text));
+
+    this->addWidget(std::move(start_flex));
 }
 
 void GUI::_layoutLobbyBrowser() {
@@ -177,28 +228,29 @@ void GUI::_layoutLobbyBrowser() {
         entry->addOnClick([ip, this](widget::Handle handle){
             std::cout << "Connecting to " << ip.address() << " ...\n";
             this->client->connectAndListen(ip.address().to_string());
+            this->client->gui_state = GUIState::LOBBY;
         });
         entry->addOnHover([this](widget::Handle handle){
             auto widget = this->borrowWidget<widget::DynText>(handle);
-            widget->changeColor(font::FontColor::BLUE);
+            widget->changeColor(font::FontColor::RED);
         });
         lobbies_flex->push(std::move(entry));
     }
 
     this->addWidget(std::move(lobbies_flex));
 
-    this->addWidget(widget::TextInput::make(
-        glm::vec2(300.0f, 300.0f),
-        "Enter a name",
-        this,
-        fonts,
-        widget::DynText::Options {
-            .font = font::Font::TEXT,
-            .font_size = font::FontSizePx::SMALL,
-            .color = font::getRGB(font::FontColor::BLACK),
-            .scale = 1.0f
-        }
-    ));
+    // this->addWidget(widget::TextInput::make(
+    //     glm::vec2(300.0f, 300.0f),
+    //     "Enter a name",
+    //     this,
+    //     fonts,
+    //     widget::DynText::Options {
+    //         .font = font::Font::TEXT,
+    //         .font_size = font::FontSizePx::SMALL,
+    //         .color = font::getRGB(font::FontColor::BLACK),
+    //         .scale = 1.0f
+    //     }
+    // ));
 }
 
 void GUI::_layoutLobby() {
@@ -210,7 +262,35 @@ void GUI::_layoutGameHUD() {
 }
 
 void GUI::_layoutGameEscMenu() {
+    auto exit_game_txt = widget::DynText::make(
+        "Exit Game",
+        fonts,
+        widget::DynText::Options {
+            .font = font::Font::MENU,
+            .font_size = font::FontSizePx::MEDIUM,
+            .color = font::getRGB(font::FontColor::BLACK),
+            .scale = 1.0f,
+        }
+    );
+    exit_game_txt->addOnHover([this](widget::Handle handle) {
+        auto widget = this->borrowWidget<widget::DynText>(handle);
+        widget->changeColor(font::FontColor::RED);
+    });
+    exit_game_txt->addOnClick([this](widget::Handle handle) {
+        glfwDestroyWindow(this->client->getWindow());
+    });
+    auto flex = widget::Flexbox::make(
+        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 2)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options {
+            .direction = widget::JustifyContent::VERTICAL,
+            .alignment = widget::AlignItems::CENTER,
+            .padding = 0.0f,
+        }
+    );
+    flex->push(std::move(exit_game_txt));
 
+    this->addWidget(std::move(flex));
 }
 
 }

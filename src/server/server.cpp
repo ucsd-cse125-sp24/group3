@@ -152,7 +152,8 @@ std::chrono::milliseconds Server::doTick() {
 
             if (this->state.getLobbyPlayers().size() >= this->state.getLobbyMaxPlayers()) {
                 this->state.setPhase(GamePhase::GAME);
-                this->lobby_broadcaster.stopBroadcasting();
+                // TODO: figure out how to selectively broadcast to only the players that were already in the lobby
+                // this->lobby_broadcaster.stopBroadcasting();
             } else {
                 std::cout << "Only have " << this->state.getLobbyPlayers().size() << "/" << this->state.getLobbyMaxPlayers() << "\n";
             }

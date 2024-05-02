@@ -21,6 +21,8 @@
 #include <memory>
 #include <unordered_map>
 
+class Client;
+
 namespace gui {
 
 enum class GUIState {
@@ -90,7 +92,7 @@ private:
     void _layoutLobbyBrowser();
     void _layoutLobby();
     void _layoutGameHUD();
-    void _layoutGameEscMenu()
+    void _layoutGameEscMenu();
 };
 
 using namespace gui;

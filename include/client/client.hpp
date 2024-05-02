@@ -41,10 +41,6 @@ public:
     // Callbacks
     void displayCallback();
 
-    // set up ui for a specific screen
-    void createLobbyFinderGUI();
-    void createLobbyGUI();
-
     void idleCallback(boost::asio::io_context& context);
     void handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement = glm::vec3(0.0f));
 
@@ -81,6 +77,7 @@ private:
 
     friend class gui::GUI;
     gui::GUI gui;
+    gui::GUIState gui_state;
     Camera *cam;
 
     // Flags

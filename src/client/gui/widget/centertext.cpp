@@ -3,7 +3,7 @@
 
 namespace gui::widget {
 
-Flexbox::Ptr CenterText::make(
+Widget::Ptr CenterText::make(
     std::string text,
     font::Font font,
     font::FontSizePx size,
@@ -25,7 +25,7 @@ Flexbox::Ptr CenterText::make(
         widget::DynText::Options {
             .font  = font,
             .font_size = size,
-            .color = font::getRGB(font::FontColor::BLACK),
+            .color = font::getRGB(color),
             .scale = 1.0f
         });
     flex->push(std::move(title));

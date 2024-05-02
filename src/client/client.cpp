@@ -58,7 +58,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     config(config),
     gameState(GamePhase::TITLE_SCREEN, config),
     session(nullptr),
-    gui(),
+    gui(this),
+    gui_state(gui::GUIState::TITLE_SCREEN),
     lobby_finder(io_context, config)
 {
     cam = new Camera();
@@ -155,17 +156,13 @@ void Client::displayCallback() {
     this->gui.beginFrame();
 
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
-        this->gui.layoutFrame(gui::GUIState::LOBBY_BROWSER);
+        
     } else if (this->gameState.phase == GamePhase::LOBBY) {
-        this->gui.layoutFrame(gui::GUIState::LOBBY);
     } else if (this->gameState.phase == GamePhase::GAME) {
-        this->gui.layoutFrame(gui::GUIState::GAME_HUD);
-
-        // tell GLFW to capture our mouse
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         this->draw();
     }
 
+    this->gui.layoutFrame(this->gui_state);
     this->gui.handleInputs(mouse_xpos, mouse_ypos, is_left_mouse_down);
     this->gui.renderFrame();
 
@@ -174,15 +171,16 @@ void Client::displayCallback() {
     glfwSwapBuffers(window);
 }
 
-void Client::createLobbyFinderGUI() {
-}
-
-void Client::createLobbyGUI() {
-    // auto title;
-}
-
 // Handle any updates 
 void Client::idleCallback(boost::asio::io_context& context) {
+    if (this->session != nullptr) {
+        processServerInput(context);
+    }
+
+    // If we aren't in the middle of the game then we shouldn't capture any movement info
+    // or send any movement related events
+    if (this->gui_state != GUIState::GAME_HUD) { return; }
+
     std::optional<glm::vec3> jump = glm::vec3(0.0f);
     std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
 
@@ -225,10 +223,6 @@ void Client::idleCallback(boost::asio::io_context& context) {
             sentCamMovement = cam_movement.value();
         }
     }
-
-    if (this->session != nullptr) {
-        processServerInput(context);
-    }
 }
 
 // Handles given key
@@ -263,7 +257,13 @@ void Client::processServerInput(boost::asio::io_context& context) {
 
     for (Event event : this->session->getEvents()) {
         if (event.type == EventType::LoadGameState) {
+            GamePhase old_phase = this->gameState.phase;
             this->gameState = boost::get<LoadGameStateEvent>(event.data).state;
+
+            // Change the UI to the game hud UI whenever we change into the GAME game phase
+            if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
+                this->gui_state = GUIState::GAME_HUD;
+            }
         }
     }
 }
@@ -304,6 +304,13 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     if (action == GLFW_PRESS) {
         switch (key) {
         case GLFW_KEY_ESCAPE:
+            if (client->gameState.phase == GamePhase::GAME) {
+                if (client->gui_state == GUIState::GAME_ESC_MENU) {
+                    client->gui_state = GUIState::GAME_HUD;
+                } else if (client->gui_state == GUIState::GAME_HUD) {
+                    client->gui_state = GUIState::GAME_ESC_MENU;
+                }
+            }
             client->gui.setCaptureKeystrokes(false);
             break;
         
