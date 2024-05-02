@@ -7,6 +7,12 @@
 
 namespace gui::font {
 
+/**
+ * Abstract representation of the different fonts to use in our game
+ * 
+ * NOTE: currently I haven't found a good font for "Text", so both of these
+ * map to the same font.
+ */
 enum class Font {
     MENU,
     TEXT,

@@ -315,23 +315,39 @@ private:
     /// preset "layouts".
     ///
     /**
-     * @brief 
+     * @brief Displays the title screen layout
+     * 
+     * Transitions to the LobbyBrowser once "Start Game" is clicked.
      */
     void _layoutTitleScreen();
     /**
-     * @brief
+     * @brief Displays the lobby browser layout
+     * 
+     * Allows the user to input a name.
+     * Transitions to the Lobby once a lobby is selected to join.
      */
     void _layoutLobbyBrowser();
     /**
-     * @brief
+     * @brief Displays the lobby layout
+     * 
+     * Does not provide any GUI-initiated transitions, as it instead waits for the
+     * server to specify that the game has started with a LoadGameStateEvent
+     * 
+     * Displays the lobby name and all of the players who are currently in the lobby.
      */
     void _layoutLobby();
     /**
-     * @brief
+     * @brief Displays the Game HUD layout
+     * 
+     * TODO: this is not implemented yet
      */
     void _layoutGameHUD();
     /**
-     * @brief
+     * @brief Displays the menu which appears when the player presses Escape while playing
+     * 
+     * Known bugs:
+     * BUG: The game stops rendering the game when this is being displayed
+     * BUG: Mouse movement is still tracked causing disorienting reorientation upon resuming
      */
     void _layoutGameEscMenu();
     /// =============================================================================
