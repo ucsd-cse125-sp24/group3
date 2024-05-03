@@ -11,6 +11,8 @@ StaticImg::StaticImg(glm::vec2 origin, gui::img::Img img):
 {
     // configure VAO/VBO
     unsigned int VBO;
+    // there might be some mismatch here because this might be assuming that the top left
+    // corner is 0,0 when we are specifying origin by bottom left coordinate
     float vertices[] = {
         // pos // tex
         0.0f, 1.0f, 0.0f, 1.0f,

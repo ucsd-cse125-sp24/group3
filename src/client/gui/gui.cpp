@@ -189,7 +189,7 @@ void GUI::_layoutTitleScreen() {
     this->addWidget(std::move(start_flex));
 
     auto yoshi = widget::StaticImg::make(
-        glm::vec2(0.0f, 0.0f),
+        glm::vec2(200.0f, 200.0f),
         this->images.getImg(img::ImgID::Yoshi)
     );
     this->addWidget(std::move(yoshi));
