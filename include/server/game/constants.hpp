@@ -17,19 +17,14 @@
 #define TIMESTEP_LEN			std::chrono::milliseconds(30)
 #define	MAX_PLAYERS				4
 
-//	SmartVector capacities
-#define	MAX_NUM_OBJECTS			100
-#define MAX_NUM_BASE_OBJECTS	100
-
 /*	Maze Constants */
 #define	MAZE_DIRECTORY			"maps"
-#define DEFAULT_MAZE_FILE		"maze2.maze"
+#define DEFAULT_MAZE_FILE		"tyler_test.maze"
 #define	MAX_MAZE_COLUMNS		1024
 #define	MAZE_CEILING_HEIGHT		10	// Maze ceiling height in meters
 
 /*	GridCell Constants	*/
 #define DEFAULT_GRIDCELL_WIDTH	1
-#define MAX_NUM_BASE_OBJECTS	100
 
 // Player Stat Constants
 #define INITIAL_HEALTH 100
