@@ -9,6 +9,8 @@ add_subdirectory(../../dependencies/glew ${CMAKE_BINARY_DIR}/glew)
 add_subdirectory(../../dependencies/freetype ${CMAKE_BINARY_DIR}/freetype)
 add_subdirectory(../../dependencies/sfml ${CMAKE_BINARY_DIR}/sfml)
 
+add_subdirectory(gui)
+
 set(FILES
     sound.cpp
     camera.cpp
@@ -17,19 +19,6 @@ set(FILES
     util.cpp
     lobbyfinder.cpp
 
-    gui/imgs/img.cpp
-    gui/imgs/loader.cpp
-    gui/font/font.cpp
-    gui/font/loader.cpp
-    gui/widget/centertext.cpp
-    gui/widget/textinput.cpp
-    gui/widget/widget.cpp
-    gui/widget/dyntext.cpp
-    gui/widget/flexbox.cpp
-    gui/widget/staticimg.cpp
-    gui/gui.cpp
-
-    ../../dependencies/stb/stb_image.cpp
     shaders.cpp
 )
 
@@ -37,14 +26,13 @@ set(FILES
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
-
 add_library(${LIB_NAME} STATIC ${FILES})
-target_include_directories(${LIB_NAME} PRIVATE ../../dependencies/stb) # include stb image loading header
 target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIRECTORY})
 target_include_directories(${LIB_NAME} PRIVATE ${BOOST_LIBRARY_INCLUDES})
 target_link_libraries(${LIB_NAME} 
     PRIVATE
     game_shared_lib
+    game_gui_lib
     Boost::asio
     Boost::filesystem
     Boost::thread

@@ -23,6 +23,15 @@ class TextInput : public Widget {
 public:
     using Ptr = std::unique_ptr<TextInput>;
 
+    /**
+     * @brief Constructs a TextInput unique ptr widget
+     * 
+     * @param Origin bottom left (x,y) coordinate in GUI coordinates
+     * @param placeholder Text to display if no text has been inputted yet
+     * @param gui Pointer to the GUI class, so internally we can access keystroke information
+     * @param fonts Font loader
+     * @param options (Optional) Configurable options for the widget
+     */
     template <typename... Params>
     static Ptr make(Params&&... params) {
         return std::make_unique<TextInput>(std::forward<Params>(params)...);
@@ -50,6 +59,8 @@ private:
     static std::string prev_input;
 
     widget::DynText::Ptr dyntext;
+
+    /// NOTE: this widget needs a pointer to the GUI so it can access the GUI's keystroke capturing functionality
     gui::GUI* gui;
 };
 

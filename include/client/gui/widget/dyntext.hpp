@@ -22,6 +22,16 @@ public:
         float scale {1.0};
     };
 
+    /**
+     * @brief creates a DynText unique ptr widget
+     * 
+     * @param origin (Optional) Bottom left coordinate position of the widget in GUI coordinates
+     * @param text Text to render
+     * @param load Font loader
+     * @param options (Optional) Options to customize how the text is rendered
+     * 
+     * @returns a DynText widget
+     */
     template <typename... Params>
     static Ptr make(Params&&... params) {
         return std::make_unique<DynText>(std::forward<Params>(params)...);

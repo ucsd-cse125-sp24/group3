@@ -35,6 +35,8 @@ using Callback = std::function<void(Handle)>;
  * 
  * You can see the documentation for these functions for explanations of why you may or
  * may not need to override this functions for a specific derived widget.
+ * 
+ * In addition, any derived class must also set width and height once these values are known.
  */
 class Widget {
 public:
@@ -127,35 +129,106 @@ public:
 
     /// =<DISPLAY>============================================================================
     /**
-     * Renders the widget to the screen using the specified shader
+     * @brief Renders the widget to the screen
+     * 
+     * This is the only function that must be overridden by derived classes.
      */
     virtual void render() = 0;
     /// ======================================================================================
 
-
+    /// =<SIMPLE GETTERS>=====================================================================
+    /**
+     * @brief Queries the widget::Type of the widget 
+     * @return Type of the widget
+     */
     [[nodiscard]] Type getType() const;
+    /**
+     * @brief Queries the origin position of the widget
+     * @return origin position of the widget in GUI coordinates
+     */
     [[nodiscard]] const glm::vec2& getOrigin() const;
+    /**
+     * @brief Queries the size of the widget in pixels
+     * @return the width and height of the widget
+     */
     [[nodiscard]] std::pair<std::size_t, std::size_t> getSize() const;
+    /**
+     * @brief Queries the handle for this specific widget
+     * @return the handle for this widget
+     */
     [[nodiscard]] Handle getHandle() const;
+    /// ======================================================================================
+
+    /// =<WIDGET BORROWING>===================================================================
+    ///
+    /// The following functions are incredibly important for GUI manipulation, especially in
+    /// event handlers. They essentially define how outside users can gain internal access to
+    /// widgets that are inside of the GUI
+    ///
+    /// hasHandle should always be called before calling borrow if you aren't sure whether or
+    /// not the widget actually has the specified handle, because borrow will terminate the
+    /// program if the specified widget does not have the handle.
+    /// 
+    /// By default hasHandle and borrow only check the widget itself to see if the handle matches.
+    /// This means that if some derived Widget acts as a container for some set of internal
+    /// subwidgets, then these functions should be overridden to provide access to those subwidgets.
+    ///
+    /**
+     * @brief Checks to see whether or not this widget "has" the specified handle, whether
+     * because the handle is this widgets handle, or because this widget internally contains
+     * some subwidget that has that handle.
+     * 
+     * @param handle Handle of the widget for which you want to query
+     * 
+     * @returns True if this widget is or contains the specified widget, false otherwise
+     */
     [[nodiscard]] virtual bool hasHandle(Handle handle) const;
+    /**
+     * @brief Gives a pointer to the subwidget specified by the handle
+     * 
+     * NOTE: if `handle` is not a valid handle for either (1) this widget or (2) any subwidgets,
+     * then this function will terminate the program and print out an error message.
+     * 
+     * @returns a pointer to the widget specified by handle
+     */
     [[nodiscard]] virtual Widget* borrow(Handle handle);
+    /// ======================================================================================
 
 protected:
+    /// @brief Handle for this widget
     Handle handle;
+
+    /// @brief Static counter for the number of widgets that have been created, so a new identifier
+    /// can be assigned to each widget as they are created
     static std::size_t num_widgets;
 
+    /// @brief Type of the widget
     Type type;
+
+    /// @brief Origin position (bottom left) of the widget in GUI coordinates
     glm::vec2 origin;
+    
+    /// NOTE: Both the widget and the height of the widget are initialized to 0 and are not set
+    /// anywhere inside of this base class. Instead, derived classes must set these values themselves
+    /// once they are known.
+
+    /// @brief Width of the widget, in pixels
     std::size_t width  {0};
+    /// @brief Height of the widget, in pixels
     std::size_t height {0};
 
+    /// @brief all of the onClick handlers, indexable by handle
     std::unordered_map<CallbackHandle, Callback> on_clicks;
+    /// @brief all of the onHover handlers, indexable by handle
     std::unordered_map<CallbackHandle, Callback> on_hovers;
 
 private:
+    /// @brief internal counter to assign to the next onClick handler
     CallbackHandle next_click_handle {0};
+    /// @brief internal counter to assign to the next onHover handler
     CallbackHandle next_hover_handle {0};
 
+    /// @brief helper function to determine if 
     bool _doesIntersect(float x, float y) const;
 };
 
