@@ -4,6 +4,7 @@
 // Note that you do not have access to the vertex shader's default output, gl_Position.
 
 in vec3 fragNormal;
+in vec3 fragPos;
 
 // uniforms used for lighting
 uniform vec3 AmbientColor = vec3(0.2);

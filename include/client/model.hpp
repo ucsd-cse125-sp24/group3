@@ -50,6 +50,13 @@ class Texture {
     std::string type;
 };
 
+struct Material {
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+    float shininess;
+};
+
 /**
  * Mesh holds the data needed to render a mesh (collection of triangles).
  *
@@ -62,7 +69,12 @@ class Mesh {
     /**
      * Creates a new mesh from a collection of vertices, indices and textures
      */
-    Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures);
+    Mesh(
+        const std::vector<Vertex>& vertices,
+        const std::vector<unsigned int>& indices,
+        const std::vector<Texture>& textures,
+        const Material& material
+    );
 
     /**
      * Render the Mesh to the viewport using the provided shader program. 
@@ -72,11 +84,12 @@ class Mesh {
      * @param modelView determines the scaling/rotation/translation of the 
      * mesh
      */
-    void Draw(std::shared_ptr<Shader> shader, glm::mat4 modelView) const;
+    void Draw(std::shared_ptr<Shader> shader, glm::mat4 modelView) ;
  private:
      std::vector<Vertex>       vertices;
      std::vector<unsigned int> indices;
      std::vector<Texture>      textures;
+     Material material;
 
     //  render data opengl needs
     GLuint VAO, VBO, EBO;
@@ -127,4 +140,8 @@ class Model {
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, const aiTextureType& type);
 
     glm::mat4 modelView;
+
+    // store the directory of the model file so that textures can be
+    // loaded relative to the model file
+    std::string directory;
 };

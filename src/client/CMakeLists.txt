@@ -9,6 +9,7 @@ set(FILES
     lobbyfinder.cpp
     shader.cpp
     model.cpp
+    lightsource.cpp
     ${imgui-source}
 )
 

@@ -13,6 +13,8 @@
 #include <iostream>
 
 #include "assimp/material.h"
+#include "assimp/types.h"
+#include "client/util.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -30,8 +32,12 @@
 #include <glm/gtx/euler_angles.hpp>
 
 
-Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures) : 
-    vertices(vertices), indices(indices), textures(textures) {
+Mesh::Mesh(
+    const std::vector<Vertex>& vertices,
+    const std::vector<unsigned int>& indices,
+    const std::vector<Texture>& textures,
+    const Material& material) : 
+    vertices(vertices), indices(indices), textures(textures), material(material) {
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -60,9 +66,13 @@ Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>&
     glBindVertexArray(0);
 
     std::cout << "Loaded mesh with " << vertices.size() << " vertices, and " << textures.size() << " textures" << std::endl;
+    std::cout << "\t diffuse " << glm::to_string(this->material.diffuse) << std::endl;
+    std::cout << "\t ambient " << glm::to_string(this->material.diffuse) << std::endl;
+    std::cout << "\t specular " << glm::to_string(this->material.specular) << std::endl;
+    std::cout << "\t shininess" << this->material.shininess << std::endl;
 }
 
-void Mesh::Draw(std::shared_ptr<Shader> shader, glm::mat4 modelView) const {
+void Mesh::Draw(std::shared_ptr<Shader> shader, glm::mat4 modelView) {
     // actiavte the shader program
     shader->use();
 
@@ -89,12 +99,19 @@ void Mesh::Draw(std::shared_ptr<Shader> shader, glm::mat4 modelView) const {
     // Compute final view-projection matrix
     glm::mat4 viewProjMtx = project * view;
 
-    auto color = glm::vec3(0.0f, 1.0f, 1.0f);
+    auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    shader->setVec3("lightColor",  lightColor);
 
-    // get the locations and send the uniforms to the shader
-    glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "viewProj"), 1, false, reinterpret_cast<float*>(&viewProjMtx));
-    glUniformMatrix4fv(glGetUniformLocation(shader->getID(), "model"), 1, GL_FALSE, reinterpret_cast<float*>(&modelView));
-    glUniform3fv(glGetUniformLocation(shader->getID(), "DiffuseColor"), 1, &color[0]);
+    glm::vec3 viewPos = glm::vec3(world[3].x, world[3].y, world[3].z);
+    shader->setVec3("viewPos", viewPos);
+
+    shader->setMat4("viewProj", viewProjMtx);
+    shader->setMat4("model", modelView);
+
+    shader->setVec3("material.diffuse", this->material.diffuse);
+    shader->setVec3("material.ambient", this->material.ambient);
+    shader->setVec3("material.specular", this->material.specular);
+    shader->setFloat("materia.shininess", this->material.shininess);
 
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
@@ -108,7 +125,8 @@ void Mesh::Draw(std::shared_ptr<Shader> shader, glm::mat4 modelView) const {
         else if(name == "texture_specular")
             number = std::to_string(specularNr++);
 
-        shader->setInt(("material." + name + number).c_str(), i);
+        std::string shaderTextureName = "material." + name + number;
+        shader->setInt(shaderTextureName, i);
         glBindTexture(GL_TEXTURE_2D, textures[i].getID());
     }
     glActiveTexture(GL_TEXTURE0);
@@ -122,7 +140,7 @@ void Mesh::Draw(std::shared_ptr<Shader> shader, glm::mat4 modelView) const {
 }
 
 Model::Model(const std::string& filepath) : 
-    modelView(1.0f) {
+    modelView(1.0f), directory(filepath.substr(0, filepath.find_last_of('/'))) {
 
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(filepath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_SplitLargeMeshes | aiProcess_OptimizeMeshes);
@@ -134,7 +152,7 @@ Model::Model(const std::string& filepath) :
 }
 
 void Model::Draw(std::shared_ptr<Shader> shader) {
-    for(const Mesh& mesh : this->meshes)
+    for(Mesh& mesh : this->meshes)
         mesh.Draw(shader, this->modelView);
 }
 
@@ -196,24 +214,60 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     }
 
     // process material
+    aiColor3D diffuse_color;
+    aiColor3D ambient_color;
+    aiColor3D specular_color;
+    float shininess;
+
     if(mesh->mMaterialIndex >= 0) {
+        std::cout << "processing material of id: " << mesh->mMaterialIndex << std::endl;
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
         std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+
         std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR);
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+
+        if(AI_SUCCESS != material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse_color)) {
+            std::cout << "couldn't get diffuse color" << std::endl;
+        }
+
+        if(AI_SUCCESS != material->Get(AI_MATKEY_COLOR_AMBIENT, ambient_color)) {
+            std::cout << "couldn't get ambient color" << std::endl;
+        }
+
+        if(AI_SUCCESS != material->Get(AI_MATKEY_COLOR_SPECULAR, specular_color)) {
+            std::cout << "couldn't get specular color" << std::endl;
+        }
+
+        if(AI_SUCCESS != material->Get(AI_MATKEY_SHININESS, shininess)) {
+            std::cout << "couldn't get shininess factor" << std::endl;
+        }
     }
 
-    return Mesh(vertices, indices, textures);
+    return Mesh(
+        vertices,
+        indices,
+        textures,
+        Material {
+            aiColorToGLM(diffuse_color),
+            aiColorToGLM(ambient_color),
+            aiColorToGLM(specular_color),
+            shininess
+        }
+    );
 }  
 
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, const aiTextureType& type) {
     std::vector<Texture> textures;
+    std::cout << "material has " << mat->GetTextureCount(type) << " textures of type " << aiTextureTypeToString(type) << std::endl;
     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
         aiString str;
         mat->GetTexture(type, i, &str);
-        Texture texture(std::string(str.C_Str()), type);
+        std::string textureFilepath = this->directory + "/" + std::string(str.C_Str());
+        Texture texture(textureFilepath, type);
         textures.push_back(texture);
     }
     return textures;
@@ -224,8 +278,10 @@ Texture::Texture(const std::string& filepath, const aiTextureType& type) {
     switch (type) {
         case aiTextureType_DIFFUSE:
             this->type = "texture_diffuse";
+            break;
         case aiTextureType_SPECULAR:
             this->type = "texture_specular";
+            break;
         default:
             throw std::invalid_argument(std::string("Unimplemented texture type ") + aiTextureTypeToString(type));
     }
@@ -234,12 +290,13 @@ Texture::Texture(const std::string& filepath, const aiTextureType& type) {
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
-    std::cout << "attempting to load texture at " << filepath << std::endl;
+    std::cout << "Attempting to load texture at " << filepath << std::endl;
     unsigned char *data = stbi_load(filepath.c_str(), &width, &height, &nrComponents, 0);
     if (!data) {
         std::cout << "Texture failed to load at path: " << filepath << std::endl;
         stbi_image_free(data);
     }
+    std::cout << "Succesfully loaded texture at " << filepath << std::endl;
     GLenum format;
     if (nrComponents == 1)
         format = GL_RED;

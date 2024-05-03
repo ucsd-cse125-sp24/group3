@@ -1,11 +1,12 @@
 #pragma once
 
-#include <GL/glew.h>
-
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
+
+#include <GL/glew.h>
+#include <glm/glm.hpp>
   
 
 class Shader {
@@ -54,6 +55,8 @@ class Shader {
      * @param value is the float value to write to that variable
      */
     void setFloat(const std::string &name, float value) const;
+    void setMat4(const std::string &name, glm::mat4& value);
+    void setVec3(const std::string &name, glm::vec3& value);
  private:
     // the shader program ID
     unsigned int ID;

@@ -1,5 +1,4 @@
 #include "client/client.hpp"
-
 #include <iostream>
 #include <memory>
 
@@ -9,6 +8,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/dll/runtime_symbol_info.hpp>
 
+#include "client/lightsource.hpp"
 #include "client/shader.hpp"
 #include "client/model.hpp"
 #include "shared/game/event.hpp"
@@ -81,12 +81,19 @@ bool Client::init() {
 
 
     boost::filesystem::path vertFilepath = this->root_path / "src/client/shaders/shader.vert";
-    boost::filesystem::path fragFilepath = this->root_path / "src/client/shaders/shader.frag";
+    boost::filesystem::path fragFilepath = this->root_path / "src/client/shaders/material.frag";
     this->cubeShader = std::make_shared<Shader>(vertFilepath.string(), fragFilepath.string());
 
-    boost::filesystem::path playerModelFilepath = this->root_path / "src/client/models/bear-sp22.obj";
+    boost::filesystem::path playerModelFilepath = this->root_path / "src/client/models/bear_full.obj";
     this->playerModel = std::make_unique<Model>(playerModelFilepath.string());
     this->playerModel->Scale(0.25);
+
+    this->lightSource = std::make_unique<LightSource>();
+    boost::filesystem::path lightVertFilepath = this->root_path / "src/client/shaders/lightsource.vert";
+    boost::filesystem::path lightFragFilepath = this->root_path / "src/client/shaders/lightsource.frag";
+    this->lightSourceShader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
+
+    this->cubeShader->setVec3("lightPos", lightSource->lightPos);
 
     return true;
 }
@@ -146,6 +153,7 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
+    this->lightSource->draw(this->lightSourceShader);
     for (int i = 0; i < this->gameState.objects.size(); i++) {
         std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
 

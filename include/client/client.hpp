@@ -12,6 +12,7 @@
 #include <boost/filesystem.hpp>
 
 #include "client/cube.hpp"
+#include "client/lightsource.hpp"
 #include "client/shader.hpp"
 #include "client/model.hpp"
 #include "client/util.hpp"
@@ -55,6 +56,9 @@ private:
     SharedGameState gameState;
 
     std::shared_ptr<Shader> cubeShader;
+    std::shared_ptr<Shader> lightSourceShader;
+
+    std::unique_ptr<LightSource> lightSource;
 
     std::unique_ptr<Model> playerModel;
     float playerMovementDelta = 0.05f;

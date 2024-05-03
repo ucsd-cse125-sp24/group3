@@ -1,9 +1,11 @@
 #include <GL/glew.h>
-#include <boost/dll/runtime_symbol_info.hpp>
 
 #include <exception>
 #include <stdexcept>
 #include <string>
+
+#include <glm/glm.hpp>
+#include <boost/dll/runtime_symbol_info.hpp>
 
 #include "client/shader.hpp"
 
@@ -104,6 +106,14 @@ void Shader::setInt(const std::string &name, int value) const {
 
 void Shader::setFloat(const std::string &name, float value) const { 
     glUniform1f(glGetUniformLocation(ID, name.c_str()), value); 
+}
+
+void Shader::setMat4(const std::string &name, glm::mat4& value)  { 
+    glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, reinterpret_cast<float*>(&value));
+}
+
+void Shader::setVec3(const std::string &name, glm::vec3& value) { 
+    glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, reinterpret_cast<float*>(&value));
 }
 
 GLuint Shader::getID() {
