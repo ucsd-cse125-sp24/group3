@@ -126,7 +126,7 @@ bool Client::init() {
     /* Load shader programs */
     std::cout << "loading shader" << std::endl;
     auto shader_path = getRepoRoot() / "src" / "client" / "shaders";
-    auto textShaderProgram = LoadShaders((shader_path / "text.vert").c_str(), (shader_path / "text.frag").c_str());
+    auto textShaderProgram = LoadShaders((shader_path / "text.vert").string(), (shader_path / "text.frag").string());
 
     if (!textShaderProgram) {
         std::cerr << "Failed to initialize text shader program" << std::endl;
