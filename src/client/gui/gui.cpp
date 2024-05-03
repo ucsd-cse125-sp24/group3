@@ -147,7 +147,7 @@ void GUI::_layoutTitleScreen() {
     this->addWidget(widget::CenterText::make(
         "Arcana",
         font::Font::MENU,
-        font::FontSizePx::BIG_YOSHI,
+        font::FontSizePx::HUGE,
         font::FontColor::RED,
         fonts,
         FRAC_WINDOW_HEIGHT(2, 3)

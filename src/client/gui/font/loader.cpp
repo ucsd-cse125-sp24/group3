@@ -56,7 +56,7 @@ bool Loader::_loadFont(Font font) {
         return false;
     }
 
-    for (auto font_size : {FontSizePx::SMALL, FontSizePx::MEDIUM, FontSizePx::LARGE, FontSizePx::BIG_YOSHI}) {
+    for (auto font_size : {FontSizePx::SMALL, FontSizePx::MEDIUM, FontSizePx::LARGE, FontSizePx::HUGE}) {
         FT_Set_Pixel_Sizes(face, 0, font_size);
         std::unordered_map<unsigned char, Character> characters;
         for (unsigned char c = 0; c < 128; c++) {

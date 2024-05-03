@@ -6,7 +6,7 @@
 namespace gui::font {
 
 std::string getFilepath(Font font) {
-    auto dir = getRepoRoot() / "fonts";
+    auto dir = getRepoRoot() / "assets/fonts";
     switch (font) {
         case Font::MENU: return (dir / "AncientModernTales-a7Po.ttf").string();
         default:

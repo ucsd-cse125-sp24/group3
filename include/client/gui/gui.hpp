@@ -44,8 +44,6 @@ enum class GUIState {
  * The GUI class acts as a container for all of these widgets and provides a helpful abstraction layer
  * allowing the rest of the code to think in terms of "GUIState", since you can just tell the GUI
  * to render a specific state, and it will do so.
- * 
- * Here be Dragons
  */
 class GUI {
 public:
