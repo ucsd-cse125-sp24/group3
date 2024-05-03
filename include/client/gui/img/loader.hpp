@@ -6,6 +6,11 @@
 
 namespace gui::img {
 
+/**
+ * This class is supposed to load images.
+ * 
+ * Unfortunately it doesn't work at all! Yipeeee!
+ */
 class Loader {
 public:
     Loader() = default;

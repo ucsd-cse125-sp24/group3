@@ -13,6 +13,9 @@ namespace gui::font {
 
 // modified from https://learnopengl.com/In-Practice/Text-Rendering
 
+/**
+ * Representation of a font character
+ */
 struct Character {
     unsigned int texture_id; /// id handle for glyph texture
     glm::ivec2 size;         /// size of glyph
@@ -20,21 +23,44 @@ struct Character {
     unsigned int advance;    /// offset to advance to next glyph
 };
 
+/**
+ * Hash function so we can provide a pair of Font and FontSize and get the char
+ * mappings for that font.
+ */
 struct font_pair_hash {
     std::size_t operator()(const std::pair<Font, FontSizePx>& p) const;
 };
 
+/**
+ * Handles loading all of the fonts we want to use, and provides an interface to get
+ * the Character information (e.g. opengl texture and sizing information).
+ */
 class Loader {
 public:
     Loader() = default;
 
+    /**
+     * Initializes all of the font information for every font we want to use and stores
+     * it inside of the font map data member.
+     */
     bool init();
 
+    /**
+     * Loads the specified character with the specified font and size
+     * 
+     * @param c ASCII char to load
+     * @param font Abstract font to use. NOTE: must be one of the preset values we provide!
+     * @param FontSizePx size of the font in pixels to load
+     * @returns the Character information for that glyph
+     */
     [[nodiscard]] const Character& loadChar(char c, Font font, FontSizePx size) const;
 
 private:
     FT_Library ft;
 
+    /**
+     * Internal helper function to load a font. Called in `init()` 
+     */
     bool _loadFont(Font font);
 
     std::unordered_map<
