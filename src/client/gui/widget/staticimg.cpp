@@ -1,5 +1,7 @@
 #include "client/gui/gui.hpp"
 
+#include "client/client.hpp"
+
 namespace gui::widget {
 
 GLuint StaticImg::shader = 0;
@@ -7,43 +9,26 @@ GLuint StaticImg::shader = 0;
 StaticImg::StaticImg(glm::vec2 origin, gui::img::Img img):
     Widget(Type::StaticImg, origin)
 {
-    // reference: https://learnopengl.com/code_viewer.php?code=getting-started/textures
-
-    // Set up vertex data (and buffer(s)) and attribute pointers
-    GLfloat vertices[] = {
-        // Positions          // Colors           // Texture Coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // Top Right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // Bottom Right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // Bottom Left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // Top Left 
+    // configure VAO/VBO
+    unsigned int VBO;
+    float vertices[] = {
+        // pos // tex
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 0.0f, 1.0f, 0.0f
     };
-    GLuint indices[] = {  // Note that we start from 0!
-        0, 1, 3, // First Triangle
-        1, 2, 3  // Second Triangle
-    };
-    glGenVertexArrays(1, &VAO);
+    glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+    glBindVertexArray(quadVAO);
     glEnableVertexAttribArray(0);
-    // Color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-    // TexCoord attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(2);
-
-    glBindVertexArray(0); // Unbind VAO
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float),(void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     this->width = img.width;
     this->height = img.height;
@@ -55,13 +40,19 @@ StaticImg::StaticImg(gui::img::Img img):
 void StaticImg::render() {
     glUseProgram(StaticImg::shader);
 
-    // Bind Texture
-    glBindTexture(GL_TEXTURE_2D, this->img.texture_id);
-    // Draw container
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(origin, 0.0f));
+    model = glm::translate(model, glm::vec3(0.5*width, 0.5*height, 0.0));
+    model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0, 0.0, 1.0));
+    model = glm::translate(model, glm::vec3(-0.5*width, -0.5*height, 0.0));
+    model = glm::scale(model, glm::vec3(glm::vec2(width, height), 1.0f));
+    glUniformMatrix4fv(glGetUniformLocation(StaticImg::shader, "projection"), 1, false, reinterpret_cast<float*>(&GUI::projection));
+    glUniformMatrix4fv(glGetUniformLocation(StaticImg::shader, "model"), 1, false, reinterpret_cast<float*>(&model));
+    glUniform3f(glGetUniformLocation(StaticImg::shader, "spriteColor"), 0.5f, 0.5f, 0.5f);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, img.texture_id);
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glUseProgram(0);
 }

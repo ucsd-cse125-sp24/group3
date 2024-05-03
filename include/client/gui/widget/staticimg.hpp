@@ -13,6 +13,9 @@ namespace gui::widget {
  * Widget to display a static image (png) to the screen.
  * 
  * BUG: This doesn't work at all currently! ASDAJSHHASHDAHHHHHHH!
+ * 
+ * Reference: The chapter on sprite rendering from
+ * https://learnopengl.com/book/book_pdf.pdf
  */
 class StaticImg : public Widget {
 public:
@@ -39,7 +42,7 @@ public:
 
 private:
     gui::img::Img img;
-    GLuint VBO, VAO, EBO;
+    GLuint quadVAO;
 };
 
 }

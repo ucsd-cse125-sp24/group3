@@ -47,6 +47,8 @@ enum class GUIState {
  */
 class GUI {
 public:
+    static glm::mat4 projection;
+
     /// =<SETUP>========================================================================
     ///
     /// These are the functions that need to be called to setup a GUI object. Doing anything

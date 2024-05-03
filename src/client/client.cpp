@@ -133,9 +133,15 @@ bool Client::init() {
         return false;
     }
 
+    auto imgShaderProgram = LoadShaders((shader_path / "img.vert").string(), (shader_path / "img.frag").string());
+    if (!imgShaderProgram) {
+        std::cerr << "Failed to initialize img shader program" << std::endl;
+        return false;
+    }
+
     // Init GUI (e.g. load in all fonts)
     // TODO: pass in shader for image loading in second param
-    if (!this->gui.init(textShaderProgram, textShaderProgram)) {
+    if (!this->gui.init(textShaderProgram, imgShaderProgram)) {
         std::cerr << "GUI failed to init" << std::endl;
         return false;
     }

@@ -10,6 +10,8 @@
 
 namespace gui {
 
+glm::mat4 GUI::projection = glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT);
+
 GUI::GUI(Client* client) {
     this->client = client;
 }
@@ -32,6 +34,8 @@ bool GUI::init(GLuint text_shader, GLuint image_shader)
     // Need to register all of the necessary shaders for each widget
     widget::DynText::shader = text_shader;
     widget::StaticImg::shader = image_shader;
+    glUniformMatrix4fv(glGetUniformLocation(widget::DynText::shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
+    glUniformMatrix4fv(glGetUniformLocation(widget::StaticImg::shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
 
     std::cout << "Initialized GUI\n";
     return true;

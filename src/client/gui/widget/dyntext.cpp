@@ -58,9 +58,7 @@ DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts, Dyn
 void DynText::render() {
     glUseProgram(DynText::shader);
 
-    // todo move to gui
-    glm::mat4 projection = glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT);
-    glUniformMatrix4fv(glGetUniformLocation(DynText::shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
+    glUniformMatrix4fv(glGetUniformLocation(DynText::shader, "projection"), 1, false, reinterpret_cast<float*>(&GUI::projection));
     glUniform3f(glGetUniformLocation(DynText::shader, "textColor"),
         this->options.color.x, this->options.color.y, this->options.color.z);
     glActiveTexture(GL_TEXTURE0);
