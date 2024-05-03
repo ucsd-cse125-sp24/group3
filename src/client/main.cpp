@@ -7,7 +7,7 @@
 #include "client/client.hpp"
 #include "shared/utilities/rng.hpp"
 #include "shared/utilities/config.hpp"
-#include "client/sound.hpp"
+#include "client/audiomanager.hpp"
 
 using namespace std::chrono_literals;
 

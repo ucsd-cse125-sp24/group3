@@ -2,7 +2,7 @@ set(TARGET_NAME client)
 set(LIB_NAME game_client_lib)
 
 set(FILES
-    sound.cpp
+    audiomanager.cpp
     camera.cpp
     client.cpp
     cube.cpp

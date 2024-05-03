@@ -1,4 +1,4 @@
-//#include "client/sound.hpp"
+#include "client/audiomanager.hpp"
 //
 //// For error output
 //#include <iostream>
