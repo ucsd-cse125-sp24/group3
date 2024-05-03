@@ -20,14 +20,13 @@ bool Loader::init() {
     return true;
 }
 
-// reference: https://www.reddit.com/r/opengl/comments/57d21g/displaying_an_image_with_stb/
 bool Loader::_loadImg(ImgID img_id) {
     auto path = getImgFilepath(img_id);
     std::cout << "Loading " << path << "...\n";
 
     int width, height, channels;
 
-    unsigned char* img_data = stbi_load(path.c_str(), &width, &height, &channels, 4);
+    unsigned char* img_data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 
     GLuint texture_id;
     if (img_data == 0 || width == 0 || height == 0) {
@@ -35,20 +34,16 @@ bool Loader::_loadImg(ImgID img_id) {
             ", " << width << ", " << height << "\n" << std::endl;
         return false;
     }
-
     glGenTextures(1, &texture_id);
+
     glBindTexture(GL_TEXTURE_2D, texture_id);
-
-    //set up some vars for OpenGL texturizing
-	GLenum image_format = GL_RGBA;
-	GLint internal_format = GL_RGBA;
-	GLint level = 0;
-	//store the texture data for OpenGL use
-	glTexImage2D(GL_TEXTURE_2D, level, internal_format, width, height,
-		0, image_format, GL_UNSIGNED_BYTE, img_data);
-
-    stbi_image_free(img_data);
-
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data);
+    // set Texture wrap and filter modes
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
 
     this->img_map.insert({img_id, Img {

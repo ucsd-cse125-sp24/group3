@@ -50,7 +50,7 @@ void StaticImg::render() {
     model = glm::scale(model, glm::vec3(glm::vec2(width, height), 1.0f));
     glUniformMatrix4fv(glGetUniformLocation(StaticImg::shader, "projection"), 1, false, reinterpret_cast<float*>(&GUI::projection));
     glUniformMatrix4fv(glGetUniformLocation(StaticImg::shader, "model"), 1, false, reinterpret_cast<float*>(&model));
-    glUniform3f(glGetUniformLocation(StaticImg::shader, "spriteColor"), 0.5f, 0.5f, 0.5f);
+    glUniform3f(glGetUniformLocation(StaticImg::shader, "spriteColor"), 1.0f, 1.0f, 1.0f);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, img.texture_id);
     glBindVertexArray(quadVAO);
