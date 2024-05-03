@@ -11,6 +11,8 @@
 
 namespace gui::widget {
 
+GLuint DynText::shader = 0;
+
 DynText::DynText(glm::vec2 origin, std::string text, 
     std::shared_ptr<gui::font::Loader> fonts, DynText::Options options):
     text(text), options(options), fonts(fonts), Widget(Type::DynText, origin)
@@ -53,13 +55,13 @@ DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts):
 DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts, DynText::Options options):
     DynText({0.0f, 0.0f}, text, fonts, options) {}
 
-void DynText::render(GLuint shader) {
-    glUseProgram(shader);
+void DynText::render() {
+    glUseProgram(DynText::shader);
 
     // todo move to gui
     glm::mat4 projection = glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
-    glUniform3f(glGetUniformLocation(shader, "textColor"),
+    glUniformMatrix4fv(glGetUniformLocation(DynText::shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
+    glUniform3f(glGetUniformLocation(DynText::shader, "textColor"),
         this->options.color.x, this->options.color.y, this->options.color.z);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);

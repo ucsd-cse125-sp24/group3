@@ -56,8 +56,8 @@ TextInput::TextInput(glm::vec2 origin,
         .scale {1.0},
     }) {}
 
-void TextInput::render(GLuint shader) {
-    this->dyntext->render(shader);
+void TextInput::render() {
+    this->dyntext->render();
 }
 
 bool TextInput::hasHandle(Handle handle) const {

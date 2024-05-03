@@ -32,7 +32,7 @@ public:
 
     void push(Widget::Ptr&& widget);
 
-    void render(GLuint shader) override;
+    void render() override;
     
     Widget* borrow(Handle handle) override;
     bool hasHandle(Handle handle) const override;

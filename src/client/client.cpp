@@ -130,13 +130,14 @@ bool Client::init() {
 
     if (!textShaderProgram) {
         std::cerr << "Failed to initialize text shader program" << std::endl;
-        return -1;
+        return false;
     }
 
     // Init GUI (e.g. load in all fonts)
-    if (!this->gui.init(textShaderProgram)) {
+    // TODO: pass in shader for image loading in second param
+    if (!this->gui.init(textShaderProgram, textShaderProgram)) {
         std::cerr << "GUI failed to init" << std::endl;
-        return -1;
+        return false;
     }
 
     this->cubeShaderProgram = loadCubeShaders();

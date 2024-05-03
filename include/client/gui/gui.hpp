@@ -64,12 +64,14 @@ public:
      */
     explicit GUI(Client* client);
     /**
-     * @brief Initializes all of the necessary file loading for all of the GUI elements.
-     * Currently this is mainly the image loading and the font loading.
+     * @brief Initializes all of the necessary file loading for all of the GUI elements, and
+     * registers all of the static shader variables for each of the derived widget classes
+     * that need a shader.
      * 
      * @param text_shader Shader to use for text rendering
+     * @param img_shader Shader to use for rendering images
      */
-    bool init(GLuint text_shader);
+    bool init(GLuint text_shader, GLuint img_shader);
     /// ================================================================================
 
     /// =<RENDERING>====================================================================
@@ -269,7 +271,6 @@ public:
 private:
     widget::Handle next_handle {0};
     std::unordered_map<widget::Handle, widget::Widget::Ptr> widgets;
-    GLuint text_shader;
 
     std::shared_ptr<font::Loader> fonts;
     img::Loader images;

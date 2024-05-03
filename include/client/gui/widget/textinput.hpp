@@ -39,7 +39,7 @@ public:
         gui::GUI* gui,
         std::shared_ptr<font::Loader> fonts);
 
-    void render(GLuint shader) override;
+    void render() override;
 
     bool hasHandle(Handle handle) const override;
     Widget* borrow(Handle handle) override;

@@ -2,6 +2,8 @@
 
 namespace gui::widget {
 
+GLuint StaticImg::shader = 0;
+
 StaticImg::StaticImg(glm::vec2 origin, gui::img::Img img):
     Widget(Type::StaticImg, origin)
 {
@@ -50,8 +52,8 @@ StaticImg::StaticImg(glm::vec2 origin, gui::img::Img img):
 StaticImg::StaticImg(gui::img::Img img):
     StaticImg({0.0f, 0.0f}, img) {}
 
-void StaticImg::render(GLuint shader) {
-    glUseProgram(shader);
+void StaticImg::render() {
+    glUseProgram(StaticImg::shader);
 
     // Bind Texture
     glBindTexture(GL_TEXTURE_2D, this->img.texture_id);

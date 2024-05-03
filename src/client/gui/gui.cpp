@@ -14,7 +14,7 @@ GUI::GUI(Client* client) {
     this->client = client;
 }
 
-bool GUI::init(GLuint text_shader)
+bool GUI::init(GLuint text_shader, GLuint image_shader)
 {
     std::cout << "Initializing GUI...\n";
 
@@ -29,7 +29,9 @@ bool GUI::init(GLuint text_shader)
         return false;
     }
 
-    this->text_shader = text_shader;
+    // Need to register all of the necessary shaders for each widget
+    widget::DynText::shader = text_shader;
+    widget::StaticImg::shader = image_shader;
 
     std::cout << "Initialized GUI\n";
     return true;
@@ -48,7 +50,7 @@ void GUI::renderFrame() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     for (auto& [handle, widget] : this->widgets) {
-        widget->render(this->text_shader);
+        widget->render();
     }
 
     glDisable(GL_CULL_FACE);

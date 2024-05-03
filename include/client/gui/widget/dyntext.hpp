@@ -13,6 +13,7 @@ namespace gui::widget {
 class DynText : public Widget {
 public:
     using Ptr = std::unique_ptr<DynText>;
+    static GLuint shader;
 
     struct Options {
         font::Font font {font::Font::TEXT};
@@ -31,7 +32,7 @@ public:
     DynText(std::string text, std::shared_ptr<gui::font::Loader> loader, Options options);
     DynText(std::string text, std::shared_ptr<gui::font::Loader> loader);
 
-    void render(GLuint shader) override;
+    void render() override;
 
     void changeColor(font::FontColor new_color);
 

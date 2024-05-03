@@ -91,11 +91,11 @@ void Flexbox::push(Widget::Ptr&& widget) {
 
 }
 
-void Flexbox::render(GLuint shader) {
+void Flexbox::render() {
     // use x and y as origin coordinates, and render everything else based off of it
 
     for (const auto& widget : this->widgets) {
-        widget->render(shader);
+        widget->render();
     }
 }
 

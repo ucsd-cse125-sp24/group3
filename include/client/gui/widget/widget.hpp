@@ -128,10 +128,8 @@ public:
     /// =<DISPLAY>============================================================================
     /**
      * Renders the widget to the screen using the specified shader
-     * 
-     * @param shader Shader to use when rednering the widgete
      */
-    virtual void render(GLuint shader) = 0;
+    virtual void render() = 0;
     /// ======================================================================================
 
 
