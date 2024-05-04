@@ -5,8 +5,8 @@ Cube::Cube(glm::vec3 newColor, glm::vec3 scale) {
     // insert the data into these buffers
     // initialize model matrix
     // Model matrix.
-    glm::vec3 cubeMin = glm::vec3(-1.0f, -1.0f, -1.0f);
-    glm::vec3 cubeMax = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 cubeMin = glm::vec3(-0.5f, -0.5f, -0.5f);
+    glm::vec3 cubeMax = glm::vec3(0.5f, 0.5f, 0.5f);
     model = glm::mat4(1.0f);
 
     //scale the cube to with given vector

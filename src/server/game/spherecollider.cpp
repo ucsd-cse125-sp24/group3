@@ -28,9 +28,12 @@ bool SphereCollider::detectCollision(Collider* otherCollider) {
 		}
 		case Box: {
 			const BoxCollider* otherC = dynamic_cast<BoxCollider*>(otherCollider);
-			float x = fmaxf(otherC->min_position.x, fminf(this->center.x, otherC->max_position.x));
-			float y = fmaxf(otherC->min_position.y, fminf(this->center.y, otherC->max_position.y));
-			float z = fmaxf(otherC->min_position.z, fminf(this->center.z, otherC->max_position.z));
+			glm::vec3 otherMinPos = otherC->corner;
+			glm::vec3 otherMaxPos = otherC->corner + otherC->dimension;
+
+			float x = fmaxf(otherMinPos.x, fminf(this->center.x, otherMaxPos.x));
+			float y = fmaxf(otherMinPos.y, fminf(this->center.y, otherMaxPos.y));
+			float z = fmaxf(otherMinPos.z, fminf(this->center.z, otherMaxPos.z));
 			
 			float distance = sqrt(
 				(x - this->center.x) * (x - this->center.x) +

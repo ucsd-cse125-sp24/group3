@@ -4,11 +4,11 @@
 #include <algorithm>
 
 BoxCollider::BoxCollider() : 
-	min_position(glm::vec3(0.0f)), max_position(glm::vec3(0.0f)) {
+	corner(glm::vec3(0.0f)), dimension(glm::vec3(0.0f)) {
 }
 
-BoxCollider::BoxCollider(glm::vec3 minPos, glm::vec3 maxPos) :
-	min_position(minPos), max_position(maxPos) {
+BoxCollider::BoxCollider(glm::vec3 corner, glm::vec3 dimension) :
+	corner(corner), dimension(dimension) {
 }
 
 
@@ -16,21 +16,28 @@ BoxCollider::~BoxCollider() {
 }
 
 bool BoxCollider::detectCollision(Collider* otherCollider) {
+	glm::vec3 minPos = this->corner;
+	glm::vec3 maxPos = this->corner + this->dimension;
+
 	switch (otherCollider->getShape()) {
         case Box: {
 			BoxCollider* otherC = dynamic_cast<BoxCollider*>(otherCollider);
-			return (this->max_position.x >= otherC->min_position.x &&
-					this->min_position.x <= otherC->max_position.x &&
-					this->max_position.y >= otherC->min_position.y &&
-					this->min_position.y <= otherC->max_position.y &&
-					this->max_position.z >= otherC->min_position.z &&
-					this->min_position.z <= otherC->max_position.z);
+			glm::vec3 otherMinPos = otherC->corner;
+			glm::vec3 otherMaxPos = otherC->corner + otherC->dimension;
+
+
+			return (maxPos.x >= otherMinPos.x &&
+					minPos.x <= otherMaxPos.x &&
+					maxPos.y >= otherMinPos.y &&
+					minPos.y <= otherMaxPos.y &&
+					maxPos.z >= otherMinPos.z &&
+					minPos.z <= otherMaxPos.z);
 		}
 		case Sphere: {
 			const SphereCollider* otherC = dynamic_cast<SphereCollider*>(otherCollider);
-			float x = fmaxf(this->min_position.x, fminf(otherC->center.x, this->max_position.x));
-			float y = fmaxf(this->min_position.y, fminf(otherC->center.y, this->max_position.y));
-			float z = fmaxf(this->min_position.z, fminf(otherC->center.z, this->max_position.z));
+			float x = fmaxf(minPos.x, fminf(otherC->center.x, maxPos.x));
+			float y = fmaxf(minPos.y, fminf(otherC->center.y, maxPos.y));
+			float z = fmaxf(minPos.z, fminf(otherC->center.z, maxPos.z));
 			
 			float distance = sqrt(
 				(x - otherC->center.x) * (x - otherC->center.x) +

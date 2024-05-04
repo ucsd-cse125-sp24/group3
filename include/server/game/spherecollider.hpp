@@ -4,7 +4,7 @@
 
 class SphereCollider : public Collider {
 public:
-	// (x,y,z) center position
+	// Vector for (x,y,z) center position
 	glm::vec3 center;
 
 	float radius;

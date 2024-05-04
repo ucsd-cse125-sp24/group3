@@ -80,12 +80,17 @@ struct SharedPhysics {
 	glm::vec3 position;
 
 	/**
+	 * @brief 3-D vector that denotes this object's bottom left corner (min x, z coordinates).
+	 */
+	glm::vec3 corner;
+
+	/**
 	 * @brief 3-D vector that denotes this object's facing direction.
 	 */
 	glm::vec3 facing;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& position& facing;
+		ar& position& corner& facing;
 	}
 };
 

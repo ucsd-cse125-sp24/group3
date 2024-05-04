@@ -13,6 +13,7 @@ Object::Object(ObjectType type) {
 	//	velocity or acceleration, and is movable. The object faces toward the
 	//	x-axis.
 	this->physics.shared.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	this->physics.shared.corner = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
 
 	this->physics.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
