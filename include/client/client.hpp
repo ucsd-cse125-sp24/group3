@@ -58,13 +58,13 @@ private:
 
     SharedGameState gameState;
 
-    std::shared_ptr<Shader> cubeShader;
-    std::shared_ptr<Shader> bearShader;
-    std::shared_ptr<Shader> lightSourceShader;
+    std::shared_ptr<Shader> cube_shader; 
+    std::shared_ptr<Shader> model_shader;
+    std::shared_ptr<Shader> light_source_shader;
 
-    std::unique_ptr<LightSource> lightSource;
+    std::unique_ptr<Model> bear_model;
+    std::unique_ptr<LightSource> light_source;
 
-    std::unique_ptr<Model> bearModel;
     float playerMovementDelta = 0.05f;
 
     GLFWwindow *window;

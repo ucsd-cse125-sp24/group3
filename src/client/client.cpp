@@ -108,24 +108,25 @@ bool Client::init() {
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
 
+    boost::filesystem::path shaders_dir = this->root_path / "src/client/shaders";
+    boost::filesystem::path graphics_assets_dir = this->root_path / "assets/graphics";
 
-    boost::filesystem::path cubeVertFilepath = this->root_path / "src/client/shaders/shader.vert";
-    boost::filesystem::path cubeFragFilepath = this->root_path / "src/client/shaders/shader.frag";
-    this->cubeShader = std::make_shared<Shader>(cubeVertFilepath.string(), cubeFragFilepath.string());
+    boost::filesystem::path cube_vert_path = shaders_dir / "shader.vert";
+    boost::filesystem::path cube_frag_path = shaders_dir / "shader.frag";
+    this->cube_shader = std::make_shared<Shader>(cube_vert_path.string(), cube_frag_path.string());
 
-    boost::filesystem::path playerVertFilepath = this->root_path / "src/client/shaders/model.vert";
-    boost::filesystem::path playerFragFilepath = this->root_path / "src/client/shaders/model.frag";
-    this->bearShader = std::make_shared<Shader>(playerVertFilepath.string(), playerFragFilepath.string());
+    boost::filesystem::path model_vert_path = shaders_dir / "model.vert";
+    boost::filesystem::path model_frag_path = shaders_dir / "model.frag";
+    this->model_shader = std::make_shared<Shader>(model_vert_path.string(), model_frag_path.string());
 
-    boost::filesystem::path playerModelFilepath = this->root_path / "src/client/models/bear-sp22.obj";
-    this->bearModel = std::make_unique<Model>(playerModelFilepath.string());
-    this->bearModel->Scale(0.25);
+    boost::filesystem::path bear_model_path = graphics_assets_dir / "bear-sp22.obj";
+    this->bear_model = std::make_unique<Model>(bear_model_path.string());
+    this->bear_model->Scale(0.25);
 
-    this->lightSource = std::make_unique<LightSource>();
+    this->light_source = std::make_unique<LightSource>();
     boost::filesystem::path lightVertFilepath = this->root_path / "src/client/shaders/lightsource.vert";
     boost::filesystem::path lightFragFilepath = this->root_path / "src/client/shaders/lightsource.frag";
-    this->lightSourceShader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
-
+    this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
 
     return true;
 }
@@ -241,15 +242,15 @@ void Client::draw() {
             continue;
         }
         if (sharedObject->type == ObjectType::Enemy) {
-            this->bearModel->TranslateTo(sharedObject->physics.position);
-            this->bearModel->Draw(this->cam->getViewProj(), this->cam->getPos(), this->bearShader, this->cam->getPos());
+            this->bear_model->TranslateTo(sharedObject->physics.position);
+            this->bear_model->Draw(this->cam->getViewProj(), this->cam->getPos(), this->model_shader, this->cam->getPos());
         }
 
         // Get camera position from server, update position and don't render player object (or special handling)
         if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
             cam->updatePos(sharedObject->physics.position);
-            this->lightSource->TranslateTo(cam->getPos());
-            this->lightSource->draw(this->lightSourceShader);
+            this->light_source->TranslateTo(cam->getPos());
+            this->light_source->draw(this->light_source_shader);
             continue;
         }
 
@@ -257,14 +258,14 @@ void Client::draw() {
         if(sharedObject->solidSurface.has_value()){
             Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f), sharedObject->solidSurface->dimensions);
             cube->update(sharedObject->physics.position);
-            cube->draw(this->cam->getViewProj(), this->cubeShader->getID(), true);
+            cube->draw(this->cam->getViewProj(), this->cube_shader->getID(), true);
             continue;
         }
 
         //  tmp: all objects are cubes
         Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f), glm::vec3(1.0f));
         cube->update(sharedObject->physics.position);
-        cube->draw(this->cam->getViewProj(), this->cubeShader->getID(), false);
+        cube->draw(this->cam->getViewProj(), this->cube_shader->getID(), false);
     }
 }
 

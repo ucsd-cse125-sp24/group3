@@ -90,23 +90,26 @@ void Mesh::Draw(std::shared_ptr<Shader> shader, glm::mat4 model, glm::mat4 viewP
     shader->setVec3("material.specular", this->material.specular);
     shader->setFloat("material.shininess", this->material.shininess);
 
-    unsigned int diffuseNr = 1;
-    unsigned int specularNr = 1;
-    for(unsigned int i = 0; i < textures.size(); i++) {
-        glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
-        // retrieve texture number (the N in diffuse_textureN)
-        std::string number;
-        std::string name = textures[i].getType();
-        if(name == "texture_diffuse")
-            number = std::to_string(diffuseNr++);
-        else if(name == "texture_specular")
-            number = std::to_string(specularNr++);
+    if (textures.size() == 0) {
+    } else {
+        unsigned int diffuseNr = 1;
+        unsigned int specularNr = 1;
+        for(unsigned int i = 0; i < textures.size(); i++) {
+            glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
+            // retrieve texture number (the N in diffuse_textureN)
+            std::string number;
+            std::string name = textures[i].getType();
+            if(name == "texture_diffuse")
+                number = std::to_string(diffuseNr++);
+            else if(name == "texture_specular")
+                number = std::to_string(specularNr++);
 
-        std::string shaderTextureName = "material." + name + number;
-        shader->setInt(shaderTextureName, i);
-        glBindTexture(GL_TEXTURE_2D, textures[i].getID());
+            std::string shaderTextureName = "material." + name + number;
+            shader->setInt(shaderTextureName, i);
+            glBindTexture(GL_TEXTURE_2D, textures[i].getID());
+        }
+        glActiveTexture(GL_TEXTURE0);
     }
-    glActiveTexture(GL_TEXTURE0);
 
     // draw mesh
     glBindVertexArray(VAO);
