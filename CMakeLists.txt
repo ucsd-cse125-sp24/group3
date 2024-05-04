@@ -76,8 +76,5 @@ add_custom_target(lint
 
 add_custom_target(pull_models
   COMMAND 
-  gdown 133bVNM4_27hg_VoZGo9EUfCn7n6VXzOU -O ${CMAKE_SOURCE_DIR}/src/client/models/Player1-fire.obj && 
-  gdown 1v3XO_E1ularO5Ku2WaA8O9GqE402a8cx -O ${CMAKE_SOURCE_DIR}/src/client/models/bear-sp22.obj && 
-  gdown 1hHK-0iKMT6uboFUl3DXC9JcbnfsNCNF4 -O ${CMAKE_SOURCE_DIR}/src/client/models/cube.obj &&
-  gdown 1mEWRgBP7G-s3XOr6NO9yichD4_eKc3JH -O ${CMAKE_SOURCE_DIR}/src/client/models/teapot.obj
+  gdown 1N7a5cDgMcXbPO0RtgznnEo-1XUfdMScM -O ${CMAKE_SOURCE_DIR}/assets/graphics --folder
 )
