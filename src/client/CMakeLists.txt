@@ -58,6 +58,7 @@ target_link_libraries(${TARGET_NAME}
     nlohmann_json::nlohmann_json
 )
 
+target_link_libraries(${LIB_NAME} PRIVATE sfml-audio)
 target_link_libraries(${TARGET_NAME} PRIVATE sfml-audio)
 
 add_subdirectory(tests) # define client unit tests
