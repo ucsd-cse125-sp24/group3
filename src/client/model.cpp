@@ -72,46 +72,23 @@ Mesh::Mesh(
     std::cout << "\t shininess" << this->material.shininess << std::endl;
 }
 
-void Mesh::Draw(std::shared_ptr<Shader> shader, glm::mat4 modelView) {
+void Mesh::Draw(std::shared_ptr<Shader> shader, glm::mat4 model, glm::mat4 viewProj, glm::vec3 camPos, glm::vec3 lightPos) {
     // actiavte the shader program
     shader->use();
 
-    // Currently 'hardcoding' camera logic in
-    float FOV = 45.0f;
-    float Aspect = 1.33f;
-    float NearClip = 0.1f;
-    float FarClip = 100.0f;
-
-    float Distance = 10.0f;
-    float Azimuth = 0.0f;
-    float Incline = 20.0f;
-
-    glm::mat4 world(1);
-    world[3][2] = Distance;
-    world = glm::eulerAngleY(glm::radians(-Azimuth)) * glm::eulerAngleX(glm::radians(-Incline)) * world;
-
-    // Compute view matrix (inverse of world matrix)
-    glm::mat4 view = glm::inverse(world);
-
-    // Compute perspective projection matrix
-    glm::mat4 project = glm::perspective(glm::radians(FOV), Aspect, NearClip, FarClip);
-
-    // Compute final view-projection matrix
-    glm::mat4 viewProjMtx = project * view;
-
     auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     shader->setVec3("lightColor",  lightColor);
+    shader->setVec3("lightPos", lightPos);
 
-    glm::vec3 viewPos = glm::vec3(world[3].x, world[3].y, world[3].z);
-    shader->setVec3("viewPos", viewPos);
+    shader->setVec3("viewPos", camPos);
 
-    shader->setMat4("viewProj", viewProjMtx);
-    shader->setMat4("model", modelView);
+    shader->setMat4("viewProj", viewProj);
+    shader->setMat4("model", model);
 
     shader->setVec3("material.diffuse", this->material.diffuse);
     shader->setVec3("material.ambient", this->material.ambient);
     shader->setVec3("material.specular", this->material.specular);
-    shader->setFloat("materia.shininess", this->material.shininess);
+    shader->setFloat("material.shininess", this->material.shininess);
 
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
@@ -140,7 +117,7 @@ void Mesh::Draw(std::shared_ptr<Shader> shader, glm::mat4 modelView) {
 }
 
 Model::Model(const std::string& filepath) : 
-    modelView(1.0f), directory(filepath.substr(0, filepath.find_last_of('/'))) {
+    model(1.0f), directory(filepath.substr(0, filepath.find_last_of('/'))) {
 
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(filepath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_SplitLargeMeshes | aiProcess_OptimizeMeshes);
@@ -151,18 +128,22 @@ Model::Model(const std::string& filepath) :
     processNode(scene->mRootNode, scene);
 }
 
-void Model::Draw(std::shared_ptr<Shader> shader) {
+void Model::Draw(glm::mat4 viewProj, glm::vec3 camPos, std::shared_ptr<Shader> shader, glm::vec3 lightPos) {
     for(Mesh& mesh : this->meshes)
-        mesh.Draw(shader, this->modelView);
+        mesh.Draw(shader, this->model, viewProj, camPos, lightPos);
 }
 
 void Model::TranslateTo(const glm::vec3 &new_pos) {
-    modelView[3] = glm::vec4(new_pos, 1.0f);
+    model[3] = glm::vec4(new_pos, 1.0f);
 }
 
 void Model::Scale(const float& new_factor) {
     glm::vec3 scaleVector(new_factor, new_factor, new_factor);
-    this->modelView = glm::scale(this->modelView, scaleVector);
+    this->model = glm::scale(this->model, scaleVector);
+}
+
+void Model::setModelView(const glm::mat4& modelView) {
+    this->model = modelView;
 }
 
 void Model::processNode(aiNode *node, const aiScene *scene) {

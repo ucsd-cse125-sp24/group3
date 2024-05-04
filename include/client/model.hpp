@@ -84,7 +84,7 @@ class Mesh {
      * @param modelView determines the scaling/rotation/translation of the 
      * mesh
      */
-    void Draw(std::shared_ptr<Shader> shader, glm::mat4 modelView) ;
+    void Draw(std::shared_ptr<Shader> shader, glm::mat4 model, glm::mat4 viewProj, glm::vec3 camPos, glm::vec3 lightPos);
  private:
      std::vector<Vertex>       vertices;
      std::vector<unsigned int> indices;
@@ -113,7 +113,7 @@ class Model {
      * @param Shader to use while drawing all the
      * meshes of the model
      */
-    void Draw(std::shared_ptr<Shader> shader);	
+    void Draw(glm::mat4 viewProj, glm::vec3 camPos, std::shared_ptr<Shader> shader, glm::vec3 lightPos);
 
     /**
      * Sets the position of the Model to the given x,y,z
@@ -132,6 +132,8 @@ class Model {
      * in half.
      */
     void Scale(const float& new_factor);
+
+    void setModelView(const glm::mat4& modelView);
  private:
     std::vector<Mesh> meshes;
 
@@ -139,7 +141,7 @@ class Model {
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, const aiTextureType& type);
 
-    glm::mat4 modelView;
+    glm::mat4 model;
 
     // store the directory of the model file so that textures can be
     // loaded relative to the model file

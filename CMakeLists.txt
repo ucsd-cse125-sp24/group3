@@ -27,7 +27,7 @@ IF (NOT WIN32)
 ENDIF()
 
 # Add google test to CMake
-add_subdirectory(dependencies/google-test)
+add_subdirectory(dependencies/google-test) 
 
 # If we need any compiler / linker flags, add them here
 SET(GCC_COMPILE_FLAGS "")
@@ -81,4 +81,3 @@ add_custom_target(pull_models
   gdown 1hHK-0iKMT6uboFUl3DXC9JcbnfsNCNF4 -O ${CMAKE_SOURCE_DIR}/src/client/models/cube.obj &&
   gdown 1mEWRgBP7G-s3XOr6NO9yichD4_eKc3JH -O ${CMAKE_SOURCE_DIR}/src/client/models/teapot.obj
 )
-

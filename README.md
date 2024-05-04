@@ -33,6 +33,11 @@ Note: If you work locally this way, you should make sure that before you merge a
 		- Linux: it probably is already installed on your system, but if not use your favorite package manager.
 	4. OpenGL
 		- TODO: figure out what version the lab computers have installed, and then put instructions to install it here.
+    5. Various Libraries
+        - Some libraries are needed that might not be installed on your system already. Here is a short list of various libraries that you might need. If you do not have apt, then you can find the corresponding packages in whatever package manager you are using
+        ```
+        sudo apt install libopenal-dev libvorbis-dev libflac-dev
+        ```
 2. Verify installations:
     - Enter in `cmake`, `g++`, and `make` into your terminal
     - Confirm that each of these commands are recognized by your system

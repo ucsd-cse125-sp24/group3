@@ -116,6 +116,12 @@ void Shader::setVec3(const std::string &name, glm::vec3& value) {
     glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, reinterpret_cast<float*>(&value));
 }
 
+glm::vec3 Shader::getVec3(const std::string &name) { 
+    glm::vec3 vec;
+    glGetUniformfv(ID, glGetUniformLocation(ID, name.c_str()), (float*)&vec);
+    return vec;
+}
+
 GLuint Shader::getID() {
     return ID;
 }

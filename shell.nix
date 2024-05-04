@@ -26,6 +26,11 @@ mkShell {
 
     freeglut
     libGLU
+    libudev-zero
+    openal
+    libvorbis
+    flac
+    freetype
 
     doxygen
     clang-tools_14

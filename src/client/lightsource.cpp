@@ -7,10 +7,8 @@
 #include "client/shader.hpp"
 
 LightSource::LightSource() {
-    this->lightPos = glm::vec3(1.0f, 10.0f, 0.0f);
     model = glm::mat4(1.0f);
-    model = glm::translate(model, lightPos);
-    model = glm::scale(model, glm::vec3(0.2f));
+    // model = glm::scale(model, glm::vec3(0.2f));
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -56,4 +54,8 @@ void LightSource::draw(std::shared_ptr<Shader> shader) {
 
     glBindVertexArray(0);
     glUseProgram(0);
+}
+
+void LightSource::TranslateTo(const glm::vec3 &new_pos) {
+    model[3] = glm::vec4(new_pos, 1.0f);
 }

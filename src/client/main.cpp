@@ -2,10 +2,12 @@
 #include <chrono>
 
 #include <boost/asio/io_context.hpp>
+#include <SFML/Audio.hpp>
 
 #include "client/client.hpp"
 #include "shared/utilities/rng.hpp"
 #include "shared/utilities/config.hpp"
+#include "client/sound.hpp"
 
 using namespace std::chrono_literals;
 
@@ -25,11 +27,11 @@ void set_callbacks(GLFWwindow* window) {
     glfwSetKeyCallback(window, Client::keyCallback);
 
     // Set the mouse and cursor callbacks
-    // glfwSetMouseButtonCallback(window, client.mouse_callback);
-    // glfwSetCursorPosCallback(window, client.cursor_callback);
+    // glfwSetMouseButtonCallback(window, Client::mouseCallback);
+    glfwSetCursorPosCallback(window, Client::mouseCallback);
 }
 
-void set_opengl_settings() {
+void set_opengl_settings(GLFWwindow* window) {
     // Enable depth buffering.
     glEnable(GL_DEPTH_TEST);
 
@@ -41,6 +43,9 @@ void set_opengl_settings() {
 
     // Set clear color to black.
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+
+    // Set cursor position to (0, 0)
+    glfwSetCursorPos(window, 0, 0);
 }
 
 int main(int argc, char* argv[])
@@ -61,18 +66,31 @@ int main(int argc, char* argv[])
         client.connectAndListen(config.network.server_ip);
     }
 
-
     if (!client.init()) {
+        std::cout << "client init failed" << std::endl;
         exit(EXIT_FAILURE);
     }
-    
+
     GLFWwindow* window = client.getWindow();
     if (!window) exit(EXIT_FAILURE);
 
     // Setup callbacks.
     set_callbacks(window);
     // Setup OpenGL settings.
-    set_opengl_settings();
+    set_opengl_settings(window);
+
+    boost::filesystem::path soundFilepath = client.getRootPath() / "assets/sounds/piano.wav";
+
+    sf::SoundBuffer buffer;
+    if (!buffer.loadFromFile(soundFilepath.string()))
+        return -1;
+
+    sf::Sound sound;
+    sound.setBuffer(buffer);
+
+    sound.setLoop(true);
+
+    sound.play();
 
     // Loop while GLFW window should stay open.
     while (!glfwWindowShouldClose(window)) {

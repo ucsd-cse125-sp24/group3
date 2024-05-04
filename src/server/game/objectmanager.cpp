@@ -1,4 +1,5 @@
 #include "server/game/objectmanager.hpp"
+#include "server/game/enemy.hpp"
 
 #include <memory>
 
@@ -10,7 +11,7 @@ ObjectManager::ObjectManager() {
 
 	//	Initialize type-specific SmartVectors
 	this->base_objects = SmartVector<Object*>();
-	this->base_items = SmartVector<Item*>();
+	this->items = SmartVector<Item*>();
 }
 
 ObjectManager::~ObjectManager() {
@@ -25,7 +26,7 @@ EntityID ObjectManager::createObject(ObjectType type) {
 	SpecificID typeID;
 
 	switch (type) {
-	case ObjectType::Object:
+	case ObjectType::Object: {
 		//	Create a new object of type Object
 		Object* object = new Object(ObjectType::Object);
 
@@ -33,15 +34,102 @@ EntityID ObjectManager::createObject(ObjectType type) {
 		//	larger than uint32 (which is what SpecificID and EntityID are
 		//	defined as)
 		//	Push to type-specific base_objects vector
-		typeID = (SpecificID) this->base_objects.push(object);
+		typeID = (SpecificID)this->base_objects.push(object);
 
 		//	Push to global objects vector
-		globalID = (EntityID) this->objects.push(object);
+		globalID = (EntityID)this->objects.push(object);
 
 		//	Set object's type and global IDs
 		object->typeID = typeID;
 		object->globalID = globalID;
 		break;
+	}
+	case ObjectType::Item: {
+		//	Create a new object of type Item
+		Item* item = new Item();
+
+		//	Push to type-specific items vector
+		typeID = (SpecificID)this->items.push(item);
+
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(item);
+
+		//	Set items' type and global IDs
+		item->typeID = typeID;
+		item->globalID = globalID;
+		break;
+	}
+	case ObjectType::SolidSurface: {
+		//	Create a new object of type SolidSurface
+		SolidSurface* solidSurface = new SolidSurface();
+
+		//	Push to type-specific solid_surfaces vector
+		typeID = (SpecificID)this->solid_surfaces.push(solidSurface);
+
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(solidSurface);
+
+		//	Set solidSurface's type and global IDs
+		solidSurface->typeID = typeID;
+		solidSurface->globalID = globalID;
+		break;
+	}
+	case ObjectType::Player: {
+		
+		//	Create a new object of type Player
+		Player* player = new Player();
+
+		//	TODO: Maybe change SmartVector's index return value? size_t is
+		//	larger than uint32 (which is what SpecificID and EntityID are
+		//	defined as)
+		//	Push to type-specific base_objects vector
+		typeID = (SpecificID)this->player_objects.push(player);
+
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(player);
+
+		//	Set object's type and global IDs
+		player->typeID = typeID;
+		player->globalID = globalID;
+		break;
+	}
+	case ObjectType::Enemy: {
+		
+		//	Create a new object of type Player
+		Enemy* enemy = new Enemy();
+
+		//	TODO: Maybe change SmartVector's index return value? size_t is
+		//	larger than uint32 (which is what SpecificID and EntityID are
+		//	defined as)
+		//	Push to type-specific base_objects vector
+		typeID = (SpecificID)this->enemy_objects.push(enemy);
+
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(enemy);
+
+		//	Set object's type and global IDs
+		enemy->typeID = typeID;
+		enemy->globalID = globalID;
+		break;
+	}
+	default: {
+		//	Create a new object of type Object
+		Object* object = new Object(ObjectType::Object);
+
+		//	TODO: Maybe change SmartVector's index return value? size_t is
+		//	larger than uint32 (which is what SpecificID and EntityID are
+		//	defined as)
+		//	Push to type-specific base_objects vector
+		typeID = (SpecificID)this->base_objects.push(object);
+
+		//	Push to global objects vector
+		globalID = (EntityID)this->objects.push(object);
+
+		//	Set object's type and global IDs
+		object->typeID = typeID;
+		object->globalID = globalID;
+		break;
+	}
 	}
 
 	//	Return new object's global EntityID
@@ -86,7 +174,11 @@ SmartVector<Object*> ObjectManager::getObjects() {
 }
 
 SmartVector<Item*> ObjectManager::getItems() {
-	return this->base_items;
+	return this->items;
+}
+
+SmartVector<SolidSurface*> ObjectManager::getSolidSurfaces() {
+	return this->solid_surfaces;
 }
 
 /*	SharedGameState generation	*/

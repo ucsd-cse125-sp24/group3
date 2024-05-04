@@ -1,5 +1,3 @@
-#pragma once
-
 #include "client/core.hpp"
 
 #include <iostream>
@@ -17,6 +15,7 @@
 #include "client/model.hpp"
 #include "client/util.hpp"
 #include "client/lobbyfinder.hpp"
+#include "client/camera.hpp"
 
 //#include "shared/game/gamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -32,9 +31,11 @@ public:
     // Callbacks
     void displayCallback();
     void idleCallback(boost::asio::io_context& context);
+    void handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement = glm::vec3(0.0f));
 
     // Bound window callbacks
     static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+    static void mouseCallback(GLFWwindow *window, double xposIn, double yposIn);
 
 
     // Getter / Setters
@@ -49,6 +50,8 @@ public:
     void draw();
     void connectAndListen(std::string ip_addr);
 
+    boost::filesystem::path getRootPath();
+
 private:
     void processClientInput();
     void processServerInput(boost::asio::io_context& context);
@@ -56,20 +59,33 @@ private:
     SharedGameState gameState;
 
     std::shared_ptr<Shader> cubeShader;
+    std::shared_ptr<Shader> bearShader;
     std::shared_ptr<Shader> lightSourceShader;
 
     std::unique_ptr<LightSource> lightSource;
 
-    std::unique_ptr<Model> playerModel;
+    std::unique_ptr<Model> bearModel;
     float playerMovementDelta = 0.05f;
 
     GLFWwindow *window;
+
+    Camera *cam;
 
     // Flags
     static bool is_held_up;
     static bool is_held_down;
     static bool is_held_right;
     static bool is_held_left;
+    static bool is_held_space;
+    static bool is_held_shift;
+
+    static bool cam_is_held_up;
+    static bool cam_is_held_down;
+    static bool cam_is_held_right;
+    static bool cam_is_held_left;
+
+    static float mouse_xpos;
+    static float mouse_ypos;
 
     GameConfig config;
     tcp::resolver resolver;
