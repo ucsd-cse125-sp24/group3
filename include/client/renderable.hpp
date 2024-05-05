@@ -28,7 +28,7 @@ class Renderable {
      *
      * @param vector of x, y, z of the 's new position
      */
-    void translateAbsolute(const glm::vec3& new_pos);
+    virtual void translateAbsolute(const glm::vec3& new_pos);
 
     /**
      * Updates the position of the item relative to it's
@@ -37,7 +37,7 @@ class Renderable {
      * @param vector of x, y, z of the change in the item's
      * position
      */
-    void translateRelative(const glm::vec3& delta);
+    virtual void translateRelative(const glm::vec3& delta);
 
     /**
      * Scale the Model across all axes (x,y,z)
@@ -47,7 +47,7 @@ class Renderable {
      * Ex: setting it to 0.5 will cut the model's rendered size  
      * in half.
      */
-    void scale(const float& new_factor);
+    virtual void scale(const float& new_factor);
 
     /**
      * Scale the item across all axes (x,y,z)
@@ -56,7 +56,7 @@ class Renderable {
      * @param the scale vector describes how much to independently scale 
      * the item in each axis (x, y, z)
      */
-    void scale(const glm::vec3& scale);
+    virtual void scale(const glm::vec3& scale);
 
     /**
      * Gets the model matrix given all the transformations 

@@ -130,7 +130,7 @@ class Model : public Renderable {
      *
      * @param vector of x, y, z of the model's new position
      */
-    void translateAbsolute(const glm::vec3& new_pos);
+    void translateAbsolute(const glm::vec3& new_pos) override;
 
     /**
      * Updates the position of the Model relative to it's
@@ -139,7 +139,7 @@ class Model : public Renderable {
      * @param vector of x, y, z of the change in the Model's
      * position
      */
-    void translateRelative(const glm::vec3& delta);
+    void translateRelative(const glm::vec3& delta) override;
 
     /**
      * Scale the Model across all axes (x,y,z)
@@ -149,7 +149,7 @@ class Model : public Renderable {
      * Ex: setting it to 0.5 will cut the model's rendered size  
      * in half.
      */
-    void scale(const float& new_factor);
+    void scale(const float& new_factor) override;
 
     /**
      * Scale the model across all axes (x,y,z)
@@ -158,7 +158,7 @@ class Model : public Renderable {
      * @param the scale vector describes how much to independently scale 
      * the model in each axis (x, y, z)
      */
-    void scale(const glm::vec3& scale);
+    void scale(const glm::vec3& scale) override;
  private:
     std::vector<Mesh> meshes;
 

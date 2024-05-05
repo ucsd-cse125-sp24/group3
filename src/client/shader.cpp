@@ -118,7 +118,7 @@ void Shader::setVec3(const std::string &name, glm::vec3& value) {
 
 glm::vec3 Shader::getVec3(const std::string &name) { 
     glm::vec3 vec;
-    glGetUniformfv(ID, glGetUniformLocation(ID, name.c_str()), (float*)&vec);
+    glGetUniformfv(ID, glGetUniformLocation(ID, name.c_str()), reinterpret_cast<float*>(&vec));
     return vec;
 }
 

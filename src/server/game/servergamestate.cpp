@@ -3,7 +3,7 @@
 
 /*	Constructors and Destructors	*/
 
-ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) {
+ServerGameState::ServerGameState(GamePhase start_phase, const GameConfig& config) {
 	this->phase = start_phase;
 	this->timestep = FIRST_TIMESTEP;
 	this->timestep_length = config.game.timestep_length_ms;
@@ -159,7 +159,7 @@ void ServerGameState::useItem() {
 
 	SmartVector<Item*> items = this->objects.getItems();
 	for (int i = 0; i < items.size(); i++) {
-		Item* item = items.get(i);
+		const Item* item = items.get(i);
 
 		if (item == nullptr)
 			continue;

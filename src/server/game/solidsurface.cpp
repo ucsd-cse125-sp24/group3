@@ -9,9 +9,9 @@ SolidSurface::~SolidSurface() {}
 
 /*	SharedGameState generation	*/
 SharedObject SolidSurface::toShared() {
-	SharedObject shared = Object::toShared();
+	SharedObject sharedSolidSurface = Object::toShared();
 
-	shared.solidSurface = this->shared;
+	sharedSolidSurface.solidSurface = this->shared;
 
-	return shared;
+	return sharedSolidSurface;
 }

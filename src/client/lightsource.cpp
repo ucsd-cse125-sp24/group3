@@ -6,10 +6,7 @@
 
 #include "client/shader.hpp"
 
-LightSource::LightSource() {
-    model = glm::mat4(1.0f);
-    // model = glm::scale(model, glm::vec3(0.2f));
-
+LightSource::LightSource() : model(1.0f) {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     // we only need to bind to the VBO, the container's VBO's data already contains the data.

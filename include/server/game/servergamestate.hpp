@@ -47,7 +47,7 @@ public:
 	 */
 	explicit ServerGameState(GamePhase start_phase);
 
-	ServerGameState(GamePhase start_phase, GameConfig config);
+	ServerGameState(GamePhase start_phase, const GameConfig& config);
 
 	~ServerGameState();
 

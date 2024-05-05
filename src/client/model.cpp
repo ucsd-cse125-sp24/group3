@@ -228,7 +228,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     aiColor3D diffuse_color;
     aiColor3D ambient_color;
     aiColor3D specular_color;
-    float shininess;
+    float shininess = 0.0f;
 
     if(mesh->mMaterialIndex >= 0) {
         std::cout << "processing material of id: " << mesh->mMaterialIndex << std::endl;

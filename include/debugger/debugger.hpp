@@ -258,7 +258,7 @@ public:
 
 		//	Create a new base object in the game state
 		unsigned int globalID = state.objects.createObject(ObjectType::Object);
-		Object* obj = state.objects.getObject(globalID);
+		const Object* obj = state.objects.getObject(globalID); // cppcheck-suppress unreadVariable
 
 		std::cout << "Created new object (global id " << globalID << ")" << std::endl;
 	}

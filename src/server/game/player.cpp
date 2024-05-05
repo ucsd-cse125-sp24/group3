@@ -8,7 +8,7 @@ SharedObject Player::toShared() {
 }
 
 Player::Player() : Creature(ObjectType::Player) {
-
+    this->stats = PlayerStats{ 100 };
 }
 
 Player::~Player() {

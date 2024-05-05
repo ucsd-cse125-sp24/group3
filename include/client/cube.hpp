@@ -14,7 +14,7 @@
 
 class Cube : public Renderable {
 public:
-    Cube(glm::vec3 newColor);
+    explicit Cube(glm::vec3 newColor);
     ~Cube();
 
     void draw(std::shared_ptr<Shader> shader,

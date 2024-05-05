@@ -6,7 +6,7 @@
 
 class Creature : public Object {
 public:
-	Creature(ObjectType type);
+	explicit Creature(ObjectType type);
 	~Creature();
 
 	virtual SharedObject toShared() override;

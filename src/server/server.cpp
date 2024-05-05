@@ -38,7 +38,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     state.objects.createObject(ObjectType::Object);
 
     EntityID bearID = state.objects.createObject(ObjectType::Enemy);
-    Enemy* bear = (Enemy*)state.objects.getObject(bearID);
+    Enemy* bear = reinterpret_cast<Enemy*>(state.objects.getObject(bearID));
     bear->physics.shared.position = glm::vec3(0.0f, -1.3f, 0.0f);
     
     //  Create a room
@@ -57,11 +57,11 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     //  #   #
     //  ##4##
 
-    SolidSurface* wall1 = (SolidSurface*)state.objects.getObject(wall1ID);
-    SolidSurface* wall2 = (SolidSurface*)state.objects.getObject(wall2ID);
-    SolidSurface* wall3 = (SolidSurface*)state.objects.getObject(wall3ID);
-    SolidSurface* wall4 = (SolidSurface*)state.objects.getObject(wall4ID);
-    SolidSurface* floor = (SolidSurface*)state.objects.getObject(floorID);
+    SolidSurface* wall1 = reinterpret_cast<SolidSurface*>(state.objects.getObject(wall1ID));
+    SolidSurface* wall2 = reinterpret_cast<SolidSurface*>(state.objects.getObject(wall2ID));
+    SolidSurface* wall3 = reinterpret_cast<SolidSurface*>(state.objects.getObject(wall3ID));
+    SolidSurface* wall4 = reinterpret_cast<SolidSurface*>(state.objects.getObject(wall4ID));
+    SolidSurface* floor = reinterpret_cast<SolidSurface*>(state.objects.getObject(floorID));
 
     //  Wall1 has dimensions (20, 4, 1); and position (0, 0, -19.5)
     wall1->shared.dimensions = glm::vec3(20, 4, 1);
