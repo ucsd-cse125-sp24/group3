@@ -12,6 +12,7 @@
 #include <assimp/postprocess.h>
 
 #include "assimp/material.h"
+#include "client/renderable.hpp"
 #include "client/shader.hpp"
 
 /**
@@ -64,7 +65,7 @@ struct Material {
  * smaller meshes. This is useful for animating parts of model individual (ex: legs,
  * arms, head)
  */
-class Mesh {
+class Mesh : public Renderable {
  public:
     /**
      * Creates a new mesh from a collection of vertices, indices and textures
@@ -84,7 +85,11 @@ class Mesh {
      * @param modelView determines the scaling/rotation/translation of the 
      * mesh
      */
-    void Draw(std::shared_ptr<Shader> shader, glm::mat4 model, glm::mat4 viewProj, glm::vec3 camPos, glm::vec3 lightPos);
+    void draw(std::shared_ptr<Shader> shader,
+            glm::mat4 viewProj,
+            glm::vec3 camPos, 
+            glm::vec3 lightPos,
+            bool fill) override;
  private:
      std::vector<Vertex>       vertices;
      std::vector<unsigned int> indices;
@@ -96,7 +101,7 @@ class Mesh {
 };
 
 
-class Model {
+class Model : public Renderable {
  public:
     /**
      * Loads Model from a given filename. Can be of format
@@ -113,7 +118,11 @@ class Model {
      * @param Shader to use while drawing all the
      * meshes of the model
      */
-    void Draw(glm::mat4 viewProj, glm::vec3 camPos, std::shared_ptr<Shader> shader, glm::vec3 lightPos);
+    void draw(std::shared_ptr<Shader> shader,
+            glm::mat4 viewProj,
+            glm::vec3 camPos, 
+            glm::vec3 lightPos,
+            bool fill) override;
 
     /**
      * Sets the position of the Model to the given x,y,z
@@ -121,7 +130,16 @@ class Model {
      *
      * @param vector of x, y, z of the model's new position
      */
-    void TranslateTo(const glm::vec3& new_pos);
+    void translateAbsolute(const glm::vec3& new_pos);
+
+    /**
+     * Updates the position of the Model relative to it's
+     * previous position
+     *
+     * @param vector of x, y, z of the change in the Model's
+     * position
+     */
+    void translateRelative(const glm::vec3& delta);
 
     /**
      * Scale the Model across all axes (x,y,z)
@@ -131,17 +149,22 @@ class Model {
      * Ex: setting it to 0.5 will cut the model's rendered size  
      * in half.
      */
-    void Scale(const float& new_factor);
+    void scale(const float& new_factor);
 
-    void setModelView(const glm::mat4& modelView);
+    /**
+     * Scale the model across all axes (x,y,z)
+     * by the scale factor in each axis.
+     *
+     * @param the scale vector describes how much to independently scale 
+     * the model in each axis (x, y, z)
+     */
+    void scale(const glm::vec3& scale);
  private:
     std::vector<Mesh> meshes;
 
     void processNode(aiNode* node, const aiScene* scene);
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, const aiTextureType& type);
-
-    glm::mat4 model;
 
     // store the directory of the model file so that textures can be
     // loaded relative to the model file

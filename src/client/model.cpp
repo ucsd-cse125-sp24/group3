@@ -72,23 +72,29 @@ Mesh::Mesh(
     std::cout << "\t shininess" << this->material.shininess << std::endl;
 }
 
-void Mesh::Draw(std::shared_ptr<Shader> shader, glm::mat4 model, glm::mat4 viewProj, glm::vec3 camPos, glm::vec3 lightPos) {
+void Mesh::draw(
+    std::shared_ptr<Shader> shader,
+    glm::mat4 viewProj,
+    glm::vec3 camPos,
+    glm::vec3 lightPos,
+    bool fill) {
     // actiavte the shader program
     shader->use();
 
-    auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-    shader->setVec3("lightColor",  lightColor);
-    shader->setVec3("lightPos", lightPos);
-
-    shader->setVec3("viewPos", camPos);
-
+    // vertex shader uniforms
     shader->setMat4("viewProj", viewProj);
+    auto model = this->getModelMat();
     shader->setMat4("model", model);
 
+    // fragment shader uniforms
     shader->setVec3("material.diffuse", this->material.diffuse);
     shader->setVec3("material.ambient", this->material.ambient);
     shader->setVec3("material.specular", this->material.specular);
     shader->setFloat("material.shininess", this->material.shininess);
+    shader->setVec3("viewPos", camPos);
+    auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    shader->setVec3("lightColor",  lightColor);
+    shader->setVec3("lightPos", lightPos);
 
     if (textures.size() == 0) {
     } else {
@@ -113,14 +119,18 @@ void Mesh::Draw(std::shared_ptr<Shader> shader, glm::mat4 model, glm::mat4 viewP
 
     // draw mesh
     glBindVertexArray(VAO);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    if(fill){
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     glUseProgram(0);
 }
 
 Model::Model(const std::string& filepath) : 
-    model(1.0f), directory(filepath.substr(0, filepath.find_last_of('/'))) {
+    directory(filepath.substr(0, filepath.find_last_of('/'))) {
 
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(filepath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_SplitLargeMeshes | aiProcess_OptimizeMeshes);
@@ -131,22 +141,39 @@ Model::Model(const std::string& filepath) :
     processNode(scene->mRootNode, scene);
 }
 
-void Model::Draw(glm::mat4 viewProj, glm::vec3 camPos, std::shared_ptr<Shader> shader, glm::vec3 lightPos) {
-    for(Mesh& mesh : this->meshes)
-        mesh.Draw(shader, this->model, viewProj, camPos, lightPos);
+void Model::draw(std::shared_ptr<Shader> shader,
+    glm::mat4 viewProj,
+    glm::vec3 camPos, 
+    glm::vec3 lightPos,
+    bool fill) {
+
+    for(Mesh& mesh : this->meshes) {
+        mesh.draw(shader, viewProj, camPos, lightPos, fill);
+    }
 }
 
-void Model::TranslateTo(const glm::vec3 &new_pos) {
-    model[3] = glm::vec4(new_pos, 1.0f);
+void Model::translateAbsolute(const glm::vec3& new_pos) {
+    for(Mesh& mesh : this->meshes) {
+        mesh.translateAbsolute(new_pos);
+    }
 }
 
-void Model::Scale(const float& new_factor) {
-    glm::vec3 scaleVector(new_factor, new_factor, new_factor);
-    this->model = glm::scale(this->model, scaleVector);
+void Model::translateRelative(const glm::vec3& delta) {
+    for(Mesh& mesh : this->meshes) {
+        mesh.translateAbsolute(delta);
+    }
 }
 
-void Model::setModelView(const glm::mat4& modelView) {
-    this->model = modelView;
+void Model::scale(const float& new_factor) {
+    for(Mesh& mesh : this->meshes) {
+        mesh.scale(new_factor);
+    }
+}
+
+void Model::scale(const glm::vec3& scale) {
+    for(Mesh& mesh : this->meshes) {
+        mesh.scale(scale);
+    }
 }
 
 void Model::processNode(aiNode *node, const aiScene *scene) {

@@ -1,16 +1,11 @@
 #include "client/cube.hpp"
 
-Cube::Cube(glm::vec3 newColor, glm::vec3 scale) {
+Cube::Cube(glm::vec3 newColor) {
     // create a vertex buffer for positions and normals
     // insert the data into these buffers
     // initialize model matrix
-    // Model matrix.
     glm::vec3 cubeMin = glm::vec3(-1.0f, -1.0f, -1.0f);
     glm::vec3 cubeMax = glm::vec3(1.0f, 1.0f, 1.0f);
-    model = glm::mat4(1.0f);
-
-    //scale the cube to with given vector
-    model = glm::scale(model, scale);
 
     // The color of the cube. Try setting it to something else!
     color = newColor;
@@ -139,34 +134,20 @@ Cube::~Cube() {
     glDeleteVertexArrays(1, &VAO);
 }
 
-void Cube::draw(glm::mat4 viewProjMat, GLuint shader, bool fill) {
+void Cube::draw(std::shared_ptr<Shader> shader,
+    glm::mat4 viewProj,
+    glm::vec3 camPos, 
+    glm::vec3 lightPos,
+    bool fill) {
+
     // actiavte the shader program
-    glUseProgram(shader);
-
-    // Currently 'hardcoding' camera logic in
-    float FOV = 45.0f;
-    float Aspect = 1.33f;
-    float NearClip = 0.1f;
-    float FarClip = 100.0f;
-
-    float Distance = 10.0f;
-    float Azimuth = 0.0f;
-    float Incline = 20.0f;
-
-    glm::mat4 world(1);
-    world[3][2] = Distance;
-    world = glm::eulerAngleY(glm::radians(-Azimuth)) * glm::eulerAngleX(glm::radians(-Incline)) * world;
-
-    // Compute view matrix (inverse of world matrix)
-    glm::mat4 view = glm::inverse(world);
-
-    // Compute perspective projection matrix
-    glm::mat4 project = glm::perspective(glm::radians(FOV), Aspect, NearClip, FarClip);
+    shader->use();
 
     // get the locations and send the uniforms to the shader
-    glUniformMatrix4fv(glGetUniformLocation(shader, "viewProj"), 1, false, reinterpret_cast<float*>(&viewProjMat));
-    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, reinterpret_cast<float*>(&model));
-    glUniform3fv(glGetUniformLocation(shader, "DiffuseColor"), 1, &color[0]);
+    shader->setMat4("viewProj", viewProj);
+    auto model = this->getModelMat();
+    shader->setMat4("model", model);
+    shader->setVec3("DiffuseColor", color);
 
     // Bind the VAO
     glBindVertexArray(VAO);
@@ -184,12 +165,4 @@ void Cube::draw(glm::mat4 viewProjMat, GLuint shader, bool fill) {
     // Unbind the VAO and shader program
     glBindVertexArray(0);
     glUseProgram(0);
-}
-
-void Cube::update(glm::vec3 new_pos) {
-    model[3] = glm::vec4(new_pos, 1.0f);
-}
-
-void Cube::update_delta(glm::vec3 delta) {
-    model = glm::translate(model, delta);
 }

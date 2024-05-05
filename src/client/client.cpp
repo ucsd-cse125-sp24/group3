@@ -11,7 +11,9 @@
 #include "client/lightsource.hpp"
 #include "client/shader.hpp"
 #include "client/model.hpp"
+#include "glm/fwd.hpp"
 #include "shared/game/event.hpp"
+#include "shared/game/sharedobject.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
@@ -121,7 +123,7 @@ bool Client::init() {
 
     boost::filesystem::path bear_model_path = graphics_assets_dir / "bear-sp22.obj";
     this->bear_model = std::make_unique<Model>(bear_model_path.string());
-    this->bear_model->Scale(0.25);
+    this->bear_model->scale(0.25);
 
     this->light_source = std::make_unique<LightSource>();
     boost::filesystem::path lightVertFilepath = this->root_path / "src/client/shaders/lightsource.vert";
@@ -242,8 +244,13 @@ void Client::draw() {
             continue;
         }
         if (sharedObject->type == ObjectType::Enemy) {
-            this->bear_model->TranslateTo(sharedObject->physics.position);
-            this->bear_model->Draw(this->cam->getViewProj(), this->cam->getPos(), this->model_shader, this->cam->getPos());
+            this->bear_model->translateAbsolute(sharedObject->physics.position);
+            this->bear_model->draw(
+                this->model_shader,
+                this->cam->getViewProj(),
+                this->cam->getPos(),
+                this->cam->getPos(),
+                true);
         }
 
         // Get camera position from server, update position and don't render player object (or special handling)
@@ -256,16 +263,18 @@ void Client::draw() {
 
         // If solidsurface, scale cube to given dimensions
         if(sharedObject->solidSurface.has_value()){
-            Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f), sharedObject->solidSurface->dimensions);
-            cube->update(sharedObject->physics.position);
-            cube->draw(this->cam->getViewProj(), this->cube_shader->getID(), true);
+            std::cout << "solid surface has type " << objectTypeString(sharedObject->type) << std::endl;
+            Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f));
+            cube->scale( sharedObject->solidSurface->dimensions);
+            cube->translateAbsolute(sharedObject->physics.position);
+            cube->draw(this->cube_shader, this->cam->getViewProj(), this->cam->getPos(), glm::vec3(), true);
             continue;
         }
 
-        //  tmp: all objects are cubes
-        Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f), glm::vec3(1.0f));
-        cube->update(sharedObject->physics.position);
-        cube->draw(this->cam->getViewProj(), this->cube_shader->getID(), false);
+        // original center cube because why not
+        Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f));
+        cube->translateAbsolute(sharedObject->physics.position);
+        cube->draw(this->cube_shader, this->cam->getViewProj(), this->cam->getPos(), glm::vec3(), false);
     }
 }
 

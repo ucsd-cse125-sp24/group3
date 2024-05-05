@@ -33,7 +33,7 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) {
         vertexCode   = vShaderStream.str();
         fragmentCode = fShaderStream.str();		
     } catch(std::ifstream::failure& e) {
-        throw std::invalid_argument("Error: could not read shader file");
+        throw std::invalid_argument("Error: could not read shader file " + vertexPath + " and " + fragmentPath);
     }
 
     const char* vShaderCode = vertexCode.c_str();
@@ -51,7 +51,7 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) {
     glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
     if(!success) {
         glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        std::cout << "ERROR: Vertex shader compilation failed\n" << infoLog << std::endl;
     };
   
     // fragment shader
@@ -62,7 +62,7 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) {
     glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
     if(!success) {
         glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        std::cout << "ERROR: Fragment shader compilation failed\n" << infoLog << std::endl;
     };
 
     if (vertex == 0 && fragment == 0) {
