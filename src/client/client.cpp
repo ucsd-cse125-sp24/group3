@@ -114,8 +114,8 @@ bool Client::init() {
     boost::filesystem::path shaders_dir = this->root_path / "src/client/shaders";
     boost::filesystem::path graphics_assets_dir = this->root_path / "assets/graphics";
 
-    boost::filesystem::path cube_vert_path = shaders_dir / "shader.vert";
-    boost::filesystem::path cube_frag_path = shaders_dir / "shader.frag";
+    boost::filesystem::path cube_vert_path = shaders_dir / "cube.vert";
+    boost::filesystem::path cube_frag_path = shaders_dir / "cube.frag";
     this->cube_shader = std::make_shared<Shader>(cube_vert_path.string(), cube_frag_path.string());
 
     boost::filesystem::path model_vert_path = shaders_dir / "model.vert";

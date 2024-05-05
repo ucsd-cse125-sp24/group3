@@ -1,23 +1,18 @@
 #version 330 core
 
-// Inputs to the fragment shader are the outputs of the same name from the vertex shader.
-// Note that you do not have access to the vertex shader's default output, gl_Position.
+// Fragment shader of solid color, untextured cubes
 
 in vec3 fragNormal;
 in vec3 fragPos;
 
-// uniforms used for lighting
 uniform vec3 AmbientColor = vec3(0.2);
 uniform vec3 LightDirection = normalize(vec3(2, 4, 3));
 uniform vec3 LightColor = vec3(1.0, 1.0, 1.0);
 uniform vec3 DiffuseColor = vec3(1.0, 1.0, 1.0);
 
-// You can output many things. The first vec4 type output determines the color of the fragment
 out vec4 fragColor;
 
-void main()
-{
-
+void main() {
 	// Compute irradiance (sum of ambient & direct lighting)
 	vec3 irradiance = AmbientColor + LightColor * max(0, dot(LightDirection, fragNormal));
 

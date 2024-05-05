@@ -1,5 +1,6 @@
 #version 330 core
-// NOTE: Do NOT use any version older than 330! Bad things will happen!
+#
+// Fragment shader of solid color, untextured cubes
 
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
