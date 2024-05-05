@@ -14,6 +14,7 @@
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
+#include "client/audiomanager.hpp"
 
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
@@ -46,11 +47,30 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     gameState(GamePhase::TITLE_SCREEN, config)
 {
     cam = new Camera();
+
+    audioManager = new AudioManager();
+
+
     this->root_path = boost::dll::program_location().parent_path().parent_path().parent_path();
+
+    std::vector< std::pair<boost::filesystem::path, SoundType>> audioPaths;
+    std::pair<boost::filesystem::path, SoundType> collidePair { this->getRootPath() / "assets/sounds/collide.wav", SoundType::Collision };
+    audioPaths.push_back(collidePair);
+
+    std::vector< std::pair<boost::filesystem::path, SoundType>> musicPaths;
+    std::pair<boost::filesystem::path, SoundType> pianoPair{ this->getRootPath() / "assets/sounds/piano.wav", SoundType::Background };
+    musicPaths.push_back(pianoPair);
+
+    audioManager->loadAudioFiles(audioPaths);
+    audioManager->loadMusicFiles(musicPaths);
 }
 
 boost::filesystem::path Client::getRootPath() {
     return this->root_path;
+}
+
+AudioManager* Client::getAudioManager() {
+    return this->audioManager;
 }
 
 void Client::connectAndListen(std::string ip_addr) {
@@ -113,6 +133,7 @@ bool Client::init() {
 
 bool Client::cleanup() {
     glDeleteProgram(this->cubeShaderProgram);
+    delete audioManager;
     return true;
 }
 

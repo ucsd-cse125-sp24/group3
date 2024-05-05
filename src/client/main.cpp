@@ -77,6 +77,12 @@ int main(int argc, char* argv[])
     // Setup OpenGL settings.
     set_opengl_settings(window);
 
+    AudioManager* clientAudioManager = client.getAudioManager();
+
+    clientAudioManager->playAudio(SoundType::Background);
+
+    clientAudioManager->loop(SoundType::Background);
+
     // Loop while GLFW window should stay open.
     while (!glfwWindowShouldClose(window)) {
         // Main render display callback. Rendering of objects is done here.

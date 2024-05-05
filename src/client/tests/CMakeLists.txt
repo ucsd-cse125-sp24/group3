@@ -24,6 +24,9 @@ target_link_libraries(${TARGET_NAME}
 target_include_directories(${TARGET_NAME} PRIVATE ${OPENGL_INCLUDE_DIRS} glfw glm ${imgui-directory} "${CMAKE_BINARY_DIR}/_deps/glew-src/include")
 target_link_libraries(${TARGET_NAME} PRIVATE glm glfw libglew_static)
 
+target_link_libraries(${LIB_NAME} PRIVATE sfml-audio)
+target_link_libraries(${TARGET_NAME} PRIVATE sfml-audio)
+
 # setup make target
 set(RUN_TESTS_TARGET "run_${TARGET_NAME}")
 add_custom_target(${RUN_TESTS_TARGET})

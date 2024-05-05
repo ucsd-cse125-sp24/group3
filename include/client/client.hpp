@@ -15,6 +15,7 @@
 #include "client/util.hpp"
 #include "client/lobbyfinder.hpp"
 #include "client/camera.hpp"
+#include "client/audiomanager.hpp"
 
 //#include "shared/game/gamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -51,6 +52,8 @@ public:
 
     boost::filesystem::path getRootPath();
 
+    AudioManager* getAudioManager();
+
 private:
     void processClientInput();
     void processServerInput(boost::asio::io_context& context);
@@ -63,6 +66,8 @@ private:
     GLuint cubeShaderProgram;
 
     Camera *cam;
+
+    AudioManager* audioManager;
 
     // Flags
     static bool is_held_up;
