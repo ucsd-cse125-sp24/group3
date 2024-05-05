@@ -17,6 +17,7 @@
 #include "shared/game/event.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
+#include "server/game/boxcollider.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
@@ -32,9 +33,23 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      world_eid(0),
      state(ServerGameState(GamePhase::LOBBY, config))
 {
-    state.objects.createObject(ObjectType::Object);
+    EntityID id = state.objects.createObject(ObjectType::Object);
+    Object* cube = (Object*)state.objects.getObject(id);
+    cube->physics.shared.position = glm::vec3(0.0f, 0.0f, 5.0f);
+    cube->physics.shared.corner = glm::vec3(-3.0f, -3.0f, 4.75f);
+    cube->physics.boundary = new BoxCollider(cube->physics.shared.corner, glm::vec3(6.0f, 6.0f, 0.5f));
+    cube->physics.movable = false;
 
-    
+    /*
+    EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
+    SolidSurface* floor = (SolidSurface*)state.objects.getObject(floorID);
+    floor->shared.dimensions = glm::vec3(20.0f, 0.1f, 20.0f);
+    floor->physics.shared.corner = glm::vec3(-10.0f, -0.1f, -10.0f);
+    floor->physics.shared.position = glm::vec3(0.0f, -0.05f, 0.0f);
+    floor->physics.boundary = new BoxCollider(floor->physics.shared.corner, floor->shared.dimensions);
+    floor->physics.movable = false;*/
+
+    /*
     //  Create a room
     EntityID wall1ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall2ID = state.objects.createObject(ObjectType::SolidSurface);
@@ -80,7 +95,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     //  floor has dimensions (20, 0.1, 20) and position (0, -1.3, 0)
     floor->shared.dimensions = glm::vec3(20.0f, 0.1f, 20.0f);
     floor->physics.shared.position = glm::vec3(0.0f, -1.3f, 0.0f);
-    floor->physics.movable = false;
+    floor->physics.movable = false;*/
     
     _doAccept(); // start asynchronously accepting
 
@@ -233,6 +248,11 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
     EntityID id = this->state.objects.createObject(ObjectType::Player);
+    Player* cube1 = (Player*)state.objects.getObject(id);
+    cube1->physics.shared.position = glm::vec3(0.5f);
+    cube1->physics.shared.corner = glm::vec3(0.0f);
+    cube1->physics.boundary = new BoxCollider(cube1->physics.shared.corner, glm::vec3(1.0f));
+
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, id));
 

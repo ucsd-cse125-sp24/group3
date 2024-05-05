@@ -137,13 +137,42 @@ void ServerGameState::updateMovement() {
 		if (object == nullptr)
 			continue;
 		
+		bool collided = false;
 		if (object->physics.movable) {
-			//TODO : check for collision at position to move, if so, dont change position
 
-			object->physics.shared.position += object->physics.velocity * object->physics.acceleration;
+			// Check for collision at position to move, if so, dont change position
+			// O(n^2) naive implementation of collision detection
+			Collider* curr = object->physics.boundary;
+			curr->corner += object->physics.velocity * object->physics.acceleration; // only move collider to check
+
+			// TODO : for possible addition for smooth collision detection, but higher computation
+			// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
+			//    Then, take the most steps possible (mario 64 handles it like this)
+			// 2) Using raycasting
+
+			for (int j = 0; j < gameObjects.size(); j++) {
+				if (i == j) { continue; }
+				Object* otherObj = gameObjects.get(j);
+				Collider* otherCollider = otherObj->physics.boundary;
+
+				if (curr->detectCollision(otherCollider)) {
+					collided = true;
+					break;
+				}
+			}
+
+			// Move object if no collision detected
+			if (!collided) {
+				object->physics.shared.position += object->physics.velocity * object->physics.acceleration;
+				object->physics.shared.corner += object->physics.velocity * object->physics.acceleration;
+			}
+			// Revert collider if collided
+			else {
+				curr->corner -= object->physics.velocity * object->physics.acceleration;
+			}
 
 			// update gravity factor
-			if ((object->physics.shared.position).y >= 0) {
+			if ((object->physics.shared.corner).y >= 0) {
 				object->physics.velocity.y -= GRAVITY;
 			} else {
 				object->physics.velocity.y = 0.0f;

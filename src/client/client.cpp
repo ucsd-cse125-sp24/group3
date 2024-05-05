@@ -225,12 +225,12 @@ void Client::draw() {
         // Get camera position from server, update position and don't render player object (or special handling)
         if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
             glm::vec3 pos = sharedObject->physics.position;
-            //pos.y += 0.5f;
+            pos.y += 1.5f;
             cam->updatePos(pos);
-            /*
+            
             Cube* cube = new Cube(glm::vec3(0.0f, 0.5f, 1.0f), glm::vec3(1.0f));
             cube->update(sharedObject->physics.position);
-            cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);*/
+            cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
             continue;
         }
 
@@ -242,10 +242,13 @@ void Client::draw() {
             continue;
         }
 
-        //  tmp: all objects are cubes
-        Cube* cube = new Cube(glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(1.0f));
+        Cube* cube = new Cube(glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(6.0f, 6.0f, 0.5f));
         cube->update(sharedObject->physics.position);
-        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
+        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);
+
+        Cube* origin = new Cube(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.05f, 0.05f, 0.05f));
+        origin->update(glm::vec3(0.0f));
+        origin->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
     }
 }
 

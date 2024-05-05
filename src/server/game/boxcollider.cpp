@@ -3,12 +3,14 @@
 #include <math.h> 
 #include <algorithm>
 
-BoxCollider::BoxCollider() : 
-	corner(glm::vec3(0.0f)), dimension(glm::vec3(0.0f)) {
+BoxCollider::BoxCollider() {
+	this->corner = corner;
+	this->dimension = dimension;
 }
 
-BoxCollider::BoxCollider(glm::vec3 corner, glm::vec3 dimension) :
-	corner(corner), dimension(dimension) {
+BoxCollider::BoxCollider(glm::vec3 corner, glm::vec3 dimension) {
+	this->corner = corner;
+	this->dimension = dimension;
 }
 
 
@@ -35,17 +37,20 @@ bool BoxCollider::detectCollision(Collider* otherCollider) {
 		}
 		case Sphere: {
 			const SphereCollider* otherC = dynamic_cast<SphereCollider*>(otherCollider);
-			float x = fmaxf(minPos.x, fminf(otherC->center.x, maxPos.x));
-			float y = fmaxf(minPos.y, fminf(otherC->center.y, maxPos.y));
-			float z = fmaxf(minPos.z, fminf(otherC->center.z, maxPos.z));
+			glm::vec3 otherCenter = otherC->corner + (otherC->dimension / 2.0f);
+			float otherRadius = otherC->dimension.x / 2.0f;
+
+			float x = fmaxf(minPos.x, fminf(otherCenter.x, maxPos.x));
+			float y = fmaxf(minPos.y, fminf(otherCenter.y, maxPos.y));
+			float z = fmaxf(minPos.z, fminf(otherCenter.z, maxPos.z));
 			
 			float distance = sqrt(
-				(x - otherC->center.x) * (x - otherC->center.x) +
-				(y - otherC->center.y) * (y - otherC->center.y) +
-				(z - otherC->center.z) * (z - otherC->center.z)
+				(x - otherCenter.x) * (x - otherCenter.x) +
+				(y - otherCenter.y) * (y - otherCenter.y) +
+				(z - otherCenter.z) * (z - otherCenter.z)
 			);
 
-			return distance < otherC->radius;
+			return distance < otherRadius;
 		}
 	}
 	return false;

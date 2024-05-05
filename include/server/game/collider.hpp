@@ -4,6 +4,11 @@
 
 class Collider {
 public:
+	// Vector for bottom left corner 
+	glm::vec3 corner;
+
+	// Vector for dimensions
+	glm::vec3 dimension;
 
 	enum Shape {   
 		Box, 
