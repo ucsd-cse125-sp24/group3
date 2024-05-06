@@ -56,12 +56,14 @@ DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts, Dyn
     DynText({0.0f, 0.0f}, text, fonts, options) {}
 
 void DynText::render() {
+    glEnable(GL_CULL_FACE);
+
     glUseProgram(DynText::shader);
 
     glUniformMatrix4fv(glGetUniformLocation(DynText::shader, "projection"), 1, false, reinterpret_cast<float*>(&GUI::projection));
     glUniform3f(glGetUniformLocation(DynText::shader, "textColor"),
         this->options.color.x, this->options.color.y, this->options.color.z);
-    glActiveTexture(GL_TEXTURE0);
+    // glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 
     float x = this->origin.x;
@@ -98,10 +100,12 @@ void DynText::render() {
         // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
         x += (ch.advance >> 6) * this->options.scale; // bitshift by 6 to get value in pixels (2^6 = 64)
     }
+
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
-
     glUseProgram(0);
+
+    glDisable(GL_CULL_FACE);
 }
 
 void DynText::changeColor(font::FontColor new_color) {
