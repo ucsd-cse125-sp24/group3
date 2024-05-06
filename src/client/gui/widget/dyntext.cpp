@@ -31,13 +31,13 @@ DynText::DynText(glm::vec2 origin, std::string text,
     this->width = 0;
     this->height = 0;
 
-    float scale = 1.0f;
+    float scale = font::getScaleFactor(this->options.size);
 
     for (int i = 0; i < text.size(); i++) {
-        font::Character ch = this->fonts->loadChar(this->text[i], this->options.font, this->options.size);
+        font::Character ch = this->fonts->loadChar(this->text[i], this->options.font);
         this->height = std::max(this->height, static_cast<std::size_t>(ch.size.y * scale));
         if (i != text.size() - 1 && i != 0) {
-            this->width += (ch.advance / 64) * scale;
+            this->width += (ch.advance >> 6) * scale;
         } else {
             this->width += ch.size.x * scale;
         }
@@ -64,9 +64,9 @@ void DynText::render() {
     // iterate through all characters
     for (const char& c : this->text)
     {
-        font::Character ch = this->fonts->loadChar(c, this->options.font, this->options.size);
+        font::Character ch = this->fonts->loadChar(c, this->options.font);
 
-        float scale = 1.0f;
+        float scale = font::getScaleFactor(this->options.size);
 
         float xpos = x + ch.bearing.x * scale;
         float ypos = y - (ch.size.y - ch.bearing.y) * scale;
