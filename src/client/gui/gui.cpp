@@ -8,6 +8,8 @@
 #include "shared/game/sharedgamestate.hpp"
 
 
+
+
 namespace gui {
 
 glm::mat4 GUI::projection = glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT);
