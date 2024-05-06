@@ -27,8 +27,8 @@ public:
     static Widget::Ptr make(
         std::string text, 
         font::Font font, 
-        font::FontSizePx size,
-        font::FontColor color, 
+        font::Size size,
+        font::Color color, 
         std::shared_ptr<font::Loader> fonts, 
         float y_pos
     );

@@ -12,9 +12,12 @@ public:
     using Ptr = std::unique_ptr<Flexbox>;
 
     struct Options {
-        JustifyContent direction;
-        AlignItems     alignment;
-        float          padding;
+        Options(Justify direction, Align alignment, float padding):
+            direction(direction), alignment(alignment), padding(padding) {}
+
+        Justify direction;
+        Align   alignment;
+        float   padding;
     };
 
     /**
@@ -37,9 +40,7 @@ public:
     }
 
     Flexbox(glm::vec2 origin, glm::vec2 size, Options options);
-    Flexbox(glm::vec2 origin, glm::vec2 size);
     Flexbox(glm::vec2 origin, Options options);
-    explicit Flexbox(glm::vec2 origin);
 
     void doClick(float x, float y) override;
     void doHover(float x, float y) override;

@@ -16,10 +16,12 @@ public:
     static GLuint shader;
 
     struct Options {
+        Options(font::Font font, font::Size size, font::Color color):
+            font(font), size(size), color(color) {}
+
         font::Font font {font::Font::TEXT};
-        font::FontSizePx font_size {font::FontSizePx::MEDIUM};
-        glm::vec3 color {font::getRGB(font::FontColor::BLACK)};
-        float scale {1.0};
+        font::Size size {font::Size::SMALL};
+        font::Color color {font::Color::BLACK};
     };
 
     /**
@@ -38,13 +40,11 @@ public:
     }
 
     DynText(glm::vec2 origin, std::string text, std::shared_ptr<gui::font::Loader> loader, Options options);
-    DynText(glm::vec2 origin, std::string text, std::shared_ptr<gui::font::Loader> loader);
     DynText(std::string text, std::shared_ptr<gui::font::Loader> loader, Options options);
-    DynText(std::string text, std::shared_ptr<gui::font::Loader> loader);
 
     void render() override;
 
-    void changeColor(font::FontColor new_color);
+    void changeColor(font::Color new_color);
 
 private:
     Options options;

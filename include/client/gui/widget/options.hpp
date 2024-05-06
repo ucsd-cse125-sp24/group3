@@ -2,12 +2,12 @@
 
 namespace gui::widget {
 
-enum class JustifyContent {
+enum class Justify {
     VERTICAL,
     HORIZONTAL
 };
 
-enum class AlignItems {
+enum class Align {
     CENTER,
     LEFT,
     RIGHT

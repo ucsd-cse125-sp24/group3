@@ -19,11 +19,11 @@ TextInput::TextInput(glm::vec2 origin,
     Widget(Type::TextInput, origin)
 {
     std::string text_to_display;
-    font::FontColor color_to_display;
+    font::Color color_to_display;
     std::string captured_input = gui->getCapturedKeyboardInput();
     if (captured_input.size() == 0) {
         text_to_display = placeholder;
-        options.color = font::getRGB(font::FontColor::GRAY);
+        options.color = font::Color::GRAY;
     } else {
         text_to_display = captured_input;
     }
@@ -44,17 +44,6 @@ TextInput::TextInput(glm::vec2 origin,
     this->width = width;
     this->height = height;
 }
-
-TextInput::TextInput(glm::vec2 origin,
-    std::string placeholder,
-    gui::GUI* gui,
-    std::shared_ptr<font::Loader> fonts):
-    TextInput(origin, placeholder, gui, fonts, DynText::Options {
-        .font {font::Font::TEXT},
-        .font_size {font::FontSizePx::MEDIUM},
-        .color {font::getRGB(font::FontColor::BLACK)},
-        .scale {1.0},
-    }) {}
 
 void TextInput::render() {
     this->dyntext->render();

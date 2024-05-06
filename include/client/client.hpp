@@ -24,8 +24,8 @@
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
 
-#define WINDOW_WIDTH  900
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH  1500
+#define WINDOW_HEIGHT 1000
 
 // position something a "frac" of the way across the screen
 // e.g. WIDTH_FRAC(1, 4) -> a fourth of the way from the left

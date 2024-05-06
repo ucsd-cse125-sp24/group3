@@ -18,16 +18,6 @@ Flexbox::Flexbox(glm::vec2 origin, glm::vec2 size, Flexbox::Options options):
 Flexbox::Flexbox(glm::vec2 origin, Flexbox::Options options):
     Flexbox(origin, {0.0f, 0.0f}, options) {}
 
-Flexbox::Flexbox(glm::vec2 origin, glm::vec2 size):
-    Flexbox(origin, size, Flexbox::Options { 
-        .direction = JustifyContent::HORIZONTAL,
-        .alignment = AlignItems::LEFT,
-        .padding   = 0
-    }) {}
-
-Flexbox::Flexbox(glm::vec2 origin):
-    Flexbox(origin, {0.0f, 0.0f}) {}
-
 void Flexbox::doClick(float x, float y) {
     Widget::doClick(x, y);
     for (auto& widget : this->widgets) {
@@ -61,12 +51,12 @@ void Flexbox::push(Widget::Ptr&& widget) {
         prev_height = prev_widget->getSize().second;
     }
 
-    if (this->options.direction == JustifyContent::HORIZONTAL) {
+    if (this->options.direction == Justify::HORIZONTAL) {
         this->width += new_width + this->options.padding;
         this->height = std::max(this->height, new_height);
         glm::vec2 new_origin(prev_origin.x + prev_width + this->options.padding, prev_origin.y);
         widget->setOrigin(new_origin);
-    } else if (this->options.direction == JustifyContent::VERTICAL) {
+    } else if (this->options.direction == Justify::VERTICAL) {
         this->height += new_height + this->options.padding;
         this->width = std::max(this->width, new_width);
         glm::vec2 new_origin(prev_origin.x, prev_origin.y + prev_height + this->options.padding);
@@ -75,17 +65,17 @@ void Flexbox::push(Widget::Ptr&& widget) {
 
     this->widgets.push_back(std::move(widget));
 
-    if (this->options.alignment == AlignItems::CENTER) {
-        if (this->options.direction == JustifyContent::HORIZONTAL) {
+    if (this->options.alignment == Align::CENTER) {
+        if (this->options.direction == Justify::HORIZONTAL) {
             std::cerr << "Note: center alignment not yet implemented for horizontal justify. Doing nothing\n";
-        } else if (this->options.direction == JustifyContent::VERTICAL) {
+        } else if (this->options.direction == Justify::VERTICAL) {
             for (auto& widget : this->widgets) {
                 const auto [curr_width, _] = widget->getSize();
                 glm::vec2 new_origin(this->origin.x + ((this->width - curr_width) / 2.0f), widget->getOrigin().y);
                 widget->setOrigin(new_origin);
             }
         }
-    } else if (this->options.alignment == AlignItems::RIGHT) {
+    } else if (this->options.alignment == Align::RIGHT) {
         std::cerr << "Note: right alignment not yet implemented. Doing nothing\n";
     } // else it is align left, which is default behavior and requires no more messing
 

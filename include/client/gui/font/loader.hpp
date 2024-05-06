@@ -24,14 +24,6 @@ struct Character {
 };
 
 /**
- * Hash function so we can provide a pair of Font and FontSize and get the char
- * mappings for that font.
- */
-struct font_pair_hash {
-    std::size_t operator()(const std::pair<Font, FontSizePx>& p) const;
-};
-
-/**
  * Handles loading all of the fonts we want to use, and provides an interface to get
  * the Character information (e.g. opengl texture and sizing information).
  */
@@ -49,11 +41,10 @@ public:
      * Loads the specified character with the specified font and size
      * 
      * @param c ASCII char to load
-     * @param font Abstract font to use. NOTE: must be one of the preset values we provide!
-     * @param FontSizePx size of the font in pixels to load
+     * @param font Abstract font to use.
      * @returns the Character information for that glyph
      */
-    [[nodiscard]] const Character& loadChar(char c, Font font, FontSizePx size) const;
+    [[nodiscard]] const Character& loadChar(char c, Font font) const;
 
 private:
     FT_Library ft;
@@ -64,9 +55,8 @@ private:
     bool _loadFont(Font font);
 
     std::unordered_map<
-        std::pair<Font, FontSizePx>,
-        std::unordered_map<unsigned char, Character>,
-        font_pair_hash
+        Font,
+        std::unordered_map<unsigned char, Character>
     > font_map;
 };
 

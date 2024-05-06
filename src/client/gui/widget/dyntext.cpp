@@ -30,27 +30,19 @@ DynText::DynText(glm::vec2 origin, std::string text,
     // Calculate size of string of text
     this->width = 0;
     this->height = 0;
+
+    float scale = font::getScaleFactor(options.size);
+
     for (int i = 0; i < text.size(); i++) {
-        font::Character ch = this->fonts->loadChar(this->text[i], this->options.font, this->options.font_size);
-        this->height = std::max(this->height, static_cast<std::size_t>(ch.size.y));
+        font::Character ch = this->fonts->loadChar(this->text[i], this->options.font);
+        this->height = std::max(this->height, static_cast<std::size_t>(ch.size.y * scale));
         if (i != text.size() - 1 && i != 0) {
-            this->width += ch.advance / 64.0;
+            this->width += (ch.advance >> 6) * scale;
         } else {
-            this->width += ch.size.x;
+            this->width += ch.size.x * scale;
         }
     }
 }
-
-DynText::DynText(glm::vec2 origin, std::string text, std::shared_ptr<gui::font::Loader> fonts):
-    DynText(origin, text, fonts, DynText::Options {
-        .font {font::Font::MENU},
-        .font_size {font::FontSizePx::MEDIUM},
-        .color {font::getRGB(font::FontColor::BLACK)},
-        .scale {1.0},
-    }) {}
-
-DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts):
-    DynText({0.0f, 0.0f}, text, fonts) {}
 
 DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts, DynText::Options options):
     DynText({0.0f, 0.0f}, text, fonts, options) {}
@@ -60,10 +52,10 @@ void DynText::render() {
 
     glUseProgram(DynText::shader);
 
+    glActiveTexture(GL_TEXTURE0);
     glUniformMatrix4fv(glGetUniformLocation(DynText::shader, "projection"), 1, false, reinterpret_cast<float*>(&GUI::projection));
-    glUniform3f(glGetUniformLocation(DynText::shader, "textColor"),
-        this->options.color.x, this->options.color.y, this->options.color.z);
-    // glActiveTexture(GL_TEXTURE0);
+    auto color = font::getRGB(this->options.color);
+    glUniform3f(glGetUniformLocation(DynText::shader, "textColor"), color.x, color.y, color.z);
     glBindVertexArray(VAO);
 
     float x = this->origin.x;
@@ -72,13 +64,15 @@ void DynText::render() {
     // iterate through all characters
     for (const char& c : this->text)
     {
-        font::Character ch = this->fonts->loadChar(c, this->options.font, this->options.font_size);
+        font::Character ch = this->fonts->loadChar(c, this->options.font);
 
-        float xpos = x + ch.bearing.x * this->options.scale;
-        float ypos = y - (ch.size.y - ch.bearing.y) * this->options.scale;
+        float scale = font::getScaleFactor(this->options.size);
 
-        float w = ch.size.x * this->options.scale;
-        float h = ch.size.y * this->options.scale;
+        float xpos = x + ch.bearing.x * scale;
+        float ypos = y - (ch.size.y - ch.bearing.y) * scale;
+
+        float w = ch.size.x * scale;
+        float h = ch.size.y * scale;
         // update VBO for each character
         float vertices[6][4] = {
             { xpos,     ypos + h,   0.0f, 0.0f },            
@@ -98,7 +92,7 @@ void DynText::render() {
         // render quad
         glDrawArrays(GL_TRIANGLES, 0, 6);
         // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-        x += (ch.advance >> 6) * this->options.scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+        x += (ch.advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
     }
 
     glBindVertexArray(0);
@@ -108,8 +102,8 @@ void DynText::render() {
     glDisable(GL_CULL_FACE);
 }
 
-void DynText::changeColor(font::FontColor new_color) {
-    this->options.color = font::getRGB(new_color);
+void DynText::changeColor(font::Color new_color) {
+    this->options.color = new_color;
 }
 
 }

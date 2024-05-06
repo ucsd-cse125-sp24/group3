@@ -4,8 +4,10 @@
 
 #include <cstddef>
 #include <string>
+#include <unordered_map>
 
 namespace gui::font {
+
 
 /**
  * Abstract representation of the different fonts to use in our game
@@ -19,19 +21,14 @@ enum class Font {
 };
 
 /**
- * Preset sizes for fonts
+ * Mappings from our specified abstract fonts to the file to load
  */
-enum FontSizePx {
-    SMALL = 64,
-    MEDIUM = 96,
-    LARGE = 128,
-    XLARGE = 256,
-};
+std::string getFilepath(Font font);
 
 /**
  * Preset colors for text
  */
-enum class FontColor {
+enum class Color {
     BLACK,
     RED,
     BLUE,
@@ -39,13 +36,26 @@ enum class FontColor {
 };
 
 /**
- * Mappings from our specified abstract fonts to the file to load
- */
-std::string getFilepath(Font font);
-
-/**
  * Mapping from preset font colors to RGB values
  */
-glm::vec3 getRGB(FontColor color);
+glm::vec3 getRGB(Color color);
+
+const int UNIT_LARGE_SIZE_PX = 128; // how many pixels a small font is on the unit screen size
+enum class Size {
+    SMALL,
+    MEDIUM,
+    LARGE,
+    XLARGE
+};
+const std::unordered_map<Size, float> SIZE_TO_SCALE = {
+    {Size::SMALL,   0.25f},
+    {Size::MEDIUM,  0.50f},
+    {Size::LARGE,   1.0f},
+    {Size::XLARGE,  2.0f},
+};
+
+float getFontSizePx(Size size);
+float getScaleFactor(Size size);
+
 
 }

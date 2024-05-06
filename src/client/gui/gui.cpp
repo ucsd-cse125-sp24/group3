@@ -7,9 +7,6 @@
 #include "client/client.hpp"
 #include "shared/game/sharedgamestate.hpp"
 
-
-
-
 namespace gui {
 
 glm::mat4 GUI::projection = glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT);
@@ -37,7 +34,6 @@ bool GUI::init(GLuint text_shader, GLuint image_shader)
     widget::DynText::shader = text_shader;
     widget::StaticImg::shader = image_shader;
     glUniformMatrix4fv(glGetUniformLocation(widget::DynText::shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
-    // glUniformMatrix4fv(glGetUniformLocation(widget::StaticImg::shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
 
     std::cout << "Initialized GUI\n";
     return true;
@@ -154,8 +150,8 @@ void GUI::_layoutTitleScreen() {
     this->addWidget(widget::CenterText::make(
         "Arcana",
         font::Font::MENU,
-        font::FontSizePx::MEDIUM,
-        font::FontColor::RED,
+        font::Size::XLARGE,
+        font::Color::RED,
         fonts,
         FRAC_WINDOW_HEIGHT(2, 3)
     ));
@@ -163,16 +159,11 @@ void GUI::_layoutTitleScreen() {
     auto start_text = widget::DynText::make(
         "Start Game",
         fonts,
-        widget::DynText::Options {
-            .font = font::Font::MENU,
-            .font_size = font::FontSizePx::MEDIUM,
-            .color = font::getRGB(font::FontColor::BLACK),
-            .scale = 1.0f,
-        }
+        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
     );
     start_text->addOnHover([this](widget::Handle handle) {
         auto widget = this->borrowWidget<widget::DynText>(handle);
-        widget->changeColor(font::FontColor::RED);
+        widget->changeColor(font::Color::RED);
     });
     start_text->addOnClick([this](widget::Handle handle) {
         client->gui_state = GUIState::LOBBY_BROWSER;
@@ -180,19 +171,15 @@ void GUI::_layoutTitleScreen() {
     auto start_flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options {
-            .direction = widget::JustifyContent::VERTICAL,
-            .alignment = widget::AlignItems::CENTER,
-            .padding = 0.0f,
-        }
+        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 0.0f)
     );
 
     start_flex->push(std::move(start_text));
     this->addWidget(std::move(start_flex));
 
     auto pikachu = widget::StaticImg::make(
-        glm::vec2(100.0f, 100.0f),
-        this->images.getImg(img::ImgID::Pikachu)
+        glm::vec2(0.0f, 0.0f),
+        images.getImg(img::ImgID::Pikachu)
     );
     this->addWidget(std::move(pikachu));
 }
@@ -201,32 +188,24 @@ void GUI::_layoutLobbyBrowser() {
     this->addWidget(widget::CenterText::make(
         "Lobbies",
         font::Font::MENU,
-        font::FontSizePx::LARGE,
-        font::FontColor::BLACK,
+        font::Size::LARGE,
+        font::Color::BLACK,
         this->fonts,
-        WINDOW_HEIGHT - font::FontSizePx::LARGE
+        WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE)
     ));
 
     auto lobbies_flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options {
-            .direction = widget::JustifyContent::VERTICAL,
-            .alignment = widget::AlignItems::CENTER,
-            .padding   = 10.0f,
-        });
+        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 10.0f)
+    );
 
     for (const auto& [ip, packet]: client->lobby_finder.getFoundLobbies()) {
         std::stringstream ss;
         ss << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken;
 
-        auto entry = widget::DynText::make(ss.str(),
-            this->fonts, widget::DynText::Options {
-                .font  = font::Font::MENU,
-                .font_size = font::FontSizePx::SMALL,
-                .color = font::getRGB(font::FontColor::BLACK),
-                .scale = 1.0f
-            });
+        auto entry = widget::DynText::make(ss.str(), this->fonts,
+            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::BLACK));
         entry->addOnClick([ip, this](widget::Handle handle){
             std::cout << "Connecting to " << ip.address() << " ...\n";
             this->client->connectAndListen(ip.address().to_string());
@@ -234,7 +213,7 @@ void GUI::_layoutLobbyBrowser() {
         });
         entry->addOnHover([this](widget::Handle handle){
             auto widget = this->borrowWidget<widget::DynText>(handle);
-            widget->changeColor(font::FontColor::RED);
+            widget->changeColor(font::Color::RED);
         });
         lobbies_flex->push(std::move(entry));
     }
@@ -243,12 +222,7 @@ void GUI::_layoutLobbyBrowser() {
         lobbies_flex->push(widget::DynText::make(
             "No lobbies found...",
             this->fonts,
-            widget::DynText::Options {
-                .font = font::Font::MENU,
-                .font_size = font::FontSizePx::SMALL,
-                .color = font::getRGB(font::FontColor::BLACK),
-                .scale = 1.0f
-            }
+            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::BLACK)
         ));
     }
 
@@ -259,12 +233,7 @@ void GUI::_layoutLobbyBrowser() {
         "Enter a name",
         this,
         fonts,
-        widget::DynText::Options {
-            .font = font::Font::TEXT,
-            .font_size = font::FontSizePx::SMALL,
-            .color = font::getRGB(font::FontColor::BLACK),
-            .scale = 1.0f
-        }
+        widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::BLACK)
     ));
 }
 
@@ -272,10 +241,10 @@ void GUI::_layoutLobby() {
     auto lobby_title = widget::CenterText::make(
         this->client->gameState.lobby.name,
         font::Font::MENU,
-        font::FontSizePx::LARGE,
-        font::FontColor::BLACK,
+        font::Size::LARGE,
+        font::Color::BLACK,
         this->fonts,
-        WINDOW_HEIGHT - font::FontSizePx::LARGE
+        WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE)
     );
     this->addWidget(std::move(lobby_title));
     std::stringstream ss;
@@ -283,32 +252,23 @@ void GUI::_layoutLobby() {
     auto player_count = widget::CenterText::make(
         ss.str(),
         font::Font::MENU,
-        font::FontSizePx::MEDIUM,
-        font::FontColor::BLACK,
+        font::Size::MEDIUM,
+        font::Color::BLACK,
         this->fonts,
-        WINDOW_HEIGHT - (2 * font::FontSizePx::LARGE) - 10.0f
+        WINDOW_HEIGHT - (2 * font::getFontSizePx(font::Size::LARGE)) - 10.0f
     );
     this->addWidget(std::move(player_count));
 
     auto players_flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 5)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options {
-            .direction = widget::JustifyContent::VERTICAL,
-            .alignment = widget::AlignItems::CENTER,
-            .padding = 10.0f
-        }
+        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 10.0f)
     );
     for (const auto& [_eid, player_name] : this->client->gameState.lobby.players) {
         players_flex->push(widget::DynText::make(
             player_name,
             this->fonts,
-            widget::DynText::Options {
-                .font = font::Font::MENU,
-                .font_size = font::FontSizePx::MEDIUM,
-                .color = font::getRGB(font::FontColor::BLACK),
-                .scale = 1.0f
-            }
+            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
         ));
     }
     this->addWidget(std::move(players_flex));
@@ -316,8 +276,8 @@ void GUI::_layoutLobby() {
     auto waiting_msg = widget::CenterText::make(
         "Waiting for players...",
         font::Font::MENU,
-        font::FontSizePx::MEDIUM,
-        font::FontColor::GRAY,
+        font::Size::MEDIUM,
+        font::Color::GRAY,
         this->fonts,
         30.0f
     );
@@ -332,16 +292,11 @@ void GUI::_layoutGameEscMenu() {
     auto exit_game_txt = widget::DynText::make(
         "Exit Game",
         fonts,
-        widget::DynText::Options {
-            .font = font::Font::MENU,
-            .font_size = font::FontSizePx::MEDIUM,
-            .color = font::getRGB(font::FontColor::BLACK),
-            .scale = 1.0f,
-        }
+        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
     );
     exit_game_txt->addOnHover([this](widget::Handle handle) {
         auto widget = this->borrowWidget<widget::DynText>(handle);
-        widget->changeColor(font::FontColor::RED);
+        widget->changeColor(font::Color::RED);
     });
     exit_game_txt->addOnClick([this](widget::Handle handle) {
         glfwDestroyWindow(this->client->getWindow());
@@ -349,11 +304,7 @@ void GUI::_layoutGameEscMenu() {
     auto flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 2)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options {
-            .direction = widget::JustifyContent::VERTICAL,
-            .alignment = widget::AlignItems::CENTER,
-            .padding = 0.0f,
-        }
+        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 0.0f)
     );
     flex->push(std::move(exit_game_txt));
 

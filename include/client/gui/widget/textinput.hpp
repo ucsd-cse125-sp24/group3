@@ -43,11 +43,6 @@ public:
         std::shared_ptr<font::Loader> fonts, 
         DynText::Options options);
 
-    TextInput(glm::vec2 origin,
-        std::string placeholder,
-        gui::GUI* gui,
-        std::shared_ptr<font::Loader> fonts);
-
     void render() override;
 
     bool hasHandle(Handle handle) const override;
