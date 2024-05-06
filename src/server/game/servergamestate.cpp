@@ -75,7 +75,7 @@ void ServerGameState::update(const EventList& events) {
 				break;
 			}
 			case ActionType::Sprint: {
-				obj->physics.acceleration = glm::vec3(1.5f, 1.1f, 1.5f);
+				obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
 				break;
 			}
 			default: {}
@@ -94,7 +94,7 @@ void ServerGameState::update(const EventList& events) {
 				break;
 			}
 			case ActionType::Sprint: {
-				obj->physics.acceleration = glm::vec3(1.0f, 1.0f, 1.0f);
+				obj->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
 				break;
 			}
 			default: { break; }
@@ -143,7 +143,7 @@ void ServerGameState::updateMovement() {
 			// Check for collision at position to move, if so, dont change position
 			// O(n^2) naive implementation of collision detection
 			Collider* curr = object->physics.boundary;
-			curr->corner += object->physics.velocity * object->physics.acceleration; // only move collider to check
+			curr->corner += object->physics.velocity * object->physics.velocityMultiplier; // only move collider to check
 
 			// TODO : for possible addition for smooth collision detection, but higher computation
 			// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
@@ -163,12 +163,12 @@ void ServerGameState::updateMovement() {
 
 			// Move object if no collision detected
 			if (!collided) {
-				object->physics.shared.position += object->physics.velocity * object->physics.acceleration;
-				object->physics.shared.corner += object->physics.velocity * object->physics.acceleration;
+				object->physics.shared.position += object->physics.velocity * object->physics.velocityMultiplier;
+				object->physics.shared.corner += object->physics.velocity * object->physics.velocityMultiplier;
 			}
 			// Revert collider if collided
 			else {
-				curr->corner -= object->physics.velocity * object->physics.acceleration;
+				curr->corner -= object->physics.velocity * object->physics.velocityMultiplier;
 			}
 
 			// update gravity factor

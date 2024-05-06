@@ -10,6 +10,7 @@ public:
 	~SphereCollider();
 
 	bool detectCollision(Collider* otherCollider) override;
+
 	bool resolveCollision(Collider* otherCollider) override;
 	Shape getShape() override;
 

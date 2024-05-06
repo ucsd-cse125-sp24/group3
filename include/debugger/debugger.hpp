@@ -206,7 +206,7 @@ public:
 					std::cout << glm::to_string(object->physics.velocity) << std::endl;
 				}
 				else if (property.compare("physics.acceleration") == 0) {
-					std::cout << glm::to_string(object->physics.acceleration) << std::endl;
+					std::cout << glm::to_string(object->physics.velocityMultiplier) << std::endl;
 				}
 				else if (property.compare("physics.shared.facing") == 0) {
 					std::cout << glm::to_string(object->physics.shared.facing) << std::endl;
@@ -371,15 +371,15 @@ public:
 			std::cout << "Set object (global id " << id << ") velocity.z to " << value << ".\n";
 		}
 		else if (property.compare("physics.acceleration.x") == 0) {
-			obj->physics.acceleration.x = value;
+			obj->physics.velocityMultiplier.x = value;
 			std::cout << "Set object (global id " << id << ") acceleration.x to " << value << ".\n";
 		}
 		else if (property.compare("physics.acceleration.y") == 0) {
-			obj->physics.acceleration.y = value;
+			obj->physics.velocityMultiplier.y = value;
 			std::cout << "Set object (global id " << id << ") acceleration.y to " << value << ".\n";
 		}
 		else if (property.compare("physics.acceleration.z") == 0) {
-			obj->physics.acceleration.z = value;
+			obj->physics.velocityMultiplier.z = value;
 			std::cout << "Set object (global id " << id << ") acceleration.z to " << value << ".\n";
 		}
 		else {

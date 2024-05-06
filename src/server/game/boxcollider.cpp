@@ -5,12 +5,12 @@
 
 BoxCollider::BoxCollider() {
 	this->corner = corner;
-	this->dimension = dimension;
+	this->dimensions = dimensions;
 }
 
-BoxCollider::BoxCollider(glm::vec3 corner, glm::vec3 dimension) {
+BoxCollider::BoxCollider(glm::vec3 corner, glm::vec3 dimensions) {
 	this->corner = corner;
-	this->dimension = dimension;
+	this->dimensions = dimensions;
 }
 
 
@@ -19,13 +19,13 @@ BoxCollider::~BoxCollider() {
 
 bool BoxCollider::detectCollision(Collider* otherCollider) {
 	glm::vec3 minPos = this->corner;
-	glm::vec3 maxPos = this->corner + this->dimension;
+	glm::vec3 maxPos = this->corner + this->dimensions;
 
 	switch (otherCollider->getShape()) {
         case Box: {
 			BoxCollider* otherC = dynamic_cast<BoxCollider*>(otherCollider);
 			glm::vec3 otherMinPos = otherC->corner;
-			glm::vec3 otherMaxPos = otherC->corner + otherC->dimension;
+			glm::vec3 otherMaxPos = otherC->corner + otherC->dimensions;
 
 
 			return (maxPos.x >= otherMinPos.x &&
@@ -37,8 +37,8 @@ bool BoxCollider::detectCollision(Collider* otherCollider) {
 		}
 		case Sphere: {
 			const SphereCollider* otherC = dynamic_cast<SphereCollider*>(otherCollider);
-			glm::vec3 otherCenter = otherC->corner + (otherC->dimension / 2.0f);
-			float otherRadius = otherC->dimension.x / 2.0f;
+			glm::vec3 otherCenter = otherC->corner + (otherC->dimensions / 2.0f);
+			float otherRadius = otherC->dimensions.x / 2.0f;
 
 			float x = fmaxf(minPos.x, fminf(otherCenter.x, maxPos.x));
 			float y = fmaxf(minPos.y, fminf(otherCenter.y, maxPos.y));
