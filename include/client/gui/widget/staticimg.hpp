@@ -37,12 +37,14 @@ public:
 
     StaticImg(glm::vec2 origin, gui::img::Img img);
     StaticImg(gui::img::Img img);
+    ~StaticImg();
 
     void render() override;
 
 private:
     gui::img::Img img;
-    GLuint quadVAO;
+    GLuint quadVAO, VBO, EBO;
+    GLuint texture_id;
 };
 
 }

@@ -15,10 +15,11 @@ namespace gui::img {
  * the image loader will actually load it.
  */
 enum class ImgID {
-    Yoshi
+    Yoshi,
+    Pikachu
 };
 #define GET_ALL_IMG_IDS() \
-    {ImgID::Yoshi}
+    {ImgID::Yoshi, ImgID::Pikachu}
 
 /**
  * Representation of a loaded image

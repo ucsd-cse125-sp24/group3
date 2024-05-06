@@ -25,12 +25,12 @@ bool Loader::init() {
     // so this is supposed to prevent seg faults related to that
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    if (!this->_loadFont(Font::MENU)) {
-        return false;
-    }
-    if (!this->_loadFont(Font::TEXT)) {
-        return false;
-    }
+    // if (!this->_loadFont(Font::MENU)) {
+    //     return false;
+    // }
+    // if (!this->_loadFont(Font::TEXT)) {
+    //     return false;
+    // }
 
     FT_Done_FreeType(this->ft); // done loading fonts, so can release these resources
 
@@ -56,7 +56,7 @@ bool Loader::_loadFont(Font font) {
         return false;
     }
 
-    for (auto font_size : {FontSizePx::SMALL, FontSizePx::MEDIUM, FontSizePx::LARGE, FontSizePx::HUGE}) {
+    for (auto font_size : {FontSizePx::SMALL, FontSizePx::MEDIUM, FontSizePx::LARGE, FontSizePx::XLARGE}) {
         FT_Set_Pixel_Sizes(face, 0, font_size);
         std::unordered_map<unsigned char, Character> characters;
         for (unsigned char c = 0; c < 128; c++) {

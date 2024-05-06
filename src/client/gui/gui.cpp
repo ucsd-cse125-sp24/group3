@@ -23,9 +23,9 @@ bool GUI::init(GLuint text_shader, GLuint image_shader)
     this->fonts = std::make_shared<font::Loader>();
     this->capture_keystrokes = false;
 
-    if (!this->fonts->init()) {
-        return false;
-    }
+    // if (!this->fonts->init()) {
+    //     return false;
+    // }
 
     if (!this->images.init()) {
         return false;
@@ -48,6 +48,7 @@ void GUI::beginFrame() {
 
 void GUI::renderFrame() {
     // for text rendering
+    glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
     glEnable(GL_CULL_FACE);
@@ -150,49 +151,55 @@ void GUI::layoutFrame(GUIState state) {
 
 
 void GUI::_layoutTitleScreen() {
-    this->addWidget(widget::CenterText::make(
-        "Arcana",
-        font::Font::MENU,
-        font::FontSizePx::HUGE,
-        font::FontColor::RED,
-        fonts,
-        FRAC_WINDOW_HEIGHT(2, 3)
-    ));
+    // this->addWidget(widget::CenterText::make(
+    //     "Arcana",
+    //     font::Font::MENU,
+    //     font::FontSizePx::XLARGE,
+    //     font::FontColor::RED,
+    //     fonts,
+    //     FRAC_WINDOW_HEIGHT(2, 3)
+    // ));
 
-    auto start_text = widget::DynText::make(
-        "Start Game",
-        fonts,
-        widget::DynText::Options {
-            .font = font::Font::MENU,
-            .font_size = font::FontSizePx::MEDIUM,
-            .color = font::getRGB(font::FontColor::BLACK),
-            .scale = 1.0f,
-        }
-    );
-    start_text->addOnHover([this](widget::Handle handle) {
-        auto widget = this->borrowWidget<widget::DynText>(handle);
-        widget->changeColor(font::FontColor::RED);
-    });
-    start_text->addOnClick([this](widget::Handle handle) {
-        client->gui_state = GUIState::LOBBY_BROWSER;
-    });
-    auto start_flex = widget::Flexbox::make(
-        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
-        glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options {
-            .direction = widget::JustifyContent::VERTICAL,
-            .alignment = widget::AlignItems::CENTER,
-            .padding = 0.0f,
-        }
-    );
-    start_flex->push(std::move(start_text));
-    this->addWidget(std::move(start_flex));
+    // auto start_text = widget::DynText::make(
+    //     "Start Game",
+    //     fonts,
+    //     widget::DynText::Options {
+    //         .font = font::Font::MENU,
+    //         .font_size = font::FontSizePx::MEDIUM,
+    //         .color = font::getRGB(font::FontColor::BLACK),
+    //         .scale = 1.0f,
+    //     }
+    // );
+    // start_text->addOnHover([this](widget::Handle handle) {
+    //     auto widget = this->borrowWidget<widget::DynText>(handle);
+    //     widget->changeColor(font::FontColor::RED);
+    // });
+    // start_text->addOnClick([this](widget::Handle handle) {
+    //     client->gui_state = GUIState::LOBBY_BROWSER;
+    // });
+    // auto start_flex = widget::Flexbox::make(
+    //     glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
+    //     glm::vec2(WINDOW_WIDTH, 0.0f),
+    //     widget::Flexbox::Options {
+    //         .direction = widget::JustifyContent::VERTICAL,
+    //         .alignment = widget::AlignItems::CENTER,
+    //         .padding = 0.0f,
+    //     }
+    // );
+    // start_flex->push(std::move(start_text));
+    // this->addWidget(std::move(start_flex));
 
-    auto yoshi = widget::StaticImg::make(
-        glm::vec2(200.0f, 200.0f),
-        this->images.getImg(img::ImgID::Yoshi)
+    // auto yoshi = widget::StaticImg::make(
+    //     glm::vec2(200.0f, 200.0f),
+    //     this->images.getImg(img::ImgID::Yoshi)
+    // );
+    // this->addWidget(std::move(yoshi));
+
+    auto pikachu = widget::StaticImg::make(
+        glm::vec2(100.0f, 100.0f),
+        this->images.getImg(img::ImgID::Pikachu)
     );
-    this->addWidget(std::move(yoshi));
+    this->addWidget(std::move(pikachu));
 }
 
 void GUI::_layoutLobbyBrowser() {

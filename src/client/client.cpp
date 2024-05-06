@@ -133,7 +133,7 @@ bool Client::init() {
         return false;
     }
 
-    auto imgShaderProgram = LoadShaders((shader_path / "img.vert").string(), (shader_path / "img.frag").string());
+    auto imgShaderProgram = LoadShaders((shader_path / "test.vert").string(), (shader_path / "test.frag").string());
     if (!imgShaderProgram) {
         std::cerr << "Failed to initialize img shader program" << std::endl;
         return false;

@@ -26,7 +26,12 @@ bool Loader::_loadImg(ImgID img_id) {
 
     int width, height, channels;
 
+	stbi_set_flip_vertically_on_load(1);
     unsigned char* img_data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+    std::cout << img_data << std::endl;
+
+    if (stbi_failure_reason())
+        std::cout << "failure: " << stbi_failure_reason() << std::endl;
 
     GLuint texture_id;
     if (img_data == 0 || width == 0 || height == 0) {
@@ -34,15 +39,19 @@ bool Loader::_loadImg(ImgID img_id) {
             ", " << width << ", " << height << "\n" << std::endl;
         return false;
     }
+    
     glGenTextures(1, &texture_id);
-
     glBindTexture(GL_TEXTURE_2D, texture_id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data);
+
     // set Texture wrap and filter modes
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     // unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -51,6 +60,9 @@ bool Loader::_loadImg(ImgID img_id) {
         .width = width,
         .height = height
     }});
+
+    stbi_image_free(img_data);
+
     return true;
 }
 

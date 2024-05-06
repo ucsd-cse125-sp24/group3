@@ -15,7 +15,7 @@ namespace gui::font {
  */
 enum class Font {
     MENU,
-    TEXT,
+    TEXT
 };
 
 /**
@@ -25,7 +25,7 @@ enum FontSizePx {
     SMALL = 64,
     MEDIUM = 96,
     LARGE = 128,
-    HUGE = 256
+    XLARGE = 256,
 };
 
 /**
