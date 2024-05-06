@@ -7,7 +7,7 @@
 
 namespace gui::font {
 
-float getFontSizePx(Size size) {
+int getFontSizePx(Size size) {
     return UNIT_LARGE_SIZE_PX * getScaleFactor(size);
 }
 

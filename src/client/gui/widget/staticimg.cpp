@@ -99,7 +99,7 @@ void StaticImg::render() {
     // glUniformMatrix4fv(glGetUniformLocation(StaticImg::shader, "model"), 1, false, reinterpret_cast<float*>(&model));
     // glUniform3f(glGetUniformLocation(StaticImg::shader, "spriteColor"), 1.0f, 1.0f, 1.0f);
 
-    glActiveTexture(GL_TEXTURE0);
+    // glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->texture_id);
     glBindVertexArray(quadVAO);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

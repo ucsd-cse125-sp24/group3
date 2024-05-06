@@ -54,7 +54,7 @@ const std::unordered_map<Size, float> SIZE_TO_SCALE = {
     {Size::XLARGE,  2.0f},
 };
 
-float getFontSizePx(Size size);
+int getFontSizePx(Size size);
 float getScaleFactor(Size size);
 
 
