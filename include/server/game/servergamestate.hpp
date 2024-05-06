@@ -56,9 +56,7 @@ public:
 	 * @param maze_file Name of maze file to load. (should be in maps/
 	 * directory).
 	 */
-	ServerGameState(std::string maze_file);
-
-	ServerGameState(GamePhase start_phase, GameConfig config, std::string maze_file);
+	ServerGameState(GameConfig config);
 
 	~ServerGameState();
 
@@ -173,9 +171,14 @@ private:
 	GamePhase phase;
 
 	/**
-	 * @brief File name of maze file path.
+	 * @brief Name of maze file that the server should load.
 	 */
 	std::string maze_file;
+
+	/**
+	 * @brief Name of the directory that contains maze map files.
+	 */
+	std::string maps_directory;
 
 	/**
 	 * @brief 2-D Grid of GridCells (filled after loadMaze() is called).

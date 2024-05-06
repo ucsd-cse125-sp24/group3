@@ -6,26 +6,16 @@
 
 /*	Constructors and Destructors	*/
 
-ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) 
-	: ServerGameState(DEFAULT_MAZE_FILE) {
-	this->phase = start_phase;
-	this->timestep_length = config.game.timestep_length_ms;
-	this->lobby.max_players = config.server.max_players;
-}
+ServerGameState::ServerGameState() : ServerGameState(getDefaultConfig()) {}
 
-ServerGameState::ServerGameState(GamePhase start_phase) 
-	: ServerGameState(DEFAULT_MAZE_FILE) {
-	this->phase = start_phase;
-}
-
-ServerGameState::ServerGameState() : ServerGameState(DEFAULT_MAZE_FILE) {}
-
-ServerGameState::ServerGameState(std::string maze_file) {
+ServerGameState::ServerGameState(GameConfig config) {
 	this->phase = GamePhase::LOBBY;
 	this->timestep = FIRST_TIMESTEP;
-	this->timestep_length = TIMESTEP_LEN;
-	this->lobby.max_players = MAX_PLAYERS;
-	this->maze_file = maze_file;
+	this->timestep_length = config.game.timestep_length_ms;
+	this->lobby.max_players = config.server.max_players;
+
+	this->maps_directory = config.game.maze.directory;
+	this->maze_file = config.game.maze.maze_file;
 
 	//	Load maze (Note: This only happens in THIS constructor! All other
 	//	ServerGameState constructors MUST call this constructor to load the
@@ -33,12 +23,49 @@ ServerGameState::ServerGameState(std::string maze_file) {
 	this->loadMaze();
 }
 
-ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config, 
-	std::string maze_file) : ServerGameState(maze_file) {
+ServerGameState::ServerGameState(GamePhase start_phase) 
+	: ServerGameState(getDefaultConfig()) {
 	this->phase = start_phase;
-	this->timestep_length = config.game.timestep_length_ms;
-	this->lobby.max_players = config.server.max_players;
 }
+
+ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config)
+	: ServerGameState(config) {
+	this->phase = start_phase;
+}
+
+//ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) 
+//	: ServerGameState(DEFAULT_MAZE_FILE) {
+//	this->phase = start_phase;
+//	this->timestep_length = config.game.timestep_length_ms;
+//	this->lobby.max_players = config.server.max_players;
+//}
+//
+//ServerGameState::ServerGameState(GamePhase start_phase) 
+//	: ServerGameState(DEFAULT_MAZE_FILE) {
+//	this->phase = start_phase;
+//}
+//
+//ServerGameState::ServerGameState() : ServerGameState(DEFAULT_MAZE_FILE) {}
+//
+//ServerGameState::ServerGameState(std::string maze_file) {
+//	this->phase = GamePhase::LOBBY;
+//	this->timestep = FIRST_TIMESTEP;
+//	this->timestep_length = TIMESTEP_LEN;
+//	this->lobby.max_players = MAX_PLAYERS;
+//	this->maze_file = maze_file;
+//
+//	//	Load maze (Note: This only happens in THIS constructor! All other
+//	//	ServerGameState constructors MUST call this constructor to load the
+//	//	maze environment from a file)
+//	this->loadMaze();
+//}
+//
+//ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config, 
+//	std::string maze_file) : ServerGameState(maze_file) {
+//	this->phase = start_phase;
+//	this->timestep_length = config.game.timestep_length_ms;
+//	this->lobby.max_players = config.server.max_players;
+//}
 
 ServerGameState::~ServerGameState() {}
 
@@ -225,7 +252,8 @@ void ServerGameState::loadMaze() {
 	//	Step 1:	Attempt to open maze file for reading.
 
 	//	Generate maze file path
-	auto maze_file_path = getRepoRoot() / "maps" / this->maze_file;
+	auto maze_file_path = 
+		getRepoRoot() / this->maps_directory / this->maze_file;
 
 	std::ifstream file;
 

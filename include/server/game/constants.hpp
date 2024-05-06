@@ -18,8 +18,6 @@
 #define	MAX_PLAYERS				4
 
 /*	Maze Constants */
-#define	MAZE_DIRECTORY			"maps"
-#define DEFAULT_MAZE_FILE		"tyler_test.maze"
 #define	MAX_MAZE_COLUMNS		1024
 #define	MAZE_CEILING_HEIGHT		10	// Maze ceiling height in meters
 
