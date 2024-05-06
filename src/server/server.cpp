@@ -32,15 +32,19 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      world_eid(0),
      state(ServerGameState(GamePhase::LOBBY, config))
 {
-    state.objects.createObject(ObjectType::Object);
+    EntityID cubeID = state.objects.createObject(ObjectType::Object);
+    Object* cube = state.objects.getObject(cubeID);
+    cube->physics.movable = false;
 
     
     //  Create a room
+    /*
     EntityID wall1ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall2ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall3ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall4ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
+    */
 
     //  Specify wall positions (RECREATED TO MATCH AXIS)
     //  Configuration: 18 (z) x 20 (x) room example
@@ -51,6 +55,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     //  #   #
     //  ##4##
 
+    /*
     SolidSurface* wall1 = (SolidSurface*)state.objects.getObject(wall1ID);
     SolidSurface* wall2 = (SolidSurface*)state.objects.getObject(wall2ID);
     SolidSurface* wall3 = (SolidSurface*)state.objects.getObject(wall3ID);
@@ -81,7 +86,9 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     floor->shared.dimensions = glm::vec3(20.0f, 0.1f, 20.0f);
     floor->physics.shared.position = glm::vec3(0.0f, -1.3f, 0.0f);
     floor->physics.movable = false;
-    
+    */
+
+
     _doAccept(); // start asynchronously accepting
 
     if (config.server.lobby_broadcast) {
