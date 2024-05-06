@@ -38,7 +38,7 @@ bool Loader::init() {
 }
 
 const Character& Loader::loadChar(char c, Font font, Size size) const {
-    auto char_map = this->font_map.at({font, size});
+    auto& char_map = this->font_map.at({font, size});
 
     if (!char_map.contains(c)) {
         return char_map.at('?');
