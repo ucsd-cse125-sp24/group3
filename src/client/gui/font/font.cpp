@@ -14,7 +14,6 @@ float getFontSizePx(Size size) {
 float getScaleFactor(Size size) {
     float screen_factor = WINDOW_WIDTH / UNIT_WINDOW_WIDTH;
 
-    std::cout << SIZE_TO_SCALE.at(size) * screen_factor << "\n";
     return SIZE_TO_SCALE.at(size) * screen_factor;
 }
 

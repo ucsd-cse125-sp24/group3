@@ -55,7 +55,7 @@ private:
     bool _loadFont(Font font);
 
     std::unordered_map<
-        Font,
+        std::pair<Font, Size>,
         std::unordered_map<unsigned char, Character>
     > font_map;
 };

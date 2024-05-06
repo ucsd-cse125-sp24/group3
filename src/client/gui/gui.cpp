@@ -33,7 +33,6 @@ bool GUI::init(GLuint text_shader, GLuint image_shader)
     // Need to register all of the necessary shaders for each widget
     widget::DynText::shader = text_shader;
     widget::StaticImg::shader = image_shader;
-    glUniformMatrix4fv(glGetUniformLocation(widget::DynText::shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
 
     std::cout << "Initialized GUI\n";
     return true;
@@ -177,11 +176,11 @@ void GUI::_layoutTitleScreen() {
     start_flex->push(std::move(start_text));
     this->addWidget(std::move(start_flex));
 
-    auto pikachu = widget::StaticImg::make(
-        glm::vec2(0.0f, 0.0f),
-        images.getImg(img::ImgID::Pikachu)
-    );
-    this->addWidget(std::move(pikachu));
+    // auto pikachu = widget::StaticImg::make(
+    //     glm::vec2(0.0f, 0.0f),
+    //     images.getImg(img::ImgID::Pikachu)
+    // );
+    // this->addWidget(std::move(pikachu));
 }
 
 void GUI::_layoutLobbyBrowser() {
