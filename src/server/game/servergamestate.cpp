@@ -347,11 +347,11 @@ void ServerGameState::loadMaze() {
 
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
 
-	EntityID floorID = this->objects.createObject(ObjectType::SolidSurface);
-	EntityID ceilingID = this->objects.createObject(ObjectType::SolidSurface);
+	SpecificID floorID = this->objects.createObject(ObjectType::SolidSurface);
+	SpecificID ceilingID = this->objects.createObject(ObjectType::SolidSurface);
 
-	SolidSurface* floor = (SolidSurface*)this->objects.getObject(floorID);
-	SolidSurface* ceiling = (SolidSurface*)this->objects.getObject(ceilingID);
+	SolidSurface* floor = this->objects.getSolidSurface(floorID);
+	SolidSurface* ceiling = this->objects.getSolidSurface(ceilingID);
 
 	//	Set floor and ceiling's x and z dimensions equal to grid dimensions
 	
@@ -388,14 +388,13 @@ void ServerGameState::loadMaze() {
 			switch (cell->type) {
 				case CellType::Wall: {
 					//	Create a new Wall object
-					EntityID wallID = 
+					SpecificID wallID = 
 						this->objects.createObject(ObjectType::SolidSurface);
 
 					//	TODO: Shouldn't this use the typeID? Change
 					//	createObject() to return the typeID of an object and
 					//	add specific object getters based on their types.
-					SolidSurface* wall = (SolidSurface *)
-						this->objects.getObject(wallID);
+					SolidSurface* wall = this->objects.getSolidSurface(wallID);
 
 					wall->shared.dimensions =
 						glm::vec3(this->grid.getGridCellWidth(),
