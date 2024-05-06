@@ -6,6 +6,8 @@
 
 class Creature : public Object {
 public:
+	SharedStats shared;
+
 	explicit Creature(ObjectType type);
 	virtual ~Creature();
 
