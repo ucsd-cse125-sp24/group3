@@ -32,8 +32,8 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      world_eid(0),
      state(ServerGameState(GamePhase::LOBBY, config))
 {
-    EntityID cubeID = state.objects.createObject(ObjectType::Object);
-    Object* cube = state.objects.getObject(cubeID);
+    SpecificID cubeID = state.objects.createObject(ObjectType::Object);
+    Object* cube = state.objects.getBaseObject(cubeID);
     cube->physics.movable = false;
 
     
@@ -239,7 +239,9 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
-    EntityID id = this->state.objects.createObject(ObjectType::Player);
+    SpecificID typeID = this->state.objects.createObject(ObjectType::Player);
+    Player* player = this->state.objects.getPlayer(typeID);
+    EntityID id = player->globalID;
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, id));
 
