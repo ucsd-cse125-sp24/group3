@@ -17,6 +17,7 @@
 #include "shared/game/event.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
+#include "server/game/boxcollider.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
@@ -32,10 +33,26 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      world_eid(0),
      state(ServerGameState(GamePhase::LOBBY, config))
 {
-    state.objects.createObject(ObjectType::Object);
+    /*
+    EntityID id = state.objects.createObject(ObjectType::Object);
+    Object* cube = (Object*)state.objects.getObject(id);
+    cube->physics.shared.position = glm::vec3(0.0f, 0.0f, 5.0f);
+    cube->physics.shared.corner = glm::vec3(-4.0f, -4.0f, 3.5f);
+    cube->physics.boundary = new BoxCollider(cube->physics.shared.corner, glm::vec3(8.0f, 8.0f, 3.0f));
+    cube->physics.movable = false;
 
-    
+    /*
+    EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
+    SolidSurface* floor = (SolidSurface*)state.objects.getObject(floorID);
+    floor->shared.dimensions = glm::vec3(20.0f, 0.1f, 20.0f);
+    floor->physics.shared.corner = glm::vec3(-10.0f, -0.1f, -10.0f);
+    floor->physics.shared.position = glm::vec3(0.0f, -0.05f, 0.0f);
+    floor->physics.boundary = new BoxCollider(floor->physics.shared.corner, floor->shared.dimensions);
+    floor->physics.movable = false;*/
+
+    /*
     //  Create a room
+    /*
     EntityID wall1ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall2ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall3ID = state.objects.createObject(ObjectType::SolidSurface);
@@ -80,7 +97,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     //  floor has dimensions (20, 0.1, 20) and position (0, -1.3, 0)
     floor->shared.dimensions = glm::vec3(20.0f, 0.1f, 20.0f);
     floor->physics.shared.position = glm::vec3(0.0f, -1.3f, 0.0f);
-    floor->physics.movable = false;
+    floor->physics.movable = false;*/
     
     _doAccept(); // start asynchronously accepting
 
@@ -232,14 +249,35 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
-    EntityID id = this->state.objects.createObject(ObjectType::Player);
-    auto session = std::make_shared<Session>(std::move(this->socket),
-        SessionInfo({}, id));
+    SpecificID playerID = this->state.objects.createObject(ObjectType::Player);
+    Player* player = this->state.objects.getPlayer(playerID);
 
-    this->sessions.insert(SessionEntry(id, addr, session));
+    //  Spawn player in random spawn point
+
+    //  TODO: Possibly replace this random spawn point with player assignments?
+    //  I.e., assign each player a spawn point to avoid multiple players getting
+    //  the same spawn point?
+    std::srand(std::time(NULL));
+    std::vector<GridCell*> spawnPoints = this->state.getGrid().getSpawnPoints();
+    size_t randomSpawnIndex = std::rand() % spawnPoints.size();
+
+    std::cout << "Number of spawn points: " << spawnPoints.size() << std::endl;
+    std::cout << "Player " << playerID << " spawning at spawn point " << randomSpawnIndex << std::endl;
+
+    GridCell * spawnPoint = 
+        this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
+
+    player->physics.shared.position = this->state.getGrid().gridCellCenterPosition(spawnPoint);
+    player->physics.shared.corner = player->physics.shared.position - glm::vec3(0.5, 0, 0.5);
+    player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f));
+
+    auto session = std::make_shared<Session>(std::move(this->socket),
+        SessionInfo({}, player->globalID));
+
+    this->sessions.insert(SessionEntry(player->globalID, addr, session));
 
     std::cout << "Established new connection with " << addr << ", which was assigned eid "
-        << id << std::endl;
+        << player->globalID << std::endl;
 
     return session;
 }

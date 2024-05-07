@@ -42,6 +42,10 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
         return GameConfig {
             .game = {
                 .timestep_length_ms = std::chrono::milliseconds(json.at("game").at("timestep_length_ms")),
+                .maze = {
+                    .directory = json.at("game").at("maze").at("directory"),
+                    .maze_file = json.at("game").at("maze").at("maze_file")
+                }
             },
             .network = {
                 .server_ip = json.at("network").at("server_ip"),
@@ -61,4 +65,29 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
         std::cerr << "Error parsing config file: " << ex.what() << std::endl;
         std::exit(1);
     }
+}
+
+GameConfig getDefaultConfig() {
+    return GameConfig {
+        .game = {
+            .timestep_length_ms = std::chrono::milliseconds(30),
+            .maze = {
+                .directory = "maps",
+                .maze_file = "default_maze.maze"
+            }
+        },
+        .network = {
+            .server_ip = "localhost",
+            .server_port = 2355
+        },
+        .server = {
+            .lobby_name = "My Test Lobby",
+            .lobby_broadcast = false,
+            .max_players = 1
+        },
+        .client = {
+            .default_name = "Player",
+            .lobby_discovery = false
+        }
+    };
 }

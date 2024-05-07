@@ -7,7 +7,7 @@
 class Item : public Object {
 public:
 
-	ItemInfo iteminfo;
+	SharedItemInfo iteminfo{};
 
 	Item();
 	~Item();

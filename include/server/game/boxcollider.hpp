@@ -4,14 +4,9 @@
 
 class BoxCollider : public Collider {
 public:
-	// min vector
-	glm::vec3 min_position;
-
-	// max vector
-	glm::vec3 max_position;
 
 	BoxCollider();
-	BoxCollider(glm::vec3 minPos, glm::vec3 maxPos);
+	BoxCollider(glm::vec3 corner, glm::vec3 dimension);
 	~BoxCollider();
 
 	bool detectCollision(Collider* otherBoundary) override;

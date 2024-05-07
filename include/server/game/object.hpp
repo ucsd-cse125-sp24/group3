@@ -36,9 +36,9 @@ struct Physics {
 	glm::vec3 velocity;
 
 	/**
-	 * @brief 3-D vector that denotes this object's current acceleration.
+	 * @brief 3-D vector that denotes this object's velocity multiplier.
 	 */
-	glm::vec3 acceleration;
+	glm::vec3 velocityMultiplier;
 
 	/**
 	 * @brief Pointer to this object's collider.
@@ -72,7 +72,7 @@ public:
 	Physics physics;
 
 	explicit Object(ObjectType type);
-	~Object();
+	virtual ~Object();
 
 	/**
 	 * @brief Generates a SharedObject representation of this object.
