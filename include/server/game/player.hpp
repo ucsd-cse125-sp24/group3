@@ -5,16 +5,16 @@
 #include "server/game/creature.hpp"
 #include "shared/game/sharedobject.hpp"
 
-struct PlayerStats {
-	int health;
-
-
-};
+//struct PlayerStats {
+//	int health;
+//
+//
+//};
 
 
 class Player : public Creature {
 public:
-	PlayerStats stats;
+	//PlayerStats stats;
 
 	// player can have items
 
