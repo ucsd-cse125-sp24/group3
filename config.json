@@ -3,7 +3,7 @@
       "timestep_length_ms": 30,
       "maze": {
         "directory": "maps",
-        "maze_file": "default_maze.maze"
+        "maze_file": "maze3.maze"
       }
     },
     "network": {

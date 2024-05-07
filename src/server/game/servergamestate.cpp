@@ -1,5 +1,6 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
+#include "server/game/boxcollider.hpp"
 #include "shared/utilities/root_path.hpp"
 
 #include <fstream>
@@ -227,7 +228,6 @@ void ServerGameState::updateMovement() {
 							collidedZ = true;
 						}
 						currentCollider->corner.x += movementStep.x;
-						break;
 					}
 				}
 
@@ -440,6 +440,10 @@ void ServerGameState::loadMaze() {
 		glm::vec3(floor->shared.dimensions.x / 2, 
 			-0.05,
 			floor->shared.dimensions.z / 2);
+
+	floor->physics.shared.corner = glm::vec3(0.0f, -0.1f, 0.0f);
+	floor->physics.boundary = new BoxCollider(floor->physics.shared.corner, floor->shared.dimensions);
+
 	floor->physics.movable = false;
 
 	ceiling->shared.dimensions = 
@@ -451,6 +455,11 @@ void ServerGameState::loadMaze() {
 		glm::vec3(floor->shared.dimensions.x / 2, 
 			MAZE_CEILING_HEIGHT + 0.05,
 			floor->shared.dimensions.z / 2);
+
+	ceiling->physics.shared.corner = glm::vec3(0.0f, -0.1f, 0.0f);
+
+	// Not sure we would need colliders for ceiling
+	//ceiling->physics.boundary = new BoxCollider(ceiling->physics.shared.corner, ceiling->shared.dimensions);
 
 	ceiling->physics.movable = false;
 	
@@ -483,6 +492,12 @@ void ServerGameState::loadMaze() {
 							MAZE_CEILING_HEIGHT / 2,
 							(0.5 + cell->y) * this->grid.getGridCellWidth());
 					
+					wall->physics.shared.corner = 
+						glm::vec3(cell->x * this->grid.getGridCellWidth(),
+							0.0f, 
+							cell->y * this->grid.getGridCellWidth());
+					wall->physics.boundary = new BoxCollider(wall->physics.shared.corner, wall->shared.dimensions);
+
 					wall->physics.movable = false;
 
 					break;

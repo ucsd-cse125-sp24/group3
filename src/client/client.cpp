@@ -242,9 +242,10 @@ void Client::draw() {
             continue;
         }
 
+        /*
         Cube* cube = new Cube(glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(8.0f, 8.0f, 3.0f));
         cube->update(sharedObject->physics.position);
-        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);
+        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);*/
 
         Cube* origin = new Cube(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.05f, 0.05f, 0.05f));
         origin->update(glm::vec3(0.0f));
