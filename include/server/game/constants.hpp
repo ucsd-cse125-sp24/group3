@@ -22,11 +22,12 @@
 #define	MAZE_CEILING_HEIGHT		10	// Maze ceiling height in meters
 
 /*	GridCell Constants	*/
-#define DEFAULT_GRIDCELL_WIDTH	1
+#define DEFAULT_GRIDCELL_WIDTH	3
 
 // Player Stat Constants
 #define INITIAL_HEALTH 100
 
 /*	Game	*/
 #define	GRAVITY					0.03f
-#define	PLAYER_SPEED 			0.5f
+#define	PLAYER_SPEED 			1.5f
+#define JUMP_SPEED				0.5f

@@ -120,7 +120,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			case ActionType::Jump: {
 				if (obj->physics.velocity.y != 0) { break; }
-				obj->physics.velocity.y += (startAction.movement * PLAYER_SPEED / 2.0f).y;
+				obj->physics.velocity.y += (startAction.movement * JUMP_SPEED / 2.0f).y;
 				break;
 			}
 			case ActionType::Sprint: {
@@ -442,7 +442,7 @@ void ServerGameState::loadMaze() {
 			floor->shared.dimensions.z / 2);
 
 	floor->physics.shared.corner = glm::vec3(0.0f, -0.1f, 0.0f);
-	floor->physics.boundary = new BoxCollider(floor->physics.shared.corner, floor->shared.dimensions);
+	//floor->physics.boundary = new BoxCollider(floor->physics.shared.corner, floor->shared.dimensions);
 
 	floor->physics.movable = false;
 
