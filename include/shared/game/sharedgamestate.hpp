@@ -67,7 +67,6 @@ struct SharedGameState {
 	SharedGameState():
 		objects(std::vector<std::shared_ptr<SharedObject>>())
 	{
-		this->objects.reserve(MAX_NUM_OBJECTS);
 		this->phase = GamePhase::TITLE_SCREEN;
 		this->timestep = FIRST_TIMESTEP;
 		this->timestep_length = TIMESTEP_LEN;
@@ -77,7 +76,6 @@ struct SharedGameState {
 	SharedGameState(GamePhase start_phase, GameConfig config):
 		objects(std::vector<std::shared_ptr<SharedObject>>())
 	{
-		this->objects.reserve(MAX_NUM_OBJECTS);
 		this->phase = start_phase;
 		this->timestep = FIRST_TIMESTEP;
 		this->timestep_length = config.game.timestep_length_ms;

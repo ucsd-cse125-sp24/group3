@@ -274,11 +274,15 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
+    glm::vec3 test(1.0f);
+
     for (int i = 0; i < this->gameState.objects.size(); i++) {
         std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
 
         if (sharedObject == nullptr)
             continue;
+
+        std::cout << "shared object " << i << ": position: " << glm::to_string(sharedObject->physics.position) << std::endl;
 
         // Get camera position from server, update position and don't render player object (or special handling)
         if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
@@ -296,8 +300,12 @@ void Client::draw() {
 
         //  tmp: all objects are cubes
         Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f), glm::vec3(1.0f));
-        cube->update(sharedObject->physics.position);
+        cube->update(glm::vec3(0.0f));
         cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);
+
+        Cube* origin = new Cube(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.05f, 0.05f, 0.05f));
+        origin->update(glm::vec3(0.0f));
+        origin->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
     }
 }
 
