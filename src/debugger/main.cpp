@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
 	ServerGameState state(GamePhase::GAME, config);
 
 	//	2.	Fill it with some objects
-	unsigned int globalID1 = state.objects.createObject(ObjectType::Object);
+	/*unsigned int globalID1 = state.objects.createObject(ObjectType::Object);
 	Object* obj1 = state.objects.getObject(globalID1);
 	obj1->physics.shared.position = glm::vec3(0.f, 0.f, 0.f);
 	obj1->physics.velocity = glm::vec3(0.f, 0.f, 10.f);
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 	Object* obj2 = state.objects.getObject(globalID2);
 	obj2->physics.shared.position = glm::vec3(0.f, 0.f, 0.f);
 	obj2->physics.velocity = glm::vec3(1.f, 1.f, 10.f);
-	obj2->physics.velocityMultiplier = glm::vec3(1.f, -1.f, 0.f);
+	obj2->physics.velocityMultiplier = glm::vec3(1.f, -1.f, 0.f); */
 
 	//	3.	Start debugger shell
 

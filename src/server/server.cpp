@@ -58,7 +58,6 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     EntityID wall3ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall4ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
-    */
 
     //  Specify wall positions (RECREATED TO MATCH AXIS)
     //  Configuration: 18 (z) x 20 (x) room example
@@ -69,7 +68,6 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     //  #   #
     //  ##4##
 
-    /*
     SolidSurface* wall1 = (SolidSurface*)state.objects.getObject(wall1ID);
     SolidSurface* wall2 = (SolidSurface*)state.objects.getObject(wall2ID);
     SolidSurface* wall3 = (SolidSurface*)state.objects.getObject(wall3ID);
