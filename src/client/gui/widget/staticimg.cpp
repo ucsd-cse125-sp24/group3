@@ -87,7 +87,6 @@ StaticImg::~StaticImg() {
 
 void StaticImg::render() {
     glUseProgram(StaticImg::shader);
-    glUniform1i(glGetUniformLocation(StaticImg::shader, "texture1"), this->texture_id);
 
     glm::mat4 model = glm::mat4(1.0f);
     // model = glm::translate(model, glm::vec3(origin, 0.0f));
