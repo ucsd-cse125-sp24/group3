@@ -38,7 +38,7 @@ public:
     }
 
     TextInput(glm::vec2 origin, 
-        std::string placeholder,
+        const std::string& placeholder,
         gui::GUI* gui,
         std::shared_ptr<font::Loader> fonts, 
         DynText::Options options);

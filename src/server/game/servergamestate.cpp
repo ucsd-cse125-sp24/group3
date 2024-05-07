@@ -187,9 +187,9 @@ void ServerGameState::updateMovement() {
 		if (object == nullptr)
 			continue;
 		
-		bool collided = false;
-		bool collidedX = false;
-		bool collidedZ = false;
+		bool collided = false; // cppcheck-suppress variableScope
+		bool collidedX = false; // cppcheck-suppress variableScope
+		bool collidedZ = false; // cppcheck-suppress variableScope
 
 		if (object->physics.movable) {
 			// Check for collision at position to move, if so, dont change position
@@ -419,7 +419,8 @@ void ServerGameState::loadMaze() {
 	file.close();
 
 	//	Verify that there's at least one spawn point
-	assert(this->grid.getSpawnPoints().size() > 0);
+	size_t num_spawn_points = this->grid.getSpawnPoints().size();
+	assert(num_spawn_points > 0);
 
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
 

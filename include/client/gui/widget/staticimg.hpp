@@ -37,7 +37,7 @@ public:
     }
 
     StaticImg(glm::vec2 origin, gui::img::Img img);
-    StaticImg(gui::img::Img img);
+    explicit StaticImg(gui::img::Img img);
     ~StaticImg();
 
     void render() override;

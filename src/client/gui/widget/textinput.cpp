@@ -12,11 +12,11 @@ namespace gui::widget {
 std::string TextInput::prev_input = "";
 
 TextInput::TextInput(glm::vec2 origin,
-    std::string placeholder,
+    const std::string& placeholder,
     gui::GUI* gui,
     std::shared_ptr<font::Loader> fonts, 
     DynText::Options options):
-    Widget(Type::TextInput, origin)
+    Widget(Type::TextInput, origin), gui(gui)
 {
     std::string text_to_display;
     font::Color color_to_display;

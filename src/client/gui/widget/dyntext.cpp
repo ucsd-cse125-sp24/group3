@@ -14,7 +14,7 @@ namespace gui::widget {
 
 std::unique_ptr<Shader> DynText::shader = nullptr;
 
-DynText::DynText(glm::vec2 origin, std::string text, 
+DynText::DynText(glm::vec2 origin, const std::string& text, 
     std::shared_ptr<gui::font::Loader> fonts, DynText::Options options):
     text(text), options(options), fonts(fonts), Widget(Type::DynText, origin)
 {
@@ -45,7 +45,7 @@ DynText::DynText(glm::vec2 origin, std::string text,
     }
 }
 
-DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts, DynText::Options options):
+DynText::DynText(const std::string& text, std::shared_ptr<gui::font::Loader> fonts, DynText::Options options):
     DynText({0.0f, 0.0f}, text, fonts, options) {}
 
 void DynText::render() {

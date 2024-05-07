@@ -40,8 +40,8 @@ public:
         return std::make_unique<DynText>(std::forward<Params>(params)...);
     }
 
-    DynText(glm::vec2 origin, std::string text, std::shared_ptr<gui::font::Loader> loader, Options options);
-    DynText(std::string text, std::shared_ptr<gui::font::Loader> loader, Options options);
+    DynText(glm::vec2 origin, const std::string& text, std::shared_ptr<gui::font::Loader> loader, Options options);
+    DynText(const std::string& text, std::shared_ptr<gui::font::Loader> loader, Options options);
 
     void render() override;
 

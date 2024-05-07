@@ -63,6 +63,8 @@ add_custom_target(lint
     --inline-suppr
     # return error exit code 1 on failures
     --error-exitcode=1
+    # ignore certain warnings that are annoying
+    --suppress=unusedVariable
     # tell it about our include directory
     -I ${CMAKE_SOURCE_DIR}/include
     # only check include and src

@@ -2,6 +2,7 @@
 #include "client/core.hpp"
 
 #include <iostream>
+#include <algorithm>
 
 #include "stb_image.h"
 
@@ -11,7 +12,7 @@ bool Loader::init() {
     std::cout << "Loading images...\n"; 
 
     for (auto img_id : GET_ALL_IMG_IDS()) {
-        if (!this->_loadImg(img_id)) {
+        if (!this->_loadImg(img_id)) { // cppcheck-suppress useStlAlgorithm
             return false;
         }
     }
@@ -39,21 +40,17 @@ bool Loader::_loadImg(ImgID img_id) {
     auto path = getImgFilepath(img_id);
     std::cout << "Loading " << path << "...\n";
     unsigned char* img_data = stbi_load(path.c_str(), &width, &height, &channels, 0);
-    std::cout << img_data << std::endl;
 
     if (stbi_failure_reason())
         std::cout << "failure: " << stbi_failure_reason() << std::endl;
 
     if (img_data == 0 || width == 0 || height == 0) {
-        std::cerr << "Error loading " << path << "! " << img_data <<
-            ", " << width << ", " << height << "\n" << std::endl;
+        std::cerr << "Error loading " << path << std::endl;
         return false;
     }
     
-    if (img_data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     // unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
