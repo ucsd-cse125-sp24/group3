@@ -249,8 +249,8 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
-    EntityID id = this->state.objects.createObject(ObjectType::Player);
-    Player* player = (Player*)state.objects.getObject(id);
+    SpecificID playerID = this->state.objects.createObject(ObjectType::Player);
+    Player* player = this->state.objects.getPlayer(playerID);
 
     //  Spawn player in random spawn point
 
@@ -261,7 +261,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     std::vector<GridCell*> spawnPoints = this->state.getGrid().getSpawnPoints();
     size_t randomSpawnIndex = std::rand() % spawnPoints.size();
 
-    std::cout << "Player " << id << " spawning at spawn point " << randomSpawnIndex << std::endl;
+    std::cout << "Player " << playerID << " spawning at spawn point " << randomSpawnIndex << std::endl;
 
     GridCell * spawnPoint = 
         this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
@@ -271,12 +271,12 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f));
 
     auto session = std::make_shared<Session>(std::move(this->socket),
-        SessionInfo({}, id));
+        SessionInfo({}, player->globalID));
 
-    this->sessions.insert(SessionEntry(id, addr, session));
+    this->sessions.insert(SessionEntry(player->globalID, addr, session));
 
     std::cout << "Established new connection with " << addr << ", which was assigned eid "
-        << id << std::endl;
+        << player->globalID << std::endl;
 
     return session;
 }
