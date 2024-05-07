@@ -244,12 +244,16 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
+    glm::vec3 test(1.0f);
+
     for (int i = 0; i < this->gameState.objects.size(); i++) {
         std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
 
         if (sharedObject == nullptr) {
             continue;
         }
+
+        std::cout << "shared object " << i << ": position: " << glm::to_string(sharedObject->physics.position) << std::endl;
 
         // Get camera position from server, update position and don't render player object (or special handling)
         if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
@@ -265,7 +269,6 @@ void Client::draw() {
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
                 // subtracting 1 from y position to render players "standing" on ground
                 auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y - 1.0f, sharedObject->physics.position.z);
-
 
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(

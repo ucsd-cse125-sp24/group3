@@ -81,7 +81,7 @@ void Session::sendEventAsync(Event event) {
 
 void Session::_receivePacketAsync() {
     auto self(shared_from_this());
-    const std::size_t BUF_SIZE = 10000;
+    const std::size_t BUF_SIZE = NETWORK_BUFFER_SIZE;
     auto buf = std::make_shared<std::array<char, BUF_SIZE>>();
 
     boost::asio::async_read(socket, boost::asio::buffer(&buf.get()[0], BUF_SIZE),

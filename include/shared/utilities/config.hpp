@@ -13,6 +13,19 @@ struct GameConfig {
     /// @brief Game config options
     struct {
         std::chrono::milliseconds timestep_length_ms;
+        struct {
+            /**
+             * @brief Path of the directory (contained in the repository
+             * directory) that contains maze map files
+             */
+            std::string directory;
+
+            /**
+             * @brief Name of the maze file within the maze maps directory that
+             * the server should load.
+             */
+            std::string maze_file;
+        } maze;
     } game;
     /// @brief Shared config settings for the network
     struct {
@@ -61,3 +74,11 @@ struct GameConfig {
      */
     static GameConfig parse(int argc, char** argv);
 };
+
+
+/** 
+ * @brief Generates a GameConfig with default values.
+ * Note: Not using a constructor as then aggregate initialization will not be
+ * possible for GameConfig structs
+ */
+GameConfig getDefaultConfig();

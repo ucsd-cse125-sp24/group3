@@ -25,9 +25,9 @@ public:
 	 * NOT do this!)
 	 * 
 	 * @param type the type of object to create
-	 * @return the EntityID of the newly created object
+	 * @return the SpecificID of the newly created object
 	 */
-	EntityID createObject(ObjectType type);
+	SpecificID createObject(ObjectType type);
 
 	/**
 	 * @brief Attempts to remove an object with the given EntityID.
@@ -38,12 +38,63 @@ public:
 	bool removeObject(EntityID globalID);
 
 	/**
+	 * @brief Attempts to remove an object pointed to by the pointer pointed to
+	 * by the given Object double pointer.
+	 * If successful, it will set the given Object pointer to nullptr. (use to
+	 * avoid dangling Object pointers)
+	 * @param object_dbl_ptr Double pointer to the object to remove
+	 * @return true if the object was successfully removed and false otherwise.
+	 */
+	bool removeObject(Object** object_dbl_ptr);
+
+	/**
 	 * @brief Attempts to retrieve the object with the given EntityID.
 	 * @param globalID EntityID of the object to retrieve
 	 * @return A pointer to the object with the given EntityID or nullptr if
 	 * none exists.
 	 */
 	Object* getObject(EntityID globalID);
+
+	/*	SpecificID object getters by type	*/
+
+	/**
+	 * @brief Attempts to retrieve the Object with the given SpecificID.
+	 * @param base_objectID SpecificID of the Object to retrieve
+	 * @return A pointer to the Object with the given SpecificID or nullptr if
+	 * none exists.
+	 */
+	Object* getBaseObject(SpecificID base_objectID);
+
+	/**
+	 * @brief Attempts to retrieve the Item with the given SpecificID.
+	 * @param itemID SpecificID of the Item to retrieve
+	 * @return A pointer to the Item with the given SpecificID or nullptr if
+	 * none exists.
+	 */
+	Item* getItem(SpecificID itemID);
+
+	/**
+	 * @brief Attempts to retrieve the SolidSurface with the given SpecificID.
+	 * @param surfaceID SpecificID of the SolidSurface to retrieve
+	 * @return A pointer to the SolidSurface with the given SpecificID or
+	 * nullptr if none exists.
+	 */
+	SolidSurface* getSolidSurface(SpecificID surfaceID);
+
+	/**
+	 * @brief Attempts to retrieve the Player with the given SpecificID.
+	 * @param playerID SpecificID of the Player to retrieve
+	 * @return A pointer to the Player with the given SpecificID or nullptr if
+	 * none exists.
+	 */
+	Player* getPlayer(SpecificID playerID);
+
+	/**
+	 * @brief Attempts to retrieve the Enemy with the given SpecificID.
+	 * @param enemyID SpecificID of the Enemy to retrieve
+	 * @return A pointer 
+	 */
+	Enemy* getEnemy(SpecificID enemyID);
 
 	/**
 	 * @brief Get a list of all objects in this game instance at the current
@@ -68,6 +119,22 @@ public:
 	 * in the game instance.
 	 */
 	SmartVector<SolidSurface*> getSolidSurfaces();
+
+	/**
+	 * @brief Get a list of all Players in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Player pointers of all Player objects in the game
+	 * instance.
+	 */
+	SmartVector<Player*> getPlayers();
+
+	/**
+	 * @brief Get a list of all Enemies in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Enemy pointers of all Enemy objects in the game
+	 * instance.
+	 */
+	SmartVector<Enemy*> getEnemies();
 
 	/*	SharedGameState generation	*/
 	
@@ -115,7 +182,7 @@ private:
 	 * that is, the Object pointer at index x points to the Object with global 
 	 * EntityID x.
 	 */
-	SmartVector<Object*> objects;
+	SmartVector<Object *> objects;
 
 	/*	Type-specific object smart vectors	*/
 	
@@ -123,27 +190,27 @@ private:
 	 * @brief SmartVector of Object pointers to all objects whose ObjectType is
 	 * ObjectType::Object.
 	 */
-	SmartVector<Object*> base_objects;
+	SmartVector<Object *> base_objects;
 
 	/**
 	 * @brief SmartVector of Item pointers to all Item objects.
 	 */
-	SmartVector<Item*> items;
+	SmartVector<Item *> items;
 
 	/**
 	 * @brief SmartVector of SolidSurface pointers to all SolidSurface objects.
 	 */
-	SmartVector<SolidSurface*> solid_surfaces;
+	SmartVector<SolidSurface *> solid_surfaces;
 
 	/**
 	 * @brief SmartVector of Player pointers to all objects whose ObjectType is
 	 * ObjectType::Player.
 	 */
-	SmartVector<Player*> player_objects;
+	SmartVector<Player *> players;
 
 	/**
 	 * @brief SmartVector of Enemy pointers to all objects whose ObjectType is
 	 * ObjectType::Enemy.
 	 */
-	SmartVector<Enemy*> enemy_objects;
+	SmartVector<Enemy *> enemies;
 };

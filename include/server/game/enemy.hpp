@@ -5,15 +5,13 @@
 #include "server/game/creature.hpp"
 #include "shared/game/sharedobject.hpp"
 
-struct EnemyStats {
-	int health;
-
-
-};
+//struct EnemyStats {
+//	int health;
+//};
 
 class Enemy : public Creature {
 public:
-	EnemyStats stats;
+	//EnemyStats stats;
 
 	// list of abilities
 

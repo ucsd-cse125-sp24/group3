@@ -257,10 +257,10 @@ public:
 		//	This command ignores arguments
 
 		//	Create a new base object in the game state
-		unsigned int globalID = state.objects.createObject(ObjectType::Object);
-		const Object* obj = state.objects.getObject(globalID); // cppcheck-suppress unreadVariable
+		SpecificID typeID = state.objects.createObject(ObjectType::Object);
+		Object* obj = state.objects.getBaseObject(typeID);
 
-		std::cout << "Created new object (global id " << globalID << ")" << std::endl;
+		std::cout << "Created new object (global id " << obj->globalID << ")" << std::endl;
 	}
 };
 
