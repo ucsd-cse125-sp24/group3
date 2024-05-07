@@ -11,6 +11,7 @@
 #include <vector>
 #include <optional>
 #include <iostream>
+#include <filesystem>
 
 #include "assimp/material.h"
 #include "assimp/types.h"
@@ -129,8 +130,8 @@ void Mesh::draw(
     glUseProgram(0);
 }
 
-Model::Model(const std::string& filepath) : 
-    directory(filepath.substr(0, filepath.find_last_of('/'))) {
+Model::Model(const std::string& filepath) {
+    this->directory = std::filesystem::path(filepath).parent_path().string();
 
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(filepath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_SplitLargeMeshes | aiProcess_OptimizeMeshes);
@@ -277,8 +278,8 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, const aiTextur
     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
         aiString str;
         mat->GetTexture(type, i, &str);
-        std::string textureFilepath = this->directory + "/" + std::string(str.C_Str());
-        Texture texture(textureFilepath, type);
+        std::filesystem::path textureFilepath = std::filesystem::path(this->directory) / std::string(str.C_Str());
+        Texture texture(textureFilepath.string(), type);
         textures.push_back(texture);
     }
     return textures;
@@ -306,9 +307,10 @@ Texture::Texture(const std::string& filepath, const aiTextureType& type) {
     if (!data) {
         std::cout << "Texture failed to load at path: " << filepath << std::endl;
         stbi_image_free(data);
+        throw std::exception();
     }
     std::cout << "Succesfully loaded texture at " << filepath << std::endl;
-    GLenum format;
+    GLenum format = GL_RED;
     if (nrComponents == 1)
         format = GL_RED;
     else if (nrComponents == 3)

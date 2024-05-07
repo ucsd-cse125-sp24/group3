@@ -278,10 +278,10 @@ void Client::draw() {
                     lightPos,
                     true);
 
-                this->light_source->TranslateTo(lightPos);
+     /*           this->light_source->TranslateTo(lightPos);
                 this->light_source->draw(
                     this->light_source_shader,
-                    this->cam->getViewProj());
+                    this->cam->getViewProj());*/
 
                 // Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f));
                 // cube->translateAbsolute(lightPos);
