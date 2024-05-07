@@ -1,5 +1,6 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
+#include "server/game/boxcollider.hpp"
 #include "shared/utilities/root_path.hpp"
 
 #include <fstream>
@@ -120,11 +121,11 @@ void ServerGameState::update(const EventList& events) {
 			}
 			case ActionType::Jump: {
 				if (obj->physics.velocity.y != 0) { break; }
-				obj->physics.velocity.y += (startAction.movement * PLAYER_SPEED / 2.0f).y;
+				obj->physics.velocity.y += (startAction.movement * JUMP_SPEED / 2.0f).y;
 				break;
 			}
 			case ActionType::Sprint: {
-				obj->physics.acceleration = glm::vec3(1.5f, 1.1f, 1.5f);
+				obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
 				break;
 			}
 			default: {}
@@ -143,7 +144,7 @@ void ServerGameState::update(const EventList& events) {
 				break;
 			}
 			case ActionType::Sprint: {
-				obj->physics.acceleration = glm::vec3(1.0f, 1.0f, 1.0f);
+				obj->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
 				break;
 			}
 			default: { break; }
@@ -186,16 +187,91 @@ void ServerGameState::updateMovement() {
 		if (object == nullptr)
 			continue;
 		
+		bool collided = false;
+		bool collidedX = false;
+		bool collidedZ = false;
+
 		if (object->physics.movable) {
-			//TODO : check for collision at position to move, if so, dont change position
+			// Check for collision at position to move, if so, dont change position
+			// O(n^2) naive implementation of collision detection
+			Collider* currentCollider = object->physics.boundary;
+			glm::vec3 movementStep = object->physics.velocity * object->physics.velocityMultiplier;
 
-			object->physics.shared.position += object->physics.velocity * object->physics.acceleration;
+			// Run collision detection movement if it has a collider
+			if (currentCollider != NULL) {
+				currentCollider->corner += movementStep; // only move collider to check
 
-			// update gravity factor
-			if ((object->physics.shared.position).y >= 0) {
-				object->physics.velocity.y -= GRAVITY;
-			} else {
-				object->physics.velocity.y = 0.0f;
+				// TODO : for possible addition for smooth collision detection, but higher computation
+				// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
+				//    Then, take the most steps possible (mario 64 handles it like this)
+				// 2) Using raycasting
+
+				for (int j = 0; j < gameObjects.size(); j++) {
+					if (i == j) { continue; }
+					Object* otherObj = gameObjects.get(j);
+					Collider* otherCollider = otherObj->physics.boundary;
+
+					if (otherCollider == NULL) { continue; }
+
+					if (currentCollider->detectCollision(otherCollider)) {
+						collided = true;
+
+						// Check x-axis collision
+						currentCollider->corner.z -= movementStep.z;
+						if (currentCollider->detectCollision(otherCollider)) {
+							collidedX = true;
+						}
+
+						// Check z-axis collision
+						currentCollider->corner.z += movementStep.z;
+						currentCollider->corner.x -= movementStep.x;
+						if (currentCollider->detectCollision(otherCollider)) {
+							collidedZ = true;
+						}
+						currentCollider->corner.x += movementStep.x;
+					}
+				}
+
+				// Move object if no collision detected
+				if (!collided) {
+					object->physics.shared.position += movementStep;
+					object->physics.shared.corner += movementStep;
+				}
+				// Revert collider if collided
+				// Seperated for x/z axis collisions
+				else {
+					if (!collidedX) {
+						object->physics.shared.position.x += movementStep.x;
+						object->physics.shared.corner.x += movementStep.x;
+					}
+					else {
+						currentCollider->corner.x -= movementStep.x;
+					}
+
+					if (!collidedZ) {
+						object->physics.shared.position.z += movementStep.z;
+						object->physics.shared.corner.z += movementStep.z;
+					}
+					else {
+						currentCollider->corner.z -= movementStep.z;
+					}
+					object->physics.shared.position.y += movementStep.y;
+					object->physics.shared.corner.y += movementStep.y;
+				}
+
+				// update gravity factor
+				if ((object->physics.shared.corner).y >= 0) {
+					object->physics.velocity.y -= GRAVITY;
+				}
+				else {
+					object->physics.velocity.y = 0.0f;
+				}
+			}
+
+			// if current object do not have a collider / this shouldn't happen though
+			else {
+				object->physics.shared.position += movementStep;
+				object->physics.shared.corner += movementStep;
 			}
 		}
 	}
@@ -342,6 +418,9 @@ void ServerGameState::loadMaze() {
 
 	file.close();
 
+	//	Verify that there's at least one spawn point
+	assert(this->grid.getSpawnPoints().size() > 0);
+
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
 
 	SpecificID floorID = this->objects.createObject(ObjectType::SolidSurface);
@@ -361,6 +440,10 @@ void ServerGameState::loadMaze() {
 		glm::vec3(floor->shared.dimensions.x / 2, 
 			-0.05,
 			floor->shared.dimensions.z / 2);
+
+	floor->physics.shared.corner = glm::vec3(0.0f, -0.1f, 0.0f);
+	//floor->physics.boundary = new BoxCollider(floor->physics.shared.corner, floor->shared.dimensions);
+
 	floor->physics.movable = false;
 
 	ceiling->shared.dimensions = 
@@ -372,6 +455,11 @@ void ServerGameState::loadMaze() {
 		glm::vec3(floor->shared.dimensions.x / 2, 
 			MAZE_CEILING_HEIGHT + 0.05,
 			floor->shared.dimensions.z / 2);
+
+	ceiling->physics.shared.corner = glm::vec3(0.0f, -0.1f, 0.0f);
+
+	// Not sure we would need colliders for ceiling
+	//ceiling->physics.boundary = new BoxCollider(ceiling->physics.shared.corner, ceiling->shared.dimensions);
 
 	ceiling->physics.movable = false;
 	
@@ -399,10 +487,18 @@ void ServerGameState::loadMaze() {
 							this->grid.getGridCellWidth());
 
 					wall->physics.shared.position =
-						glm::vec3((0.5 + cell->x) * this->grid.getGridCellWidth(),
+						this->grid.gridCellCenterPosition(cell)
+						+ glm::vec3(0, MAZE_CEILING_HEIGHT / 2, 0);
+						/*glm::vec3((0.5 + cell->x) * this->grid.getGridCellWidth(),
 							MAZE_CEILING_HEIGHT / 2,
-							(0.5 + cell->y) * this->grid.getGridCellWidth());
+							(0.5 + cell->y) * this->grid.getGridCellWidth());*/
 					
+					wall->physics.shared.corner = 
+						glm::vec3(cell->x * this->grid.getGridCellWidth(),
+							0.0f, 
+							cell->y * this->grid.getGridCellWidth());
+					wall->physics.boundary = new BoxCollider(wall->physics.shared.corner, wall->shared.dimensions);
+
 					wall->physics.movable = false;
 
 					break;
@@ -410,7 +506,10 @@ void ServerGameState::loadMaze() {
 			}
 		}
 	}
+}
 
+Grid& ServerGameState::getGrid() {
+	return this->grid;
 }
 
 /*	Debugger Methods	*/

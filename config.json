@@ -1,9 +1,9 @@
 {
     "game": {
-      "timestep_length_ms": 30,
+      "timestep_length_ms": 40,
       "maze": {
         "directory": "maps",
-        "maze_file": "tyler_test.maze"
+        "maze_file": "maze5.maze"
       }
     },
     "network": {
@@ -18,6 +18,6 @@
     "client": {
         "default_name": "John Doe",
         "lobby_discovery": true,
-        "window_width": 1500
+        "window_width": 2000
     }
 }

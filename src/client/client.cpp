@@ -133,7 +133,7 @@ bool Client::init() {
     if (GLEW_OK != err) { 
         std::cerr << "Error loading GLEW: " << glewGetString(err) << std::endl; 
         return false;
-    } 
+    }
 
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
@@ -218,14 +218,14 @@ void Client::idleCallback(boost::asio::io_context& context) {
     std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
 
     // Sets a direction vector
-    if(cam_is_held_right)
-        cam_movement.value() += cam->move(false, 1.0f);
-    if(cam_is_held_left)
-        cam_movement.value() += cam->move(false, -1.0f);
-    if (cam_is_held_up)
+    if (cam_is_held_right)
         cam_movement.value() += cam->move(true, 1.0f);
-    if (cam_is_held_down)
+    if (cam_is_held_left)
         cam_movement.value() += cam->move(true, -1.0f);
+    if (cam_is_held_up)
+        cam_movement.value() += cam->move(false, 1.0f);
+    if (cam_is_held_down)
+        cam_movement.value() += cam->move(false, -1.0f);
     if (is_held_space)
         jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -265,7 +265,7 @@ void Client::handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm
     if (keyHeld == *eventSent) { return; }
     
     ActionType sendAction;
-    switch(keyType) {
+    switch (keyType) {
         case GLFW_KEY_LEFT_SHIFT:
             sendAction = ActionType::Sprint;
             break;
@@ -313,15 +313,13 @@ void Client::draw() {
 
         std::cout << "shared object " << i << ": position: " << glm::to_string(sharedObject->physics.position) << std::endl;
 
-        // Get camera position from server, update position and don't render player object (or special handling)
-        if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
-        }
-
         switch (sharedObject->type) {
             case ObjectType::Player: {
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
-                    cam->updatePos(sharedObject->physics.position);
+                    glm::vec3 pos = sharedObject->physics.position;
+                    pos.y += 1.5f;
+                    cam->updatePos(pos);
                     break;
                 }
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
@@ -485,7 +483,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_D:
             cam_is_held_right = false;
             break;
-            
+
         case GLFW_KEY_SPACE:
             is_held_space = false;
             break;
@@ -510,7 +508,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     }
 }
 
-void Client::mouseCallback(GLFWwindow *window, double xposIn, double yposIn) { // cppcheck-suppress constParameterPointer
+void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { // cppcheck-suppress constParameterPointer
     mouse_xpos = static_cast<float>(xposIn);
     mouse_ypos = static_cast<float>(yposIn);
 }

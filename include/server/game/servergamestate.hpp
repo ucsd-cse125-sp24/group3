@@ -134,6 +134,14 @@ public:
 	 */
 	void loadMaze();
 
+	/*	Maze getters	*/
+
+	/**
+	 * @brief Returns a reference to the Grid in use by this ServerGameState
+	 * @return Reference to Grid instance used by this ServerGameState instance
+	 */
+	Grid& getGrid();
+
 	/*	Debugger Methods	*/
 
 	/**
