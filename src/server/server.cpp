@@ -33,6 +33,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      world_eid(0),
      state(ServerGameState(GamePhase::LOBBY, config))
 {
+    /*
     EntityID id = state.objects.createObject(ObjectType::Object);
     Object* cube = (Object*)state.objects.getObject(id);
     cube->physics.shared.position = glm::vec3(0.0f, 0.0f, 5.0f);
@@ -40,7 +41,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     cube->physics.boundary = new BoxCollider(cube->physics.shared.corner, glm::vec3(6.0f, 6.0f, 0.5f));
     cube->physics.movable = false;
 
-    /*
+    
     EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
     SolidSurface* floor = (SolidSurface*)state.objects.getObject(floorID);
     floor->shared.dimensions = glm::vec3(20.0f, 0.1f, 20.0f);
@@ -51,11 +52,13 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
 
     /*
     //  Create a room
+    /*
     EntityID wall1ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall2ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall3ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID wall4ID = state.objects.createObject(ObjectType::SolidSurface);
     EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
+    */
 
     //  Specify wall positions (RECREATED TO MATCH AXIS)
     //  Configuration: 18 (z) x 20 (x) room example
@@ -66,6 +69,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     //  #   #
     //  ##4##
 
+    /*
     SolidSurface* wall1 = (SolidSurface*)state.objects.getObject(wall1ID);
     SolidSurface* wall2 = (SolidSurface*)state.objects.getObject(wall2ID);
     SolidSurface* wall3 = (SolidSurface*)state.objects.getObject(wall3ID);
@@ -248,10 +252,12 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
     EntityID id = this->state.objects.createObject(ObjectType::Player);
+
+    /*
     Player* cube1 = (Player*)state.objects.getObject(id);
     cube1->physics.shared.position = glm::vec3(0.5f);
     cube1->physics.shared.corner = glm::vec3(0.0f);
-    cube1->physics.boundary = new BoxCollider(cube1->physics.shared.corner, glm::vec3(1.0f));
+    cube1->physics.boundary = new BoxCollider(cube1->physics.shared.corner, glm::vec3(1.0f));*/
 
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, id));

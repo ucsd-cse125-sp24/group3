@@ -14,6 +14,8 @@ set(FILES
     game/objectmanager.cpp
     game/player.cpp
     game/enemy.cpp
+    game/gridcell.cpp
+    game/grid.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

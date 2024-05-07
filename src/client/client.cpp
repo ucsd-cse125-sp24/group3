@@ -61,7 +61,7 @@ void Client::connectAndListen(std::string ip_addr) {
     this->session->connectTo(this->endpoints);
 
     auto packet = PackagedPacket::make_shared(PacketType::ClientDeclareInfo,
-        ClientDeclareInfoPacket{ .player_name = config.client.default_name });
+        ClientDeclareInfoPacket { .player_name = config.client.default_name });
 
     this->session->sendPacketAsync(packet);
 
@@ -181,14 +181,14 @@ void Client::idleCallback(boost::asio::io_context& context) {
 // Handles given key
 // send startAction key is held but not sent
 // send stopAction when unheld
-void Client::handleKeys(int eid, int keyType, bool keyHeld, bool* eventSent, glm::vec3 movement) {
+void Client::handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement){
     if (keyHeld == *eventSent) { return; }
-
+    
     ActionType sendAction;
     switch (keyType) {
-    case GLFW_KEY_LEFT_SHIFT:
-        sendAction = ActionType::Sprint;
-        break;
+        case GLFW_KEY_LEFT_SHIFT:
+            sendAction = ActionType::Sprint;
+            break;
     }
     if (keyHeld && !*eventSent) {
         this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, movement, sendAction)));
