@@ -47,6 +47,8 @@ enum class GUIState {
     GAME_ESC_MENU
 };
 
+#define GUI_PROJECTION_MATRIX() glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT);
+
 /**
  * Class which wraps around all of the GUI elements that should be rendered to the screen.
  * 
@@ -59,6 +61,7 @@ enum class GUIState {
 class GUI {
 public:
     static glm::mat4 projection;
+
 
     /// =<SETUP>========================================================================
     ///

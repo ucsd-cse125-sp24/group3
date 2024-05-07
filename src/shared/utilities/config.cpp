@@ -50,7 +50,8 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
             },
             .client = {
                 .default_name = json.at("client").at("default_name"),
-                .lobby_discovery = json.at("client").at("lobby_discovery")
+                .lobby_discovery = json.at("client").at("lobby_discovery"),
+                .window_width = json.at("client").at("window_width")
             }
         };
     } catch (nlohmann::json::exception& ex) {

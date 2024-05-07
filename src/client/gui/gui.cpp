@@ -9,7 +9,6 @@
 
 namespace gui {
 
-glm::mat4 GUI::projection = glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT);
 
 GUI::GUI(Client* client) {
     this->client = client;
@@ -175,12 +174,6 @@ void GUI::_layoutTitleScreen() {
 
     start_flex->push(std::move(start_text));
     this->addWidget(std::move(start_flex));
-
-    // auto pikachu = widget::StaticImg::make(
-    //     glm::vec2(0.0f, 0.0f),
-    //     images.getImg(img::ImgID::Pikachu)
-    // );
-    // this->addWidget(std::move(pikachu));
 }
 
 void GUI::_layoutLobbyBrowser() {
@@ -221,7 +214,7 @@ void GUI::_layoutLobbyBrowser() {
         lobbies_flex->push(widget::DynText::make(
             "No lobbies found...",
             this->fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::BLACK)
+            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
         ));
     }
 
@@ -232,7 +225,7 @@ void GUI::_layoutLobbyBrowser() {
         "Enter a name",
         this,
         fonts,
-        widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::BLACK)
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
     ));
 }
 

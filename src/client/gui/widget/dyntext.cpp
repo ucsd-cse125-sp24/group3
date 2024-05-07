@@ -53,7 +53,8 @@ void DynText::render() {
     glUseProgram(DynText::shader);
 
     // glActiveTexture(GL_TEXTURE0);
-    glUniformMatrix4fv(glGetUniformLocation(DynText::shader, "projection"), 1, false, reinterpret_cast<float*>(&GUI::projection));
+    auto projection = GUI_PROJECTION_MATRIX();
+    glUniformMatrix4fv(glGetUniformLocation(DynText::shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
     auto color = font::getRGB(this->options.color);
     glUniform3f(glGetUniformLocation(DynText::shader, "textColor"), color.x, color.y, color.z);
     glBindVertexArray(VAO);

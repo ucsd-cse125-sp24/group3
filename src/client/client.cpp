@@ -13,7 +13,9 @@
 #include <sstream>
 
 #include "client/gui/gui.hpp"
+#include "client/constants.hpp"
 #include <boost/dll/runtime_symbol_info.hpp>
+
 
 #include "client/shader.hpp"
 #include "shared/game/event.hpp"
@@ -48,6 +50,9 @@ bool Client::is_left_mouse_down = false;
 float Client::mouse_xpos = 0.0f;
 float Client::mouse_ypos = 0.0f;
 
+int Client::window_width = UNIT_WINDOW_WIDTH;
+int Client::window_height = UNIT_WINDOW_HEIGHT;
+
 time_t Client::time_of_last_keystroke = 0;
 
 using namespace gui;
@@ -63,6 +68,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     lobby_finder(io_context, config)
 {
     cam = new Camera();
+    Client::window_width = config.client.window_width;
+    Client::window_height = static_cast<int>((config.client.window_width * 2.0f) / 3.0f);
     
     if (config.client.lobby_discovery)  {
         lobby_finder.startSearching();
@@ -102,13 +109,14 @@ bool Client::init() {
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Arcana", NULL, NULL);
+    window = glfwCreateWindow(Client::window_width, Client::window_height, "Arcana", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
         return false;
     }
-    glfwSetWindowSizeLimits(window, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT);
+    glfwSetWindowSizeLimits(window, 
+        Client::window_width, Client::window_height, Client::window_width, Client::window_height);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
@@ -458,6 +466,10 @@ void Client::charCallback(GLFWwindow* window, unsigned int codepoint) {
 
     client->gui.captureKeystroke(static_cast<char>(codepoint));
     Client::time_of_last_keystroke = getMsSinceEpoch();
+}
+
+glm::vec2 Client::getWindowSize() {
+    return glm::vec2(Client::window_width, Client::window_height);
 }
 
 time_t Client::getTimeOfLastKeystroke() {

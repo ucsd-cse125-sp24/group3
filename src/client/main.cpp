@@ -27,7 +27,7 @@ void set_callbacks(GLFWwindow* window, Client* client) {
     glfwSetErrorCallback(error_callback);
 
     // Set the window resize callback.
-    // glfwSetWindowSizeCallback(window, client.resizeCallback);
+    // glfwSetWindowSizeCallback(window, Client::windowResizeCallback);
 
     // Set the key callback.
     glfwSetKeyCallback(window, Client::keyCallback);

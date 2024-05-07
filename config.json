@@ -13,6 +13,7 @@
     },
     "client": {
         "default_name": "John Doe",
-        "lobby_discovery": true 
+        "lobby_discovery": true,
+        "window_width": 1500
     }
 }

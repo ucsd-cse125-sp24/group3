@@ -12,7 +12,7 @@ int getFontSizePx(Size size) {
 }
 
 float getScaleFactor(Size size) {
-    float screen_factor = WINDOW_WIDTH / UNIT_WINDOW_WIDTH;
+    float screen_factor = static_cast<float>(WINDOW_WIDTH) / static_cast<float>(UNIT_WINDOW_WIDTH);
 
     return SIZE_TO_SCALE.at(size) * screen_factor;
 }

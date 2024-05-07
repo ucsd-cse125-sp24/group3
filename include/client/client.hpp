@@ -24,14 +24,14 @@
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
 
-#define WINDOW_WIDTH  1500
-#define WINDOW_HEIGHT 1000
+#define WINDOW_WIDTH Client::getWindowSize().x
+#define WINDOW_HEIGHT Client::getWindowSize().y
 
 // position something a "frac" of the way across the screen
 // e.g. WIDTH_FRAC(1, 4) -> a fourth of the way from the left
 //      HEIGHT_FRAC(2, 3) -> two thirds of the way from the bottom
-#define FRAC_WINDOW_WIDTH(num, denom) WINDOW_WIDTH * static_cast<float>(num) / static_cast<float>(denom)
-#define FRAC_WINDOW_HEIGHT(num, denom) WINDOW_HEIGHT * static_cast<float>(num) / static_cast<float>(denom)
+#define FRAC_WINDOW_WIDTH(num, denom) Client::window_width * static_cast<float>(num) / static_cast<float>(denom)
+#define FRAC_WINDOW_HEIGHT(num, denom) Client::window_height * static_cast<float>(num) / static_cast<float>(denom)
 
 using namespace boost::asio::ip;
 
@@ -49,8 +49,10 @@ public:
     static void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
     static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
     static void charCallback(GLFWwindow* window, unsigned int codepoint);
-    static time_t getTimeOfLastKeystroke();
 
+    static glm::vec2 getWindowSize();
+
+    static time_t getTimeOfLastKeystroke();
 
     // Getter / Setters
     GLFWwindow* getWindow() { return window; }
@@ -97,6 +99,9 @@ private:
     static bool is_click_available;
     static float mouse_xpos;
     static float mouse_ypos;
+
+    static int window_width;
+    static int window_height;
 
     static time_t time_of_last_keystroke;
 
