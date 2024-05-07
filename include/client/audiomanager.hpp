@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <boost/filesystem.hpp>
 #include <SFML/Audio.hpp>
+#include <memory>
 
 enum class SoundType {
     Collision,
