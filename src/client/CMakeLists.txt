@@ -10,7 +10,6 @@ add_subdirectory(../../dependencies/freetype ${CMAKE_BINARY_DIR}/freetype)
 add_subdirectory(../../dependencies/sfml ${CMAKE_BINARY_DIR}/sfml)
 add_subdirectory(../../dependencies/assimp ${CMAKE_BINARY_DIR}/assimp)
 add_subdirectory(../../dependencies/stb ${CMAKE_BINARY_DIR}/stb)
-add_subdirectory(../../dependencies/sfml ${CMAKE_BINARY_DIR}/sfml)
 
 add_subdirectory(gui)
 
@@ -22,7 +21,7 @@ set(FILES
     util.cpp
     lobbyfinder.cpp
 
-    shaders.cpp
+    shader.cpp
     model.cpp
     lightsource.cpp
     renderable.cpp
@@ -88,7 +87,7 @@ target_link_libraries(${TARGET_NAME}
     glfw
     libglew_static
     assimp
-    freetypw
+    freetype
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE sfml-audio)

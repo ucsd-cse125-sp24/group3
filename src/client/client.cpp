@@ -148,7 +148,7 @@ bool Client::init() {
     }
 
     auto shaders_dir = getRepoRoot() / "src/client/shaders";
-    auto graphics_assets_dir = this->root_path / "assets/graphics";
+    auto graphics_assets_dir = getRepoRoot() / "assets/graphics";
 
     auto cube_vert_path = shaders_dir / "cube.vert";
     auto cube_frag_path = shaders_dir / "cube.frag";
@@ -168,8 +168,8 @@ bool Client::init() {
 
     this->light_source = std::make_unique<LightSource>();
 
-    auto lightVertFilepath = this->root_path / "src/client/shaders/lightsource.vert";
-    auto lightFragFilepath = this->root_path / "src/client/shaders/lightsource.frag";
+    auto lightVertFilepath = shaders_dir / "lightsource.vert";
+    auto lightFragFilepath = shaders_dir / "lightsource.frag";
     this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
 
     return true;

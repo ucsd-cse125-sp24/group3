@@ -3,6 +3,7 @@
 #include "client/gui/widget/widget.hpp"
 #include "client/gui/img/loader.hpp"
 #include "client/gui/img/img.hpp"
+#include "client/shader.hpp"
 
 #include <memory>
 
@@ -20,7 +21,7 @@ namespace gui::widget {
 class StaticImg : public Widget {
 public:
     using Ptr = std::unique_ptr<StaticImg>;
-    static GLuint shader;
+    static std::unique_ptr<Shader> shader;
 
     /**
      * @brief creates a StaticImg unique ptr widget

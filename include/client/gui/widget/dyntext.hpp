@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "client/core.hpp"
+#include "client/shader.hpp"
 #include "client/gui/widget/widget.hpp"
 #include "client/gui/font/font.hpp"
 #include "client/gui/font/loader.hpp"
@@ -13,7 +14,7 @@ namespace gui::widget {
 class DynText : public Widget {
 public:
     using Ptr = std::unique_ptr<DynText>;
-    static GLuint shader;
+    static std::unique_ptr<Shader> shader;
 
     struct Options {
         Options(font::Font font, font::Size size, font::Color color):

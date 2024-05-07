@@ -1,12 +1,13 @@
 #include "client/gui/gui.hpp"
 
 #include "client/client.hpp"
+#include "client/shader.hpp"
 
 
 
 namespace gui::widget {
 
-GLuint StaticImg::shader = 0;
+std::unique_ptr<Shader> StaticImg::shader = nullptr;
 
 StaticImg::StaticImg(glm::vec2 origin, gui::img::Img img):
     Widget(Type::StaticImg, origin)
@@ -86,7 +87,7 @@ StaticImg::~StaticImg() {
 }
 
 void StaticImg::render() {
-    glUseProgram(StaticImg::shader);
+    StaticImg::shader->use();
 
     glm::mat4 model = glm::mat4(1.0f);
 

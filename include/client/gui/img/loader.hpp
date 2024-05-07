@@ -7,9 +7,7 @@
 namespace gui::img {
 
 /**
- * This class is supposed to load images.
- * 
- * Unfortunately it doesn't work at all! Yipeeee!
+ * This class loads in all of our images
  */
 class Loader {
 public:

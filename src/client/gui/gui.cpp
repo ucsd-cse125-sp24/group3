@@ -19,14 +19,16 @@ bool GUI::init()
     std::cout << "Initializing GUI...\n";
 
     auto shader_path = getRepoRoot() / "src" / "client" / "shaders";
-    auto text_shader = LoadShaders((shader_path / "text.vert").string(), (shader_path / "text.frag").string());
-    if (!text_shader) {
-        std::cerr << "Failed to initialize text shader program" << std::endl;
+
+    widget::DynText::shader = std::make_unique<Shader>(
+        (shader_path / "text.vert").string(), (shader_path / "text.frag").string());
+    if (widget::DynText::shader->getID() == 0) {
         return false;
     }
-    auto image_shader = LoadShaders((shader_path / "img.vert").string(), (shader_path / "img.frag").string());
-    if (!image_shader) {
-        std::cerr << "Failed to initialize img shader program" << std::endl;
+
+    widget::StaticImg::shader = std::make_unique<Shader>(
+        (shader_path / "img.vert").string(), (shader_path / "img.frag").string());
+    if (widget::StaticImg::shader->getID() == 0) {
         return false;
     }
 
@@ -40,10 +42,6 @@ bool GUI::init()
     if (!this->images.init()) {
         return false;
     }
-
-    // Need to register all of the necessary shaders for each widget
-    widget::DynText::shader = text_shader;
-    widget::StaticImg::shader = image_shader;
 
     std::cout << "Initialized GUI\n";
     return true;

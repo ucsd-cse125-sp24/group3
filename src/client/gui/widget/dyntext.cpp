@@ -3,6 +3,7 @@
 #include "client/gui/font/loader.hpp"
 #include "client/core.hpp"
 #include "client/client.hpp"
+#include "client/shader.hpp"
 
 #include <string>
 #include <algorithm>
@@ -11,7 +12,7 @@
 
 namespace gui::widget {
 
-GLuint DynText::shader = 0;
+std::unique_ptr<Shader> DynText::shader = nullptr;
 
 DynText::DynText(glm::vec2 origin, std::string text, 
     std::shared_ptr<gui::font::Loader> fonts, DynText::Options options):
@@ -50,13 +51,12 @@ DynText::DynText(std::string text, std::shared_ptr<gui::font::Loader> fonts, Dyn
 void DynText::render() {
     glEnable(GL_CULL_FACE);
 
-    glUseProgram(DynText::shader);
+    DynText::shader->use();
 
-    // glActiveTexture(GL_TEXTURE0);
     auto projection = GUI_PROJECTION_MATRIX();
-    glUniformMatrix4fv(glGetUniformLocation(DynText::shader, "projection"), 1, false, reinterpret_cast<float*>(&projection));
+    DynText::shader->setMat4("projection", projection);
     auto color = font::getRGB(this->options.color);
-    glUniform3f(glGetUniformLocation(DynText::shader, "textColor"), color.x, color.y, color.z);
+    DynText::shader->setVec3("textColor", color);
     glBindVertexArray(VAO);
 
     float x = this->origin.x;
