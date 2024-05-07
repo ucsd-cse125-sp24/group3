@@ -8,9 +8,7 @@ AudioManager::AudioManager() {
 }
 
 AudioManager::~AudioManager() {
-	for (auto sound = soundMap.begin(); sound != soundMap.end();) {
-		sound = soundMap.erase(sound); // removes the element and destructs the sound
-	}
+
 }
 
 void AudioManager::changeVolume(SoundType type, float volume) {
@@ -19,7 +17,7 @@ void AudioManager::changeVolume(SoundType type, float volume) {
 
 void AudioManager::loadAudioFiles(std::vector<std::pair<boost::filesystem::path, SoundType>> audioPaths) {
 	for (std::pair<boost::filesystem::path, SoundType> audioPath : audioPaths) {
-		sf::SoundBuffer* buffer = new sf::SoundBuffer();
+		std::unique_ptr<sf::SoundBuffer> buffer = std::make_unique<sf::SoundBuffer>();
 
 		boost::filesystem::path soundFilePath = audioPath.first;
 
@@ -30,7 +28,7 @@ void AudioManager::loadAudioFiles(std::vector<std::pair<boost::filesystem::path,
 			return;
 		}
 
-		sf::Sound* sound = new sf::Sound(*buffer);
+		std::shared_ptr<sf::Sound> sound = std::make_shared<sf::Sound>(*buffer);
 
 		SoundType type = audioPath.second;
 
@@ -42,7 +40,7 @@ void AudioManager::loadAudioFiles(std::vector<std::pair<boost::filesystem::path,
 
 void AudioManager::loadMusicFiles(std::vector<std::pair<boost::filesystem::path, SoundType>> musicPaths) {
 	for (std::pair<boost::filesystem::path, SoundType> musicPath : musicPaths) {
-		sf::Music* music = new sf::Music();
+		std::unique_ptr<sf::Music> music = std::make_unique<sf::Music>();
 
 		boost::filesystem::path soundFilePath = musicPath.first;
 
@@ -55,7 +53,7 @@ void AudioManager::loadMusicFiles(std::vector<std::pair<boost::filesystem::path,
 
 		SoundType type = musicPath.second;
 
-		this->soundMap[type] = music;
+		this->soundMap[type] = std::move(music);
 
 		std::cout << "added music" << std::endl;
 	}
@@ -72,6 +70,15 @@ void AudioManager::playAudio(SoundType type) {
 
 void AudioManager::loop(SoundType type) {
 	// hacky way of setting loops, will change
-	if(type == SoundType::Background)
-		((sf::Music*)(this->soundMap[type]))->setLoop(true);
+	if (type == SoundType::Background) {
+		auto musicPtr = std::dynamic_pointer_cast<sf::Music>(this->soundMap[type]);
+
+		if (musicPtr) {
+			musicPtr->setLoop(true);
+		}
+		else {
+			// Handle the case where the object in the shared_ptr is not an sf::Music
+			std::cout << "Error: Not an sf::Music object." << std::endl;
+		}
+	}
 }

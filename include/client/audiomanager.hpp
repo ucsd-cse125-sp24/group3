@@ -28,5 +28,5 @@ public:
 	void changeVolume(SoundType type, float volume);
 
 private:
-	std::unordered_map<SoundType, sf::SoundSource*> soundMap;
+	std::unordered_map<SoundType, std::shared_ptr<sf::SoundSource>> soundMap;
 };
