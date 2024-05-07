@@ -472,6 +472,13 @@ void ServerGameState::loadMaze() {
 			GridCell* cell = this->grid.getCell(col, row);
 
 			switch (cell->type) {
+				case CellType::Enemy: {
+					SpecificID enemyID = this->objects.createObject(ObjectType::Enemy);
+
+					Enemy* enemy = this->objects.getEnemy(enemyID);
+					enemy->physics.shared.position = this->grid.gridCellCenterPosition(cell);
+					break;
+				}
 				case CellType::Wall: {
 					//	Create a new Wall object
 					SpecificID wallID = 

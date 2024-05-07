@@ -311,8 +311,6 @@ void Client::draw() {
             continue;
         }
 
-        std::cout << "shared object " << i << ": position: " << glm::to_string(sharedObject->physics.position) << std::endl;
-
         switch (sharedObject->type) {
             case ObjectType::Player: {
                 // don't render yourself
