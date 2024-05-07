@@ -331,7 +331,7 @@ void GUI::_layoutGameEscMenu() {
         widget->changeColor(font::Color::RED);
     });
     exit_game_txt->addOnClick([this](widget::Handle handle) {
-        glfwDestroyWindow(this->client->getWindow());
+        glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
     });
     auto flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 2)),
