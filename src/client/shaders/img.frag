@@ -1,14 +1,13 @@
 #version 330 core
-in vec2 TexCoords
-out vec4 color
+out vec4 FragColor;
 
-// Reference: The chapter on sprite rendering from
-// https://learnopengl.com/book/book_pdf.pdf
+in vec3 ourColor;
+in vec2 TexCoord;
 
-uniform sampler2D image;
-uniform vec3 spriteColor;
+// texture sampler
+uniform sampler2D texture1;
 
 void main()
 {
-    color = texture(image, TexCoords);
+	FragColor = texture(texture1, TexCoord);
 }

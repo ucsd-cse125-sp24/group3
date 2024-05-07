@@ -14,9 +14,21 @@ GUI::GUI(Client* client) {
     this->client = client;
 }
 
-bool GUI::init(GLuint text_shader, GLuint image_shader)
+bool GUI::init()
 {
     std::cout << "Initializing GUI...\n";
+
+    auto shader_path = getRepoRoot() / "src" / "client" / "shaders";
+    auto text_shader = LoadShaders((shader_path / "text.vert").string(), (shader_path / "text.frag").string());
+    if (!text_shader) {
+        std::cerr << "Failed to initialize text shader program" << std::endl;
+        return false;
+    }
+    auto image_shader = LoadShaders((shader_path / "img.vert").string(), (shader_path / "img.frag").string());
+    if (!image_shader) {
+        std::cerr << "Failed to initialize img shader program" << std::endl;
+        return false;
+    }
 
     this->fonts = std::make_shared<font::Loader>();
     this->capture_keystrokes = false;
@@ -197,7 +209,7 @@ void GUI::_layoutLobbyBrowser() {
         ss << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken;
 
         auto entry = widget::DynText::make(ss.str(), this->fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::BLACK));
+            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK));
         entry->addOnClick([ip, this](widget::Handle handle){
             std::cout << "Connecting to " << ip.address() << " ...\n";
             this->client->connectAndListen(ip.address().to_string());

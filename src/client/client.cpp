@@ -131,25 +131,10 @@ bool Client::init() {
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
 
-    /* Load shader programs */
-    std::cout << "loading shader" << std::endl;
-    auto shader_path = getRepoRoot() / "src" / "client" / "shaders";
-    auto textShaderProgram = LoadShaders((shader_path / "text.vert").string(), (shader_path / "text.frag").string());
-
-    if (!textShaderProgram) {
-        std::cerr << "Failed to initialize text shader program" << std::endl;
-        return false;
-    }
-
-    auto imgShaderProgram = LoadShaders((shader_path / "test.vert").string(), (shader_path / "test.frag").string());
-    if (!imgShaderProgram) {
-        std::cerr << "Failed to initialize img shader program" << std::endl;
-        return false;
-    }
 
     // Init GUI (e.g. load in all fonts)
     // TODO: pass in shader for image loading in second param
-    if (!this->gui.init(textShaderProgram, imgShaderProgram)) {
+    if (!this->gui.init()) {
         std::cerr << "GUI failed to init" << std::endl;
         return false;
     }
