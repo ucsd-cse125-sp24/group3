@@ -186,6 +186,8 @@ void ServerGameState::updateMovement() {
 			continue;
 		
 		bool collided = false;
+		bool collidedX = false;
+		bool collidedZ = false;
 
 		// If movable, please make sure the object has a collider, or it will crash
 		if (object->physics.movable) {
@@ -193,7 +195,8 @@ void ServerGameState::updateMovement() {
 			// O(n^2) naive implementation of collision detection
 			Collider* curr = object->physics.boundary;
 
-			curr->corner += object->physics.velocity * object->physics.velocityMultiplier; // only move collider to check
+			glm::vec3 movementStep = object->physics.velocity * object->physics.velocityMultiplier;
+			curr->corner += movementStep; // only move collider to check
 
 			// TODO : for possible addition for smooth collision detection, but higher computation
 			// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
@@ -208,18 +211,49 @@ void ServerGameState::updateMovement() {
 				if (otherCollider == NULL) { continue; }
 				if (curr->detectCollision(otherCollider)) {
 					collided = true;
+
+					// Check x-axis collision
+					curr->corner.z -= movementStep.z;
+					if (curr->detectCollision(otherCollider)) {
+						collidedX = true;
+					}
+
+					// Check z-axis collision
+					curr->corner.z += movementStep.z;
+					curr->corner.x -= movementStep.x;
+					if (curr->detectCollision(otherCollider)) {
+						collidedZ = true;
+					}
+					curr->corner.x += movementStep.x;
 					break;
 				}
 			}
 
 			// Move object if no collision detected
 			if (!collided) {
-				object->physics.shared.position += object->physics.velocity * object->physics.velocityMultiplier;
-				object->physics.shared.corner += object->physics.velocity * object->physics.velocityMultiplier;
+				object->physics.shared.position += movementStep;
+				object->physics.shared.corner += movementStep;
 			}
 			// Revert collider if collided
+			// Seperated for x/z axis collisions
 			else {
-				curr->corner -= object->physics.velocity * object->physics.velocityMultiplier;
+				if (!collidedX) {
+					object->physics.shared.position.x += movementStep.x;
+					object->physics.shared.corner.x += movementStep.x;
+				}
+				else {
+					curr->corner.x -= movementStep.x;
+				}
+
+				if (!collidedZ) {
+					object->physics.shared.position.z += movementStep.z;
+					object->physics.shared.corner.z += movementStep.z;
+				}
+				else {
+					curr->corner.z -= movementStep.z;
+				}
+				object->physics.shared.position.y += movementStep.y;
+				object->physics.shared.corner.y += movementStep.y;
 			}
 
 			// update gravity factor

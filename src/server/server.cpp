@@ -33,15 +33,15 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      world_eid(0),
      state(ServerGameState(GamePhase::LOBBY, config))
 {
-    /*
+    
     EntityID id = state.objects.createObject(ObjectType::Object);
     Object* cube = (Object*)state.objects.getObject(id);
     cube->physics.shared.position = glm::vec3(0.0f, 0.0f, 5.0f);
-    cube->physics.shared.corner = glm::vec3(-3.0f, -3.0f, 4.75f);
-    cube->physics.boundary = new BoxCollider(cube->physics.shared.corner, glm::vec3(6.0f, 6.0f, 0.5f));
+    cube->physics.shared.corner = glm::vec3(-4.0f, -4.0f, 3.5f);
+    cube->physics.boundary = new BoxCollider(cube->physics.shared.corner, glm::vec3(8.0f, 8.0f, 3.0f));
     cube->physics.movable = false;
 
-    
+    /*
     EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
     SolidSurface* floor = (SolidSurface*)state.objects.getObject(floorID);
     floor->shared.dimensions = glm::vec3(20.0f, 0.1f, 20.0f);
