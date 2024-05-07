@@ -139,7 +139,6 @@ bool Client::init() {
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
 
-
     // Init GUI (e.g. load in all fonts)
     // TODO: pass in shader for image loading in second param
     if (!this->gui.init()) {

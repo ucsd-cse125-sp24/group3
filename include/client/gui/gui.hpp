@@ -29,6 +29,7 @@ namespace gui {
  */
 enum class GUIState {
     NONE,
+    INITIAL_LOAD,
     TITLE_SCREEN,
     LOBBY_BROWSER,
     LOBBY,

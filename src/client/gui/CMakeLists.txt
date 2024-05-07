@@ -23,9 +23,17 @@ find_package(OpenGL REQUIRED)
 
 add_library(${LIB_NAME} STATIC ${FILES})
 target_include_directories(${LIB_NAME} PRIVATE ${INCLUDE_DIRECTORY})
-target_include_directories(${LIB_NAME} PRIVATE ${BOOST_LIBRARY_INCLUDES} ${STB_INCLUDE_DIRS})
 target_link_libraries(${LIB_NAME} PRIVATE game_shared_lib)
-target_include_directories(${LIB_NAME} PRIVATE ${OPENGL_INCLUDE_DIRS} glfw glm ${FREETYPE_INCLUDE_DIRS} "${CMAKE_BINARY_DIR}/_deps/glew-src/include")
+target_include_directories(${LIB_NAME} PRIVATE 
+    ${OPENGL_INCLUDE_DIRS} 
+    ${BOOST_LIBRARY_INCLUDES}
+    ${STB_INCLUDE_DIRS}
+    glfw 
+    glm 
+    ${FREETYPE_INCLUDE_DIRS} 
+    ${ASSIMP_INCLUDE_DIRS} 
+    "${CMAKE_BINARY_DIR}/_deps/glew-src/include"
+)
 target_link_libraries(${LIB_NAME} PRIVATE glm glfw libglew_static freetype)
 target_link_libraries(${LIB_NAME} 
     PRIVATE
@@ -35,4 +43,5 @@ target_link_libraries(${LIB_NAME}
     Boost::program_options
     Boost::serialization
     nlohmann_json::nlohmann_json
+    assimp
 )
