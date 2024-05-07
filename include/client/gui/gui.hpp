@@ -20,14 +20,6 @@
 
 class Client;
 
-/*
-    2. move shader loading inside of gui.init()
-    3. dont force the user to pass in img / font loaders into widgets
-    4. allow semi dynamic screen size scaling, with static 3:2 aspect ratio
-    5. Text+Img Widget combined
-    6. rename StaticImg -> Sprite[something]
-*/
-
 namespace gui {
 
 /**
@@ -57,9 +49,6 @@ enum class GUIState {
  */
 class GUI {
 public:
-    static glm::mat4 projection;
-
-
     /// =<SETUP>========================================================================
     ///
     /// These are the functions that need to be called to setup a GUI object. Doing anything
