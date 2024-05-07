@@ -253,19 +253,26 @@ void Client::draw() {
         // Get camera position from server, update position and don't render player object (or special handling)
         if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
             cam->updatePos(sharedObject->physics.position);
-            auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
-            auto player_pos = glm::vec3(this->cam->getPos().x, this->cam->getPos().y - 20.0f, this->cam->getPos().z);
-            this->player_model->translateAbsolute(sharedObject->physics.position);
-            this->player_model->draw(
-                this->model_shader,
-                this->cam->getViewProj(),
-                player_pos,
-                lightPos,
-                true);
-            continue;
+            //continue;
         }
 
         switch (sharedObject->type) {
+            case ObjectType::Player: {
+                // don't render yourself
+                if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+                    break;
+                }
+                auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
+                auto player_pos = glm::vec3(this->cam->getPos().x, this->cam->getPos().y - 20.0f, this->cam->getPos().z);
+                this->player_model->translateAbsolute(sharedObject->physics.position);
+                this->player_model->draw(
+                    this->model_shader,
+                    this->cam->getViewProj(),
+                    player_pos,
+                    lightPos,
+                    true);
+                break;
+            }
             case ObjectType::Enemy: {
                 // warren bear is an enemy because why not
                 // auto pos = glm::vec3(0.0f, 0.0f, 0.0f);
