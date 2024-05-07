@@ -68,7 +68,7 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     gameState(GamePhase::TITLE_SCREEN, config),
     session(nullptr),
     gui(this),
-    gui_state(gui::GUIState::TITLE_SCREEN),
+    gui_state(gui::GUIState::INITIAL_LOAD),
     lobby_finder(io_context, config)
 {
     cam = new Camera();
@@ -129,7 +129,6 @@ bool Client::init() {
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-
     GLenum err = glewInit() ; 
     if (GLEW_OK != err) { 
         std::cerr << "Error loading GLEW: " << glewGetString(err) << std::endl; 
@@ -145,6 +144,8 @@ bool Client::init() {
         std::cerr << "GUI failed to init" << std::endl;
         return false;
     }
+
+    this->displayCallback();
 
     auto shaders_dir = getRepoRoot() / "src/client/shaders";
     auto graphics_assets_dir = getRepoRoot() / "assets/graphics";
@@ -170,6 +171,8 @@ bool Client::init() {
     auto lightVertFilepath = shaders_dir / "lightsource.vert";
     auto lightFragFilepath = shaders_dir / "lightsource.frag";
     this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
+
+    this->gui_state = GUIState::TITLE_SCREEN;
 
     return true;
 }

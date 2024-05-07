@@ -32,7 +32,9 @@ enum class Color {
     BLACK,
     RED,
     BLUE,
-    GRAY
+    GRAY,
+    WHITE,
+    TORCHLIGHT_GAMES
 };
 
 /**

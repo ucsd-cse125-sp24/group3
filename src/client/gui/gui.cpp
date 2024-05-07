@@ -132,6 +132,10 @@ void GUI::layoutFrame(GUIState state) {
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             this->_layoutTitleScreen();
             break;
+        case GUIState::INITIAL_LOAD:
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            this->_layoutLoadingScreen();
+            break;
         case GUIState::GAME_ESC_MENU:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             this->_layoutGameEscMenu();
@@ -153,6 +157,32 @@ void GUI::layoutFrame(GUIState state) {
     }
 }
 
+void GUI::_layoutLoadingScreen() {
+    this->addWidget(widget::CenterText::make(
+        "made by",
+        font::Font::MENU,
+        font::Size::MEDIUM,
+        font::Color::WHITE,
+        fonts,
+        FRAC_WINDOW_HEIGHT(7,8)
+    ));
+    this->addWidget(widget::CenterText::make(
+        "Torchlight Games",
+        font::Font::MENU,
+        font::Size::XLARGE,
+        font::Color::TORCHLIGHT_GAMES,
+        fonts,
+        FRAC_WINDOW_HEIGHT(2,3)
+    ));
+    this->addWidget(widget::CenterText::make(
+        "Loading...",
+        font::Font::MENU,
+        font::Size::MEDIUM,
+        font::Color::WHITE,
+        fonts,
+        FRAC_WINDOW_HEIGHT(1,3)
+    ));
+}
 
 void GUI::_layoutTitleScreen() {
     this->addWidget(widget::CenterText::make(

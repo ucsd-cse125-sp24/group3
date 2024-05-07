@@ -314,6 +314,10 @@ private:
     /// preset "layouts".
     ///
     /**
+     * @brief Displays a loading screen while the game is starting up
+     */
+    void _layoutLoadingScreen();
+    /**
      * @brief Displays the title screen layout
      * 
      * Transitions to the LobbyBrowser once "Start Game" is clicked.

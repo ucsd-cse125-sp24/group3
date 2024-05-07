@@ -34,6 +34,10 @@ glm::vec3 getRGB(Color color) {
             return {0.0f, 0.0f, 1.0f};
         case Color::GRAY:
             return {0.5f, 0.5f, 0.5f};
+        case Color::WHITE:
+            return {1.0f, 1.0f, 1.0f};
+        case Color::TORCHLIGHT_GAMES:
+            return {0.902, 0.575, 0.055};
 
         case Color::BLACK:
         default:
