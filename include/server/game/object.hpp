@@ -72,7 +72,7 @@ public:
 	Physics physics;
 
 	explicit Object(ObjectType type);
-	~Object();
+	virtual ~Object();
 
 	/**
 	 * @brief Generates a SharedObject representation of this object.

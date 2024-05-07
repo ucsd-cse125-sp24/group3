@@ -26,7 +26,7 @@ enum class ObjectType {
  */
 std::string objectTypeString(ObjectType type);
 
-struct Stats {
+struct SharedStats {
 	float health;
 	float speed;
 
@@ -35,7 +35,7 @@ struct Stats {
 	}
 };
 
-struct ItemInfo {
+struct SharedItemInfo {
 	enum ItemType { healing, swiftness, invisible, key };
 
 	bool held; // for rendering
@@ -113,8 +113,8 @@ public:
 	ObjectType type;
 	SharedPhysics physics;
 
-	boost::optional<Stats> stats;	
-	boost::optional<ItemInfo> iteminfo;
+	boost::optional<SharedStats> stats;	
+	boost::optional<SharedItemInfo> iteminfo;
 	boost::optional<SharedSolidSurface> solidSurface;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar

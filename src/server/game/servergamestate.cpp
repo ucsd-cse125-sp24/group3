@@ -29,7 +29,7 @@ ServerGameState::ServerGameState(GamePhase start_phase)
 	this->phase = start_phase;
 }
 
-ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config)
+ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) // cppcheck-suppress passedByValue
 	: ServerGameState(config) {
 	this->phase = start_phase;
 }

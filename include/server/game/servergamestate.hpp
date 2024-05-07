@@ -56,7 +56,7 @@ public:
 	 * @param maze_file Name of maze file to load. (should be in maps/
 	 * directory).
 	 */
-	ServerGameState(GameConfig config);
+	explicit ServerGameState(GameConfig config);
 
 	~ServerGameState();
 
