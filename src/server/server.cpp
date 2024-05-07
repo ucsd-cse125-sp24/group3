@@ -39,7 +39,7 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
 
     EntityID bearID = state.objects.createObject(ObjectType::Enemy);
     Enemy* bear = reinterpret_cast<Enemy*>(state.objects.getObject(bearID));
-    bear->physics.shared.position = glm::vec3(0.0f, -1.3f, 0.0f);
+    bear->physics.shared.position = glm::vec3(0.0f, 50.0f, 0.0f);
     
     //  Create a room
     EntityID wall1ID = state.objects.createObject(ObjectType::SolidSurface);

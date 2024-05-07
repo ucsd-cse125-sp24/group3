@@ -16,7 +16,7 @@
 class LightSource {
 public:
     LightSource();
-    void draw(std::shared_ptr<Shader> shader);
+    void draw(std::shared_ptr<Shader> shader, glm::mat4 viewProj);
     void TranslateTo(const glm::vec3& new_pos);
 
     glm::vec3 lightPos;

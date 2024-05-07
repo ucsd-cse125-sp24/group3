@@ -16,33 +16,12 @@ LightSource::LightSource() : model(1.0f) {
     glEnableVertexAttribArray(0);
 }
 
-void LightSource::draw(std::shared_ptr<Shader> shader) {
+void LightSource::draw(std::shared_ptr<Shader> shader,
+    glm::mat4 viewProj) {
     shader->use();
-    // Currently 'hardcoding' camera logic in
-    float FOV = 45.0f;
-    float Aspect = 1.33f;
-    float NearClip = 0.1f;
-    float FarClip = 100.0f;
-
-    float Distance = 10.0f;
-    float Azimuth = 0.0f;
-    float Incline = 20.0f;
-
-    glm::mat4 world(1);
-    world[3][2] = Distance;
-    world = glm::eulerAngleY(glm::radians(-Azimuth)) * glm::eulerAngleX(glm::radians(-Incline)) * world;
-
-    // Compute view matrix (inverse of world matrix)
-    glm::mat4 view = glm::inverse(world);
-
-    // Compute perspective projection matrix
-    glm::mat4 project = glm::perspective(glm::radians(FOV), Aspect, NearClip, FarClip);
-
-    // Compute final view-projection matrix
-    glm::mat4 viewProjMtx = project * view;
 
     // get the locations and send the uniforms to the shader
-    shader->setMat4("viewProj", viewProjMtx);
+    shader->setMat4("viewProj", viewProj);
     shader->setMat4("model", model);
 
     // draw the light cube object

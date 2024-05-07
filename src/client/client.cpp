@@ -126,7 +126,12 @@ bool Client::init() {
     this->bear_model = std::make_unique<Model>(bear_model_path.string());
     this->bear_model->scale(0.25);
 
+    boost::filesystem::path player_model_path = graphics_assets_dir / "Fire-testing.obj";
+    this->player_model = std::make_unique<Model>(player_model_path.string());
+    this->player_model->scale(0.25);
+
     this->light_source = std::make_unique<LightSource>();
+
     boost::filesystem::path lightVertFilepath = this->root_path / "src/client/shaders/lightsource.vert";
     boost::filesystem::path lightFragFilepath = this->root_path / "src/client/shaders/lightsource.frag";
     this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
@@ -248,21 +253,43 @@ void Client::draw() {
         // Get camera position from server, update position and don't render player object (or special handling)
         if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
             cam->updatePos(sharedObject->physics.position);
-            this->light_source->TranslateTo(cam->getPos());
-            this->light_source->draw(this->light_source_shader);
+            auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
+            auto player_pos = glm::vec3(this->cam->getPos().x, this->cam->getPos().y - 20.0f, this->cam->getPos().z);
+            this->player_model->translateAbsolute(sharedObject->physics.position);
+            this->player_model->draw(
+                this->model_shader,
+                this->cam->getViewProj(),
+                player_pos,
+                lightPos,
+                true);
             continue;
         }
 
         switch (sharedObject->type) {
             case ObjectType::Enemy: {
                 // warren bear is an enemy because why not
+                // auto pos = glm::vec3(0.0f, 0.0f, 0.0f);
+                auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
                 this->bear_model->translateAbsolute(sharedObject->physics.position);
                 this->bear_model->draw(
                     this->model_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    this->cam->getPos(),
+                    lightPos,
                     true);
+
+                this->light_source->TranslateTo(lightPos);
+                this->light_source->draw(
+                    this->light_source_shader,
+                    this->cam->getViewProj());
+
+                // Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f));
+                // cube->translateAbsolute(lightPos);
+                // cube->draw(this->cube_shader,
+                //     this->cam->getViewProj(),
+                //     this->cam->getPos(),
+                //     glm::vec3(),
+                //     false);
                 break;
             }
             case ObjectType::SolidSurface: {
