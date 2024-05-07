@@ -4,8 +4,9 @@ Cube::Cube(glm::vec3 newColor) {
     // create a vertex buffer for positions and normals
     // insert the data into these buffers
     // initialize model matrix
-    glm::vec3 cubeMin = glm::vec3(-1.0f, -1.0f, -1.0f);
-    glm::vec3 cubeMax = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 cubeMin = glm::vec3(-0.5f, -0.5f, -0.5f);
+    glm::vec3 cubeMax = glm::vec3(0.5f, 0.5f, 0.5f);
+
 
     // The color of the cube. Try setting it to something else!
     color = newColor;

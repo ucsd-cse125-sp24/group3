@@ -13,7 +13,7 @@
     "server": {
         "lobby_name": "Unnamed Lobby",
         "lobby_broadcast": true,
-        "max_players": 2
+        "max_players": 1
     },
     "client": {
         "default_name": "John Doe",
