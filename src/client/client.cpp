@@ -318,7 +318,7 @@ void Client::draw() {
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
                     glm::vec3 pos = sharedObject->physics.position;
-                    pos.y += 1.5f;
+                    pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
                     break;
                 }
