@@ -261,6 +261,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     std::vector<GridCell*> spawnPoints = this->state.getGrid().getSpawnPoints();
     size_t randomSpawnIndex = std::rand() % spawnPoints.size();
 
+    std::cout << "Number of spawn points: " << spawnPoints.size() << std::endl;
     std::cout << "Player " << playerID << " spawning at spawn point " << randomSpawnIndex << std::endl;
 
     GridCell * spawnPoint = 
