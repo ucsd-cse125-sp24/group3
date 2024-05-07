@@ -186,11 +186,13 @@ void ServerGameState::updateMovement() {
 			continue;
 		
 		bool collided = false;
-		if (object->physics.movable) {
 
+		// If movable, please make sure the object has a collider, or it will crash
+		if (object->physics.movable) {
 			// Check for collision at position to move, if so, dont change position
 			// O(n^2) naive implementation of collision detection
 			Collider* curr = object->physics.boundary;
+
 			curr->corner += object->physics.velocity * object->physics.velocityMultiplier; // only move collider to check
 
 			// TODO : for possible addition for smooth collision detection, but higher computation
@@ -203,6 +205,7 @@ void ServerGameState::updateMovement() {
 				Object* otherObj = gameObjects.get(j);
 				Collider* otherCollider = otherObj->physics.boundary;
 
+				if (otherCollider == NULL) { continue; }
 				if (curr->detectCollision(otherCollider)) {
 					collided = true;
 					break;
@@ -222,7 +225,8 @@ void ServerGameState::updateMovement() {
 			// update gravity factor
 			if ((object->physics.shared.corner).y >= 0) {
 				object->physics.velocity.y -= GRAVITY;
-			} else {
+			}
+			else {
 				object->physics.velocity.y = 0.0f;
 			}
 		}
