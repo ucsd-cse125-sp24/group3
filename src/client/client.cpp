@@ -21,8 +21,6 @@ using namespace std::chrono_literals;
 // Checker for events sent / later can be made in an array
 glm::vec3 sentCamMovement = glm::vec3(-1.0f);
 
-bool shiftEvent = false;
-
 Client::Client(boost::asio::io_context& io_context, GameConfig config):
     resolver(io_context),
     socket(io_context),
@@ -123,73 +121,46 @@ void Client::displayCallback() {
 
 // Handle any updates 
 void Client::idleCallback(boost::asio::io_context& context) {
-    std::optional<glm::vec3> jump = glm::vec3(0.0f);
-    std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
+    glm::vec3 cam_movement = glm::vec3(0.0f);
 
     // Sets a direction vector
     if(is_held_right)
-        cam_movement.value() += cam->move(false, 1.0f);
+        cam_movement += cam->move(false, 1.0f);
     if(is_held_left)
-        cam_movement.value() += cam->move(false, -1.0f);
+        cam_movement += cam->move(false, -1.0f);
     if (is_held_up)
-        cam_movement.value() += cam->move(true, 1.0f);
+        cam_movement += cam->move(true, 1.0f);
     if (is_held_down)
-        cam_movement.value() += cam->move(true, -1.0f);
-    if (is_held_space)
-        jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
-    // Update camera direction
+        cam_movement += cam->move(true, -1.0f);
+
+    // Update camera facing direction
     cam->update(mouse_xpos, mouse_ypos);
 
     // IF PLAYER, allow moving
     if (this->session->getInfo().client_eid.has_value()) {
         auto eid = this->session->getInfo().client_eid.value();
 
-        this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam_movement.value())));
+        this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam->getFacing())));
 
         // Send jump action
         if (is_held_space) {
-            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), ActionType::Jump)));
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Jump)));
         }
 
-        // Handles individual keys
-        handleKeys(eid, GLFW_KEY_LEFT_SHIFT, is_held_shift, &shiftEvent);
-
         // If movement 0, send stopevent
-        if ((sentCamMovement != cam_movement.value()) && cam_movement.value() == glm::vec3(0.0f)) {
-            this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
-            sentCamMovement = cam_movement.value();
+        if ((sentCamMovement != cam_movement) && cam_movement == glm::vec3(0.0f)) {
+            this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement, ActionType::MoveCam)));
+            sentCamMovement = cam_movement;
         }
 
         // If movement detected, different from previous, send start event
-        else if (sentCamMovement != cam_movement.value()) {
-            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
-            sentCamMovement = cam_movement.value();
+        else if (sentCamMovement != cam_movement) {
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement, ActionType::MoveCam)));
+            sentCamMovement = cam_movement;
         }
     }
 
     processServerInput(context);
-}
-
-// Handles given key
-// send startAction key is held but not sent
-// send stopAction when unheld
-void Client::handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement){
-    if (keyHeld == *eventSent) { return; }
-    
-    ActionType sendAction;
-    switch(keyType) {
-        case GLFW_KEY_LEFT_SHIFT:
-            sendAction = ActionType::Sprint;
-            break;
-    }
-    if (keyHeld && !*eventSent) {
-        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, movement, sendAction)));
-        *eventSent = true;
-    }
-    if (!keyHeld && *eventSent) {
-        this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, movement, sendAction)));
-        *eventSent = false;
-    }
 }
 
 void Client::processServerInput(boost::asio::io_context& context) {
@@ -208,8 +179,6 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
-    glm::vec3 test(1.0f);
-
     for (int i = 0; i < this->gameState.objects.size(); i++) {
         std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
 
@@ -232,7 +201,7 @@ void Client::draw() {
             continue;
         }
 
-        //  tmp: all objects are cubes
+        /* tmp: all objects are cubes, currently used for origin point of reference */  
         Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f), glm::vec3(1.0f));
         cube->update(glm::vec3(0.0f));
         cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);
@@ -244,14 +213,24 @@ void Client::draw() {
 }
 
 void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-  // Check for a key press.
+    // Check for a key press.
+    /* Store player EID for use in certain key handling */ 
+    std::optional<EntityID> eid;
+
+    if (this->session->getInfo().client_eid.has_value()) {
+        eid = this->session->getInfo().client_eid.value();
+    }
+
     if (action == GLFW_PRESS) {
         switch (key) {
         case GLFW_KEY_ESCAPE:
-            // Close the window. This causes the program to also terminate.
+            /* Close the window. This causes the program to also terminate. */ 
             glfwSetWindowShouldClose(window, GL_TRUE);
             break;
 
+        /* For movement keys (WASD), activate flags and use it to generate
+         * movement in idleCallback() instead of sending individual events
+         */  
         case GLFW_KEY_S:
             is_held_down = true;
             break;
@@ -268,12 +247,16 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             is_held_right = true;
             break;
 
+        /* Space also uses a flag to constantly send events when key is held */
         case GLFW_KEY_SPACE:
             is_held_space = true;
             break;
 
+        /* Send an event to start 'shift' movement (i.e. sprint) */
         case GLFW_KEY_LEFT_SHIFT:
-            is_held_shift = true;
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
+            }
             break;
 
         default:
@@ -304,7 +287,9 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
 
         case GLFW_KEY_LEFT_SHIFT:
-            is_held_shift = false;
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
+            }
             break;
 
         default:

@@ -77,17 +77,6 @@ public:
     void idleCallback(boost::asio::io_context& context);
 
     /**
-     * @brief Handles specific key events (i.e. shift key press)
-     * 
-     * @param eid 
-     * @param keyType 
-     * @param keyHeld 
-     * @param eventSent 
-     * @param movement 
-     */
-    void handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement = glm::vec3(0.0f));
-
-    /**
      * @brief Callback which handles keyboard inputs to the GLFWwindow. Binds to the GLFWwindow.
      * 
      * @param window The GLFWwindow being monitered.
@@ -151,24 +140,28 @@ private:
      */
     void draw();
 
+    /* Current game state */
     SharedGameState gameState;
 
+    /* GLFW window object & properties */
     GLFWwindow *window;
     int width;
     int height;
 
+    /* Potentially move this to camera? */
     GLuint cubeShaderProgram;
 
+    /* Camera object representing player's current position & orientation */
     std::unique_ptr<Camera> cam;
 
-    // Flags
+    /* Key held flags */
     bool is_held_up = false;
     bool is_held_down = false;
     bool is_held_right = false;
     bool is_held_left = false;
     bool is_held_space = false;
-    bool is_held_shift = false;
 
+    /* Mouse position coordinates */
     float mouse_xpos = 0.0f;
     float mouse_ypos = 0.0f;
 
