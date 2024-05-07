@@ -421,6 +421,9 @@ void ServerGameState::loadMaze() {
 
 	file.close();
 
+	//	Verify that there's at least one spawn point
+	assert(this->grid.getSpawnPoints().size() > 0);
+
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
 
 	EntityID floorID = this->objects.createObject(ObjectType::SolidSurface);
@@ -488,9 +491,11 @@ void ServerGameState::loadMaze() {
 							this->grid.getGridCellWidth());
 
 					wall->physics.shared.position =
-						glm::vec3((0.5 + cell->x) * this->grid.getGridCellWidth(),
+						this->grid.gridCellCenterPosition(cell)
+						+ glm::vec3(0, MAZE_CEILING_HEIGHT / 2, 0);
+						/*glm::vec3((0.5 + cell->x) * this->grid.getGridCellWidth(),
 							MAZE_CEILING_HEIGHT / 2,
-							(0.5 + cell->y) * this->grid.getGridCellWidth());
+							(0.5 + cell->y) * this->grid.getGridCellWidth());*/
 					
 					wall->physics.shared.corner = 
 						glm::vec3(cell->x * this->grid.getGridCellWidth(),
@@ -505,7 +510,10 @@ void ServerGameState::loadMaze() {
 			}
 		}
 	}
+}
 
+Grid& ServerGameState::getGrid() {
+	return this->grid;
 }
 
 /*	Debugger Methods	*/

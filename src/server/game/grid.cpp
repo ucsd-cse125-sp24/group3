@@ -75,3 +75,14 @@ std::vector<std::vector<GridCell*>> Grid::getGrid() {
 std::vector<GridCell*> Grid::getSpawnPoints() {
 	return this->spawnCells;
 }
+
+glm::vec3 Grid::gridCellCenterPosition(GridCell* cell) {
+	if (cell == nullptr) {
+		return glm::vec3(0, 0, 0);
+	}
+
+	//	Compute cell's center position
+	return glm::vec3((0.5 + cell->x) * grid_cell_width,
+			0,
+			(0.5 + cell->y) * grid_cell_width);
+}
