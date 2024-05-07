@@ -39,7 +39,7 @@ bool Client::cam_is_held_left = false;
 float Client::mouse_xpos = 0.0f;
 float Client::mouse_ypos = 0.0f;
 
-Client::Client(boost::asio::io_context& io_context, GameConfig config):
+Client::Client(boost::asio::io_context& io_context, GameConfig config) :
     resolver(io_context),
     socket(io_context),
     config(config),
@@ -93,18 +93,18 @@ bool Client::init() {
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    GLenum err = glewInit() ; 
-    if (GLEW_OK != err) { 
-        std::cerr << "Error loading GLEW: " << glewGetString(err) << std::endl; 
+    GLenum err = glewInit();
+    if (GLEW_OK != err) {
+        std::cerr << "Error loading GLEW: " << glewGetString(err) << std::endl;
         return false;
-    } 
+    }
 
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
 
     this->cubeShaderProgram = loadCubeShaders();
     if (!this->cubeShaderProgram) {
-        std::cout << "Failed to load cube shader files" << std::endl; 
+        std::cout << "Failed to load cube shader files" << std::endl;
         return false;
     }
 
@@ -136,14 +136,14 @@ void Client::idleCallback(boost::asio::io_context& context) {
     std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
 
     // Sets a direction vector
-    if(cam_is_held_right)
-        cam_movement.value() += cam->move(false, 1.0f);
-    if(cam_is_held_left)
-        cam_movement.value() += cam->move(false, -1.0f);
-    if (cam_is_held_up)
+    if (cam_is_held_right)
         cam_movement.value() += cam->move(true, 1.0f);
-    if (cam_is_held_down)
+    if (cam_is_held_left)
         cam_movement.value() += cam->move(true, -1.0f);
+    if (cam_is_held_up)
+        cam_movement.value() += cam->move(false, 1.0f);
+    if (cam_is_held_down)
+        cam_movement.value() += cam->move(false, -1.0f);
     if (is_held_space)
         jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -185,7 +185,7 @@ void Client::handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm
     if (keyHeld == *eventSent) { return; }
     
     ActionType sendAction;
-    switch(keyType) {
+    switch (keyType) {
         case GLFW_KEY_LEFT_SHIFT:
             sendAction = ActionType::Sprint;
             break;
@@ -228,22 +228,28 @@ void Client::draw() {
 
         // Get camera position from server, update position and don't render player object (or special handling)
         if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
-            cam->updatePos(sharedObject->physics.position);
-            continue;
-        }
-
-        // If solidsurface, scale cube to given dimensions
-        if(sharedObject->solidSurface.has_value()){
-            Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f), sharedObject->solidSurface->dimensions);
+            glm::vec3 pos = sharedObject->physics.position;
+            pos.y += 1.5f;
+            cam->updatePos(pos);
+            
+            Cube* cube = new Cube(glm::vec3(0.0f, 0.5f, 1.0f), glm::vec3(1.0f));
             cube->update(sharedObject->physics.position);
             cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
             continue;
         }
 
-        //  tmp: all objects are cubes
-        Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f), glm::vec3(1.0f));
-        cube->update(glm::vec3(0.0f));
-        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);
+        // If solidsurface, scale cube to given dimensions
+        if (sharedObject->solidSurface.has_value()) {
+            Cube* cube = new Cube(glm::vec3(0.4f, 0.5f, 0.7f), sharedObject->solidSurface->dimensions);
+            cube->update(sharedObject->physics.position);
+            cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
+            continue;
+        }
+
+        /*
+        Cube* cube = new Cube(glm::vec3(0.0f, 1.0f, 1.0f), glm::vec3(8.0f, 8.0f, 3.0f));
+        cube->update(sharedObject->physics.position);
+        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);*/
 
         Cube* origin = new Cube(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.05f, 0.05f, 0.05f));
         origin->update(glm::vec3(0.0f));
@@ -252,8 +258,8 @@ void Client::draw() {
 }
 
 // callbacks - for Interaction
-void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-  // Check for a key press.
+void Client::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    // Check for a key press.
     if (action == GLFW_PRESS) {
         switch (key) {
         case GLFW_KEY_ESCAPE:
@@ -339,7 +345,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_D:
             cam_is_held_right = false;
             break;
-            
+
         case GLFW_KEY_SPACE:
             is_held_space = false;
             break;
@@ -354,7 +360,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     }
 }
 
-void Client::mouseCallback(GLFWwindow *window, double xposIn, double yposIn) { // cppcheck-suppress constParameterPointer
+void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { // cppcheck-suppress constParameterPointer
     mouse_xpos = static_cast<float>(xposIn);
     mouse_ypos = static_cast<float>(yposIn);
 }

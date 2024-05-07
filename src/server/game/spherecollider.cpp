@@ -3,42 +3,53 @@
 #include <math.h> 
 #include <algorithm>
 
-SphereCollider::SphereCollider() : 
-	center(glm::vec3(0.0f)), radius(0) {
+SphereCollider::SphereCollider() { 
+	this->corner = corner;
+	this->dimensions = dimensions;
 }
 
-SphereCollider::SphereCollider(glm::vec3 center, float radius) : 
-	center(center), radius(radius) {
+SphereCollider::SphereCollider(glm::vec3 corner, glm::vec3 dimensions) {
+	this->corner = corner;
+	this->dimensions = dimensions;
 }
 
 SphereCollider::~SphereCollider() {
 }
 
 bool SphereCollider::detectCollision(Collider* otherCollider) {
+	glm::vec3 center = this->corner + (this->dimensions / 2.0f);
+	float radius = this->dimensions.x / 2.0f;
+
 	switch (otherCollider->getShape()) {
         case Sphere: {
 			const SphereCollider* otherC = dynamic_cast<SphereCollider*>(otherCollider);
+			glm::vec3 otherCenter = otherC->corner + (otherC->dimensions / 2.0f);
+			float otherRadius = otherC->dimensions.x / 2.0f;
+
 			float distance = sqrt(
-				(this->center.x - otherC->center.x) * (this->center.x - otherC->center.x) +
-				(this->center.y - otherC->center.y) * (this->center.y - otherC->center.y) +
-				(this->center.z - otherC->center.z) * (this->center.z - otherC->center.z)
+				(center.x - otherCenter.x) * (center.x - otherCenter.x) +
+				(center.y - otherCenter.y) * (center.y - otherCenter.y) +
+				(center.z - otherCenter.z) * (center.z - otherCenter.z)
 			);
 
-			return distance < this->radius + otherC->radius;
+			return distance < radius + otherRadius;
 		}
 		case Box: {
 			const BoxCollider* otherC = dynamic_cast<BoxCollider*>(otherCollider);
-			float x = fmaxf(otherC->min_position.x, fminf(this->center.x, otherC->max_position.x));
-			float y = fmaxf(otherC->min_position.y, fminf(this->center.y, otherC->max_position.y));
-			float z = fmaxf(otherC->min_position.z, fminf(this->center.z, otherC->max_position.z));
+			glm::vec3 otherMinPos = otherC->corner;
+			glm::vec3 otherMaxPos = otherC->corner + otherC->dimensions;
+
+			float x = fmaxf(otherMinPos.x, fminf(center.x, otherMaxPos.x));
+			float y = fmaxf(otherMinPos.y, fminf(center.y, otherMaxPos.y));
+			float z = fmaxf(otherMinPos.z, fminf(center.z, otherMaxPos.z));
 			
 			float distance = sqrt(
-				(x - this->center.x) * (x - this->center.x) +
-				(y - this->center.y) * (y - this->center.y) +
-				(z - this->center.z) * (z - this->center.z)
+				(x - center.x) * (x - center.x) +
+				(y - center.y) * (y - center.y) +
+				(z - center.z) * (z - center.z)
 			);
 
-			return distance < this->radius;
+			return distance < radius;
 		}
 	}
 	return false;
