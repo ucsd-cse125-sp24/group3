@@ -189,79 +189,88 @@ void ServerGameState::updateMovement() {
 		bool collidedX = false;
 		bool collidedZ = false;
 
-		// If movable, please make sure the object has a collider, or it will crash
 		if (object->physics.movable) {
 			// Check for collision at position to move, if so, dont change position
 			// O(n^2) naive implementation of collision detection
-			Collider* curr = object->physics.boundary;
-
+			Collider* currentCollider = object->physics.boundary;
 			glm::vec3 movementStep = object->physics.velocity * object->physics.velocityMultiplier;
-			curr->corner += movementStep; // only move collider to check
 
-			// TODO : for possible addition for smooth collision detection, but higher computation
-			// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
-			//    Then, take the most steps possible (mario 64 handles it like this)
-			// 2) Using raycasting
+			// Run collision detection movement if it has a collider
+			if (currentCollider != NULL) {
+				currentCollider->corner += movementStep; // only move collider to check
 
-			for (int j = 0; j < gameObjects.size(); j++) {
-				if (i == j) { continue; }
-				Object* otherObj = gameObjects.get(j);
-				Collider* otherCollider = otherObj->physics.boundary;
+				// TODO : for possible addition for smooth collision detection, but higher computation
+				// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
+				//    Then, take the most steps possible (mario 64 handles it like this)
+				// 2) Using raycasting
 
-				if (otherCollider == NULL) { continue; }
-				if (curr->detectCollision(otherCollider)) {
-					collided = true;
+				for (int j = 0; j < gameObjects.size(); j++) {
+					if (i == j) { continue; }
+					Object* otherObj = gameObjects.get(j);
+					Collider* otherCollider = otherObj->physics.boundary;
 
-					// Check x-axis collision
-					curr->corner.z -= movementStep.z;
-					if (curr->detectCollision(otherCollider)) {
-						collidedX = true;
+					if (otherCollider == NULL) { continue; }
+
+					if (currentCollider->detectCollision(otherCollider)) {
+						collided = true;
+
+						// Check x-axis collision
+						currentCollider->corner.z -= movementStep.z;
+						if (currentCollider->detectCollision(otherCollider)) {
+							collidedX = true;
+						}
+
+						// Check z-axis collision
+						currentCollider->corner.z += movementStep.z;
+						currentCollider->corner.x -= movementStep.x;
+						if (currentCollider->detectCollision(otherCollider)) {
+							collidedZ = true;
+						}
+						currentCollider->corner.x += movementStep.x;
+						break;
+					}
+				}
+
+				// Move object if no collision detected
+				if (!collided) {
+					object->physics.shared.position += movementStep;
+					object->physics.shared.corner += movementStep;
+				}
+				// Revert collider if collided
+				// Seperated for x/z axis collisions
+				else {
+					if (!collidedX) {
+						object->physics.shared.position.x += movementStep.x;
+						object->physics.shared.corner.x += movementStep.x;
+					}
+					else {
+						currentCollider->corner.x -= movementStep.x;
 					}
 
-					// Check z-axis collision
-					curr->corner.z += movementStep.z;
-					curr->corner.x -= movementStep.x;
-					if (curr->detectCollision(otherCollider)) {
-						collidedZ = true;
+					if (!collidedZ) {
+						object->physics.shared.position.z += movementStep.z;
+						object->physics.shared.corner.z += movementStep.z;
 					}
-					curr->corner.x += movementStep.x;
-					break;
+					else {
+						currentCollider->corner.z -= movementStep.z;
+					}
+					object->physics.shared.position.y += movementStep.y;
+					object->physics.shared.corner.y += movementStep.y;
+				}
+
+				// update gravity factor
+				if ((object->physics.shared.corner).y >= 0) {
+					object->physics.velocity.y -= GRAVITY;
+				}
+				else {
+					object->physics.velocity.y = 0.0f;
 				}
 			}
 
-			// Move object if no collision detected
-			if (!collided) {
+			// if current object do not have a collider / this shouldn't happen though
+			else {
 				object->physics.shared.position += movementStep;
 				object->physics.shared.corner += movementStep;
-			}
-			// Revert collider if collided
-			// Seperated for x/z axis collisions
-			else {
-				if (!collidedX) {
-					object->physics.shared.position.x += movementStep.x;
-					object->physics.shared.corner.x += movementStep.x;
-				}
-				else {
-					curr->corner.x -= movementStep.x;
-				}
-
-				if (!collidedZ) {
-					object->physics.shared.position.z += movementStep.z;
-					object->physics.shared.corner.z += movementStep.z;
-				}
-				else {
-					curr->corner.z -= movementStep.z;
-				}
-				object->physics.shared.position.y += movementStep.y;
-				object->physics.shared.corner.y += movementStep.y;
-			}
-
-			// update gravity factor
-			if ((object->physics.shared.corner).y >= 0) {
-				object->physics.velocity.y -= GRAVITY;
-			}
-			else {
-				object->physics.velocity.y = 0.0f;
 			}
 		}
 	}

@@ -137,13 +137,13 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
     // Sets a direction vector
     if (cam_is_held_right)
-        cam_movement.value() += cam->move(false, 1.0f);
-    if (cam_is_held_left)
-        cam_movement.value() += cam->move(false, -1.0f);
-    if (cam_is_held_up)
         cam_movement.value() += cam->move(true, 1.0f);
-    if (cam_is_held_down)
+    if (cam_is_held_left)
         cam_movement.value() += cam->move(true, -1.0f);
+    if (cam_is_held_up)
+        cam_movement.value() += cam->move(false, 1.0f);
+    if (cam_is_held_down)
+        cam_movement.value() += cam->move(false, -1.0f);
     if (is_held_space)
         jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
 
