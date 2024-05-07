@@ -19,6 +19,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 
 # Tell CMake to ignore warnings from stuff in our dependencies. Surely GLM
 # knows what it is doing... https://7tv.app/emotes/61e8fae862858c6406126ced
+IF (NOT WIN32)
+    set_property(
+        DIRECTORY build 
+        PROPERTY COMPILE_OPTIONS "-w"
+    )
+ENDIF()
 
 # Add google test to CMake
 add_subdirectory(dependencies/google-test) 
@@ -66,4 +72,9 @@ add_custom_target(lint
     -i${CMAKE_SOURCE_DIR}/src/client/tests
     -i${CMAKE_SOURCE_DIR}/src/server/tests
     -i${CMAKE_SOURCE_DIR}/src/shared/tests
+)
+
+add_custom_target(pull_models
+  COMMAND 
+  gdown 1N7a5cDgMcXbPO0RtgznnEo-1XUfdMScM -O ${CMAKE_SOURCE_DIR}/assets/graphics --folder
 )

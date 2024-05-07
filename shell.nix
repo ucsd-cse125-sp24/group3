@@ -9,6 +9,7 @@ mkShell {
     gnumake
     gcc13
     gdb
+    zlib
 
     wayland
     wayland-scanner
@@ -34,6 +35,8 @@ mkShell {
     doxygen
     clang-tools_14
     cppcheck
+
+    python310Packages.gdown
   ];
   nativeBuildInputs = with pkgs; [
         pkg-config

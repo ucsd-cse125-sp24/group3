@@ -33,6 +33,10 @@ glm::mat4 Camera::getViewProj() {
     return viewProjMat;
 }
 
+glm::vec3 Camera::getPos() {
+    return cameraPos;
+}
+
 void Camera::update(float xpos, float ypos) {
 
     if (firstMouse)

@@ -8,6 +8,6 @@ FetchContent_Declare(glew
 
 FetchContent_MakeAvailable(glew)
 
-# find_package(GLEW 2.0 REQUIRED)
-# target_link_libraries(Starting GLEW::GLEW)
-
+set(GLEW_INCLUDE_DIRS
+    ${CMAKE_BINARY_DIR}/_deps/glew-src/include
+    PARENT_SCOPE)

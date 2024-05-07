@@ -14,9 +14,12 @@
 #include <chrono>
 
 #include "boost/variant/get.hpp"
+#include "server/game/enemy.hpp"
+#include "server/game/player.hpp"
 #include "shared/game/event.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
+#include "shared/game/sharedobject.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
@@ -36,6 +39,9 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
     Object* cube = state.objects.getBaseObject(cubeID);
     cube->physics.movable = false;
 
+    EntityID bearID = state.objects.createObject(ObjectType::Enemy);
+    Enemy* bear = reinterpret_cast<Enemy*>(state.objects.getObject(bearID));
+    bear->physics.shared.position = glm::vec3(0.0f, 50.0f, 0.0f);
     
     //  Create a room
     /*

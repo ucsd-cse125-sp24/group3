@@ -30,6 +30,8 @@ public:
     glm::mat4 getViewProj();
     void updatePos(glm::vec3 pos);
 
+    glm::vec3 getPos();
+
 private:
     // Perspective controls
     float FOV;       // Field of View Angle (degrees)

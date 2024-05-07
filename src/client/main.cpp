@@ -13,7 +13,6 @@
 
 #include "shared/utilities/root_path.hpp"
 #include "client/gui/img/img.hpp"
-#include "stb_image.h"
 
 using namespace std::chrono_literals;
 
@@ -62,7 +61,8 @@ int main(int argc, char* argv[])
     boost::asio::io_context context;
     Client client(context, config);
 
-    if (client.init() == -1) {
+    if (!client.init()) {
+        std::cout << "client init failed" << std::endl;
         exit(EXIT_FAILURE);
     }
 

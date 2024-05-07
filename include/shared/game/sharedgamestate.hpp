@@ -73,7 +73,7 @@ struct SharedGameState {
 		this->lobby.max_players = MAX_PLAYERS;
 	}
 
-	SharedGameState(GamePhase start_phase, GameConfig config):
+	SharedGameState(GamePhase start_phase, const GameConfig& config):
 		objects(std::vector<std::shared_ptr<SharedObject>>())
 	{
 		this->phase = start_phase;

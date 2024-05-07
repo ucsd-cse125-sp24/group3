@@ -1,5 +1,3 @@
-#pragma once
-
 #include "client/core.hpp"
 
 #include <iostream>
@@ -13,6 +11,9 @@
 #include <boost/filesystem.hpp>
 
 #include "client/cube.hpp"
+#include "client/lightsource.hpp"
+#include "client/shader.hpp"
+#include "client/model.hpp"
 #include "client/util.hpp"
 #include "client/lobbyfinder.hpp"
 #include "client/gui/gui.hpp"
@@ -72,10 +73,17 @@ private:
 
     SharedGameState gameState;
 
-    float cubeMovementDelta = 0.05f;
+    std::shared_ptr<Shader> cube_shader; 
+    std::shared_ptr<Shader> model_shader;
+    std::shared_ptr<Shader> light_source_shader;
+
+    std::unique_ptr<Model> player_model;
+    std::unique_ptr<Model> bear_model;
+    std::unique_ptr<LightSource> light_source;
+
+    float playerMovementDelta = 0.05f;
 
     GLFWwindow *window;
-    GLuint cubeShaderProgram;
 
     friend class gui::GUI;
     gui::GUI gui;

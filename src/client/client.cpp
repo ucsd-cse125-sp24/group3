@@ -1,5 +1,4 @@
 #include "client/client.hpp"
-
 #include <iostream>
 #include <memory>
 
@@ -16,14 +15,19 @@
 #include "client/constants.hpp"
 #include <boost/dll/runtime_symbol_info.hpp>
 
-
+#include "client/lightsource.hpp"
 #include "client/shader.hpp"
+#include "client/model.hpp"
+#include "glm/fwd.hpp"
+#include "server/game/solidsurface.hpp"
 #include "shared/game/event.hpp"
+#include "shared/game/sharedobject.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
+
 
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
@@ -103,8 +107,12 @@ Client::~Client() {
 // TODO: error flags / output for broken init
 bool Client::init() {
     /* Initialize glfw library */
-    if (!glfwInit())
+    if (!glfwInit()) {
+        const char* glfwErrorDesc = NULL;
+        glfwGetError(&glfwErrorDesc);
+        std::cout << "glfw init fails" << glfwErrorDesc << std::endl;
         return false;
+    }
 
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -139,17 +147,35 @@ bool Client::init() {
         return false;
     }
 
-    this->cubeShaderProgram = loadCubeShaders();
-    if (!this->cubeShaderProgram) {
-        std::cout << "Failed to load cube shader files" << std::endl; 
-        return false;
-    }
+    auto shaders_dir = getRepoRoot() / "src/client/shaders";
+    auto graphics_assets_dir = this->root_path / "assets/graphics";
+
+    auto cube_vert_path = shaders_dir / "cube.vert";
+    auto cube_frag_path = shaders_dir / "cube.frag";
+    this->cube_shader = std::make_shared<Shader>(cube_vert_path.string(), cube_frag_path.string());
+
+    auto model_vert_path = shaders_dir / "model.vert";
+    auto model_frag_path = shaders_dir / "model.frag";
+    this->model_shader = std::make_shared<Shader>(model_vert_path.string(), model_frag_path.string());
+
+    auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
+    this->bear_model = std::make_unique<Model>(bear_model_path.string());
+    this->bear_model->scale(0.25);
+
+    auto player_model_path = graphics_assets_dir / "Fire-testing.obj";
+    this->player_model = std::make_unique<Model>(player_model_path.string());
+    this->player_model->scale(0.25);
+
+    this->light_source = std::make_unique<LightSource>();
+
+    auto lightVertFilepath = this->root_path / "src/client/shaders/lightsource.vert";
+    auto lightFragFilepath = this->root_path / "src/client/shaders/lightsource.frag";
+    this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
 
     return true;
 }
 
 bool Client::cleanup() {
-    glDeleteProgram(this->cubeShaderProgram);
     return true;
 }
 
@@ -279,33 +305,76 @@ void Client::draw() {
     for (int i = 0; i < this->gameState.objects.size(); i++) {
         std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
 
-        if (sharedObject == nullptr)
+        if (sharedObject == nullptr) {
             continue;
+        }
 
         std::cout << "shared object " << i << ": position: " << glm::to_string(sharedObject->physics.position) << std::endl;
 
         // Get camera position from server, update position and don't render player object (or special handling)
         if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
-            cam->updatePos(sharedObject->physics.position);
-            continue;
         }
 
-        // If solidsurface, scale cube to given dimensions
-        if(sharedObject->solidSurface.has_value()){
-            Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f), sharedObject->solidSurface->dimensions);
-            cube->update(sharedObject->physics.position);
-            cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
-            continue;
+        switch (sharedObject->type) {
+            case ObjectType::Player: {
+                // don't render yourself
+                if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+                    cam->updatePos(sharedObject->physics.position);
+                    break;
+                }
+                auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
+                // subtracting 1 from y position to render players "standing" on ground
+                auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y - 1.0f, sharedObject->physics.position.z);
+
+                this->player_model->translateAbsolute(player_pos);
+                this->player_model->draw(
+                    this->model_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    lightPos,
+                    true);
+                break;
+            }
+            case ObjectType::Enemy: {
+                // warren bear is an enemy because why not
+                // auto pos = glm::vec3(0.0f, 0.0f, 0.0f);
+                auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
+                this->bear_model->translateAbsolute(sharedObject->physics.position);
+                this->bear_model->draw(
+                    this->model_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    lightPos,
+                    true);
+
+     /*           this->light_source->TranslateTo(lightPos);
+                this->light_source->draw(
+                    this->light_source_shader,
+                    this->cam->getViewProj());*/
+
+                // Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f));
+                // cube->translateAbsolute(lightPos);
+                // cube->draw(this->cube_shader,
+                //     this->cam->getViewProj(),
+                //     this->cam->getPos(),
+                //     glm::vec3(),
+                //     false);
+                break;
+            }
+            case ObjectType::SolidSurface: {
+                Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f));
+                cube->scale( sharedObject->solidSurface->dimensions);
+                cube->translateAbsolute(sharedObject->physics.position);
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
+                break;
+            }
+            default:
+                break;
         }
-
-        //  tmp: all objects are cubes
-        Cube* cube = new Cube(glm::vec3(0.0f,1.0f,1.0f), glm::vec3(1.0f));
-        cube->update(glm::vec3(0.0f));
-        cube->draw(this->cam->getViewProj(), this->cubeShaderProgram, false);
-
-        Cube* origin = new Cube(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.05f, 0.05f, 0.05f));
-        origin->update(glm::vec3(0.0f));
-        origin->draw(this->cam->getViewProj(), this->cubeShaderProgram, true);
     }
 }
 

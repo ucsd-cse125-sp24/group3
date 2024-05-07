@@ -29,7 +29,7 @@ ServerGameState::ServerGameState(GamePhase start_phase)
 	this->phase = start_phase;
 }
 
-ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) // cppcheck-suppress passedByValue
+ServerGameState::ServerGameState(GamePhase start_phase, const GameConfig& config)
 	: ServerGameState(config) {
 	this->phase = start_phase;
 }
@@ -208,7 +208,7 @@ void ServerGameState::useItem() {
 
 	SmartVector<Item*> items = this->objects.getItems();
 	for (int i = 0; i < items.size(); i++) {
-		Item* item = items.get(i);
+		const Item* item = items.get(i);
 
 		if (item == nullptr)
 			continue;
