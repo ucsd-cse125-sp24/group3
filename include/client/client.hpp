@@ -65,7 +65,9 @@ public:
     bool cleanup();
 
     void draw();
-    void connectAndListen(std::string ip_addr);
+
+    [[nodiscard("You should check if the connection was successful")]]
+        bool connectAndListen(std::string ip_addr);
 
 private:
     void processClientInput();

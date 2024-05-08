@@ -12,10 +12,10 @@ public:
     using Ptr = std::unique_ptr<Flexbox>;
 
     struct Options {
-        Options(Justify direction, Align alignment, float padding):
+        Options(Dir direction, Align alignment, float padding):
             direction(direction), alignment(alignment), padding(padding) {}
 
-        Justify direction;
+        Dir direction;
         Align   alignment;
         float   padding;
     };

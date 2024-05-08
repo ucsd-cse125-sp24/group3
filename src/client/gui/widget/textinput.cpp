@@ -46,6 +46,7 @@ TextInput::TextInput(glm::vec2 origin,
 }
 
 void TextInput::render() {
+    this->dyntext->setOrigin(this->origin);
     this->dyntext->render();
 }
 

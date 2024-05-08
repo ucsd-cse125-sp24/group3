@@ -14,7 +14,7 @@ Widget::Ptr CenterText::make(
     auto flex = widget::Flexbox::make(
         glm::vec2(0.0f, y_pos),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
     );
     auto title = widget::DynText::make(text, fonts,
         widget::DynText::Options(font, size, color));

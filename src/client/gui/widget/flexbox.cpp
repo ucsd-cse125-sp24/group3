@@ -42,8 +42,8 @@ void Flexbox::push(Widget::Ptr&& widget) {
     std::size_t prev_height;
     if (this->widgets.empty()) {
         prev_origin = this->origin;
-        prev_width = this->width;
-        prev_height = this->height;
+        prev_width = 0;
+        prev_height = 0;
     } else {
         Widget::Ptr& prev_widget = this->widgets[this->widgets.size() - 1];
         prev_origin = prev_widget->getOrigin();
@@ -51,12 +51,18 @@ void Flexbox::push(Widget::Ptr&& widget) {
         prev_height = prev_widget->getSize().second;
     }
 
-    if (this->options.direction == Justify::HORIZONTAL) {
-        this->width += new_width + this->options.padding;
+    if (this->options.direction == Dir::HORIZONTAL) {
+        float widgets_width = 0.0f;
+        for (auto& widget : this->widgets) {
+            widgets_width += widget->getSize().first;
+        }
+        if (widgets_width >= this->width) {
+            this->width += new_width + this->options.padding;
+        }
         this->height = std::max(this->height, new_height);
         glm::vec2 new_origin(prev_origin.x + prev_width + this->options.padding, prev_origin.y);
         widget->setOrigin(new_origin);
-    } else if (this->options.direction == Justify::VERTICAL) {
+    } else if (this->options.direction == Dir::VERTICAL) {
         this->height += new_height + this->options.padding;
         this->width = std::max(this->width, new_width);
         glm::vec2 new_origin(prev_origin.x, prev_origin.y + prev_height + this->options.padding);
@@ -66,9 +72,10 @@ void Flexbox::push(Widget::Ptr&& widget) {
     this->widgets.push_back(std::move(widget));
 
     if (this->options.alignment == Align::CENTER) {
-        if (this->options.direction == Justify::HORIZONTAL) {
-            std::cerr << "Note: center alignment not yet implemented for horizontal justify. Doing nothing\n";
-        } else if (this->options.direction == Justify::VERTICAL) {
+        if (this->options.direction == Dir::HORIZONTAL) {
+            // it is much easier to handle this case right before rendering, when everything in the container
+            // is already there and we can just shift things if needed
+        } else if (this->options.direction == Dir::VERTICAL) {
             for (auto& widget : this->widgets) {
                 const auto [curr_width, _] = widget->getSize();
                 glm::vec2 new_origin(this->origin.x + ((this->width - curr_width) / 2.0f), widget->getOrigin().y);
@@ -83,6 +90,29 @@ void Flexbox::push(Widget::Ptr&& widget) {
 
 void Flexbox::render() {
     // use x and y as origin coordinates, and render everything else based off of it
+
+    // It is easier to do this kind of alignment at render time once everything is in the container,
+    // so we do it now
+    // dear god this code is so gross
+    if (this->options.alignment == Align::CENTER) {
+        if (this->options.direction == Dir::HORIZONTAL) {
+            // need to shift everything left/right to center align
+            // this->width should be set to a size larger than all of the elements
+            // e.g     |               | <- marks this->width, so we are centering within this->width
+            //         |               | * this comes about by giving a definite width when constructing the flex box,
+            //         |               | * which is usually WINDOW_WIDTH since we want to center within the entire window
+            // before: 1 2 3 4 5 . . . . 
+            // after:  . . 1 2 3 4 5 . . 
+            float widgets_width = 0.0f;
+            for (auto& widget : this->widgets) {
+                widgets_width += widget->getSize().first;
+            }
+            float shift_amount = (this->width - widgets_width) / 2.0f;
+            for (auto& widget : this->widgets) {
+                widget->setOrigin(widget->getOrigin() + glm::vec2(shift_amount, 0.0f));
+            }
+        }
+    }
 
     for (const auto& widget : this->widgets) {
         widget->render();
