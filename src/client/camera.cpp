@@ -9,18 +9,24 @@ Camera::Camera() : cameraPos(glm::vec3(0.0f)), cameraFront(glm::vec3(0.0f, 0.0f,
 
     yaw   = -90.0f; // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
     pitch =  0.0f;
-    lastX =  800.0f / 2.0;
-    lastY =  600.0 / 2.0;
+    lastX =  640.0f / 2.0;
+    lastY =  480.0 / 2.0;
     fov   =  45.0f;
 
     sensitivity = 0.1f;
     firstMouse = true;
+
+    worldUp = cameraUp;
 
     speed = 0.125f;
 }
 
 Camera::~Camera() {
 
+}
+
+glm::vec3 Camera::getPos() {
+    return cameraPos;
 }
 
 void Camera::update(float xpos, float ypos) {
@@ -43,17 +49,22 @@ void Camera::update(float xpos, float ypos) {
     yaw += xoffset;
     pitch += yoffset;
 
+    // limit how much player can see
     // make sure that when pitch is out of bounds, screen doesn't get flipped
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
+    if (pitch > 70.0f)
+        pitch = 70.0f;
+    if (pitch < -70.0f)
+        pitch = -70.0f;
 
     glm::vec3 front;
     front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
     front.y = sin(glm::radians(pitch));
     front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     cameraFront = glm::normalize(front);
+
+    glm::vec3 oldCamUp = cameraUp;
+    cameraRight = glm::normalize(glm::cross(cameraFront, worldUp)); 
+    cameraUp = glm::normalize(glm::cross(cameraRight, cameraFront));
 
     glm::mat4 projection = glm::perspective(glm::radians(FOV), aspect, nearClip, farClip);
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
@@ -62,12 +73,13 @@ void Camera::update(float xpos, float ypos) {
 }
 
 glm::vec3 Camera::move(bool is_x_axis, float dir) {
+    glm::vec3 effCameraFront = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
+
     if (is_x_axis) {
-        glm::vec3 effCameraFront = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
-        return dir * speed * effCameraFront;
-    } else {
-        glm::vec3 effCameraFront = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
         return dir * glm::normalize(glm::cross(effCameraFront, cameraUp)) * speed;
+    } else {
+        return dir * speed * effCameraFront;
+        // return dir * speed * cameraRight;
     }
 }
 

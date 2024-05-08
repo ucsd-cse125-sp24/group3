@@ -11,6 +11,8 @@ CellType charToCellType(char c) {
 		return CellType::Wall;
 	case '@':
 		return CellType::Spawn;
+	case 'E':
+		return CellType::Enemy;
 	default:
 		return CellType::Unknown;
 	}

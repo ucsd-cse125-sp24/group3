@@ -1,13 +1,18 @@
 #include <iostream>
 #include <chrono>
 
+
 #include <boost/asio/io_context.hpp>
 #include <SFML/Audio.hpp>
 
 #include "client/client.hpp"
 #include "shared/utilities/rng.hpp"
 #include "shared/utilities/config.hpp"
+#include "shared/utilities/root_path.hpp"
 #include "client/sound.hpp"
+
+#include "shared/utilities/root_path.hpp"
+#include "client/gui/img/img.hpp"
 
 using namespace std::chrono_literals;
 
@@ -38,10 +43,12 @@ void set_callbacks(GLFWwindow* window) {
     });
 
     // Set the mouse and cursor callbacks
-    // glfwSetMouseButtonCallback(window, Client::mouseCallback);
+    glfwSetMouseButtonCallback(window, Client::mouseButtonCallback);
     glfwSetCursorPosCallback(window, [](GLFWwindow* w, double xposIn, double yposIn) {
         static_cast<Client*>(glfwGetWindowUserPointer(w))->mouseCallback(w, xposIn, yposIn);
     });
+
+    glfwSetCharCallback(window, Client::charCallback);
 }
 
 void set_opengl_settings(GLFWwindow* window) {
@@ -65,23 +72,12 @@ int main(int argc, char* argv[])
 {
     auto config = GameConfig::parse(argc, argv);
     boost::asio::io_context context;
-    LobbyFinder lobby_finder(context, config);
 
     std::unique_ptr<Client> client(new Client(context, config));
 
-    if (config.client.lobby_discovery) {
-        // TODO: once we have UI, there should be a way to connect based on
-        // this. Right now, there isn't really a way to react to the information
-        // the LobbyFinder is gathering.
-        std::cerr << "Error: lobby discovery not enabled yet for client-side."
-            << std::endl;
-        std::exit(1);
-        // lobby_finder.startSearching();
-    } else {
-        client->connectAndListen(config.network.server_ip);
-    }
 
     if (!client->init()) {
+        std::cout << "client init failed" << std::endl;
         exit(EXIT_FAILURE);
     }
     
@@ -95,7 +91,7 @@ int main(int argc, char* argv[])
     // Setup OpenGL settings.
     set_opengl_settings(window);
 
-    boost::filesystem::path soundFilepath = client->getRootPath() / "assets/sounds/piano.wav";
+    boost::filesystem::path soundFilepath = getRepoRoot() / "assets/sounds/piano.wav";
 
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile(soundFilepath.string()))

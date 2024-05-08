@@ -37,7 +37,7 @@ public:
      * Tell the broadcaster the current state of the lobby so it can broadcast
      * updated messages.
      */
-    void setLobbyInfo(const ServerLobbyBroadcastPacket& bcast_info);
+    void setLobbyInfo(const Lobby& bcast_info);
 
     /**
      * Tells the LobbyBroadcaster to stop advertising that there is a lobby open.

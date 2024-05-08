@@ -1,9 +1,9 @@
 {
     "game": {
-      "timestep_length_ms": 30,
+      "timestep_length_ms": 40,
       "maze": {
         "directory": "maps",
-        "maze_file": "tyler_test.maze"
+        "maze_file": "maze5.maze"
       }
     },
     "network": {
@@ -11,12 +11,13 @@
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "My Test Lobby",
-        "lobby_broadcast": false,
+        "lobby_name": "Unnamed Lobby",
+        "lobby_broadcast": true,
         "max_players": 1
     },
     "client": {
-        "default_name": "Player",
-        "lobby_discovery": false 
+        "default_name": "John Doe",
+        "lobby_discovery": true,
+        "window_width": 1500
     }
 }

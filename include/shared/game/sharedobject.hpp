@@ -80,12 +80,26 @@ struct SharedPhysics {
 	glm::vec3 position;
 
 	/**
+	 * @brief 3-D vector that denotes this object's bottom left corner 
+	 * (min x and z coordinates).
+	 */
+	glm::vec3 corner;
+
+	/**
 	 * @brief 3-D vector that denotes this object's facing direction.
 	 */
 	glm::vec3 facing;
 
+	/**
+	 * @brief 3-D vector that defines a rectangular prism which outlines the
+	 * object that contains this SharedPhysic struct.
+	 * @note This field dictates the dimensions of the object for rendering in
+	 * the client.
+	 */
+	glm::vec3 dimensions;
+
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& position& facing;
+		ar& position& corner& facing & dimensions;
 	}
 };
 

@@ -13,10 +13,11 @@ Object::Object(ObjectType type) {
 	//	velocity or acceleration, and is movable. The object faces toward the
 	//	x-axis.
 	this->physics.shared.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	this->physics.shared.corner = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
 
 	this->physics.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
-	this->physics.acceleration = glm::vec3(1.0f, 1.0f, 1.0f);
+	this->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
 	this->physics.movable = true;
 
 	//	By default, the object is not assigned a collider (must be explicitly
@@ -69,8 +70,9 @@ std::string Physics::to_string(unsigned int tab_offset) {
 	representation += tabs + "\tmovable:\t\t" + (this->movable ? "true" : "false") + '\n';
 	representation += tabs + "\tposition:\t\t" + glm::to_string(this->shared.position) + '\n';
 	representation += tabs + "\tvelocity:\t\t" + glm::to_string(this->velocity) + '\n';
-	representation += tabs + "\tacceleration:\t\t" + glm::to_string(this->acceleration) + '\n';
+	representation += tabs + "\velocityMultiplier:\t\t" + glm::to_string(this->velocityMultiplier) + '\n';
 	representation += tabs + "\tfacing:\t\t\t" + glm::to_string(this->shared.facing) + '\n';
+	representation += tabs + "\tdimensions:\t\t\t" + glm::to_string(this->shared.dimensions) + '\n';
 	representation += tabs + "}";
 
 	return representation;

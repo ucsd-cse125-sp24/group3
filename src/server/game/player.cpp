@@ -8,7 +8,6 @@ SharedObject Player::toShared() {
 }
 
 Player::Player() : Creature(ObjectType::Player) {
-
 }
 
 Player::~Player() {

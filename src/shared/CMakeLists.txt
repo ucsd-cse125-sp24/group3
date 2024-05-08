@@ -9,6 +9,7 @@ set(FILES
     utilities/config.cpp
     utilities/rng.cpp
     utilities/root_path.cpp
+    utilities/time.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

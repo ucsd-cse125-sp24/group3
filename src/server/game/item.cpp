@@ -2,7 +2,7 @@
 #include "shared/game/sharedobject.hpp"
 
 /*  Constructors and Destructors    */
-Item::Item() : Object(ObjectType::Item) {
+Item::Item() : Object(ObjectType::Item) { // cppcheck-suppress uninitMemberVar
 
 }
 

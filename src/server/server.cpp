@@ -14,9 +14,12 @@
 #include <chrono>
 
 #include "boost/variant/get.hpp"
+#include "server/game/enemy.hpp"
+#include "server/game/player.hpp"
 #include "shared/game/event.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
+#include "server/game/boxcollider.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
@@ -32,63 +35,6 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      world_eid(0),
      state(ServerGameState(GamePhase::LOBBY, config))
 {
-    SpecificID cubeID = state.objects.createObject(ObjectType::Object);
-    Object* cube = state.objects.getBaseObject(cubeID);
-    cube->physics.movable = false;
-
-    
-    //  Create a room
-    /*
-    EntityID wall1ID = state.objects.createObject(ObjectType::SolidSurface);
-    EntityID wall2ID = state.objects.createObject(ObjectType::SolidSurface);
-    EntityID wall3ID = state.objects.createObject(ObjectType::SolidSurface);
-    EntityID wall4ID = state.objects.createObject(ObjectType::SolidSurface);
-    EntityID floorID = state.objects.createObject(ObjectType::SolidSurface);
-    */
-
-    //  Specify wall positions (RECREATED TO MATCH AXIS)
-    //  Configuration: 18 (z) x 20 (x) room example
-    // (z-axis)
-    //  ##1##
-    //  #   #
-    //  2   3 (x-axis)
-    //  #   #
-    //  ##4##
-
-    /*
-    SolidSurface* wall1 = (SolidSurface*)state.objects.getObject(wall1ID);
-    SolidSurface* wall2 = (SolidSurface*)state.objects.getObject(wall2ID);
-    SolidSurface* wall3 = (SolidSurface*)state.objects.getObject(wall3ID);
-    SolidSurface* wall4 = (SolidSurface*)state.objects.getObject(wall4ID);
-    SolidSurface* floor = (SolidSurface*)state.objects.getObject(floorID);
-
-    //  Wall1 has dimensions (20, 4, 1); and position (0, 0, -19.5)
-    wall1->shared.dimensions = glm::vec3(20, 4, 1);
-    wall1->physics.shared.position = glm::vec3(0, 0, -19.5);
-    wall1->physics.movable = false;
-
-    //  Wall2 has dimensions (1, 4, 18) and position (-19.5, 0, 0)
-    wall2->shared.dimensions = glm::vec3(1, 4, 18);
-    wall2->physics.shared.position = glm::vec3(-19.5, 0, 0);
-    wall2->physics.movable = false;
-
-    //  Wall3 has dimensions (1, 4, 18) and position (19.5, 0, 0)
-    wall3->shared.dimensions = glm::vec3(1, 4, 18);
-    wall3->physics.shared.position = glm::vec3(19.5, 0, 0);
-    wall3->physics.movable = false;
-
-    //  Wall4 has dimensions (20, 4, 1) and position (0, 0, 19.5)
-    wall4->shared.dimensions = glm::vec3(20, 4, 1);
-    wall4->physics.shared.position = glm::vec3(0, 0, 19.5);
-    wall4->physics.movable = false;
-
-    //  floor has dimensions (20, 0.1, 20) and position (0, -1.3, 0)
-    floor->shared.dimensions = glm::vec3(20.0f, 0.1f, 20.0f);
-    floor->physics.shared.position = glm::vec3(0.0f, -1.3f, 0.0f);
-    floor->physics.movable = false;
-    */
-
-
     _doAccept(); // start asynchronously accepting
 
     if (config.server.lobby_broadcast) {
@@ -157,16 +103,21 @@ std::chrono::milliseconds Server::doTick() {
                 }
             }
 
-            if (this->state.getLobbyPlayers().size() >= this->state.getLobbyMaxPlayers()) {
+            if (this->state.getLobby().players.size() >= this->state.getLobby().max_players) {
                 this->state.setPhase(GamePhase::GAME);
+                // TODO: figure out how to selectively broadcast to only the players that were already in the lobby
+                // this->lobby_broadcaster.stopBroadcasting();
             } else {
-                std::cout << "Only have " << this->state.getLobbyPlayers().size() << "/" << this->state.getLobbyMaxPlayers() << "\n";
+                std::cout << "Only have " << this->state.getLobby().players.size()
+                    << "/" << this->state.getLobby().max_players << "\n";
             }
+
+            this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
 
             sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
             // Tell each client the current lobby status
 
-            std::cout << "waiting for " << this->state.getLobbyMaxPlayers() << " players" << std::endl;
+            std::cout << "waiting for " << this->state.getLobby().max_players << " players" << std::endl;
 
             break;
         case GamePhase::GAME: {
@@ -239,16 +190,35 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
-    SpecificID typeID = this->state.objects.createObject(ObjectType::Player);
-    Player* player = this->state.objects.getPlayer(typeID);
-    EntityID id = player->globalID;
-    auto session = std::make_shared<Session>(std::move(this->socket),
-        SessionInfo({}, id));
+    SpecificID playerID = this->state.objects.createObject(ObjectType::Player);
+    Player* player = this->state.objects.getPlayer(playerID);
 
-    this->sessions.insert(SessionEntry(id, addr, session));
+    //  Spawn player in random spawn point
+
+    //  TODO: Possibly replace this random spawn point with player assignments?
+    //  I.e., assign each player a spawn point to avoid multiple players getting
+    //  the same spawn point?
+    std::srand(std::time(NULL));
+    std::vector<GridCell*> spawnPoints = this->state.getGrid().getSpawnPoints();
+    size_t randomSpawnIndex = std::rand() % spawnPoints.size();
+
+    std::cout << "Number of spawn points: " << spawnPoints.size() << std::endl;
+    std::cout << "Player " << playerID << " spawning at spawn point " << randomSpawnIndex << std::endl;
+
+    GridCell * spawnPoint = 
+        this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
+
+    player->physics.shared.position = this->state.getGrid().gridCellCenterPosition(spawnPoint);
+    player->physics.shared.corner = player->physics.shared.position - glm::vec3(0.5, 0, 0.5);
+    player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f));
+
+    auto session = std::make_shared<Session>(std::move(this->socket),
+        SessionInfo({}, player->globalID));
+
+    this->sessions.insert(SessionEntry(player->globalID, addr, session));
 
     std::cout << "Established new connection with " << addr << ", which was assigned eid "
-        << id << std::endl;
+        << player->globalID << std::endl;
 
     return session;
 }

@@ -88,6 +88,16 @@ public:
 	 */
 	std::vector<GridCell*> getSpawnPoints();
 
+	/**
+	 * @brief Returns the center position (as an Object position vector) of the
+	 * given GridCell's center.
+	 * @param cell GridCell whose center position will be returned as an
+	 * Object position vector.
+	 * @return Center position of the given grid cell as an Object Physics
+	 * position vector, or (0,0,0) if the given cell pointer is nullptr
+	 */
+	glm::vec3 gridCellCenterPosition(GridCell * cell);
+
 private:
 
 	/**
