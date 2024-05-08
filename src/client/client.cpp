@@ -35,12 +35,6 @@ using namespace std::chrono_literals;
 // Checker for events sent / later can be made in an array
 glm::vec3 sentCamMovement = glm::vec3(-1.0f);
 
-float Client::mouse_xpos = 0.0f;
-float Client::mouse_ypos = 0.0f;
-
-bool Client::is_left_mouse_down = false;
-bool Client::is_click_available = false;
-
 int Client::window_width = UNIT_WINDOW_WIDTH;
 int Client::window_height = UNIT_WINDOW_HEIGHT;
 
@@ -57,9 +51,7 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     gui(this),
     gui_state(gui::GUIState::INITIAL_LOAD),
     lobby_finder(io_context, config),
-    cam(new Camera()),
-    width(640),
-    height(480) {    
+    cam(new Camera()) {    
     Client::window_width = config.client.window_width;
     Client::window_height = static_cast<int>((config.client.window_width * 2.0f) / 3.0f);
     
@@ -458,19 +450,6 @@ void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { /
     mouse_ypos = static_cast<float>(yposIn);
 }
 
-void Client::resizeCallback(GLFWwindow *window, int width, int height) {
-    #ifdef __APPLE__
-        // In case your Mac has a retina display.
-        glfwGetFramebufferSize(window, &width, &height);
-    #endif
-    this->width = width;
-    this->height = height;
-    // Set the viewport size.
-    glViewport(0, 0, width, height);
-
-    cam->setAspect(float(width) / float(height));
-}
-
 void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
@@ -482,9 +461,7 @@ void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int
 }
 
 void Client::charCallback(GLFWwindow* window, unsigned int codepoint) {
-    Client* client = static_cast<Client*>(glfwGetWindowUserPointer(window));
-
-    client->gui.captureKeystroke(static_cast<char>(codepoint));
+    gui.captureKeystroke(static_cast<char>(codepoint));
     Client::time_of_last_keystroke = getMsSinceEpoch();
 }
 

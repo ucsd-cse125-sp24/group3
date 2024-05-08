@@ -32,28 +32,30 @@ void set_callbacks(GLFWwindow* window) {
     // Set the error callback.
     glfwSetErrorCallback(error_callback);
 
-    // Set the window resize callback.
-    glfwSetWindowSizeCallback(window, [](GLFWwindow* w, int width, int height) {
-        static_cast<Client*>(glfwGetWindowUserPointer(w))->resizeCallback(w, width, height);
-    });
-
-    // Set the key callback.
+    /* Set key callback */
     glfwSetKeyCallback(window, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
         static_cast<Client*>(glfwGetWindowUserPointer(w))->keyCallback(w, key, scancode, action, mods);
     });
 
-    // Set the mouse and cursor callbacks
-    glfwSetMouseButtonCallback(window, Client::mouseButtonCallback);
+    /* Set mouse and cursor callbacks */
+    glfwSetMouseButtonCallback(window, [](GLFWwindow* w, int button, int action, int mods) {
+        static_cast<Client*>(glfwGetWindowUserPointer(w))->mouseButtonCallback(w, button, action, mods);
+    });
+
     glfwSetCursorPosCallback(window, [](GLFWwindow* w, double xposIn, double yposIn) {
         static_cast<Client*>(glfwGetWindowUserPointer(w))->mouseCallback(w, xposIn, yposIn);
     });
 
-    glfwSetCharCallback(window, Client::charCallback);
+    /* Set character callback for typing */
+    glfwSetCharCallback(window, [](GLFWwindow* w, unsigned int codepoint) {
+        static_cast<Client*>(glfwGetWindowUserPointer(w))->charCallback(w, codepoint);
+    });
 }
 
 void set_opengl_settings(GLFWwindow* window) {
     // Enable depth buffering.
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 
     // Related to shaders and z value comparisons for the depth buffer.
     glDepthFunc(GL_LEQUAL);

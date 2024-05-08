@@ -19,7 +19,6 @@
 #include "client/gui/gui.hpp"
 #include "client/camera.hpp"
 
-//#include "shared/game/gamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/session.hpp"
@@ -107,20 +106,38 @@ public:
      * @param yposIn The current y-coordinate of the cursor.
      */
     void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
-    static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
-    static void charCallback(GLFWwindow* window, unsigned int codepoint);
 
+    /**
+     * @brief Callback which handles mouse button presses.
+     * 
+     * @param window The GLFWwindow being monitered.
+     * @param button The mouse button pressed.
+     * @param action One of GLFW_PRESS, GLFW_REPEAT, or GLFW_RELEASE representing the state of the button.
+     * @param mods Any modifiers to the key pressed (i.e. shift, ctrl, alt, etc.).
+     */
+    void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+
+    /**
+     * @brief 
+     * 
+     * @param window 
+     * @param codepoint 
+     */
+    void charCallback(GLFWwindow* window, unsigned int codepoint);
+
+    /**
+     * @brief Get a vec2 representing <width, height> of the window size.
+     * 
+     * @return glm::vec2 
+     */
     static glm::vec2 getWindowSize();
 
-    static time_t getTimeOfLastKeystroke();
     /**
-     * @brief Callback which handles window resizing.
+     * @brief Get the time of last keystroke.
      * 
-     * @param window The GLFWwindow being monitored.
-     * @param width The new width of the window.
-     * @param height The new height of the window.
+     * @return time_t 
      */
-    void resizeCallback(GLFWwindow *window, int width, int height);
+    static time_t getTimeOfLastKeystroke();
 
     // Getter / Setters
     /**
@@ -153,38 +170,32 @@ private:
     /* Current game state */
     SharedGameState gameState;
 
+    /* Shader objects for various */
     std::shared_ptr<Shader> cube_shader; 
     std::shared_ptr<Shader> model_shader;
     std::shared_ptr<Shader> light_source_shader;
 
+    /* Character models and lighting objects, might need to move to different classes later */
     std::unique_ptr<Model> player_model;
     std::unique_ptr<Model> bear_model;
     std::unique_ptr<LightSource> light_source;
 
-    float playerMovementDelta = 0.05f;
-
     GLFWwindow *window;
-    int width;
-    int height;
 
-    /* Potentially move this to camera? */
-
+    /* GUI */
     friend class gui::GUI;
     gui::GUI gui;
     gui::GUIState gui_state;
+
     /* Camera object representing player's current position & orientation */
     std::unique_ptr<Camera> cam;
 
-    // Flags
-    static bool is_left_mouse_down;
-    static bool is_click_available;
-    static float mouse_xpos;
-    static float mouse_ypos;
-
+    /* Flags */
     static int window_width;
     static int window_height;
 
     static time_t time_of_last_keystroke;
+
     /* Key held flags */
     bool is_held_up = false;
     bool is_held_down = false;
@@ -192,9 +203,11 @@ private:
     bool is_held_left = false;
     bool is_held_space = false;
 
+    bool is_left_mouse_down = false;
+
     /* Mouse position coordinates */
-    // float mouse_xpos = 0.0f;
-    // float mouse_ypos = 0.0f;
+    float mouse_xpos = 0.0f;
+    float mouse_ypos = 0.0f;
 
     GameConfig config;
     tcp::resolver resolver;
