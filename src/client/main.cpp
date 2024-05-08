@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
     // Setup OpenGL settings.
     set_opengl_settings(window);
 
-    boost::filesystem::path soundFilepath = getRepoRoot() / "assets/sounds/speedrun.mp3";
+    boost::filesystem::path soundFilepath = getRepoRoot() / "assets/sounds/piano.wav";
 
     sf::SoundBuffer buffer;
     if (!buffer.loadFromFile(soundFilepath.string()))
