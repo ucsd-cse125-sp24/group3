@@ -14,6 +14,7 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->timestep = FIRST_TIMESTEP;
 	this->timestep_length = config.game.timestep_length_ms;
 	this->lobby.max_players = config.server.max_players;
+	this->lobby.name = config.server.lobby_name;
 
 	this->maps_directory = config.game.maze.directory;
 	this->maze_file = config.game.maze.maze_file;
@@ -29,7 +30,7 @@ ServerGameState::ServerGameState(GamePhase start_phase)
 	this->phase = start_phase;
 }
 
-ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) // cppcheck-suppress passedByValue
+ServerGameState::ServerGameState(GamePhase start_phase, const GameConfig& config)
 	: ServerGameState(config) {
 	this->phase = start_phase;
 }
@@ -186,9 +187,9 @@ void ServerGameState::updateMovement() {
 		if (object == nullptr)
 			continue;
 		
-		bool collided = false;
-		bool collidedX = false;
-		bool collidedZ = false;
+		bool collided = false; // cppcheck-suppress variableScope
+		bool collidedX = false; // cppcheck-suppress variableScope
+		bool collidedZ = false; // cppcheck-suppress variableScope
 
 		if (object->physics.movable) {
 			// Check for collision at position to move, if so, dont change position
@@ -283,7 +284,7 @@ void ServerGameState::useItem() {
 
 	SmartVector<Item*> items = this->objects.getItems();
 	for (int i = 0; i < items.size(); i++) {
-		Item* item = items.get(i);
+		const Item* item = items.get(i);
 
 		if (item == nullptr)
 			continue;
@@ -314,12 +315,8 @@ void ServerGameState::removePlayerFromLobby(EntityID id) {
 	this->lobby.players.erase(id);
 }
 
-const std::unordered_map<EntityID, std::string>& ServerGameState::getLobbyPlayers() const {
-	return this->lobby.players;
-}
-
-int ServerGameState::getLobbyMaxPlayers() const {
-	return this->lobby.max_players;
+const Lobby& ServerGameState::getLobby() const {
+	return this->lobby;
 }
 
 /*	Maze initialization	*/
@@ -422,7 +419,8 @@ void ServerGameState::loadMaze() {
 	file.close();
 
 	//	Verify that there's at least one spawn point
-	assert(this->grid.getSpawnPoints().size() > 0);
+	size_t num_spawn_points = this->grid.getSpawnPoints().size();
+	assert(num_spawn_points > 0);
 
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
 
@@ -474,6 +472,13 @@ void ServerGameState::loadMaze() {
 			GridCell* cell = this->grid.getCell(col, row);
 
 			switch (cell->type) {
+				case CellType::Enemy: {
+					SpecificID enemyID = this->objects.createObject(ObjectType::Enemy);
+
+					Enemy* enemy = this->objects.getEnemy(enemyID);
+					enemy->physics.shared.position = this->grid.gridCellCenterPosition(cell);
+					break;
+				}
 				case CellType::Wall: {
 					//	Create a new Wall object
 					SpecificID wallID = 

@@ -1,4 +1,5 @@
 #include "server/game/objectmanager.hpp"
+#include "server/game/enemy.hpp"
 
 #include <memory>
 
@@ -70,8 +71,22 @@ SpecificID ObjectManager::createObject(ObjectType type) {
 			player->globalID = globalID;
 			break;
 		}
-		case ObjectType::Object:
-		default: {
+        case ObjectType::Enemy: {
+            //	Create a new object of type Enemy
+            Enemy* enemy = new Enemy();
+
+			//	Push to type-specific enemies vector
+            typeID = (SpecificID)this->enemies.push(enemy);
+
+            //	Push to global objects vector
+            globalID = (EntityID)this->objects.push(enemy);
+
+            //	Set object's type and global IDs
+            enemy->typeID = typeID;
+            enemy->globalID = globalID;
+            break;
+        }
+		case ObjectType::Object: {
 			//	Create a new object of type Object
 			Object* object = new Object(ObjectType::Object);
 
@@ -84,11 +99,29 @@ SpecificID ObjectManager::createObject(ObjectType type) {
 			//	Push to global objects vector
 			globalID = (EntityID)this->objects.push(object);
 
-			//	Set object's type and global IDs
-			object->typeID = typeID;
-			object->globalID = globalID;
-			break;
-		}
+            //	Set object's type and global IDs
+            object->typeID = typeID;
+            object->globalID = globalID;
+            break;
+        }
+        default: {
+            //	Create a new object of type Object
+            Object* object = new Object(ObjectType::Object);
+
+            //	TODO: Maybe change SmartVector's index return value? size_t is
+            //	larger than uint32 (which is what SpecificID and EntityID are
+            //	defined as)
+            //	Push to type-specific base_objects vector
+            typeID = (SpecificID)this->base_objects.push(object);
+
+            //	Push to global objects vector
+            globalID = (EntityID)this->objects.push(object);
+
+            //	Set object's type and global IDs
+            object->typeID = typeID;
+            object->globalID = globalID;
+            break;
+        }
 	}
 
 	//	Return new object's specificID

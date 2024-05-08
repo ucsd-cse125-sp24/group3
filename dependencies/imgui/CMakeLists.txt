@@ -10,19 +10,20 @@ FetchContent_MakeAvailable(imgui)
 set(imgui-directory ${CMAKE_BINARY_DIR}/_deps/imgui-src/ PARENT_SCOPE)
 set(imgui-directory ${CMAKE_BINARY_DIR}/_deps/imgui-src/)
 
-set(imgui-source 
-${imgui-directory}/imconfig.h
-	${imgui-directory}/imgui.h
+set(IMGUI_INCLUDE_DIRS
+    ${imgui-directory}
+    ${imgui-directory}/backends
+    PARENT_SCOPE
+)
+
+set(IMGUI_SOURCES
 	${imgui-directory}/imgui.cpp
 	${imgui-directory}/imgui_draw.cpp
-	${imgui-directory}/imgui_internal.h
 	${imgui-directory}/imgui_widgets.cpp
-	${imgui-directory}/imstb_rectpack.h
-	${imgui-directory}/imstb_textedit.h
-	${imgui-directory}/imstb_truetype.h
     ${imgui-directory}/imgui_tables.cpp
 	${imgui-directory}/imgui_demo.cpp
 	${imgui-directory}/backends/imgui_impl_glfw.cpp
 	${imgui-directory}/backends/imgui_impl_opengl3.cpp
+    ${imgui-directory}misc/cpp/imgui_stdlib.cpp
 	PARENT_SCOPE
 )
