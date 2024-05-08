@@ -1,5 +1,7 @@
 ## Game Name Here
 
+![Docs](https://github.com/ucsd-cse125-sp24/group3/actions/workflows/docs.yml/badge.svg)
+
 TODO: Game description here, with screenshots.
 
 ## Setup
@@ -12,7 +14,7 @@ TODO: Game description here, with screenshots.
 		- in the popup window put in this URL: `https://github.com/ucsd-cse125-sp24/group3.git`
     - Alternatively, you can use the command line and then open Visual Studio in the directory where you cloned it:
 		- `git clone https://github.com/ucsd-cse125-sp24/group3.git`
-3. Everything should just work™. To run the program, you can click on the green arrow at the top bar that says "Select Startup Item." There is a dropdown arrow on the right side which will let you select between running the client and the server.
+3. Everything should just workï¿½. To run the program, you can click on the green arrow at the top bar that says "Select Startup Item." There is a dropdown arrow on the right side which will let you select between running the client and the server.
 
 ### Linux / Mac
 
@@ -31,6 +33,11 @@ Note: If you work locally this way, you should make sure that before you merge a
 		- Linux: it probably is already installed on your system, but if not use your favorite package manager.
 	4. OpenGL
 		- TODO: figure out what version the lab computers have installed, and then put instructions to install it here.
+    5. Various Libraries
+        - Some libraries are needed that might not be installed on your system already. Here is a short list of various libraries that you might need. If you do not have apt, then you can find the corresponding packages in whatever package manager you are using
+        ```
+        sudo apt install libopenal-dev libvorbis-dev libflac-dev
+        ```
 2. Verify installations:
     - Enter in `cmake`, `g++`, and `make` into your terminal
     - Confirm that each of these commands are recognized by your system
@@ -124,3 +131,84 @@ Depending on where you need to link the library (client, server, shared), you wi
 
 - [C++ Intellisense](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools)
 - [General Productivity](https://marketplace.visualstudio.com/items?itemName=jirkavrba.subway-surfers)
+
+## Models
+
+You can download models from our Google Drive folder [here](https://drive.google.com/drive/folders/1N7a5cDgMcXbPO0RtgznnEo-1XUfdMScM?usp=sharing) and place them in `src/client/models`. Alternatively, you can install [gdown](https://github.com/wkentaro/gdown) and run `make pull_models` to automatically pull them.
+
+## Documentation
+
+View deployed documentation [here](https://cse125.ucsd.edu/2024/cse125g3/site/docs/html/)
+
+### Build Docs Locally 
+
+1. We are using Doxygen which you can install locally from [here](https://www.doxygen.nl/download.html)
+2. Run `doxygen` from the root of the directory
+3. Open the `html` files in the `docs` directory of the repo
+
+
+## Testing
+
+We are using [GoogleTest](https://google.github.io/googletest/) for unit testing. They run automatically in GitHub actions or can also be done manually.
+
+There are three categories of unit tests:
+
+1. Client tests for client specific code
+2. Server tests for server specific code
+2. Shared tests for code shared between the client and server 
+
+### Running Tests Locally
+
+From the build directory run the following commands for each testing category:
+
+```sh
+make run_client_tests
+make run_server_tests
+make run_shared_tests
+```
+
+### Adding New Tests 
+
+1. Add a new `.cpp` file to the testing directory you want (either `src/client/tests`, `src/server/tests` or `src/shared/tests`).
+
+2. Add a testing function with the GoogleTest `TEST` macro. See [this](https://google.github.io/googletest/reference/assertions.html) page to see all the available assertions.
+```cpp
+// Tests factorial of positive numbers.
+TEST(FactorialTest, HandlesPositiveInput) {
+  EXPECT_EQ(Factorial(1), 1);
+  EXPECT_EQ(Factorial(2), 2);
+  EXPECT_EQ(Factorial(3), 6);
+  EXPECT_EQ(Factorial(8), 40320);
+}
+```
+3. Run the tests locally with the steps above or with GitHub actions
+
+## Linting
+
+We are using [cppcheck](https://github.com/danmar/cppcheck) for linting and static code analysis. They run automatically with GitHub actions.
+
+### Suppressing errors
+
+You can suppress a single error by adding comments in the following format after the lint in question:
+
+```cpp
+int x = 5; // cppcheck-suppress unusedVariable 
+```
+
+You can also pass in `--suppress <check-name>` to cppcheck. You can modify the flags that `make lint` uses by modifying the lint target's definition in the root level CMakeLists.txt.
+
+### Linting locally 
+
+#### Linux/macOS
+Install cppcheck on your system based on instructions [here](https://cppcheck.sourceforge.io/)
+
+#### Windows
+Visual Studio supports a [cppcheck plugin](https://github.com/VioletGiraffe/cppcheck-vs-addin/tree/1.5)
+
+#### Run
+
+From inside the build directory run:
+
+```sh
+make lint
+```

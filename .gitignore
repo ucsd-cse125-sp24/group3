@@ -1,4 +1,7 @@
 build/
-assets/*
 .vscode/
 .vs/
+.cache/
+
+docs/*
+!docs/.gitkeep

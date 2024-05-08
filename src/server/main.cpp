@@ -1,13 +1,26 @@
 #include <iostream>
+#include <chrono>
+
+#include <boost/asio/io_context.hpp>
 
 #include "server/server.hpp"
 #include "shared/utilities/rng.hpp"
+#include "shared/utilities/config.hpp"
 
-int main() {
-    Server server;
+using namespace std::chrono_literals;
 
-    std::cout << "I am a server!\n"; 
+int main(int argc, char** argv) {
+    auto config = GameConfig::parse(argc, argv);
+    boost::asio::io_context context;
+    Server server(context, config);
 
-    // Test that shared lib is linked correctly
-    std::cout << "Random number: " << randomInt(0, 100) << "\n";
+    while (true) {
+        // Do one tick of updates
+        auto wait_time = server.doTick();
+
+        // Wait until next tick
+        context.run_for(wait_time);
+
+        // std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
 }
