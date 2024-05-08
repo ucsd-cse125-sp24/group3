@@ -355,7 +355,7 @@ void GUI::_layoutGameHUD() {
 
 void GUI::_layoutGameEscMenu() {
     auto exit_game_txt = widget::DynText::make(
-        "Exit Game",
+        "<Exit Game>",
         fonts,
         widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
     );
