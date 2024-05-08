@@ -49,24 +49,6 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config) :
     cam = new Camera();
 
     audioManager = new AudioManager();
-
-
-    this->root_path = boost::dll::program_location().parent_path().parent_path().parent_path();
-
-    std::vector< std::pair<boost::filesystem::path, SoundType>> audioPaths;
-    std::pair<boost::filesystem::path, SoundType> collidePair { this->getRootPath() / "assets/sounds/collide.wav", SoundType::Collision };
-    audioPaths.push_back(collidePair);
-
-    std::vector< std::pair<boost::filesystem::path, SoundType>> musicPaths;
-    std::pair<boost::filesystem::path, SoundType> pianoPair{ this->getRootPath() / "assets/sounds/piano.wav", SoundType::Background };
-    musicPaths.push_back(pianoPair);
-
-    audioManager->loadAudioFiles(audioPaths);
-    audioManager->loadMusicFiles(musicPaths);
-}
-
-boost::filesystem::path Client::getRootPath() {
-    return this->root_path;
 }
 
 AudioManager* Client::getAudioManager() {
@@ -127,6 +109,8 @@ bool Client::init() {
         std::cout << "Failed to load cube shader files" << std::endl;
         return false;
     }
+
+    this->audioManager->init();
 
     return true;
 }

@@ -15,9 +15,7 @@ public:
 	AudioManager();
 	~AudioManager();
 
-	void loadAudioFiles(std::vector< std::pair<boost::filesystem::path, SoundType>> audioPaths);
-
-	void loadMusicFiles(std::vector< std::pair<boost::filesystem::path, SoundType>> musicPaths);
+	void init();
 
 	void playAudio(SoundType type);
 
@@ -30,4 +28,8 @@ public:
 
 private:
 	std::unordered_map<SoundType, std::shared_ptr<sf::SoundSource>> soundMap;
+
+	void loadAudioFiles(std::vector< std::pair<boost::filesystem::path, SoundType>> audioPaths);
+
+	void loadMusicFiles(std::vector< std::pair<boost::filesystem::path, SoundType>> musicPaths);
 };

@@ -1,4 +1,5 @@
 #include "client/audiomanager.hpp"
+#include "shared/utilities/root_path.hpp"
 #include <iostream>
 
 using namespace std;
@@ -9,6 +10,17 @@ AudioManager::AudioManager() {
 
 AudioManager::~AudioManager() {
 
+}
+
+void AudioManager::init() {
+	std::vector< std::pair<boost::filesystem::path, SoundType>> audioPaths;
+	audioPaths.push_back({ getRepoRoot() / "assets/sounds/collide.wav", SoundType::Collision });
+
+	std::vector< std::pair<boost::filesystem::path, SoundType>> musicPaths;
+	musicPaths.push_back({ getRepoRoot() / "assets/sounds/piano.wav", SoundType::Background });
+
+	this->loadAudioFiles(audioPaths);
+	this->loadMusicFiles(musicPaths);
 }
 
 void AudioManager::changeVolume(SoundType type, float volume) {
