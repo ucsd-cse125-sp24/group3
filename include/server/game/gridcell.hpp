@@ -4,6 +4,7 @@ enum class CellType {
 	Empty,
 	Wall,
 	Spawn,
+	Enemy,
 	Unknown
 };
 

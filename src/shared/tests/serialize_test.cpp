@@ -6,7 +6,7 @@
 #include "server/game/servergamestate.hpp"
 
 TEST(SerializeTest, SerializeEvent) {
-    ServerGameState state(GamePhase::LOBBY, GameConfig{});
+    ServerGameState state(GamePhase::LOBBY);
     state.addPlayerToLobby(1, "Player Name");
     Event evt(0, EventType::LoadGameState, LoadGameStateEvent(state.generateSharedGameState()));
     Event evt2 = deserialize<Event>(serialize(evt));
@@ -20,7 +20,7 @@ TEST(SerializeTest, SerializeEvent) {
 }
 
 TEST(SerializeTest, SerializePacketEvent) {
-    ServerGameState state(GamePhase::LOBBY, GameConfig{});
+    ServerGameState state(GamePhase::LOBBY);
     state.addPlayerToLobby(1, "Player Name");
     Event evt(0, EventType::LoadGameState, LoadGameStateEvent(state.generateSharedGameState()));
 

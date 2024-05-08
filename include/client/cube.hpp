@@ -1,6 +1,7 @@
 #pragma once
 
 #include "client/core.hpp"
+#include "client/renderable.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
@@ -11,22 +12,21 @@
 #include <ostream>
 #include <vector>
 
-class Cube {
+class Cube : public Renderable {
 public:
-    Cube(glm::vec3 newColor, glm::vec3 scale);
+    explicit Cube(glm::vec3 newColor);
     ~Cube();
 
-    void draw(glm::mat4 viewProjMat, GLuint shader, bool fill);
-    void update(glm::vec3 new_pos);
-    void update_delta(glm::vec3 delta);
-
+    void draw(std::shared_ptr<Shader> shader,
+            glm::mat4 viewProj,
+            glm::vec3 camPos, 
+            glm::vec3 lightPos,
+            bool fill) override;
 private:
     GLuint VAO;
     GLuint VBO_positions, VBO_normals, EBO;
 
-    glm::mat4 model;    
     glm::vec3 color;
-
 
     // Cube Information
     std::vector<glm::vec3> positions;
