@@ -368,6 +368,7 @@ void Client::draw() {
                     this->cam->getPos(),
                     glm::vec3(),
                     true);
+                delete cube;
                 break;
             }
             default:
