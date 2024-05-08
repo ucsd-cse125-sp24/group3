@@ -5,6 +5,7 @@
 #include <iostream>
 #include <thread>
 
+#include "shared/game/sharedgamestate.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
@@ -33,9 +34,13 @@ void LobbyBroadcaster::startBroadcasting(const ServerLobbyBroadcastPacket& bcast
     }
 }
 
-void LobbyBroadcaster::setLobbyInfo(const ServerLobbyBroadcastPacket& bcast_info) {
+void LobbyBroadcaster::setLobbyInfo(const Lobby& lobby_info) {
     std::unique_lock<std::mutex> lock(this->mut);
-    this->bcast_info = bcast_info;
+    this->bcast_info = ServerLobbyBroadcastPacket {
+        .lobby_name = lobby_info.name,
+        .slots_taken = static_cast<int>(lobby_info.players.size()),
+        .slots_avail = static_cast<int>(lobby_info.max_players - lobby_info.players.size())
+    };
 }
 
 void LobbyBroadcaster::stopBroadcasting() {

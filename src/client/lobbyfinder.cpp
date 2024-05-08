@@ -16,7 +16,6 @@ LobbyFinder::LobbyFinder(boost::asio::io_context& io_context, const GameConfig& 
     keep_searching(false),
     lobby_info_buf()
 {
-
 }
 
 LobbyFinder::~LobbyFinder() {

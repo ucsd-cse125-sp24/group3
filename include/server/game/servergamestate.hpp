@@ -48,7 +48,7 @@ public:
 	 */
 	explicit ServerGameState(GamePhase start_phase);
 
-	ServerGameState(GamePhase start_phase, GameConfig config);
+	ServerGameState(GamePhase start_phase, const GameConfig& config);
 
 	/**
 	 * @brief This is the ONLY constructor that initializes the maze from a
@@ -123,14 +123,8 @@ public:
 	 * Removes a player from the lobby with the specified id.
 	 */
 	void removePlayerFromLobby(EntityID id);
-	/**
-	 * Getter for the mapping between entity ID and player name in the lobby
-	 */
-	const std::unordered_map<EntityID, std::string>& getLobbyPlayers() const;
-	/**
-	 * Returns how many max players can be in the lobby, based on the config option
-	 */
-	int getLobbyMaxPlayers() const;
+
+	const Lobby& getLobby() const;
 
 	/*	Maze initialization	*/
 	
