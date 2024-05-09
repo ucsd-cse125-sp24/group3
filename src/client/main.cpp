@@ -76,7 +76,6 @@ int main(int argc, char* argv[])
 
     std::unique_ptr<Client> client(new Client(context, config));
 
-
     if (!client->init()) {
         std::cout << "client init failed" << std::endl;
         exit(EXIT_FAILURE);
@@ -92,7 +91,7 @@ int main(int argc, char* argv[])
     // Setup OpenGL settings.
     set_opengl_settings(window);
 
-    AudioManager* clientAudioManager = client.getAudioManager();
+    AudioManager* clientAudioManager = client->getAudioManager();
 
     clientAudioManager->playAudio(SoundType::Background);
 
