@@ -17,7 +17,8 @@ enum class ObjectType {
 	Item,
 	SolidSurface,
 	Player,
-	Enemy
+	Enemy,
+	SpikeTrap
 };
 
 /**
@@ -109,6 +110,14 @@ struct SharedPhysics {
 	}
 };
 
+struct SharedTrapInfo {
+	bool triggered;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & triggered;
+	}
+};
+
 /**
  * @brief Representation of the Object class used by ServerGameState, containing
  * exactly the subset of Object data required by the client.
@@ -122,12 +131,13 @@ public:
 	boost::optional<SharedStats> stats;	
 	boost::optional<SharedItemInfo> iteminfo;
 	boost::optional<SharedSolidSurface> solidSurface;
+	boost::optional<SharedTrapInfo> trapInfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& globalID & type& physics & stats & iteminfo & solidSurface;
+		ar& globalID & type& physics & stats & iteminfo & solidSurface & trapInfo;
 	}
 private:
 };

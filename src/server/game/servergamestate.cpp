@@ -1,6 +1,7 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "server/game/boxcollider.hpp"
+#include "server/game/spiketrap.hpp"
 #include "shared/utilities/root_path.hpp"
 
 #include <fstream>
@@ -281,6 +282,17 @@ void ServerGameState::updateMovement() {
 				object->physics.shared.corner.y = 0;
 				object->physics.boundary->corner = object->physics.shared.corner;
 			}
+
+
+			// This object moved, so we should check to see if a trap should trigger because of it
+			auto traps = this->objects.getTraps();
+			for (int i = 0; i < traps.size(); i++) {
+				auto trap = traps.get(i);
+				if (trap == nullptr) { continue; } // unsure if i need this?
+				if (trap->shouldTrigger(*object)) {
+					trap->trigger();
+				}
+			}
 		}
 	}
 }
@@ -480,6 +492,26 @@ void ServerGameState::loadMaze() {
 			GridCell* cell = this->grid.getCell(col, row);
 
 			switch (cell->type) {
+				case CellType::SpikeTrap: {
+					SpecificID trapID = this->objects.createObject(ObjectType::SpikeTrap);
+					SpikeTrap* trap = dynamic_cast<SpikeTrap*>(this->objects.getTrap(trapID));
+
+					const float SPIKE_HEIGHT = 1;
+
+					trap->physics.shared.dimensions = glm::vec3(
+						this->grid.getGridCellWidth(),
+						SPIKE_HEIGHT,
+						this->grid.getGridCellWidth()
+					);
+					trap->physics.shared.position =
+						this->grid.gridCellCenterPosition(cell) + glm::vec3(0, MAZE_CEILING_HEIGHT - (SPIKE_HEIGHT / 2), 0);
+					trap->physics.shared.corner = 
+						glm::vec3(cell->x * this->grid.getGridCellWidth(),
+							MAZE_CEILING_HEIGHT - SPIKE_HEIGHT, 
+							cell->y * this->grid.getGridCellWidth());
+					trap->physics.boundary = new BoxCollider(trap->physics.shared.corner, trap->physics.shared.dimensions);
+					break;
+				}
 				case CellType::Enemy: {
 					SpecificID enemyID = this->objects.createObject(ObjectType::Enemy);
 

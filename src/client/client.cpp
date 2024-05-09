@@ -383,6 +383,17 @@ void Client::draw() {
                     true);
                 break;
             }
+            case ObjectType::SpikeTrap: {
+                auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
+                cube->scale( sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.position);
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
+                break;
+            }
             default:
                 break;
         }

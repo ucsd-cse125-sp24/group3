@@ -1,5 +1,6 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
+#include "server/game/spiketrap.hpp"
 
 #include <memory>
 
@@ -26,6 +27,16 @@ SpecificID ObjectManager::createObject(ObjectType type) {
 	SpecificID typeID;
 
 	switch (type) {
+		case ObjectType::SpikeTrap: {
+			SpikeTrap* trap = new SpikeTrap();
+
+			typeID = (SpecificID) this->traps.push(trap);
+			globalID = (EntityID) this->objects.push(trap);
+
+			trap->typeID = typeID;
+			trap->globalID = globalID;
+			break;
+		}
 		case ObjectType::Item: {
 			//	Create a new object of type Item
 			Item* item = new Item();
@@ -206,6 +217,10 @@ Enemy* ObjectManager::getEnemy(SpecificID enemyID) {
 	return this->enemies.get(enemyID);
 }
 
+Trap* ObjectManager::getTrap(SpecificID trapID) {
+	return this->traps.get(trapID);
+}
+
 SmartVector<Item*> ObjectManager::getItems() {
 	return this->items;
 }
@@ -220,6 +235,10 @@ SmartVector<Player*> ObjectManager::getPlayers() {
 
 SmartVector<Enemy*> ObjectManager::getEnemies() {
 	return this->enemies;
+}
+
+SmartVector<Trap*> ObjectManager::getTraps() {
+	return this->traps;
 }
 
 /*	SharedGameState generation	*/

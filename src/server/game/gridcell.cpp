@@ -13,6 +13,8 @@ CellType charToCellType(char c) {
 		return CellType::Spawn;
 	case 'E':
 		return CellType::Enemy;
+	case 'X':
+		return CellType::SpikeTrap;
 	default:
 		return CellType::Unknown;
 	}
