@@ -11,9 +11,9 @@
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "Unnamed Lobby",
+        "lobby_name": "The Room",
         "lobby_broadcast": true,
-        "max_players": 1
+        "max_players": 2
     },
     "client": {
         "default_name": "John Doe",

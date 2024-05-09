@@ -320,9 +320,8 @@ void Client::draw() {
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
                     glm::vec3 pos = sharedObject->physics.position;
                     pos.y += PLAYER_EYE_LEVEL;
-                    pos.z -= 3.0f;
                     cam->updatePos(pos);
-                    // break;
+                    break;
                 }
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
                 // subtracting 1 from y position to render players "standing" on ground
