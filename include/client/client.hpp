@@ -18,6 +18,7 @@
 #include "client/lobbyfinder.hpp"
 #include "client/gui/gui.hpp"
 #include "client/camera.hpp"
+#include "client/audiomanager.hpp"
 
 //#include "shared/game/gamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -67,6 +68,8 @@ public:
     void draw();
     void connectAndListen(std::string ip_addr);
 
+    AudioManager* getAudioManager();
+
 private:
     void processClientInput();
     void processServerInput(boost::asio::io_context& context);
@@ -89,6 +92,8 @@ private:
     gui::GUI gui;
     gui::GUIState gui_state;
     Camera *cam;
+
+    AudioManager* audioManager;
 
     // Flags
     static bool is_held_up;
