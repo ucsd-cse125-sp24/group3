@@ -15,15 +15,40 @@ public:
 	AudioManager();
 	~AudioManager();
 
+	/**
+	 * load in all the sound & music files
+	 */
 	void init();
 
+	/**
+	 * Play the audio of a particular SoundType
+	 *
+	 * @param the SoundType to play
+	 */
 	void playAudio(SoundType type);
 
+	/**
+	 * Pause the audio of a particular SoundType
+	 *
+	 * @param the SoundType to play
+	 */
 	void pauseAudio(SoundType type);
 
+	/**
+	 * Pause the audio of a particular SoundType
+	 *
+	 * @param the SoundType to play
+	 */
 	void loop(SoundType type);
 
-	// The volume is a value between 0 (mute) and 100 (full volume). The default value for the volume is 100.
+	/**
+	 * Change the volume of a particular SoundType
+	 * The volume is a value between 0 (mute) and 100 (full volume). 
+	 * The default value for the volume is 100.
+	 * 
+	 * @param the SoundType to change
+	 * #param the volume to set it to
+	 */
 	void changeVolume(SoundType type, float volume);
 
 private:
