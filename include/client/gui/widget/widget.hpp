@@ -66,6 +66,13 @@ public:
      * @param origin Bottom left (x,y) coordinate of the widget in the GUI coordinate frame.
      */
     void setOrigin(glm::vec2 origin);
+    /**
+     * @brief Function that is run after all of the widgets have been added to the screee
+     * but before any input handling has occurred
+     * 
+     * This by default does nothing, but for certain widgets (flexbox) this can be helpful
+     */
+    virtual void lock() {}
     /// ======================================================================================
 
     /// =<ACTION HANDLING>====================================================================

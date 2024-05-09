@@ -155,6 +155,10 @@ void GUI::layoutFrame(GUIState state) {
         case GUIState::NONE:
             break;
     }
+
+    for (auto& [_handle, widget] : this->widgets) {
+        widget->lock();
+    }
 }
 
 void GUI::_layoutLoadingScreen() {
@@ -282,8 +286,10 @@ void GUI::_layoutLobbyBrowser() {
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, font::getRelativePixels(20))
     );
 
+    std::stringstream ss;
+    ss << "<Connect to \"" << this->getCapturedKeyboardInput() << "\">";
     auto connect_btn = widget::DynText::make(
-        "<Connect>",
+        ss.str(),
         fonts,
         widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
     );

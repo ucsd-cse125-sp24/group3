@@ -73,8 +73,7 @@ void Flexbox::push(Widget::Ptr&& widget) {
 
     if (this->options.alignment == Align::CENTER) {
         if (this->options.direction == Dir::HORIZONTAL) {
-            // it is much easier to handle this case right before rendering, when everything in the container
-            // is already there and we can just shift things if needed
+            // it is much easier to handle this case in the close function
         } else if (this->options.direction == Dir::VERTICAL) {
             for (auto& widget : this->widgets) {
                 const auto [curr_width, _] = widget->getSize();
@@ -88,10 +87,8 @@ void Flexbox::push(Widget::Ptr&& widget) {
 
 }
 
-void Flexbox::render() {
-    // use x and y as origin coordinates, and render everything else based off of it
-
-    // It is easier to do this kind of alignment at render time once everything is in the container,
+void Flexbox::lock() {
+    // It is easier to do this kind of alignment once everything is in the container,
     // so we do it now
     // dear god this code is so gross
     if (this->options.alignment == Align::CENTER) {
@@ -113,7 +110,10 @@ void Flexbox::render() {
             }
         }
     }
+}
 
+void Flexbox::render() {
+    // use x and y as origin coordinates, and render everything else based off of it
     for (const auto& widget : this->widgets) {
         widget->render();
     }
