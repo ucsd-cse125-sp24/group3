@@ -186,6 +186,10 @@ void GUI::_layoutLoadingScreen() {
         fonts,
         FRAC_WINDOW_HEIGHT(1,3)
     ));
+    this->addWidget(widget::StaticImg::make(
+        glm::vec2(0.0f, 0.0f),
+        this->images.getImg(img::ImgID::Pikachu)
+    ));
 }
 
 void GUI::_layoutTitleScreen() {

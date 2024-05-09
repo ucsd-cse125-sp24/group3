@@ -63,7 +63,9 @@ StaticImg::~StaticImg() {
 void StaticImg::render() {
     StaticImg::shader->use();
 
-    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 transform = glm::mat4(1.0f);
+    transform = glm::translate(transform, glm::vec3(this->origin.x, this->origin.y, 0));
+    shader->setMat4("transform", transform);
 
     // glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->texture_id);
