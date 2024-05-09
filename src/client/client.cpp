@@ -371,7 +371,7 @@ void Client::draw() {
                 break;
             }
             case ObjectType::SolidSurface: {
-                Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f));
+                auto cube = std::make_unique<Cube>(glm::vec3(0.4f,0.5f,0.7f));
                 cube->scale( sharedObject->solidSurface->dimensions);
                 cube->translateAbsolute(sharedObject->physics.position);
                 cube->draw(this->cube_shader,
