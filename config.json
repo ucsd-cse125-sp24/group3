@@ -1,9 +1,9 @@
 {
     "game": {
-      "timestep_length_ms": 30,
+      "timestep_length_ms": 50,
       "maze": {
         "directory": "maps",
-        "maze_file": "maze5.maze"
+        "maze_file": "room.maze"
       }
     },
     "network": {
@@ -13,7 +13,7 @@
     "server": {
         "lobby_name": "Unnamed Lobby",
         "lobby_broadcast": true,
-        "max_players": 2
+        "max_players": 1
     },
     "client": {
         "default_name": "John Doe",
