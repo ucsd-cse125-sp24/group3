@@ -70,6 +70,7 @@ void GUI::handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_d
     // convert to gui coords, where (0,0) is bottome left
     mouse_ypos = WINDOW_HEIGHT - mouse_ypos;
     if (is_left_mouse_down) {
+        std::cout << mouse_xpos << ", " << mouse_ypos << "\n";
         this->_handleClick(mouse_xpos, mouse_ypos);
         is_left_mouse_down = false;
     }
@@ -186,10 +187,6 @@ void GUI::_layoutLoadingScreen() {
         fonts,
         FRAC_WINDOW_HEIGHT(1,3)
     ));
-    this->addWidget(widget::StaticImg::make(
-        glm::vec2(0.0f, 0.0f),
-        this->images.getImg(img::ImgID::Pikachu)
-    ));
 }
 
 void GUI::_layoutTitleScreen() {
@@ -222,6 +219,11 @@ void GUI::_layoutTitleScreen() {
 
     start_flex->push(std::move(start_text));
     this->addWidget(std::move(start_flex));
+
+    this->addWidget(widget::StaticImg::make(
+        glm::vec2(100.0f, 100.0f),
+        this->images.getImg(img::ImgID::Yoshi)
+    ));
 }
 
 void GUI::_layoutLobbyBrowser() {
