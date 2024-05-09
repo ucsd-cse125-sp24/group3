@@ -18,6 +18,7 @@
 #include "client/lobbyfinder.hpp"
 #include "client/gui/gui.hpp"
 #include "client/camera.hpp"
+#include "client/audiomanager.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/network/packet.hpp"
@@ -154,6 +155,8 @@ public:
      */
     void connectAndListen(std::string ip_addr);
 
+    AudioManager* getAudioManager();
+
 private:
     /**
      * @brief Processes all data received from the server and updates the SharedGameState.
@@ -186,6 +189,8 @@ private:
     friend class gui::GUI;
     gui::GUI gui;
     gui::GUIState gui_state;
+
+    AudioManager* audioManager;
 
     /* Camera object representing player's current position & orientation */
     std::unique_ptr<Camera> cam;

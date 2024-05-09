@@ -25,6 +25,7 @@
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
+#include "client/audiomanager.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 
@@ -52,12 +53,19 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     gui_state(gui::GUIState::INITIAL_LOAD),
     lobby_finder(io_context, config),
     cam(new Camera()) {    
+    
+    audioManager = new AudioManager();
+
     Client::window_width = config.client.window_width;
     Client::window_height = static_cast<int>((config.client.window_width * 2.0f) / 3.0f);
     
     if (config.client.lobby_discovery)  {
         lobby_finder.startSearching();
     }
+}
+
+AudioManager* Client::getAudioManager() {
+    return this->audioManager;
 }
 
 void Client::connectAndListen(std::string ip_addr) {
@@ -152,6 +160,8 @@ bool Client::init() {
 
     this->gui_state = GUIState::TITLE_SCREEN;
 
+    this->audioManager->init();
+
     return true;
 }
 
@@ -163,6 +173,7 @@ bool Client::cleanup() {
     // Terminate GLFW.
     glfwTerminate();
 
+    delete audioManager;
     return true;
 }
 
@@ -317,7 +328,7 @@ void Client::draw() {
                 break;
             }
             case ObjectType::SolidSurface: {
-                Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f));
+                auto cube = std::make_unique<Cube>(glm::vec3(0.4f,0.5f,0.7f));
                 cube->scale( sharedObject->solidSurface->dimensions);
                 cube->translateAbsolute(sharedObject->physics.position);
                 cube->draw(this->cube_shader,

@@ -3,13 +3,12 @@
 
 
 #include <boost/asio/io_context.hpp>
-#include <SFML/Audio.hpp>
 
 #include "client/client.hpp"
 #include "shared/utilities/rng.hpp"
 #include "shared/utilities/config.hpp"
+#include "client/audiomanager.hpp"
 #include "shared/utilities/root_path.hpp"
-#include "client/sound.hpp"
 
 #include "shared/utilities/root_path.hpp"
 #include "client/gui/img/img.hpp"
@@ -93,18 +92,11 @@ int main(int argc, char* argv[])
     // Setup OpenGL settings.
     set_opengl_settings(window);
 
-    boost::filesystem::path soundFilepath = getRepoRoot() / "assets/sounds/piano.wav";
+    AudioManager* clientAudioManager = client.getAudioManager();
 
-    sf::SoundBuffer buffer;
-    if (!buffer.loadFromFile(soundFilepath.string()))
-        return -1;
+    clientAudioManager->playAudio(SoundType::Background);
 
-    sf::Sound sound;
-    sound.setBuffer(buffer);
-
-    sound.setLoop(true);
-
-    sound.play();
+    clientAudioManager->loop(SoundType::Background);
 
     // Loop while GLFW window should stay open.
     while (!glfwWindowShouldClose(window)) {
