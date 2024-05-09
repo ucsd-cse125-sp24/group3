@@ -7,19 +7,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <string>
-#include <vector>
 #include <optional>
 #include <iostream>
 #include <filesystem>
 
-#include "assimp/material.h"
 #include "assimp/types.h"
 #include "client/util.hpp"
 #include "glm/ext/matrix_transform.hpp"
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -270,6 +264,59 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         }
     );
 }  
+
+void Model::setDefaultVertexBoneData(Vertex& vertex) {
+    for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
+        vertex.m_boneIDs[i] = -1;
+        vertex.m_weights[i] = 0.0f;
+    }
+}
+
+void Model::setVertexBoneData(Vertex& vertex, int boneID, float weight) {
+    for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
+        if (vertex.m_boneIDs[i] < 0) {
+            vertex.m_boneIDs[i] = boneID;
+            vertex.m_weights[i] = weight;
+            return;
+        }
+    }
+}
+
+void Model::extractBoneWeight(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene) {
+    auto& boneInfoMap = m_boneInfo;
+    int& boneCount = m_boneCounter;
+
+    for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
+    {
+        int boneID = -1;
+        std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+        if (boneInfoMap.find(boneName) == boneInfoMap.end())
+        {
+            BoneInfo newBoneInfo;
+            newBoneInfo.id = boneCount;
+            newBoneInfo.offset = matrixToGLM(mesh->mBones[boneIndex]->mOffsetMatrix);
+            boneInfoMap[boneName] = newBoneInfo;
+            boneID = boneCount;
+            boneCount++;
+        }
+        else
+        {
+            boneID = boneInfoMap[boneName].id;
+        }
+        assert(boneID != -1);
+        auto weights = mesh->mBones[boneIndex]->mWeights;
+        int numWeights = mesh->mBones[boneIndex]->mNumWeights;
+
+        for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex)
+        {
+            int vertexId = weights[weightIndex].mVertexId;
+            float weight = weights[weightIndex].mWeight;
+            assert(vertexId <= vertices.size());
+            setVertexBoneData(vertices[vertexId], boneID, weight);
+        }
+    }
+}
+
 
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, const aiTextureType& type) {

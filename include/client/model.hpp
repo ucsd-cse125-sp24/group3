@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include <memory>
 #include <optional>
 
@@ -14,6 +15,9 @@
 #include "assimp/material.h"
 #include "client/renderable.hpp"
 #include "client/shader.hpp"
+#include "client/util.hpp"
+
+#define MAX_BONE_INFLUENCE 4
 
 /**
  * Stores position, normal vector, and coordinates 
@@ -23,6 +27,10 @@ struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 textureCoords;
+    glm::vec3 tangent;
+    glm::vec3 bitangent;
+    int m_boneIDs[MAX_BONE_INFLUENCE]; /* Bone indices which influence the vertex */
+    float m_weights[MAX_BONE_INFLUENCE]; /* Weights for each bone */
 };
 
 class Texture {
@@ -56,6 +64,14 @@ struct Material {
     glm::vec3 diffuse;
     glm::vec3 specular;
     float shininess;
+};
+
+struct BoneInfo {
+	/*id is index in finalBoneMatrices*/
+	int id;
+
+	/*offset matrix transforms vertex from model space to bone space*/
+	glm::mat4 offset;
 };
 
 /**
@@ -161,9 +177,16 @@ class Model : public Renderable {
     void scale(const glm::vec3& scale) override;
  private:
     std::vector<Mesh> meshes;
+	std::map<std::string, BoneInfo> m_boneInfo;
+	int m_boneCounter = 0;
+
 
     void processNode(aiNode* node, const aiScene* scene);
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+	void setDefaultVertexBoneData(Vertex& vertex);
+	void setVertexBoneData(Vertex& vertex, int boneID, float weight);
+	void extractBoneWeight(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene);
+
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, const aiTextureType& type);
 
     // store the directory of the model file so that textures can be

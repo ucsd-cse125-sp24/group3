@@ -367,7 +367,7 @@ void Client::draw() {
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     glm::vec3(),
-                    true);
+                    true); 
                 break;
             }
             default:
