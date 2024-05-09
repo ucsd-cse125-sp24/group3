@@ -200,7 +200,7 @@ void GUI::_layoutTitleScreen() {
     ));
 
     auto start_text = widget::DynText::make(
-        "<Start Game>",
+        "(Start Game)",
         fonts,
         widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
     );
@@ -219,11 +219,6 @@ void GUI::_layoutTitleScreen() {
 
     start_flex->push(std::move(start_text));
     this->addWidget(std::move(start_flex));
-
-    this->addWidget(widget::StaticImg::make(
-        glm::vec2(100.0f, 100.0f),
-        this->images.getImg(img::ImgID::Yoshi)
-    ));
 }
 
 void GUI::_layoutLobbyBrowser() {
@@ -244,7 +239,7 @@ void GUI::_layoutLobbyBrowser() {
 
     for (const auto& [ip, packet]: client->lobby_finder.getFoundLobbies()) {
         std::stringstream ss;
-        ss << "<" << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken << ">";
+        ss << "(" << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken << ")";
 
         auto entry = widget::DynText::make(ss.str(), this->fonts,
             widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK));
@@ -293,7 +288,7 @@ void GUI::_layoutLobbyBrowser() {
     );
 
     std::stringstream ss;
-    ss << "<Connect to \"" << this->getCapturedKeyboardInput() << "\">";
+    ss << "(Connect to \"" << this->getCapturedKeyboardInput() << "\")";
     auto connect_btn = widget::DynText::make(
         ss.str(),
         fonts,
@@ -367,7 +362,7 @@ void GUI::_layoutGameHUD() {
 
 void GUI::_layoutGameEscMenu() {
     auto exit_game_txt = widget::DynText::make(
-        "<Exit Game>",
+        "(Exit Game)",
         fonts,
         widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
     );
