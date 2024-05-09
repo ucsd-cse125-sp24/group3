@@ -1,6 +1,6 @@
 {
     "game": {
-      "timestep_length_ms": 50,
+      "timestep_length_ms": 30,
       "maze": {
         "directory": "maps",
         "maze_file": "room.maze"

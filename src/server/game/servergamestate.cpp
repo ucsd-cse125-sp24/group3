@@ -277,12 +277,9 @@ void ServerGameState::updateMovement() {
 
 			if (object->physics.shared.corner.y <= 0) {
 				// potentially need to make this unconditional further down
-				std::cout << "Clamping " << object->physics.shared.position.y << ", " << object->physics.shared.corner.y << "\n";
-				std::cout << object->globalID << "\n";
 				object->physics.shared.position.y -= object->physics.shared.corner.y;
 				object->physics.shared.corner.y = 0;
 				object->physics.boundary->corner = object->physics.shared.corner;
-				std::cout << "After " << object->physics.shared.position.y << ", " << object->physics.shared.corner.y << "\n";
 			}
 		}
 	}
