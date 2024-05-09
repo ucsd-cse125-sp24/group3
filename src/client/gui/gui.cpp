@@ -70,7 +70,6 @@ void GUI::handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_d
     // convert to gui coords, where (0,0) is bottome left
     mouse_ypos = WINDOW_HEIGHT - mouse_ypos;
     if (is_left_mouse_down) {
-        std::cout << mouse_xpos << ", " << mouse_ypos << "\n";
         this->_handleClick(mouse_xpos, mouse_ypos);
         is_left_mouse_down = false;
     }

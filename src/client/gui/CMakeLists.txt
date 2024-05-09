@@ -32,6 +32,7 @@ target_include_directories(${LIB_NAME} PRIVATE
     glm 
     ${FREETYPE_INCLUDE_DIRS} 
     ${ASSIMP_INCLUDE_DIRS} 
+    sfml-audio
     "${CMAKE_BINARY_DIR}/_deps/glew-src/include"
 )
 target_link_libraries(${LIB_NAME} PRIVATE glm glfw libglew_static freetype)
@@ -44,4 +45,5 @@ target_link_libraries(${LIB_NAME}
     Boost::serialization
     nlohmann_json::nlohmann_json
     assimp
+    sfml-audio
 )
