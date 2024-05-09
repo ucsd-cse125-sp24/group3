@@ -325,7 +325,7 @@ void Client::draw() {
                 }
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
                 // subtracting 1 from y position to render players "standing" on ground
-                auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y - 1.0f, sharedObject->physics.position.z);
+                auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y + 0.1, sharedObject->physics.position.z);
 
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
