@@ -356,7 +356,22 @@ void GUI::_layoutLobby() {
 }
 
 void GUI::_layoutGameHUD() {
+    auto self_eid = client->session->getInfo().client_eid;
+    if (!self_eid.has_value()) {
+        return;
+    }
 
+    auto self = client->gameState.objects.at(*self_eid);
+
+    auto health_txt = widget::CenterText::make(
+        std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
+        font::Font::MENU,
+        font::Size::MEDIUM,
+        font::Color::RED,
+        fonts,
+        font::getRelativePixels(10)
+    );
+    this->addWidget(std::move(health_txt));
 }
 
 void GUI::_layoutGameEscMenu() {

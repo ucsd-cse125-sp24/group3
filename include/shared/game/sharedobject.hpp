@@ -6,6 +6,7 @@
 //#include "server/game/object.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/game/stat.hpp"
 
 /**
  * @brief An enum for the type of an object; the fields here should match all
@@ -27,11 +28,16 @@ enum class ObjectType {
 std::string objectTypeString(ObjectType type);
 
 struct SharedStats {
-	float health;
-	float speed;
+	SharedStats():
+		health(0,0,0), speed(0,0,0) {}
+	SharedStats(Stat<int> health, Stat<int> speed):
+		health(health), speed(speed) {}
+
+	Stat<int> health;
+	Stat<int> speed;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& health& speed;
+		ar & health & speed;
 	}
 };
 

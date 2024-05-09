@@ -6,12 +6,13 @@
 
 class Creature : public Object {
 public:
-	SharedStats shared{};
+	SharedStats stats;
 
-	explicit Creature(ObjectType type);
+	Creature(ObjectType type, SharedStats stats);
 	virtual ~Creature();
 
 	virtual SharedObject toShared() override;
+
 private:
 
 };

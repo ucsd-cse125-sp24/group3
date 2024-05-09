@@ -1,5 +1,6 @@
 #include "server/game/player.hpp"
 #include "shared/game/sharedobject.hpp"
+#include "shared/game/stat.hpp"
 #include <iostream>
 
 SharedObject Player::toShared() {
@@ -7,7 +8,12 @@ SharedObject Player::toShared() {
     return so;
 }
 
-Player::Player() : Creature(ObjectType::Player) {
+Player::Player():
+    Creature(ObjectType::Player, SharedStats(
+        Stat(0, 100, 100),
+        Stat(0, 10, 5)
+    ))
+{
 }
 
 Player::~Player() {

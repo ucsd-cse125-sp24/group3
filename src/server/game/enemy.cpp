@@ -6,7 +6,11 @@ SharedObject Enemy::toShared() {
     return so;
 }
 
-Enemy::Enemy() : Creature(ObjectType::Enemy) {
-}
+Enemy::Enemy():
+    Creature(ObjectType::Enemy, SharedStats(
+        Stat(0, 20, 20),
+        Stat(0, 10, 5)
+    ))
+{}
 
 Enemy::~Enemy() {}
