@@ -17,6 +17,9 @@ bool detectCollision(Physics& obj1, Physics& obj2) {
 }
 
 bool detectCollisionSphere(Physics& sphere, Physics& obj) {
+	//	Verify that the first argument's collider is indeed a Sphere
+	assert(sphere.collider == Collider::Sphere);
+
 	glm::vec3 center = sphere.shared.corner + (sphere.shared.dimensions / 2.0f);
 	float radius = sphere.shared.dimensions.x / 2.0f;
 
@@ -61,6 +64,9 @@ bool detectCollisionSphere(Physics& sphere, Physics& obj) {
 }
 
 bool detectCollisionBox(Physics& box, Physics& obj) {
+	//	Verify that the first argument's collider is indeed a Box
+	assert(box.collider == Collider::Box);
+
 	glm::vec3 minPos = box.shared.corner;
 	glm::vec3 maxPos = box.shared.corner + box.shared.dimensions;
 
