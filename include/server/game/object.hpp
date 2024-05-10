@@ -14,6 +14,8 @@ class SharedObject;
 //	From sharedobject.hpp
 struct SharedPhysics;
 
+class ServerGameState; // forward declaration to use ptr as parameter
+
 /**
  * @brief Physics struct that contains all movement / collision related data for
  * a particular object
@@ -103,6 +105,14 @@ public:
 	 * @return A SharedObject representation of this object.
 	 */
 	virtual SharedObject toShared();
+
+	/**
+	 * @brief Code to run when this object collides with another
+	 * 
+	 * NOTE: default implementation does nothing
+	 * only override behaviors will matter
+     */
+	virtual void doCollision(Object* other, ServerGameState* state) {};
 
 	/*	Debugger Methods	*/
 

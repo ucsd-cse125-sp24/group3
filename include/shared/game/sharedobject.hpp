@@ -113,6 +113,15 @@ struct SharedTrapInfo {
 	}
 };
 
+struct SharedPlayerInfo {
+	bool is_alive;
+	time_t respawn_time; // unix timestamp in ms when the player will be respawned
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & is_alive & respawn_time;
+	}
+};
+
 /**
  * @brief Representation of the Object class used by ServerGameState, containing
  * exactly the subset of Object data required by the client.
@@ -124,16 +133,17 @@ public:
 	SharedPhysics physics;
 	ModelType modelType;
 
-	boost::optional<SharedStats> stats;	
+	boost::optional<SharedStats> stats;
 	boost::optional<SharedItemInfo> iteminfo;
 	boost::optional<SharedSolidSurface> solidSurface;
 	boost::optional<SharedTrapInfo> trapInfo;
+	boost::optional<SharedPlayerInfo> playerInfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo;
 	}
 private:
 };

@@ -7,10 +7,12 @@
 
 class Player : public Creature {
 public:
+	SharedPlayerInfo info;
+
 	Player();
 	~Player();
 
 	virtual SharedObject toShared() override;
-private:
 
+private:
 };

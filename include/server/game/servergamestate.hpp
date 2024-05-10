@@ -74,6 +74,10 @@ public:
 
 	void updateTraps();
 
+	void handleDeaths();
+
+	void handleRespawns();
+
 	/*	SharedGameState generation	*/
 
 	//	TODO: Modify this function to dynamically allocate a SharedGameState

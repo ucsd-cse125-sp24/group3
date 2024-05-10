@@ -12,7 +12,4 @@ public:
 	virtual ~Creature();
 
 	virtual SharedObject toShared() override;
-
-private:
-
 };
