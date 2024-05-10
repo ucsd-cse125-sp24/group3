@@ -193,12 +193,10 @@ void ServerGameState::updateMovement() {
 		if (object->physics.movable) {
 			// Check for collision at position to move, if so, dont change position
 			// O(n^2) naive implementation of collision detection
-			//Collider* currentCollider = object->physics.boundary;
 			glm::vec3 movementStep = object->physics.velocity * object->physics.velocityMultiplier;
 
 			// Run collision detection movement if it has a collider
 			if (object->physics.collider != Collider::None) {
-				//currentCollider->corner += movementStep; // only move collider to check
 				object->physics.shared.corner += movementStep;
 
 				// TODO : for possible addition for smooth collision detection, but higher computation
@@ -222,47 +220,22 @@ void ServerGameState::updateMovement() {
 						}
 
 						// Check z-axis collision
-						/*currentCollider->corner.z += movementStep.z;
-						currentCollider->corner.x -= movementStep.x;*/
 						object->physics.shared.corner.z += movementStep.z;
 						object->physics.shared.corner.x -= movementStep.x;
 						if (detectCollision(object->physics, otherObj->physics)) {
 							collidedZ = true;
 						}
-						//currentCollider->corner.x += movementStep.x;
 						object->physics.shared.corner.x += movementStep.x;
 					}
 				}
 
-				// Move object if no collision detected (this is already done)
-				/*if (!collided) {
-					object->physics.shared.corner += movementStep;
-				}*/
-				// Revert collider if collided
-				// Separated for x/z axis collisions
-				/*else {*/
-				/*if (!collidedX) {
-					object->physics.shared.corner.x = originalObjectCorner + movementStep.x;
-				}
-				else {
-					currentCollider->corner.x -= movementStep.x;
-				}*/
 				if (collidedX) {
 					object->physics.shared.corner.x -= movementStep.x;
 				}
 
-				/*if (!collidedZ) {
-					object->physics.shared.corner.z += movementStep.z;
-				}
-				else {
-					currentCollider->corner.z -= movementStep.z;
-				}*/
 				if (collidedZ) {
 					object->physics.shared.corner.z -= movementStep.z;
 				}
-
-					//object->physics.shared.corner.y += movementStep.y;
-				//}
 
 				// update gravity factor
 				if ((object->physics.shared.corner).y >= 0) {
@@ -281,7 +254,6 @@ void ServerGameState::updateMovement() {
 			if (object->physics.shared.corner.y <= 0) {
 				// potentially need to make this unconditional further down
 				object->physics.shared.corner.y = 0;
-				//object->physics.boundary->corner = object->physics.shared.corner;
 			}
 		}
 	}
