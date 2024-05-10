@@ -14,11 +14,11 @@
  */
 enum class ObjectType {
 	Object,	//	Generic object type (base class)
-	Item,
 	SolidSurface,
 	Player,
 	Enemy,
-	SpikeTrap
+	SpikeTrap,
+	Potion
 };
 
 /**
@@ -42,17 +42,21 @@ struct SharedStats {
 	}
 };
 
-struct SharedItemInfo {
-	enum ItemType { healing, swiftness, invisible, key };
 
+enum class ItemType {
+	Weapon,
+	Spell,
+	Potion,
+	Useable
+};
+
+struct SharedItemInfo {
 	bool held; // for rendering
-	bool used;
-	float scalar;
-	float timer;
+	bool used; // for rendering
 	ItemType type;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& held& used& scalar& timer& type;
+		ar& type& used& held;
 	}
 };
 

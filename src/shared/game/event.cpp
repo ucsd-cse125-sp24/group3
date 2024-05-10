@@ -21,6 +21,7 @@ std::ostream& operator<<(std::ostream& os, const EventType& type) {
         TO_STR(MoveRelative);
         TO_STR(MoveAbsolute);
         TO_STR(SpawnEntity);
+        TO_STR(UseItem);
     default:
         os << "Unknown EventType";
         break;

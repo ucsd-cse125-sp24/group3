@@ -18,6 +18,8 @@ set(FILES
     game/grid.cpp
     game/trap.cpp
     game/spiketrap.cpp
+    game/item.cpp
+    game/potion.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

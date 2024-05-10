@@ -1,6 +1,7 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/spiketrap.hpp"
+#include "server/game/potion.hpp"
 
 #include <memory>
 
@@ -37,19 +38,19 @@ SpecificID ObjectManager::createObject(ObjectType type) {
 			trap->globalID = globalID;
 			break;
 		}
-		case ObjectType::Item: {
+		case ObjectType::Potion: {
 			//	Create a new object of type Item
-			Item* item = new Item();
+			Potion* pot = new Potion();
 
 			//	Push to type-specific items vector
-			typeID = (SpecificID)this->items.push(item);
+			typeID = (SpecificID)this->items.push(pot);
 
 			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(item);
+			globalID = (EntityID)this->objects.push(pot);
 
 			//	Set items' type and global IDs
-			item->typeID = typeID;
-			item->globalID = globalID;
+			pot->typeID = typeID;
+			pot->globalID = globalID;
 			break;
 		}
 		case ObjectType::SolidSurface: {

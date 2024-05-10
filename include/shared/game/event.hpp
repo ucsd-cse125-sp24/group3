@@ -34,6 +34,7 @@ enum class EventType {
     MoveRelative,
     MoveAbsolute,
     SpawnEntity,
+    UseItem,
 };
 
 enum class ActionType {
@@ -180,7 +181,21 @@ struct SpawnEntityEvent {
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         // TODO:
     }
+};
 
+/**
+ * Event for entity to use item
+ */
+struct UseItemEvent {
+    UseItemEvent() {}
+    UseItemEvent(EntityID playerID, EntityID itemID) : playerID(playerID), itemID(itemID) {}
+
+    EntityID playerID;
+    EntityID itemID;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& playerID& itemID;
+    }
 };
 
 /**
@@ -195,7 +210,8 @@ using EventData = boost::variant<
     StopActionEvent,
     MoveRelativeEvent,
     MoveAbsoluteEvent,
-    SpawnEntityEvent
+    SpawnEntityEvent,
+    UseItemEvent
 >;
 
 /**

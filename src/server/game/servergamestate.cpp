@@ -2,6 +2,7 @@
 #include "shared/game/sharedgamestate.hpp"
 #include "server/game/boxcollider.hpp"
 #include "server/game/spiketrap.hpp"
+#include "server/game/potion.hpp"
 #include "shared/utilities/root_path.hpp"
 
 #include <fstream>
@@ -168,7 +169,7 @@ void ServerGameState::update(const EventList& events) {
     }
 
 	//	TODO: fill update() method with updating object movement
-	useItem();
+	updateItem();
 	updateMovement();
 	updateTraps();
 	
@@ -289,17 +290,23 @@ void ServerGameState::updateMovement() {
 	}
 }
 
-void ServerGameState::useItem() {
+void ServerGameState::updateItem() {
 	// Update whatever is necesssary for item
 	// This method may need to be broken down for different types
 	// of item types
 
-	SmartVector<Item*> items = this->objects.getItems();
+	auto items = this->objects.getItems();
 	for (int i = 0; i < items.size(); i++) {
-		const Item* item = items.get(i);
+		auto item = items.get(i);
 
 		if (item == nullptr)
 			continue;
+
+		if (item->iteminfo.used) {
+			item->useItem();
+			
+			//remove from itemList?
+		}
 	}
 }
 

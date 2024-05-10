@@ -71,9 +71,7 @@ public:
 
 	void updateMovement();
 
-	//	TODO: Add implementations of items
-
-	void useItem();
+	void updateItem();
 
 	void updateTraps();
 

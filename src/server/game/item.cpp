@@ -2,12 +2,15 @@
 #include "shared/game/sharedobject.hpp"
 
 /*  Constructors and Destructors    */
-Item::Item() : Object(ObjectType::Item) { // cppcheck-suppress uninitMemberVar
+Item::Item(ObjectType type) :
+    Object(type), iteminfo(SharedItemInfo{ .held = false, .used = false }) {}
 
+void Item::useItem() {
+    this->iteminfo.used = true;
 }
 
-Item::~Item() {
-
+void Item::pickUpItem() {
+    this->iteminfo.held = true;
 }
 
 /*	SharedGameState generation	*/
