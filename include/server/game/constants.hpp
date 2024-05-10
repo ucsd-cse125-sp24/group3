@@ -27,6 +27,15 @@
 // Player Stat Constants
 #define INITIAL_HEALTH 100
 
+/*	Potion Stats	*/
+#define	RESTORE_HEALTH			20
+#define HEALTH_DURATION			0
+
+#define	SPEED_BOOST 			1.2f
+#define SPEED_DURATION			15
+
+#define INVIS_DURATION			15
+
 /*	Game	*/
 #define	GRAVITY					0.03f
 #define	PLAYER_SPEED 			1.5f

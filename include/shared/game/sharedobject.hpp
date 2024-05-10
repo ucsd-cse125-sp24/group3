@@ -42,6 +42,15 @@ struct SharedStats {
 	}
 };
 
+struct SharedInventory {
+	// need to share itemtype data...
+	std::unordered_map<int, SpecificID> inventory;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& dimensions& surfaceType;
+	}
+};
+
 /**
  * @brief An enum for the type of an item
  */

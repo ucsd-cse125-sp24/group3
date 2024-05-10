@@ -553,8 +553,8 @@ void ServerGameState::loadMaze() {
 				case CellType::Potion: {
 					SpecificID potID = this->objects.createObject(ObjectType::Potion);
 					Potion* pot = dynamic_cast<Potion*>(this->objects.getItem(potID));
-					pot->setDuration(0);
-					pot->seteffectScalar(20);
+					pot->setDuration(HEALTH_DURATION);
+					pot->seteffectScalar(RESTORE_HEALTH);
 					pot->setPotionType(PotionType::Health);
 
 					pot->physics.shared.dimensions = glm::vec3(1.0f);

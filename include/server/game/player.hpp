@@ -14,8 +14,6 @@ public:
 	Player();
 	~Player();
 
-	void useItem(int itemNum);
-
 	virtual SharedObject toShared() override;
 private:
 
