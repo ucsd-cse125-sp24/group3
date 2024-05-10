@@ -507,18 +507,18 @@ void ServerGameState::loadMaze() {
 					SpecificID trapID = this->objects.createObject(ObjectType::SpikeTrap);
 					SpikeTrap* trap = dynamic_cast<SpikeTrap*>(this->objects.getTrap(trapID));
 
-					const float SPIKE_HEIGHT = 1;
+                    const float HEIGHT_SHOWING = 0.5;
 
 					trap->physics.shared.dimensions = glm::vec3(
 						this->grid.getGridCellWidth(),
-						SPIKE_HEIGHT,
+						MAZE_CEILING_HEIGHT,
 						this->grid.getGridCellWidth()
 					);
-					trap->physics.shared.position =
-						this->grid.gridCellCenterPosition(cell) + glm::vec3(0, MAZE_CEILING_HEIGHT - (SPIKE_HEIGHT / 2), 0);
+					trap->physics.shared.position = this->grid.gridCellCenterPosition(cell) + 
+                        glm::vec3(0, MAZE_CEILING_HEIGHT + (MAZE_CEILING_HEIGHT / 2), 0) - HEIGHT_SHOWING;
 					trap->physics.shared.corner = 
 						glm::vec3(cell->x * this->grid.getGridCellWidth(),
-							MAZE_CEILING_HEIGHT - SPIKE_HEIGHT, 
+							MAZE_CEILING_HEIGHT - HEIGHT_SHOWING, 
 							cell->y * this->grid.getGridCellWidth());
 					trap->physics.boundary = new BoxCollider(trap->physics.shared.corner, trap->physics.shared.dimensions);
 					break;

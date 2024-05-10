@@ -6,8 +6,8 @@
 
 using namespace std::chrono_literals;
 
-const std::chrono::seconds SpikeTrap::ACTIVE_TIME = 3s;
-const std::chrono::seconds SpikeTrap::TIME_UNTIL_RESET = 5s;
+const std::chrono::seconds SpikeTrap::ACTIVE_TIME = 4s;
+const std::chrono::seconds SpikeTrap::TIME_UNTIL_RESET = 10s;
 
 SpikeTrap::SpikeTrap():
     Trap(ObjectType::SpikeTrap) 
@@ -60,11 +60,8 @@ void SpikeTrap::trigger() {
     this->reset_pos = this->physics.shared.position;
     this->reset_dimensions = this->physics.shared.dimensions;
 
-    this->physics.shared.corner.y = 0;
-    this->physics.shared.position.y = MAZE_CEILING_HEIGHT / 2;
-    this->physics.shared.dimensions.y += MAZE_CEILING_HEIGHT;
-    this->physics.boundary->corner = this->physics.shared.corner;
-    this->physics.boundary->dimensions = this->physics.shared.dimensions;
+    this->physics.movable = true;
+    this->physics.velocity.y = -3.0f * GRAVITY;
 
     this->dropped_time = std::chrono::system_clock::now();
 }
@@ -75,10 +72,12 @@ bool SpikeTrap::shouldReset(ServerGameState& state) {
 }
 
 void SpikeTrap::reset() {
-    Trap::reset();
-    this->physics.shared.corner = this->reset_corner;
-    this->physics.shared.position = this->reset_pos;
-    this->physics.shared.dimensions = this->reset_dimensions;
-    this->physics.boundary->corner = this->physics.shared.corner;
-    this->physics.boundary->dimensions = this->physics.shared.dimensions;
+    this->physics.movable = false;
+    this->physics.boundary->corner.y += 0.1;
+    this->physics.shared.corner.y += 0.1;
+    this->physics.shared.position.y += 0.1;
+
+    if (this->physics.shared.corner.y >= this->reset_corner.y) {
+        Trap::reset();
+    }
 }
