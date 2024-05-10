@@ -6,6 +6,7 @@
 //#include "server/game/object.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/game/sharedmodel.hpp"
 
 /**
  * @brief An enum for the type of an object; the fields here should match all
@@ -112,6 +113,7 @@ public:
 	EntityID globalID;
 	ObjectType type;
 	SharedPhysics physics;
+	SharedModel model;
 
 	boost::optional<SharedStats> stats;	
 	boost::optional<SharedItemInfo> iteminfo;
@@ -121,7 +123,7 @@ public:
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& globalID & type& physics & stats & iteminfo & solidSurface;
+		ar& globalID & type& physics & model & stats & iteminfo & solidSurface;
 	}
 private:
 };

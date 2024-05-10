@@ -27,6 +27,14 @@ Object::Object(ObjectType type) {
 
 Object::~Object() {}
 
+/*	Static properties	*/
+std::unordered_map<ModelType, glm::vec3> Object::models ({
+	{ModelType::Cube, glm::vec3(1.0, 1.0, 1.0) },
+	//	TODO: Update these to the correct dimensions!!
+	{ModelType::Player, glm::vec3(0)},
+	{ModelType::WarrenBear, glm::vec3(0)}
+});
+
 /*	SharedGameState generation	*/
 SharedObject Object::toShared() {
 	SharedObject shared;
@@ -34,6 +42,7 @@ SharedObject Object::toShared() {
 	shared.globalID = this->globalID;
 	shared.type = this->type;
 	shared.physics = this->physics.shared;
+	shared.model = this->model;
 
 	return shared;
 }

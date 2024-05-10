@@ -6,6 +6,7 @@
 #include "server/game/collider.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/game/sharedmodel.hpp"
 
 //	From sharedobject.hpp
 class SharedObject;
@@ -69,10 +70,24 @@ public:
 	 */
 	ObjectType type;
 
+	/**
+	 * @brief Object's Physics-related properties
+	 */
 	Physics physics;
+
+	/**
+	 * @brief Object's render model information
+	 */
+	SharedModel model;
 
 	explicit Object(ObjectType type);
 	virtual ~Object();
+
+	/**
+	 * @brief Maps from ModelType to a model's dimensions as read from the model
+	 * files. (At present, these values are hard-coded in object.cpp)
+	 */
+	static std::unordered_map<ModelType, glm::vec3> models;
 
 	/**
 	 * @brief Generates a SharedObject representation of this object.
