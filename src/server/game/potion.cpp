@@ -8,30 +8,9 @@
 Potion::Potion(): 
     Item(ObjectType::Potion)
 {
-    this->physics.movable = false;
     this->duration = 0;
     this->effectScalar = 0;
     this->potType = PotionType::Health;
-}
-
-void Potion::useItem() {
-    Item::useItem();
-
-    switch (this->potType) {
-    case PotionType::Health: {
-
-        break;
-    }
-    case PotionType::Swiftness: {
-
-        break;
-    }
-    case PotionType::Invisibility: {
-
-        break;
-    }
-    default: {}
-    }
 }
 
 void Potion::setDuration(int duration) {

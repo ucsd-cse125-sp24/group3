@@ -4,6 +4,7 @@
 #include "server/game/spiketrap.hpp"
 #include "server/game/potion.hpp"
 #include "shared/utilities/root_path.hpp"
+#include "server/game/constants.hpp"
 
 #include <fstream>
 
@@ -154,13 +155,24 @@ void ServerGameState::update(const EventList& events) {
 			break;
 		}
 	
-        case EventType::MoveRelative:
+		case EventType::MoveRelative:
 		{
 			//currently just sets the velocity to given 
-            auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-            Object* objMoveRel = this->objects.getObject(moveRelativeEvent.entity_to_move);
-            objMoveRel->physics.velocity += moveRelativeEvent.movement;
-            break;
+			auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
+			Object* objMoveRel = this->objects.getObject(moveRelativeEvent.entity_to_move);
+			objMoveRel->physics.velocity += moveRelativeEvent.movement;
+			break;
+
+		}
+		case EventType::UseItem:
+		{
+			auto useItemEvent = boost::get<UseItemEvent>(event.data);
+			Object* obj = this->objects.getObject(useItemEvent.playerEID);
+			Player* player = this->objects.getPlayer(obj->typeID);
+			if (player->inventory.at(useItemEvent.itemNum) != nullptr) {
+				player->useItem(useItemEvent.itemNum);
+			}
+			break;
 		}
 
 		// default:
@@ -218,6 +230,25 @@ void ServerGameState::updateMovement() {
 
 					if (currentCollider->detectCollision(otherCollider)) {
 						collided = true;
+
+						// If player colliding with items, add it to inventory
+						if (object->type == ObjectType::Player && otherObj->type == ObjectType::Potion) {
+							Player* player = this->objects.getPlayer(object->typeID);
+							Item* item = this->objects.getItem(otherObj->typeID);
+
+							if (player->inventory.size() < MAX_ITEMS) {
+								for (int x : {1,2,3,4,5}) {
+									if (player->inventory.contains(i)) {
+										player->inventory[i] = item;
+										break;
+									}
+								}
+
+								item->iteminfo.held = true;
+								item->physics.boundary = NULL;
+								continue;
+							}
+						}
 
 						// Check x-axis collision
 						currentCollider->corner.z -= movementStep.z;
@@ -301,12 +332,6 @@ void ServerGameState::updateItem() {
 
 		if (item == nullptr)
 			continue;
-
-		if (item->iteminfo.used) {
-			item->useItem();
-			
-			//remove from itemList?
-		}
 	}
 }
 

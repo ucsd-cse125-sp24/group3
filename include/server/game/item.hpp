@@ -11,9 +11,6 @@ public:
 
 	Item(ObjectType type);
 
-	virtual void useItem();
-	virtual void pickUpItem();
-
 	virtual SharedObject toShared() override;
 
 private:

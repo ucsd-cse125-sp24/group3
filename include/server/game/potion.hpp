@@ -21,7 +21,6 @@ public:
     void setDuration(int duration);
     void seteffectScalar(int scalar);
     void setPotionType(PotionType type);
-    void useItem() override;
 
 private:
 

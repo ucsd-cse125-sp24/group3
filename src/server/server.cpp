@@ -14,6 +14,7 @@
 #include <chrono>
 
 #include "boost/variant/get.hpp"
+#include "server/game/potion.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/player.hpp"
 #include "shared/game/event.hpp"

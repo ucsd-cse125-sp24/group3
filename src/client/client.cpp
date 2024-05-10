@@ -351,6 +351,17 @@ void Client::draw() {
                     true);
                 break;
             }
+            case ObjectType::Potion: {
+                auto cube = std::make_unique<Cube>(glm::vec3(0.5f));
+                cube->scale(sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.position);
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
+                break;
+            }
             default:
                 break;
         }
@@ -387,6 +398,30 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_BACKSPACE:
             this->gui.captureBackspace();
             Client::time_of_last_keystroke = getMsSinceEpoch();
+            break;
+
+        case GLFW_KEY_1:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value(), 1)));
+            }
+            break;
+
+        case GLFW_KEY_2:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value(), 2)));
+            }
+            break;
+
+        case GLFW_KEY_3:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value(), 3)));
+            }
+            break;
+
+        case GLFW_KEY_4:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value(), 4)));
+            }
             break;
 
         /* For movement keys (WASD), activate flags and use it to generate

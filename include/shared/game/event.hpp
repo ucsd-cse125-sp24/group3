@@ -188,13 +188,13 @@ struct SpawnEntityEvent {
  */
 struct UseItemEvent {
     UseItemEvent() {}
-    UseItemEvent(EntityID playerID, EntityID itemID) : playerID(playerID), itemID(itemID) {}
+    UseItemEvent(EntityID playerEID, int itemNum) : playerEID(playerEID), itemNum(itemNum) {}
 
-    EntityID playerID;
-    EntityID itemID;
+    EntityID playerEID;
+    int itemNum;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& playerID& itemID;
+        ar& playerEID& itemNum;
     }
 };
 

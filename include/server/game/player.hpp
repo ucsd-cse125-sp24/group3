@@ -4,11 +4,17 @@
 #include "server/game/object.hpp"
 #include "server/game/creature.hpp"
 #include "shared/game/sharedobject.hpp"
+#include "server/game/item.hpp"
+#include <unordered_map>
 
 class Player : public Creature {
 public:
+	std::unordered_map<int, Item*> inventory;
+
 	Player();
 	~Player();
+
+	void useItem(int itemNum);
 
 	virtual SharedObject toShared() override;
 private:

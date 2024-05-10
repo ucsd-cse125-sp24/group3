@@ -47,7 +47,7 @@ enum class ItemType {
 	Weapon,
 	Spell,
 	Potion,
-	Useable
+	Blank
 };
 
 struct SharedItemInfo {

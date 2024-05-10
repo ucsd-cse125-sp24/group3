@@ -3,14 +3,9 @@
 
 /*  Constructors and Destructors    */
 Item::Item(ObjectType type) :
-    Object(type), iteminfo(SharedItemInfo{ .held = false, .used = false }) {}
-
-void Item::useItem() {
-    this->iteminfo.used = true;
-}
-
-void Item::pickUpItem() {
-    this->iteminfo.held = true;
+    Object(type), iteminfo(SharedItemInfo{ .held = false, .used = false }) 
+{
+    this->physics.movable = false;
 }
 
 /*	SharedGameState generation	*/
