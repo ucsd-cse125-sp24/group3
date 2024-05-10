@@ -7,21 +7,32 @@
 Object::Object(ObjectType type) {
 	//	Set object type to Object
 	this->type = type;
+
+	//	Set collider (by default, no collider)
+	this->physics.collider = Collider::None;
+
+	//	Set model information
+	this->model.type = ModelType::Cube;
+	this->model.dimensions = Object::models.find(this->model.type)->second;
+
+	//	By default, an object has 1 x 1 x 1 model scaling (i.e., the object's
+	//	size is exactly the model's size
+	this->model.scale = glm::vec3(1);
 	
 	//	Initialize object Physics
 	//	By default, the newly created object spawns at the origin without any
 	//	velocity or acceleration, and is movable. The object faces toward the
 	//	x-axis.
+
+	//	Initialize object dimensions based on render model dimensions and
+	//	scaling
+	this->physics.shared.dimensions = this->model.dimensions * this->model.scale;
 	this->physics.shared.corner = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
 
 	this->physics.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
 	this->physics.movable = true;
-
-	//	By default, the object is not assigned a collider (must be explicitly
-	//	assigned) (TODO: Could change this by assigning a default collider?)
-	this->physics.boundary = nullptr;
 }
 
 Object::~Object() {}

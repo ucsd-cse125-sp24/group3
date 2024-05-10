@@ -42,9 +42,9 @@ struct Physics {
 	glm::vec3 velocityMultiplier;
 
 	/**
-	 * @brief Pointer to this object's collider.
+	 * @brief This object's collider type.
 	 */
-	Collider* boundary;
+	Collider collider;
 
 	/*	Debugger Methods	*/
 	std::string to_string(unsigned int tab_offset);

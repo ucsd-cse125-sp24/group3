@@ -211,7 +211,11 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     //  TODO: Fix this so that the player spawns at the center of the grid cell,
     //  not having the player's corner position in the center of the grid cell
     player->physics.shared.corner = this->state.getGrid().gridCellCenterPosition(spawnPoint);
-    player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f, 2.0f, 1.0f));
+    //player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f, 2.0f, 1.0f));
+
+    //  TODO: Set player dimensions in Player constructor!
+
+    player->physics.collider = Collider::Box;
 
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, player->globalID));
