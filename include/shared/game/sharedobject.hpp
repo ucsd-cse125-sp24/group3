@@ -107,7 +107,8 @@ public:
 	EntityID globalID;
 	ObjectType type;
 	SharedPhysics physics;
-	SharedModel model;
+	//SharedModel model;
+	ModelType modelType;
 
 	boost::optional<SharedStats> stats;	
 	boost::optional<SharedItemInfo> iteminfo;
@@ -117,7 +118,7 @@ public:
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& globalID & type& physics & model & stats & iteminfo & solidSurface;
+		ar& globalID & type& physics & modelType & stats & iteminfo & solidSurface;
 	}
 private:
 };

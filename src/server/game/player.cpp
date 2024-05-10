@@ -8,6 +8,8 @@ SharedObject Player::toShared() {
 }
 
 Player::Player() : Creature(ObjectType::Player) {
+    //	Set model information
+    this->setModel(ModelType::Player);
 }
 
 Player::~Player() {

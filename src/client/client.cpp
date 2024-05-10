@@ -289,7 +289,7 @@ void Client::draw() {
                     /*glm::vec3 pos = sharedObject->physics.position;
                     pos.y += PLAYER_EYE_LEVEL;*/
                     //  TODO: Update the player eye level to an acceptable level
-                    glm::vec3 pos = sharedObject->physics.corner;
+                    glm::vec3 pos = sharedObject->physics.corner + (sharedObject->physics.dimensions / 2.0f);
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
                     break;
@@ -297,9 +297,7 @@ void Client::draw() {
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
                 //auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y + 0.1, sharedObject->physics.position.z);
 
-                //  TODO: May have to offset this position to be the center of
-                //  the player instead of the lower corner
-                auto player_pos = sharedObject->physics.corner;
+                auto player_pos = sharedObject->physics.corner + (sharedObject->physics.dimensions / 2.0f);
 
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
@@ -316,9 +314,8 @@ void Client::draw() {
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
                 //this->bear_model->translateAbsolute(sharedObject->physics.position);
 
-                //  TODO: May have to offset this position to be the center of
-                //  the bear instead of the lower corner
-                this->bear_model->translateAbsolute(sharedObject->physics.corner);
+                this->bear_model->translateAbsolute(sharedObject->physics.corner
+                    + (sharedObject->physics.dimensions / 2.0f));
                 this->bear_model->draw(
                     this->model_shader,
                     this->cam->getViewProj(),
