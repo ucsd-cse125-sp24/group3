@@ -315,6 +315,7 @@ void ServerGameState::updateTraps() {
 			trap->trigger();
 		}
         if (trap->shouldReset(*this)) {
+            std::cout << "reset\n";
             trap->reset();
         }
 	}

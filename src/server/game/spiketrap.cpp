@@ -6,14 +6,25 @@
 
 using namespace std::chrono_literals;
 
+const std::chrono::seconds SpikeTrap::ACTIVE_TIME = 3s;
+const std::chrono::seconds SpikeTrap::TIME_UNTIL_RESET = 5s;
+
 SpikeTrap::SpikeTrap():
     Trap(ObjectType::SpikeTrap) 
 {
     this->physics.movable = false;
+    this->dropped_time = std::chrono::system_clock::now();
 }
 
 bool SpikeTrap::shouldTrigger(ServerGameState& state) {
     if (this->info.triggered) {
+        return false;
+    }
+
+    auto now = std::chrono::system_clock::now();
+    // only drop if it isn't currently triggered, and it has been at least 5 seconds since the 
+    // last drop
+    if (now - this->dropped_time < TIME_UNTIL_RESET) {
         return false;
     }
 
@@ -60,7 +71,7 @@ void SpikeTrap::trigger() {
 
 bool SpikeTrap::shouldReset(ServerGameState& state) {
     auto now = std::chrono::system_clock::now();
-    return (this->info.triggered && now - this->dropped_time > 3s);
+    return (this->info.triggered && (now - this->dropped_time) > ACTIVE_TIME);
 }
 
 void SpikeTrap::reset() {

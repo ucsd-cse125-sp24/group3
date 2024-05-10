@@ -10,6 +10,9 @@ class SpikeTrap : public Trap {
 public:
     SpikeTrap();
 
+    const static std::chrono::seconds ACTIVE_TIME; // how long the spikes are down
+    const static std::chrono::seconds TIME_UNTIL_RESET; // how long from initial activation until it can activate again
+
     bool shouldTrigger(ServerGameState& state) override;
     void trigger() override;
 
