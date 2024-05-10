@@ -33,27 +33,8 @@
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
-// Flags
-bool Client::is_held_up = false;
-bool Client::is_held_down = false;
-bool Client::is_held_right = false;
-bool Client::is_held_left = false;
-bool Client::is_held_space = false;
-bool Client::is_held_shift = false;
-
 // Checker for events sent / later can be made in an array
 glm::vec3 sentCamMovement = glm::vec3(-1.0f);
-
-bool shiftEvent = false;
-
-bool Client::cam_is_held_up = false;
-bool Client::cam_is_held_down = false;
-bool Client::cam_is_held_right = false;
-bool Client::cam_is_held_left = false;
-bool Client::is_left_mouse_down = false;
-
-float Client::mouse_xpos = 0.0f;
-float Client::mouse_ypos = 0.0f;
 
 int Client::window_width = UNIT_WINDOW_WIDTH;
 int Client::window_height = UNIT_WINDOW_HEIGHT;
@@ -70,9 +51,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     session(nullptr),
     gui(this),
     gui_state(gui::GUIState::INITIAL_LOAD),
-    lobby_finder(io_context, config)
-{
-    cam = new Camera();
+    lobby_finder(io_context, config),
+    cam(new Camera()) {    
     
     audioManager = new AudioManager();
 
@@ -111,9 +91,7 @@ bool Client::connectAndListen(std::string ip_addr) {
     return true;
 }
 
-Client::~Client() {
-
-}
+Client::~Client() {}
 
 // TODO: error flags / output for broken init
 bool Client::init() {
@@ -191,6 +169,13 @@ bool Client::init() {
 }
 
 bool Client::cleanup() {
+    cam.reset(nullptr);
+
+    // Destroy the window.
+    glfwDestroyWindow(window);
+    // Terminate GLFW.
+    glfwTerminate();
+
     delete audioManager;
     return true;
 }
@@ -228,69 +213,43 @@ void Client::idleCallback(boost::asio::io_context& context) {
     // or send any movement related events
     if (this->gui_state != GUIState::GAME_HUD) { return; }
 
-    std::optional<glm::vec3> jump = glm::vec3(0.0f);
-    std::optional<glm::vec3> cam_movement = glm::vec3(0.0f);
+    glm::vec3 cam_movement = glm::vec3(0.0f);
 
     // Sets a direction vector
-    if (cam_is_held_right)
-        cam_movement.value() += cam->move(true, 1.0f);
-    if (cam_is_held_left)
-        cam_movement.value() += cam->move(true, -1.0f);
-    if (cam_is_held_up)
-        cam_movement.value() += cam->move(false, 1.0f);
-    if (cam_is_held_down)
-        cam_movement.value() += cam->move(false, -1.0f);
-    if (is_held_space)
-        jump.value() += glm::vec3(0.0f, 1.0f, 0.0f);
+    if(is_held_right)
+        cam_movement += cam->move(true, 1.0f);
+    if(is_held_left)
+        cam_movement += cam->move(true, -1.0f);
+    if (is_held_up)
+        cam_movement += cam->move(false, 1.0f);
+    if (is_held_down)
+        cam_movement += cam->move(false, -1.0f);
 
+    // Update camera facing direction
     cam->update(mouse_xpos, mouse_ypos);
 
     // IF PLAYER, allow moving
     if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
         auto eid = this->session->getInfo().client_eid.value();
 
-        this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam_movement.value())));
+        this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam->getFacing())));
 
         // Send jump action
         if (is_held_space) {
-            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, jump.value(), ActionType::Jump)));
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Jump)));
         }
-
-        // Handles individual keys
-        handleKeys(eid, GLFW_KEY_LEFT_SHIFT, is_held_shift, &shiftEvent);
 
         // If movement 0, send stopevent
-        if ((sentCamMovement != cam_movement.value()) && cam_movement.value() == glm::vec3(0.0f)) {
-            this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
-            sentCamMovement = cam_movement.value();
+        if ((sentCamMovement != cam_movement) && cam_movement == glm::vec3(0.0f)) {
+            this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement, ActionType::MoveCam)));
+            sentCamMovement = cam_movement;
         }
-        // If movement detected, different from previous, send start event
-        else if (sentCamMovement != cam_movement.value()) {
-            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement.value(), ActionType::MoveCam)));
-            sentCamMovement = cam_movement.value();
-        }
-    }
-}
 
-// Handles given key
-// send startAction key is held but not sent
-// send stopAction when unheld
-void Client::handleKeys(int eid, int keyType, bool keyHeld, bool *eventSent, glm::vec3 movement){
-    if (keyHeld == *eventSent) { return; }
-    
-    ActionType sendAction;
-    switch (keyType) {
-        case GLFW_KEY_LEFT_SHIFT:
-            sendAction = ActionType::Sprint;
-            break;
-    }
-    if (keyHeld && !*eventSent) {
-        this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, movement, sendAction)));
-        *eventSent = true;
-    }
-    if (!keyHeld && *eventSent) {
-        this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, movement, sendAction)));
-        *eventSent = false;
+        // If movement detected, different from previous, send start event
+        else if (sentCamMovement != cam_movement) {
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement, ActionType::MoveCam)));
+            sentCamMovement = cam_movement;
+        }
     }
 }
 
@@ -316,8 +275,6 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
-    glm::vec3 test(1.0f);
-
     for (int i = 0; i < this->gameState.objects.size(); i++) {
         std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
 
@@ -329,13 +286,15 @@ void Client::draw() {
             case ObjectType::Player: {
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
-                    glm::vec3 pos = sharedObject->physics.position;
+                    //  TODO: Update the player eye level to an acceptable level
+                    glm::vec3 pos = sharedObject->physics.corner + (sharedObject->physics.dimensions / 2.0f);
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
                     break;
                 }
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
-                auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y + 0.1, sharedObject->physics.position.z);
+
+                auto player_pos = sharedObject->physics.corner + (sharedObject->physics.dimensions / 2.0f);
 
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
@@ -350,7 +309,9 @@ void Client::draw() {
                 // warren bear is an enemy because why not
                 // auto pos = glm::vec3(0.0f, 0.0f, 0.0f);
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
-                this->bear_model->translateAbsolute(sharedObject->physics.position);
+
+                this->bear_model->translateAbsolute(sharedObject->physics.corner
+                    + (sharedObject->physics.dimensions / 2.0f));
                 this->bear_model->draw(
                     this->model_shader,
                     this->cam->getViewProj(),
@@ -374,8 +335,13 @@ void Client::draw() {
             }
             case ObjectType::SolidSurface: {
                 auto cube = std::make_unique<Cube>(glm::vec3(0.4f,0.5f,0.7f));
-                cube->scale( sharedObject->solidSurface->dimensions);
-                cube->translateAbsolute(sharedObject->physics.position);
+                cube->scale( sharedObject->physics.dimensions);
+
+                //  Get solidSurface's center position
+                auto surfacePosition = sharedObject->physics.corner +
+                    0.5f * (sharedObject->physics.dimensions);
+
+                cube->translateAbsolute(surfacePosition);
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
@@ -402,69 +368,65 @@ void Client::draw() {
 
 // callbacks - for Interaction
 void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    Client* client = static_cast<Client*>(glfwGetWindowUserPointer(window));
-
     // Check for a key press.
+    /* Store player EID for use in certain key handling */ 
+    std::optional<EntityID> eid;
+
+    if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
+        eid = this->session->getInfo().client_eid.value();
+    }
+
     if (action == GLFW_PRESS) {
         switch (key) {
         case GLFW_KEY_ESCAPE:
-            if (client->gameState.phase == GamePhase::GAME) {
-                if (client->gui_state == GUIState::GAME_ESC_MENU) {
-                    client->gui_state = GUIState::GAME_HUD;
-                } else if (client->gui_state == GUIState::GAME_HUD) {
-                    client->gui_state = GUIState::GAME_ESC_MENU;
+            if (this->gameState.phase == GamePhase::GAME) {
+                if (this->gui_state == GUIState::GAME_ESC_MENU) {
+                    this->gui_state = GUIState::GAME_HUD;
+                } else if (this->gui_state == GUIState::GAME_HUD) {
+                    this->gui_state = GUIState::GAME_ESC_MENU;
                 }
             }
-            client->gui.setCaptureKeystrokes(false);
+            this->gui.setCaptureKeystrokes(false);
             break;
         
         case GLFW_KEY_TAB:
-            client->gui.setCaptureKeystrokes(true);
+            this->gui.setCaptureKeystrokes(true);
             break;
         
         case GLFW_KEY_BACKSPACE:
-            client->gui.captureBackspace();
+            this->gui.captureBackspace();
             Client::time_of_last_keystroke = getMsSinceEpoch();
             break;
 
-        case GLFW_KEY_DOWN:
+        /* For movement keys (WASD), activate flags and use it to generate
+         * movement in idleCallback() instead of sending individual events
+         */  
+        case GLFW_KEY_S:
             is_held_down = true;
             break;
 
-        case GLFW_KEY_UP:
+        case GLFW_KEY_W:
             is_held_up = true;
             break;
 
-        case GLFW_KEY_LEFT:
+        case GLFW_KEY_A:
             is_held_left = true;
             break;
 
-        case GLFW_KEY_RIGHT:
+        case GLFW_KEY_D:
             is_held_right = true;
             break;
 
-        case GLFW_KEY_S:
-            cam_is_held_down = true;
-            break;
-
-        case GLFW_KEY_W:
-            cam_is_held_up = true;
-            break;
-
-        case GLFW_KEY_A:
-            cam_is_held_left = true;
-            break;
-
-        case GLFW_KEY_D:
-            cam_is_held_right = true;
-            break;
-
+        /* Space also uses a flag to constantly send events when key is held */
         case GLFW_KEY_SPACE:
             is_held_space = true;
             break;
 
+        /* Send an event to start 'shift' movement (i.e. sprint) */
         case GLFW_KEY_LEFT_SHIFT:
-            is_held_shift = true;
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
+            }
             break;
 
         default:
@@ -474,44 +436,30 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
     if (action == GLFW_RELEASE) {
         switch (key) {
-        case GLFW_KEY_DOWN:
+        case GLFW_KEY_S:
             is_held_down = false;
             break;
 
-        case GLFW_KEY_UP:
+        case GLFW_KEY_W:
             is_held_up = false;
             break;
 
-        case GLFW_KEY_LEFT:
+        case GLFW_KEY_A:
             is_held_left = false;
             break;
 
-        case GLFW_KEY_RIGHT:
+        case GLFW_KEY_D:
             is_held_right = false;
             break;
-
-        case GLFW_KEY_S:
-            cam_is_held_down = false;
-            break;
-
-        case GLFW_KEY_W:
-            cam_is_held_up = false;
-            break;
-
-        case GLFW_KEY_A:
-            cam_is_held_left = false;
-            break;
-
-        case GLFW_KEY_D:
-            cam_is_held_right = false;
-            break;
-
+            
         case GLFW_KEY_SPACE:
             is_held_space = false;
             break;
 
         case GLFW_KEY_LEFT_SHIFT:
-            is_held_shift = false;
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
+            }
             break;
 
         default:
@@ -524,7 +472,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             auto ms_since_epoch = getMsSinceEpoch();
             if (Client::time_of_last_keystroke + 100 < ms_since_epoch) {
                 Client::time_of_last_keystroke = ms_since_epoch;
-                client->gui.captureBackspace();
+                this->gui.captureBackspace();
             }
         }
     }
@@ -546,9 +494,7 @@ void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int
 }
 
 void Client::charCallback(GLFWwindow* window, unsigned int codepoint) {
-    Client* client = static_cast<Client*>(glfwGetWindowUserPointer(window));
-
-    client->gui.captureKeystroke(static_cast<char>(codepoint));
+    gui.captureKeystroke(static_cast<char>(codepoint));
     Client::time_of_last_keystroke = getMsSinceEpoch();
 }
 

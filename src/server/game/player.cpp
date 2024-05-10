@@ -14,6 +14,7 @@ Player::Player():
         Stat(0, 10, 5)
     ))
 {
+    this->setModel(ModelType::Player);
 }
 
 Player::~Player() {

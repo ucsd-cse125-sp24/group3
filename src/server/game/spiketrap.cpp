@@ -12,6 +12,7 @@ const std::chrono::seconds SpikeTrap::TIME_UNTIL_RESET = 10s;
 SpikeTrap::SpikeTrap():
     Trap(ObjectType::SpikeTrap) 
 {
+    this->setModel(ModelType::Cube);
     this->physics.movable = false;
     this->dropped_time = std::chrono::system_clock::now();
 }
@@ -57,7 +58,6 @@ void SpikeTrap::trigger() {
     // this->physics.velocity.y = -GRAVITY;
 
     this->reset_corner = this->physics.shared.corner;
-    this->reset_pos = this->physics.shared.position;
     this->reset_dimensions = this->physics.shared.dimensions;
 
     this->physics.movable = true;
@@ -73,9 +73,7 @@ bool SpikeTrap::shouldReset(ServerGameState& state) {
 
 void SpikeTrap::reset() {
     this->physics.movable = false;
-    this->physics.boundary->corner.y += 0.1;
     this->physics.shared.corner.y += 0.1;
-    this->physics.shared.position.y += 0.1;
 
     if (this->physics.shared.corner.y >= this->reset_corner.y) {
         Trap::reset();
