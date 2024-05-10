@@ -13,6 +13,7 @@
 #include <iostream>
 #include <filesystem>
 
+#include "assimp/aabb.h"
 #include "assimp/material.h"
 #include "assimp/types.h"
 #include "client/util.hpp"
@@ -134,7 +135,12 @@ Model::Model(const std::string& filepath) {
     this->directory = std::filesystem::path(filepath).parent_path().string();
 
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(filepath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_SplitLargeMeshes | aiProcess_OptimizeMeshes);
+    const aiScene *scene = importer.ReadFile(filepath, 
+            aiProcess_Triangulate | // flag to only creates geometry made of triangles
+            aiProcess_FlipUVs | 
+            aiProcess_SplitLargeMeshes | 
+            aiProcess_OptimizeMeshes | 
+            aiProcess_GenBoundingBoxes); // needed to query bounding box of the model later
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         throw std::invalid_argument(std::string("ERROR::ASSIMP::") + importer.GetErrorString());
     }
@@ -177,11 +183,26 @@ void Model::scale(const glm::vec3& scale) {
     }
 }
 
+glm::vec3 Model::getDimensions() {
+    return this->dimensions;
+}
+
+void Model::setDimensions(const glm::vec3& dimensions) {
+    auto scaleFactor = dimensions / this->dimensions;
+    this->scale(scaleFactor);
+}
+
 void Model::processNode(aiNode *node, const aiScene *scene) {
     // process all the node's meshes (if any)
     for(unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]]; 
         meshes.push_back(processMesh(mesh, scene));			
+
+        // update model's bounding box with new mesh
+        const Bbox meshBbox = aiBboxToGLM(mesh->mAABB);
+        this->bbox = combineBboxes(this->bbox, meshBbox);
+        // update dimensions based on updated bbox
+        this->dimensions = this->bbox.getDimensions();
     }
     // then do the same for each of its children
     for(unsigned int i = 0; i < node->mNumChildren; i++) {

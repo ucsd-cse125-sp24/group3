@@ -2,6 +2,7 @@ set(TARGET_NAME client_tests)
 
 set(FILES
     hello_client_test.cpp
+    bbox.cpp
 )
 
 add_executable(${TARGET_NAME} ${FILES})
