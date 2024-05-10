@@ -199,9 +199,6 @@ public:
 				else if (property.compare("physics.movable") == 0) {
 					std::cout << (object->physics.movable ? "true" : "false") << std::endl;
 				}
-				else if (property.compare("physics.shared.position") == 0) {
-					std::cout << glm::to_string(object->physics.shared.position) << std::endl;
-				}
 				else if (property.compare("physics.velocity") == 0) {
 					std::cout << glm::to_string(object->physics.velocity) << std::endl;
 				}
@@ -346,18 +343,6 @@ public:
 		}
 
 		//	Set property
-		if (property.compare("physics.shared.position.x") == 0) {
-			obj->physics.shared.position.x = value;
-			std::cout << "Set object (global id " << id << ") position.x to " << value << ".\n";
-		}
-		else if (property.compare("physics.shared.position.y") == 0) {
-			obj->physics.shared.position.y = value;
-			std::cout << "Set object (global id " << id << ") position.y to " << value << ".\n";
-		}
-		else if (property.compare("physics.shared.position.z") == 0) {
-			obj->physics.shared.position.z = value;
-			std::cout << "Set object (global id " << id << ") position.z to " << value << ".\n";
-		}
 		else if (property.compare("physics.velocity.x") == 0) {
 			obj->physics.velocity.x = value;
 			std::cout << "Set object (global id " << id << ") velocity.x to " << value << ".\n";

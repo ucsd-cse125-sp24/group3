@@ -3,10 +3,10 @@
 #include <optional>
 #include <glm/glm.hpp>
 
-//#include "server/game/object.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/stat.hpp"
+#include "shared/game/sharedmodel.hpp"
 
 /**
  * @brief An enum for the type of an object; the fields here should match all
@@ -79,28 +79,17 @@ enum class SurfaceType {
 
 struct SharedSolidSurface {
 	/**
-	 * @brief Dimensions of the solid surface in 3 dimensions. The position of
-	 * the SolidSurface object is at the center of the object.
-	 */
-	glm::vec3 dimensions;
-
-	/**
 	 * @brief Type of solid surface, e.g. wall, floor, ceiling, etc.(relevant
 	 * for rendering)
 	 */
 	SurfaceType surfaceType;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& dimensions& surfaceType;
+		ar& surfaceType;
 	}
 };
 
 struct SharedPhysics {
-	/**
-	 * @brief 3-D vector that denotes this object's current position.
-	 */
-	glm::vec3 position;
-
 	/**
 	 * @brief 3-D vector that denotes this object's bottom left corner 
 	 * (min x and z coordinates).
@@ -120,8 +109,14 @@ struct SharedPhysics {
 	 */
 	glm::vec3 dimensions;
 
+	/**
+	 * @brief Calculates and returns the center position of this object.
+	 * @return glm::vec3 that denotes the center position of this object.
+	 */
+	glm::vec3 getCenterPosition();
+
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& position& corner& facing & dimensions;
+		ar& corner& facing & dimensions;
 	}
 };
 
@@ -142,6 +137,7 @@ public:
 	EntityID globalID;
 	ObjectType type;
 	SharedPhysics physics;
+	ModelType modelType;
 
 	boost::optional<SharedStats> stats;	
 	boost::optional<SharedItemInfo> iteminfo;
@@ -152,7 +148,7 @@ public:
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& globalID & type& physics & stats & iteminfo & solidSurface & trapInfo;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo;
 	}
 private:
 };

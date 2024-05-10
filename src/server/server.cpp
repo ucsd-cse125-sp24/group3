@@ -20,7 +20,6 @@
 #include "shared/game/event.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
-#include "server/game/boxcollider.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
@@ -209,9 +208,14 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     GridCell * spawnPoint = 
         this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
 
-    player->physics.shared.position = this->state.getGrid().gridCellCenterPosition(spawnPoint);
-    player->physics.shared.corner = player->physics.shared.position - glm::vec3(0.5, 0, 0.5);
-    player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f, 2.0f, 1.0f));
+    //  TODO: Fix this so that the player spawns at the center of the grid cell,
+    //  not having the player's corner position in the center of the grid cell
+    player->physics.shared.corner = this->state.getGrid().gridCellCenterPosition(spawnPoint);
+    //player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f, 2.0f, 1.0f));
+
+    //  TODO: Set player dimensions in Player constructor!
+
+    player->physics.collider = Collider::Box;
 
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, player->globalID));

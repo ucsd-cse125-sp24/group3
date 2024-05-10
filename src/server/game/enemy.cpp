@@ -11,6 +11,8 @@ Enemy::Enemy():
         Stat(0, 20, 20),
         Stat(0, 10, 5)
     ))
-{}
+{
+    this->setModel(ModelType::WarrenBear);
+}
 
 Enemy::~Enemy() {}

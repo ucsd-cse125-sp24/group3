@@ -8,8 +8,9 @@ SharedObject Creature::toShared() {
     return so;
 }
 
-Creature::Creature(ObjectType type, SharedStats stats): 
-    Object(type), stats(stats)
-{}
+Creature::Creature(ObjectType type, SharedStats stats) : Object(type), stats(stats) {
+    //  Set collider to Box
+    this->physics.collider = Collider::Box;
+}
 
 Creature::~Creature() {}
