@@ -234,14 +234,12 @@ void ServerGameState::updateMovement() {
 
 				// Move object if no collision detected
 				if (!collided) {
-					object->physics.shared.position += movementStep;
 					object->physics.shared.corner += movementStep;
 				}
 				// Revert collider if collided
 				// Seperated for x/z axis collisions
 				else {
 					if (!collidedX) {
-						object->physics.shared.position.x += movementStep.x;
 						object->physics.shared.corner.x += movementStep.x;
 					}
 					else {
@@ -249,13 +247,11 @@ void ServerGameState::updateMovement() {
 					}
 
 					if (!collidedZ) {
-						object->physics.shared.position.z += movementStep.z;
 						object->physics.shared.corner.z += movementStep.z;
 					}
 					else {
 						currentCollider->corner.z -= movementStep.z;
 					}
-					object->physics.shared.position.y += movementStep.y;
 					object->physics.shared.corner.y += movementStep.y;
 
 				}
@@ -271,13 +267,11 @@ void ServerGameState::updateMovement() {
 
 			// if current object do not have a collider / this shouldn't happen though
 			else {
-				object->physics.shared.position += movementStep;
 				object->physics.shared.corner += movementStep;
 			}
 
 			if (object->physics.shared.corner.y <= 0) {
 				// potentially need to make this unconditional further down
-				object->physics.shared.position.y -= object->physics.shared.corner.y;
 				object->physics.shared.corner.y = 0;
 				object->physics.boundary->corner = object->physics.shared.corner;
 			}
@@ -440,32 +434,22 @@ void ServerGameState::loadMaze() {
 
 	//	Set floor and ceiling's x and z dimensions equal to grid dimensions
 	
-	floor->shared.dimensions =
+	floor->physics.shared.dimensions =
 		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(),
 			0.1,
 			this->grid.getRows() * this->grid.getGridCellWidth());
-
-	floor->physics.shared.position =
-		glm::vec3(floor->shared.dimensions.x / 2, 
-			-0.05,
-			floor->shared.dimensions.z / 2);
 
 	floor->physics.shared.corner = glm::vec3(0.0f, -0.1f, 0.0f);
 	//floor->physics.boundary = new BoxCollider(floor->physics.shared.corner, floor->shared.dimensions);
 
 	floor->physics.movable = false;
 
-	ceiling->shared.dimensions = 
+	ceiling->physics.shared.dimensions = 
 		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(),
 			0.1,
 			this->grid.getRows() * this->grid.getGridCellWidth());
 
-	ceiling->physics.shared.position =
-		glm::vec3(floor->shared.dimensions.x / 2, 
-			MAZE_CEILING_HEIGHT + 0.05,
-			floor->shared.dimensions.z / 2);
-
-	ceiling->physics.shared.corner = glm::vec3(0.0f, -0.1f, 0.0f);
+	ceiling->physics.shared.corner = glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f);
 
 	// Not sure we would need colliders for ceiling
 	//ceiling->physics.boundary = new BoxCollider(ceiling->physics.shared.corner, ceiling->shared.dimensions);
@@ -485,7 +469,12 @@ void ServerGameState::loadMaze() {
 
 					Enemy* enemy = this->objects.getEnemy(enemyID);
 					enemy->physics.movable = false;
-					enemy->physics.shared.position = this->grid.gridCellCenterPosition(cell);
+					//	TODO: maybe update this to use the grid cell's corner
+					//	position or something like this?
+					//	Or, offset the position by 1/2 the dimensions of the
+					//	object (i.e., so that the Enemy's center position is in
+					//	the center of the grid cell)
+					enemy->physics.shared.corner = this->grid.gridCellCenterPosition(cell);
 					break;
 				}
 				case CellType::Wall: {
@@ -498,14 +487,14 @@ void ServerGameState::loadMaze() {
 					//	add specific object getters based on their types.
 					SolidSurface* wall = this->objects.getSolidSurface(wallID);
 
-					wall->shared.dimensions =
+					wall->physics.shared.dimensions =
 						glm::vec3(this->grid.getGridCellWidth(),
 							MAZE_CEILING_HEIGHT,
 							this->grid.getGridCellWidth());
 
-					wall->physics.shared.position =
+					/*wall->physics.shared.position =
 						this->grid.gridCellCenterPosition(cell)
-						+ glm::vec3(0, MAZE_CEILING_HEIGHT / 2, 0);
+						+ glm::vec3(0, MAZE_CEILING_HEIGHT / 2, 0);*/
 						/*glm::vec3((0.5 + cell->x) * this->grid.getGridCellWidth(),
 							MAZE_CEILING_HEIGHT / 2,
 							(0.5 + cell->y) * this->grid.getGridCellWidth());*/
@@ -514,7 +503,7 @@ void ServerGameState::loadMaze() {
 						glm::vec3(cell->x * this->grid.getGridCellWidth(),
 							0.0f, 
 							cell->y * this->grid.getGridCellWidth());
-					wall->physics.boundary = new BoxCollider(wall->physics.shared.corner, wall->shared.dimensions);
+					wall->physics.boundary = new BoxCollider(wall->physics.shared.corner, wall->physics.shared.dimensions);
 
 					wall->physics.movable = false;
 

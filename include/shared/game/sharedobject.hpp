@@ -61,7 +61,6 @@ struct SharedSolidSurface {
 	 * @brief Dimensions of the solid surface in 3 dimensions. The position of
 	 * the SolidSurface object is at the center of the object.
 	 */
-	glm::vec3 dimensions;
 
 	/**
 	 * @brief Type of solid surface, e.g. wall, floor, ceiling, etc.(relevant
@@ -70,16 +69,11 @@ struct SharedSolidSurface {
 	SurfaceType surfaceType;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& dimensions& surfaceType;
+		ar& surfaceType;
 	}
 };
 
 struct SharedPhysics {
-	/**
-	 * @brief 3-D vector that denotes this object's current position.
-	 */
-	glm::vec3 position;
-
 	/**
 	 * @brief 3-D vector that denotes this object's bottom left corner 
 	 * (min x and z coordinates).
@@ -100,7 +94,7 @@ struct SharedPhysics {
 	glm::vec3 dimensions;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& position& corner& facing & dimensions;
+		ar& corner& facing & dimensions;
 	}
 };
 

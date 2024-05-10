@@ -286,13 +286,20 @@ void Client::draw() {
             case ObjectType::Player: {
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
-                    glm::vec3 pos = sharedObject->physics.position;
+                    /*glm::vec3 pos = sharedObject->physics.position;
+                    pos.y += PLAYER_EYE_LEVEL;*/
+                    //  TODO: Update the player eye level to an acceptable level
+                    glm::vec3 pos = sharedObject->physics.corner;
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
                     break;
                 }
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
-                auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y + 0.1, sharedObject->physics.position.z);
+                //auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y + 0.1, sharedObject->physics.position.z);
+
+                //  TODO: May have to offset this position to be the center of
+                //  the player instead of the lower corner
+                auto player_pos = sharedObject->physics.corner;
 
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
@@ -307,7 +314,11 @@ void Client::draw() {
                 // warren bear is an enemy because why not
                 // auto pos = glm::vec3(0.0f, 0.0f, 0.0f);
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
-                this->bear_model->translateAbsolute(sharedObject->physics.position);
+                //this->bear_model->translateAbsolute(sharedObject->physics.position);
+
+                //  TODO: May have to offset this position to be the center of
+                //  the bear instead of the lower corner
+                this->bear_model->translateAbsolute(sharedObject->physics.corner);
                 this->bear_model->draw(
                     this->model_shader,
                     this->cam->getViewProj(),
@@ -331,8 +342,14 @@ void Client::draw() {
             }
             case ObjectType::SolidSurface: {
                 auto cube = std::make_unique<Cube>(glm::vec3(0.4f,0.5f,0.7f));
-                cube->scale( sharedObject->solidSurface->dimensions);
-                cube->translateAbsolute(sharedObject->physics.position);
+                cube->scale( sharedObject->physics.dimensions);
+                //cube->translateAbsolute(sharedObject->physics.position);
+
+                //  Get solidSurface's center position
+                auto surfacePosition = sharedObject->physics.corner +
+                    0.5f * (sharedObject->physics.dimensions);
+
+                cube->translateAbsolute(surfacePosition);
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
