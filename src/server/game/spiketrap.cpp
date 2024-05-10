@@ -13,6 +13,7 @@ SpikeTrap::SpikeTrap():
     Trap(ObjectType::SpikeTrap) 
 {
     this->setModel(ModelType::Cube);
+    this->physics.collider == Collider::Box;
     this->physics.movable = false;
     this->dropped_time = std::chrono::system_clock::now();
 }
@@ -34,11 +35,13 @@ bool SpikeTrap::shouldTrigger(ServerGameState& state) {
         auto player = players.get(p);
         if (player == nullptr) continue;
 
+        auto center_pos = player->physics.shared.getCenterPosition();
+
         bool is_underneath = (
-            player->physics.shared.position.x >= this->physics.shared.corner.x &&
-            player->physics.shared.position.x <= this->physics.shared.corner.x + this->physics.shared.dimensions.x &&
-            player->physics.shared.position.z >= this->physics.shared.corner.z &&
-            player->physics.shared.position.z <= this->physics.shared.corner.z + this->physics.shared.dimensions.z
+            center_pos.x >= this->physics.shared.corner.x &&
+            center_pos.x <= this->physics.shared.corner.x + this->physics.shared.dimensions.x &&
+            center_pos.z >= this->physics.shared.corner.z &&
+            center_pos.z <= this->physics.shared.corner.z + this->physics.shared.dimensions.z
         );
 
         // Trigger the trap if the player is underneath, and only on a random roll (per tick)
@@ -54,14 +57,11 @@ bool SpikeTrap::shouldTrigger(ServerGameState& state) {
 void SpikeTrap::trigger() {
     Trap::trigger();
 
-    // this->physics.movable = true;
-    // this->physics.velocity.y = -GRAVITY;
-
     this->reset_corner = this->physics.shared.corner;
     this->reset_dimensions = this->physics.shared.dimensions;
 
     this->physics.movable = true;
-    this->physics.velocity.y = -3.0f * GRAVITY;
+    this->physics.velocity.y = -8.0f * GRAVITY;
 
     this->dropped_time = std::chrono::system_clock::now();
 }
