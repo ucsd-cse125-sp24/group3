@@ -5,8 +5,6 @@ set(FILES
     lobbybroadcaster.cpp
     server.cpp
     game/collider.cpp
-    game/boxcollider.cpp
-    game/spherecollider.cpp
     game/creature.cpp
     game/item.cpp
     game/solidsurface.cpp

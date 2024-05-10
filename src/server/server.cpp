@@ -19,7 +19,6 @@
 #include "shared/game/event.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
-#include "server/game/boxcollider.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"

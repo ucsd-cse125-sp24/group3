@@ -50,6 +50,11 @@ bool detectCollisionSphere(Physics& sphere, Physics& obj) {
 
 			return distance < radius;
 		}
+		//	If the object doesn't have a collider, the collision detection
+		//	always returns false
+		case Collider::None:
+		default:
+			return false;
 	}
 
 	return false;
@@ -88,5 +93,10 @@ bool detectCollisionBox(Physics& box, Physics& obj) {
 				maxPos.z >= objMinPos.z &&
 				minPos.z <= objMaxPos.z);
 		}
+		//	If the object doesn't have a collider, the collision detection
+		//	always returns false
+		case Collider::None:
+		default:
+			return false;
 	}
 }

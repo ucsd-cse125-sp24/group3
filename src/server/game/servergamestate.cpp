@@ -1,6 +1,5 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
-#include "server/game/boxcollider.hpp"
 #include "shared/utilities/root_path.hpp"
 
 #include <fstream>

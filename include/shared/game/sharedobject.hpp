@@ -3,7 +3,6 @@
 #include <optional>
 #include <glm/glm.hpp>
 
-//#include "server/game/object.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/sharedmodel.hpp"
@@ -58,11 +57,6 @@ enum class SurfaceType {
 
 struct SharedSolidSurface {
 	/**
-	 * @brief Dimensions of the solid surface in 3 dimensions. The position of
-	 * the SolidSurface object is at the center of the object.
-	 */
-
-	/**
 	 * @brief Type of solid surface, e.g. wall, floor, ceiling, etc.(relevant
 	 * for rendering)
 	 */
@@ -107,7 +101,6 @@ public:
 	EntityID globalID;
 	ObjectType type;
 	SharedPhysics physics;
-	//SharedModel model;
 	ModelType modelType;
 
 	boost::optional<SharedStats> stats;	

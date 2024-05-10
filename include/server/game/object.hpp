@@ -76,10 +76,10 @@ public:
 	Physics physics;
 
 	/**
-	 * @brief Object's render model information
+	 * @brief Object's render model type (specifies this Object's render model
+	 * to the client)
 	 */
 	ModelType modelType;
-	//SharedModel model;
 
 	explicit Object(ObjectType type);
 	virtual ~Object();
@@ -91,15 +91,6 @@ public:
 	 * rendered as.
 	 */
 	void setModel(ModelType type);
-
-	///**
-	// * @brief Sets object's dimensions to the given dimensions.
-	// * @note Always use this method to set object dimensions! This encapsulates
-	// * updating the object's SharedPhysics.dimensions and SharedModel.scale
-	// * fields, which must always be in sync!
-	// * @param dimensions New dimensions for this object.
-	// */
-	//void setDimensions(glm::vec3 dimensions);
 
 	/**
 	 * @brief Maps from ModelType to a model's dimensions as read from the model
