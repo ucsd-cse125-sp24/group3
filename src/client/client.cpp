@@ -366,7 +366,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     /* Store player EID for use in certain key handling */ 
     std::optional<EntityID> eid;
 
-    if (this->session->getInfo().client_eid.has_value()) {
+    if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
         eid = this->session->getInfo().client_eid.value();
     }
 
