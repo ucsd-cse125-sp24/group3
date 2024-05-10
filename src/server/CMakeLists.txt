@@ -16,6 +16,7 @@ set(FILES
     game/enemy.cpp
     game/gridcell.cpp
     game/grid.cpp
+    game/dungeonmaster.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

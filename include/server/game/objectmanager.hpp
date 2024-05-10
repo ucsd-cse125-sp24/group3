@@ -6,6 +6,7 @@
 #include "server/game/item.hpp"
 #include "server/game/player.hpp"
 #include "server/game/enemy.hpp"
+#include "server/game/dungeonmaster.hpp"
 #include "server/game/solidsurface.hpp"
 
 #include "shared/utilities/smartvector.hpp"
@@ -88,6 +89,8 @@ public:
 	 * none exists.
 	 */
 	Player* getPlayer(SpecificID playerID);
+
+	DungeonMaster* getDM();
 
 	/**
 	 * @brief Attempts to retrieve the Enemy with the given SpecificID.
@@ -213,4 +216,6 @@ private:
 	 * ObjectType::Enemy.
 	 */
 	SmartVector<Enemy *> enemies;
+
+	DungeonMaster * dm;
 };

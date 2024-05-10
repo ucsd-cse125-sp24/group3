@@ -71,6 +71,23 @@ SpecificID ObjectManager::createObject(ObjectType type) {
 			player->globalID = globalID;
 			break;
 		}
+		case ObjectType::DungeonMaster: {
+			this->dm = new DungeonMaster();
+
+			//	TODO: Maybe change SmartVector's index return value? size_t is
+			//	larger than uint32 (which is what SpecificID and EntityID are
+			//	defined as)
+			//	Push to type-specific base_objects vector
+			typeID = (SpecificID)this->base_objects.push(this->dm);
+
+			//	Push to global objects vector
+			globalID = (EntityID)this->objects.push(this->dm);
+
+			//	Set object's type and global IDs
+			this->dm->typeID = typeID;
+			this->dm->globalID = globalID;
+			break;
+		}
         case ObjectType::Enemy: {
             //	Create a new object of type Enemy
             Enemy* enemy = new Enemy();
@@ -188,6 +205,10 @@ SmartVector<Object*> ObjectManager::getObjects() {
 /*	SpecificID object getters by type	*/
 Object* ObjectManager::getBaseObject(SpecificID base_objectID) {
 	return this->base_objects.get(base_objectID);
+}
+
+DungeonMaster* ObjectManager::getDM() {
+	return this->dm;
 }
 
 Item* ObjectManager::getItem(SpecificID itemID) {

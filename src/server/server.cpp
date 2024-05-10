@@ -188,6 +188,42 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         }
     }
 
+    // first player is Dungeon Master
+    if (this->state.getLobby().players.size() == 0) {
+        SpecificID dmID = this->state.objects.createObject(ObjectType::DungeonMaster);
+        DungeonMaster* dm = this->state.objects.getDM();
+
+        //  Spawn player in random spawn point
+
+        //  TODO: Possibly replace this random spawn point with player assignments?
+        //  I.e., assign each player a spawn point to avoid multiple players getting
+        //  the same spawn point?
+        std::srand(std::time(NULL));
+        std::vector<GridCell*> spawnPoints = this->state.getGrid().getSpawnPoints();
+        size_t randomSpawnIndex = std::rand() % spawnPoints.size();
+
+        std::cout << "Number of spawn points: " << spawnPoints.size() << std::endl;
+        std::cout << "Player " << dmID << " spawning at spawn point " << randomSpawnIndex << std::endl;
+
+        GridCell* spawnPoint =
+            this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
+
+        dm->physics.shared.position = this->state.getGrid().gridCellCenterPosition(spawnPoint) + glm::vec3(0.0f, 100.0f, 0.0f);
+
+        dm->physics.shared.corner = dm->physics.shared.position - glm::vec3(0.5, 0, 0.5);
+        dm->physics.boundary = new BoxCollider(dm->physics.shared.corner, glm::vec3(1.0f));
+
+        auto session = std::make_shared<Session>(std::move(this->socket),
+            SessionInfo({}, dm->globalID));
+
+        this->sessions.insert(SessionEntry(dm->globalID, addr, session));
+
+        std::cout << "Established new connection with " << addr << ", which was assigned eid "
+            << dm->globalID << std::endl;
+
+        return session;
+    } 
+
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
     SpecificID playerID = this->state.objects.createObject(ObjectType::Player);
@@ -209,6 +245,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
 
     player->physics.shared.position = this->state.getGrid().gridCellCenterPosition(spawnPoint);
+
     player->physics.shared.corner = player->physics.shared.position - glm::vec3(0.5, 0, 0.5);
     player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f));
 

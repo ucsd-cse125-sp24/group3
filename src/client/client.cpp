@@ -344,6 +344,28 @@ void Client::draw() {
                     true);
                 break;
             }
+            // CHANGE THIS
+            case ObjectType::DungeonMaster: {
+                // don't render yourself
+                if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+                    glm::vec3 pos = sharedObject->physics.position;
+                    pos.y += PLAYER_EYE_LEVEL;
+                    cam->updatePos(pos);
+                    break;
+                }
+                auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
+                // subtracting 1 from y position to render players "standing" on ground
+                auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y - 1.0f, sharedObject->physics.position.z);
+
+                this->player_model->translateAbsolute(player_pos);
+                this->player_model->draw(
+                    this->model_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    lightPos,
+                    true);
+                break;
+            }
             case ObjectType::Enemy: {
                 // warren bear is an enemy because why not
                 // auto pos = glm::vec3(0.0f, 0.0f, 0.0f);
