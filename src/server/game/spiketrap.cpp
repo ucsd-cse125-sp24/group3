@@ -13,7 +13,7 @@ SpikeTrap::SpikeTrap():
     Trap(ObjectType::SpikeTrap) 
 {
     this->setModel(ModelType::Cube);
-    this->physics.collider == Collider::Box;
+    this->physics.collider = Collider::Box;
     this->physics.movable = false;
     this->dropped_time = std::chrono::system_clock::now();
 }
