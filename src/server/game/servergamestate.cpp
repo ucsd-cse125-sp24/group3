@@ -169,8 +169,10 @@ void ServerGameState::update(const EventList& events) {
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
 			Object* obj = this->objects.getObject(useItemEvent.playerEID);
 			Player* player = this->objects.getPlayer(obj->typeID);
-			if (player->inventory.at(useItemEvent.itemNum) != nullptr) {
-				player->useItem(useItemEvent.itemNum);
+			if (player->inventory.find(useItemEvent.itemNum) != player->inventory.end()) {
+				updateItem(player->typeID, player->inventory.at(useItemEvent.itemNum));
+				player->inventory.erase(useItemEvent.itemNum);
+				//TODO : should also remove item afterwards
 			}
 			break;
 		}
@@ -181,7 +183,6 @@ void ServerGameState::update(const EventList& events) {
     }
 
 	//	TODO: fill update() method with updating object movement
-	updateItem();
 	updateMovement();
 	updateTraps();
 	
@@ -235,15 +236,14 @@ void ServerGameState::updateMovement() {
 						if (object->type == ObjectType::Player && otherObj->type == ObjectType::Potion) {
 							Player* player = this->objects.getPlayer(object->typeID);
 							Item* item = this->objects.getItem(otherObj->typeID);
-
+							
 							if (player->inventory.size() < MAX_ITEMS) {
 								for (int x : {1,2,3,4,5}) {
-									if (player->inventory.contains(i)) {
-										player->inventory[i] = item;
+									if (!player->inventory.contains(i)) {
+										player->inventory[x] = item->typeID;
 										break;
 									}
 								}
-
 								item->iteminfo.held = true;
 								item->physics.boundary = NULL;
 								continue;
@@ -315,24 +315,39 @@ void ServerGameState::updateMovement() {
 				object->physics.shared.corner.y = 0;
 				object->physics.boundary->corner = object->physics.shared.corner;
 			}
-
-
 		}
 	}
 }
 
-void ServerGameState::updateItem() {
-	// Update whatever is necesssary for item
-	// This method may need to be broken down for different types
-	// of item types
+void ServerGameState::updateItem(SpecificID	playerID, SpecificID itemID) {
+	Player* player = this->objects.getPlayer(playerID);
+	Item* item = this->objects.getItem(itemID);
 
-	auto items = this->objects.getItems();
-	for (int i = 0; i < items.size(); i++) {
-		auto item = items.get(i);
+	switch (item->iteminfo.type) {
+	case ItemType::Potion: {
 
-		if (item == nullptr)
-			continue;
+		Potion* pot = dynamic_cast<Potion*>(item);
+		switch (pot->potType) {
+		case PotionType::Health: {
+			player->stats.health.adjustMod(pot->effectScalar);
+			break;
+		}
+		case PotionType::Swiftness: {
+			player->stats.speed.adjustMod(pot->effectScalar);
+			break;
+		}
+		case PotionType::Invisibility: {
+
+			break;
+		}
+		}
 	}
+
+	case ItemType::Spell: {
+		break;
+	}	  
+	}
+
 }
 
 void ServerGameState::updateTraps() {
@@ -535,6 +550,23 @@ void ServerGameState::loadMaze() {
 			GridCell* cell = this->grid.getCell(col, row);
 
 			switch (cell->type) {
+				case CellType::Potion: {
+					SpecificID potID = this->objects.createObject(ObjectType::Potion);
+					Potion* pot = dynamic_cast<Potion*>(this->objects.getItem(potID));
+					pot->setDuration(0);
+					pot->seteffectScalar(20);
+					pot->setPotionType(PotionType::Health);
+
+					pot->physics.shared.dimensions = glm::vec3(1.0f);
+					pot->physics.shared.position = this->grid.gridCellCenterPosition(cell) +
+						glm::vec3(0, 0.5, 0);
+					pot->physics.shared.corner =
+						glm::vec3(cell->x * this->grid.getGridCellWidth() + 1,
+							0,
+							cell->y * this->grid.getGridCellWidth() + 1);
+					pot->physics.boundary = new BoxCollider(pot->physics.shared.corner, pot->physics.shared.dimensions);
+					break;
+				}
 				case CellType::SpikeTrap: {
 					SpecificID trapID = this->objects.createObject(ObjectType::SpikeTrap);
 					SpikeTrap* trap = dynamic_cast<SpikeTrap*>(this->objects.getTrap(trapID));

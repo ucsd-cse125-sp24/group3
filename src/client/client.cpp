@@ -352,14 +352,16 @@ void Client::draw() {
                 break;
             }
             case ObjectType::Potion: {
-                auto cube = std::make_unique<Cube>(glm::vec3(0.5f));
-                cube->scale(sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.position);
-                cube->draw(this->cube_shader,
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    glm::vec3(),
-                    true);
+                if (!sharedObject->iteminfo->held) {
+                    auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
+                    cube->scale(sharedObject->physics.dimensions);
+                    cube->translateAbsolute(sharedObject->physics.position);
+                    cube->draw(this->cube_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        glm::vec3(),
+                        true);
+                }
                 break;
             }
             default:

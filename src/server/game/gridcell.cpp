@@ -15,6 +15,8 @@ CellType charToCellType(char c) {
 		return CellType::Enemy;
 	case 'X':
 		return CellType::SpikeTrap;
+	case 'P':
+		return CellType::Potion;
 	default:
 		return CellType::Unknown;
 	}

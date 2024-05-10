@@ -42,7 +42,9 @@ struct SharedStats {
 	}
 };
 
-
+/**
+ * @brief An enum for the type of an item
+ */
 enum class ItemType {
 	Weapon,
 	Spell,

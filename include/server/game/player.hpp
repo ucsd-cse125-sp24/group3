@@ -9,7 +9,7 @@
 
 class Player : public Creature {
 public:
-	std::unordered_map<int, Item*> inventory;
+	std::unordered_map<int, SpecificID> inventory;
 
 	Player();
 	~Player();
