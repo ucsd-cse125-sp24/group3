@@ -75,6 +75,8 @@ public:
 
 	void useItem();
 
+	void updateTraps();
+
 	/*	SharedGameState generation	*/
 
 	//	TODO: Modify this function to dynamically allocate a SharedGameState

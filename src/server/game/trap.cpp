@@ -12,3 +12,7 @@ SharedObject Trap::toShared() {
     so.trapInfo = this->info;
     return so;
 }
+
+void Trap::reset() {
+    this->info.triggered = false;
+}

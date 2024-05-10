@@ -170,6 +170,7 @@ void ServerGameState::update(const EventList& events) {
 	//	TODO: fill update() method with updating object movement
 	useItem();
 	updateMovement();
+	updateTraps();
 	
 	//	Increment timestep
 	this->timestep++;
@@ -284,15 +285,6 @@ void ServerGameState::updateMovement() {
 			}
 
 
-			// This object moved, so we should check to see if a trap should trigger because of it
-			auto traps = this->objects.getTraps();
-			for (int i = 0; i < traps.size(); i++) {
-				auto trap = traps.get(i);
-				if (trap == nullptr) { continue; } // unsure if i need this?
-				if (trap->shouldTrigger(*object)) {
-					trap->trigger();
-				}
-			}
 		}
 	}
 }
@@ -309,6 +301,24 @@ void ServerGameState::useItem() {
 		if (item == nullptr)
 			continue;
 	}
+}
+
+void ServerGameState::updateTraps() {
+	// check for activations
+
+	// This object moved, so we should check to see if a trap should trigger because of it
+	auto traps = this->objects.getTraps();
+	for (int i = 0; i < traps.size(); i++) {
+		auto trap = traps.get(i);
+		if (trap == nullptr) { continue; } // unsure if i need this?
+		if (trap->shouldTrigger(*this)) {
+			trap->trigger();
+		}
+        if (trap->shouldReset(*this)) {
+            trap->reset();
+        }
+	}
+
 }
 
 unsigned int ServerGameState::getTimestep() const {
