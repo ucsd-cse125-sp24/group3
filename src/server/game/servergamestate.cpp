@@ -231,8 +231,8 @@ void ServerGameState::updateMovement() {
 						}
 						object->physics.shared.corner.x += movementStep.x;
 
-						object->doCollision(otherObj);
-						otherObj->doCollision(object);
+						object->doCollision(otherObj, this);
+						otherObj->doCollision(object, this);
 					}
 				}
 
