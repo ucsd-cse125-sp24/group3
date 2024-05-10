@@ -59,5 +59,13 @@ const std::unordered_map<Size, float> SIZE_TO_SCALE = {
 int getFontSizePx(Size size);
 float getScaleFactor(Size size);
 
+/**
+ * Takes an amount of pixels, and scales it to be from a 1500x1000 screen to the current screen width/height
+ * 
+ * @param pixels Pixels on a 1500x1000 window
+ * @returns corresponding amount of pixels on the current window
+ */
+float getRelativePixels(float pixels);
+
 
 }

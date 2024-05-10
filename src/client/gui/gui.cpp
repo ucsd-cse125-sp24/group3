@@ -155,6 +155,10 @@ void GUI::layoutFrame(GUIState state) {
         case GUIState::NONE:
             break;
     }
+
+    for (auto& [_handle, widget] : this->widgets) {
+        widget->lock();
+    }
 }
 
 void GUI::_layoutLoadingScreen() {
@@ -195,7 +199,7 @@ void GUI::_layoutTitleScreen() {
     ));
 
     auto start_text = widget::DynText::make(
-        "Start Game",
+        "(Start Game)",
         fonts,
         widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
     );
@@ -209,7 +213,7 @@ void GUI::_layoutTitleScreen() {
     auto start_flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
     );
 
     start_flex->push(std::move(start_text));
@@ -229,19 +233,21 @@ void GUI::_layoutLobbyBrowser() {
     auto lobbies_flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 10.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 10.0f)
     );
 
     for (const auto& [ip, packet]: client->lobby_finder.getFoundLobbies()) {
         std::stringstream ss;
-        ss << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken;
+        ss << "(" << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken << ")";
 
         auto entry = widget::DynText::make(ss.str(), this->fonts,
             widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK));
         entry->addOnClick([ip, this](widget::Handle handle){
             std::cout << "Connecting to " << ip.address() << " ...\n";
-            this->client->connectAndListen(ip.address().to_string());
-            this->client->gui_state = GUIState::LOBBY;
+            if (this->client->connectAndListen(ip.address().to_string())) {
+                this->client->gui_state = GUIState::LOBBY;
+                this->clearCapturedKeyboardInput();
+            }
         });
         entry->addOnHover([this](widget::Handle handle){
             auto widget = this->borrowWidget<widget::DynText>(handle);
@@ -254,19 +260,52 @@ void GUI::_layoutLobbyBrowser() {
         lobbies_flex->push(widget::DynText::make(
             "No lobbies found...",
             this->fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
         ));
     }
 
     this->addWidget(std::move(lobbies_flex));
 
-    this->addWidget(widget::TextInput::make(
-        glm::vec2(FRAC_WINDOW_WIDTH(2, 5), FRAC_WINDOW_HEIGHT(1, 6)),
-        "Enter a name",
+    auto input_flex = widget::Flexbox::make(
+        glm::vec2(0.0f, font::getRelativePixels(30) + 2 * font::getFontSizePx(font::Size::MEDIUM)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, font::getRelativePixels(20))
+    );
+    input_flex->push(widget::TextInput::make(
+        glm::vec2(0.0f, 0.0f),
+        "Manual IP",
         this,
         fonts,
         widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
     ));
+    this->addWidget(std::move(input_flex));
+
+    auto connect_flex = widget::Flexbox::make(
+        glm::vec2(0.0f, font::getRelativePixels(30)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, font::getRelativePixels(20))
+    );
+
+    std::stringstream ss;
+    ss << "(Connect to \"" << this->getCapturedKeyboardInput() << "\")";
+    auto connect_btn = widget::DynText::make(
+        ss.str(),
+        fonts,
+        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+    );
+    connect_btn->addOnHover([this](widget::Handle handle) {
+        auto btn = this->borrowWidget<widget::DynText>(handle);
+        btn->changeColor(font::Color::RED);
+    });
+    connect_btn->addOnClick([this](widget::Handle handle) {
+        auto input = this->getCapturedKeyboardInput();
+        if (client->connectAndListen(input)) {
+            client->gui_state = GUIState::LOBBY;
+            this->clearCapturedKeyboardInput();
+        }
+    });
+    connect_flex->push(std::move(connect_btn));
+    this->addWidget(std::move(connect_flex));
 }
 
 void GUI::_layoutLobby() {
@@ -294,7 +333,7 @@ void GUI::_layoutLobby() {
     auto players_flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 5)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 10.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 10.0f)
     );
     for (const auto& [_eid, player_name] : this->client->gameState.lobby.players) {
         players_flex->push(widget::DynText::make(
@@ -322,7 +361,7 @@ void GUI::_layoutGameHUD() {
 
 void GUI::_layoutGameEscMenu() {
     auto exit_game_txt = widget::DynText::make(
-        "Exit Game",
+        "(Exit Game)",
         fonts,
         widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
     );
@@ -336,7 +375,7 @@ void GUI::_layoutGameEscMenu() {
     auto flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 2)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
     );
     flex->push(std::move(exit_game_txt));
 

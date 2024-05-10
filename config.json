@@ -1,9 +1,9 @@
 {
     "game": {
-      "timestep_length_ms": 40,
+      "timestep_length_ms": 30,
       "maze": {
         "directory": "maps",
-        "maze_file": "maze5.maze"
+        "maze_file": "room.maze"
       }
     },
     "network": {
@@ -11,7 +11,7 @@
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "Unnamed Lobby",
+        "lobby_name": "The Room",
         "lobby_broadcast": true,
         "max_players": 1
     },

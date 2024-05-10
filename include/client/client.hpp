@@ -153,7 +153,7 @@ public:
      * 
      * @param ip_addr 
      */
-    void connectAndListen(std::string ip_addr);
+    bool connectAndListen(std::string ip_addr);
 
     AudioManager* getAudioManager();
 

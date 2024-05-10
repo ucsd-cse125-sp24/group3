@@ -68,12 +68,14 @@ AudioManager* Client::getAudioManager() {
     return this->audioManager;
 }
 
-void Client::connectAndListen(std::string ip_addr) {
+bool Client::connectAndListen(std::string ip_addr) {
     this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
     this->session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo(this->config.client.default_name, {}));
 
-    this->session->connectTo(this->endpoints);
+    if (!this->session->connectTo(this->endpoints)) {
+        return false;
+    }
 
     auto name = this->gui.getCapturedKeyboardInput();
     if (name == "") {
@@ -86,6 +88,7 @@ void Client::connectAndListen(std::string ip_addr) {
     this->session->sendPacketAsync(packet);
 
     this->session->startListen();
+    return true;
 }
 
 Client::~Client() {}
@@ -288,9 +291,8 @@ void Client::draw() {
                     cam->updatePos(pos);
                     break;
                 }
-                auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
-                // subtracting 1 from y position to render players "standing" on ground
-                auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y - 1.0f, sharedObject->physics.position.z);
+                auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
+                auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y + 0.1, sharedObject->physics.position.z);
 
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(

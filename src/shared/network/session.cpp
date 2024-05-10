@@ -29,8 +29,14 @@ void Session::startListen() {
     _receivePacketAsync();
 }
 
-void Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpoints) {
-    tcp::endpoint endpt = boost::asio::connect(socket, endpoints);
+bool Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpoints) {
+    boost::system::error_code ec;
+    tcp::endpoint endpt = boost::asio::connect(socket, endpoints, ec);
+    if (ec) {
+        std::cerr << "ERROR Connecting: " << ec.what() << std::endl;
+        return false;
+    }
+    return true;
 }
 
 void Session::_handleReceivedPacket(PacketType type, const std::string& data) {
