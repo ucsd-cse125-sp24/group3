@@ -474,7 +474,6 @@ void ServerGameState::loadMaze() {
 
 	//	Set floor collider to None
 	floor->physics.collider = Collider::None;
-	//floor->physics.boundary = new BoxCollider(floor->physics.shared.corner, floor->shared.dimensions);
 
 	floor->physics.movable = false;
 
@@ -487,9 +486,6 @@ void ServerGameState::loadMaze() {
 
 	//	Set ceiling collider to None
 	ceiling->physics.collider = Collider::None;
-
-	// Not sure we would need colliders for ceiling
-	//ceiling->physics.boundary = new BoxCollider(ceiling->physics.shared.corner, ceiling->shared.dimensions);
 
 	ceiling->physics.movable = false;
 	
@@ -545,19 +541,11 @@ void ServerGameState::loadMaze() {
 						glm::vec3(this->grid.getGridCellWidth(),
 							MAZE_CEILING_HEIGHT,
 							this->grid.getGridCellWidth());
-
-					/*wall->physics.shared.position =
-						this->grid.gridCellCenterPosition(cell)
-						+ glm::vec3(0, MAZE_CEILING_HEIGHT / 2, 0);*/
-						/*glm::vec3((0.5 + cell->x) * this->grid.getGridCellWidth(),
-							MAZE_CEILING_HEIGHT / 2,
-							(0.5 + cell->y) * this->grid.getGridCellWidth());*/
 					
 					wall->physics.shared.corner = 
 						glm::vec3(cell->x * this->grid.getGridCellWidth(),
 							0.0f, 
 							cell->y * this->grid.getGridCellWidth());
-					//wall->physics.boundary = new BoxCollider(wall->physics.shared.corner, wall->physics.shared.dimensions);
 					wall->physics.collider = Collider::Box;
 
 					wall->physics.movable = false;

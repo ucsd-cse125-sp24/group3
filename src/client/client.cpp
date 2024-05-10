@@ -287,14 +287,14 @@ void Client::draw() {
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
                     //  TODO: Update the player eye level to an acceptable level
-                    glm::vec3 pos = sharedObject->physics.corner + (sharedObject->physics.dimensions / 2.0f);
+                    glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
                     break;
                 }
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
 
-                auto player_pos = sharedObject->physics.corner + (sharedObject->physics.dimensions / 2.0f);
+                auto player_pos = sharedObject->physics.getCenterPosition();
 
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
@@ -310,8 +310,7 @@ void Client::draw() {
                 // auto pos = glm::vec3(0.0f, 0.0f, 0.0f);
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
 
-                this->bear_model->translateAbsolute(sharedObject->physics.corner
-                    + (sharedObject->physics.dimensions / 2.0f));
+                this->bear_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->bear_model->draw(
                     this->model_shader,
                     this->cam->getViewProj(),
@@ -335,13 +334,9 @@ void Client::draw() {
             }
             case ObjectType::SolidSurface: {
                 auto cube = std::make_unique<Cube>(glm::vec3(0.4f,0.5f,0.7f));
-                cube->scale( sharedObject->physics.dimensions);
+                cube->scale(sharedObject->physics.dimensions);
 
-                //  Get solidSurface's center position
-                auto surfacePosition = sharedObject->physics.corner +
-                    0.5f * (sharedObject->physics.dimensions);
-
-                cube->translateAbsolute(surfacePosition);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),

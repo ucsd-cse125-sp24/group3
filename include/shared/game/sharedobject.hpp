@@ -94,6 +94,12 @@ struct SharedPhysics {
 	 */
 	glm::vec3 dimensions;
 
+	/**
+	 * @brief Calculates and returns the center position of this object.
+	 * @return glm::vec3 that denotes the center position of this object.
+	 */
+	glm::vec3 getCenterPosition();
+
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
 		ar& corner& facing & dimensions;
 	}
