@@ -416,27 +416,39 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             Client::time_of_last_keystroke = getMsSinceEpoch();
             break;
 
+        case GLFW_KEY_E:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
+            }
+            break;
+
+        case GLFW_KEY_Q:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::DropItem, DropItemEvent(eid.value())));
+            }
+            break;
+
         case GLFW_KEY_1:
             if (eid.has_value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value(), 1)));
+                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
             }
             break;
 
         case GLFW_KEY_2:
             if (eid.has_value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value(), 2)));
+                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 2)));
             }
             break;
 
         case GLFW_KEY_3:
             if (eid.has_value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value(), 3)));
+                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 3)));
             }
             break;
 
         case GLFW_KEY_4:
             if (eid.has_value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value(), 4)));
+                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 4)));
             }
             break;
 

@@ -169,16 +169,35 @@ void ServerGameState::update(const EventList& events) {
 			break;
 
 		}
+		case EventType::SelectItem:
+		{
+			auto selectItemEvent = boost::get<SelectItemEvent>(event.data);
+			player->sharedInventory.selected = selectItemEvent.itemNum;
+			break;
+		}
 		case EventType::UseItem:
 		{
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
-			Object* obj = this->objects.getObject(useItemEvent.playerEID);
-			Player* player = this->objects.getPlayer(obj->typeID);
-			if (player->inventory.find(useItemEvent.itemNum) != player->inventory.end()) {
-				updateItem(player->typeID, player->inventory.at(useItemEvent.itemNum));
-				player->inventory.erase(useItemEvent.itemNum);
-				player->sharedInventory.inventory.erase(useItemEvent.itemNum);
+			int itemSelected = player->sharedInventory.selected;
+			if (player->inventory.find(itemSelected) != player->inventory.end()) {
+				updateItem(player->typeID, player->inventory.at(itemSelected));
+				player->inventory.erase(itemSelected);
+				player->sharedInventory.inventory.erase(itemSelected);
 				//TODO : should also remove item afterwards
+			}
+			break;
+		}
+		case EventType::DropItem:
+		{
+			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
+			int itemSelected = player->sharedInventory.selected;
+			if (player->inventory.find(itemSelected) != player->inventory.end()) {
+				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
+				item->iteminfo.held = false;
+				item->physics.collider = Collider::Box;
+				item->physics.shared.corner = (player->physics.shared.corner + (player->physics.shared.facing * 4.0f)) * glm::vec3(1.0f, 0.0f, 1.0f);
+				player->inventory.erase(itemSelected);
+				player->sharedInventory.inventory.erase(itemSelected);
 			}
 			break;
 		}
@@ -236,6 +255,12 @@ void ServerGameState::updateMovement() {
 					if (otherObj->physics.collider == Collider::None) { continue; }
 
 					if (detectCollision(object->physics, otherObj->physics)) {
+
+						// If item, resolve it here
+						if (otherObj->type == ObjectType::Potion) {
+							otherObj->doCollision(object, this);
+							continue;
+						}
 						collided = true;
 
 						// Check x-axis collision

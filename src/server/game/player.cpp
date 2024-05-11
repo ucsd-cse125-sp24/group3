@@ -20,6 +20,7 @@ Player::Player():
     this->physics.collider = Collider::Box;
     this->info.is_alive = true;
     this->info.respawn_time = NULL;
+    this->sharedInventory.selected = 1;
 }
 
 Player::~Player() {

@@ -45,10 +45,11 @@ struct SharedStats {
 
 struct SharedInventory {
 	// need to share itemtype data...
+	int selected;
 	std::unordered_map<int, ModelType> inventory;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& inventory;
+		ar& selected & inventory;
 	}
 }; 
 
