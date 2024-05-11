@@ -1,6 +1,7 @@
 #include "server/game/item.hpp"
-#include "server/game/player.hpp"
 #include "shared/game/sharedobject.hpp"
+#include "server/game/servergamestate.hpp"
+#include "server/game/objectmanager.hpp"
 
 /*  Constructors and Destructors    */
 Item::Item(ObjectType type) :

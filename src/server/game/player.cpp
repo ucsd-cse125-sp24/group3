@@ -1,14 +1,12 @@
 #include "server/game/player.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/game/stat.hpp"
-#include "server/game/item.hpp"
-#include "server/game/potion.hpp"
-#include "server/game/servergamestate.hpp"
 #include <iostream>
 
 SharedObject Player::toShared() {
     auto so = Creature::toShared();
     so.playerInfo = this->info;
+    so.inventoryInfo = this->sharedInventory;
     return so;
 }
 

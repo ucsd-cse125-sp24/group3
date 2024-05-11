@@ -3,15 +3,12 @@
 #include <memory>
 
 #include "server/game/object.hpp"
-#include "server/game/item.hpp"
-#include "server/game/trap.hpp"
 #include "server/game/player.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/solidsurface.hpp"
 
 class Trap; // forward declaration to use Trap*
 class Item;
-class Player;
 
 #include "shared/utilities/smartvector.hpp"
 

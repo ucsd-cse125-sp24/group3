@@ -2,8 +2,6 @@
 
 #include "server/game/potion.hpp"
 #include "shared/game/sharedobject.hpp"
-#include "server/game/servergamestate.hpp"
-#include "server/game/objectmanager.hpp"
 
 Potion::Potion(): 
     Item(ObjectType::Potion)

@@ -4,7 +4,6 @@
 #include "server/game/object.hpp"
 #include "server/game/creature.hpp"
 #include "shared/game/sharedobject.hpp"
-#include "server/game/item.hpp"
 #include <unordered_map>
 
 class Player : public Creature {

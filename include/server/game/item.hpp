@@ -1,7 +1,6 @@
 #pragma once
 
 #include "server/game/object.hpp"
-#include "shared/game/sharedobject.hpp"
 #include "server/game/servergamestate.hpp"
 
 class Item : public Object {

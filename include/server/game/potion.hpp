@@ -2,7 +2,6 @@
 
 #include "server/game/item.hpp"
 #include "server/game/object.hpp"
-#include "server/game/servergamestate.hpp"
 
 enum class PotionType {
 	Health,
