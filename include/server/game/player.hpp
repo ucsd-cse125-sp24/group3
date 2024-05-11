@@ -9,6 +9,10 @@ class Player : public Creature {
 public:
 	SharedPlayerInfo info;
 
+	/**
+	 * @param Corner corner position of the player 
+	 * @param facing what direction the player should spawn in facing
+	 */
 	Player(glm::vec3 corner, glm::vec3 facing);
 	~Player();
 

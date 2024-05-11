@@ -7,6 +7,10 @@
 
 class Enemy : public Creature {
 public:
+	/**
+	 * @param Corner corner position of the enemy
+	 * @param facing what direction the enemy should spawn in facing
+	 */
 	Enemy(glm::vec3 corner, glm::vec3 facing);
 	~Enemy();
 
