@@ -1,17 +1,17 @@
 #include "client/camera.hpp"
 // Code adapted from https://learnopengl.com/Getting-started/Camera
 
-Camera::Camera() : cameraPos(glm::vec3(0.0f)), cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)), cameraUp(glm::vec3(0.0f, 1.0f, 0.0f)), viewProjMat(glm::mat4(1.0f)) {
+Camera::Camera() : cameraPos(glm::vec3(0.0f, 0.0f, 1.0f)), cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)), cameraUp(glm::vec3(0.0f, 1.0f, 0.0f)), viewProjMat(glm::mat4(1.0f)) {
     FOV = 45.0f;
     aspect = 1.33f;
     nearClip = 0.1f;
     farClip = 100.0f;
 
     yaw   = -90.0f; // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
-    pitch =  0.0f;
+    pitch =  -69.0f; 
     lastX =  640.0f / 2.0;
     lastY =  480.0 / 2.0;
-    fov   =  45.0f;
+    fov   = 45.0f;
 
     sensitivity = 0.1f;
     firstMouse = true;
@@ -51,10 +51,10 @@ void Camera::update(float xpos, float ypos) {
 
     // limit how much player can see
     // make sure that when pitch is out of bounds, screen doesn't get flipped
-    if (pitch > 70.0f)
-        pitch = 70.0f;
-    if (pitch < -70.0f)
-        pitch = -70.0f;
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
 
     glm::vec3 front;
     front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));

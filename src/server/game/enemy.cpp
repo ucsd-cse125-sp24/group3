@@ -7,6 +7,8 @@ SharedObject Enemy::toShared() {
 }
 
 Enemy::Enemy() : Creature(ObjectType::Enemy) {
+    //	Set model information
+    this->setModel(ModelType::WarrenBear);
 }
 
 Enemy::~Enemy() {}

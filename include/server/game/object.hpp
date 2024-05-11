@@ -6,6 +6,7 @@
 #include "server/game/collider.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/game/sharedmodel.hpp"
 
 //	From sharedobject.hpp
 class SharedObject;
@@ -41,9 +42,9 @@ struct Physics {
 	glm::vec3 velocityMultiplier;
 
 	/**
-	 * @brief Pointer to this object's collider.
+	 * @brief This object's collider type.
 	 */
-	Collider* boundary;
+	Collider collider;
 
 	/*	Debugger Methods	*/
 	std::string to_string(unsigned int tab_offset);
@@ -69,10 +70,33 @@ public:
 	 */
 	ObjectType type;
 
+	/**
+	 * @brief Object's Physics-related properties
+	 */
 	Physics physics;
+
+	/**
+	 * @brief Object's render model type (specifies this Object's render model
+	 * to the client)
+	 */
+	ModelType modelType;
 
 	explicit Object(ObjectType type);
 	virtual ~Object();
+
+	/**
+	 * @brief Sets this Object's model and initializes its dimensions to the
+	 * given model's default dimensions.
+	 * @param type ModelType of the render model that this Object should be
+	 * rendered as.
+	 */
+	void setModel(ModelType type);
+
+	/**
+	 * @brief Maps from ModelType to a model's dimensions as read from the model
+	 * files. (At present, these values are hard-coded in object.cpp)
+	 */
+	static std::unordered_map<ModelType, glm::vec3> models;
 
 	/**
 	 * @brief Generates a SharedObject representation of this object.

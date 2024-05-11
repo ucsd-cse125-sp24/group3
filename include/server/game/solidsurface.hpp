@@ -8,6 +8,8 @@ public:
 
 	~SolidSurface();
 
+	void setSurfaceType(SurfaceType type);
+
 	SharedSolidSurface shared{};
 
 	virtual SharedObject toShared() override;

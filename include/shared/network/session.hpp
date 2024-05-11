@@ -43,11 +43,12 @@ enum SocketError {
  */
 struct SessionInfo {
     SessionInfo(std::optional<std::string> client_name,
-        std::optional<EntityID> client_eid)
-        : client_name(client_name), client_eid(client_eid) {}
+        std::optional<EntityID> client_eid, std::optional<bool> is_dungeon_master)
+        : client_name(client_name), client_eid(client_eid), is_dungeon_master(is_dungeon_master) {}
 
     std::optional<std::string> client_name;
     std::optional<EntityID> client_eid;
+    std::optional<bool> is_dungeon_master;
 };
 
 

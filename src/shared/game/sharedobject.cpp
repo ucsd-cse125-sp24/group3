@@ -16,3 +16,7 @@ std::string objectTypeString(ObjectType type) {
 		return "Unknown";
 	}
 }
+
+glm::vec3 SharedPhysics::getCenterPosition() {
+    return this->corner + (this->dimensions / 2.0f);
+}
