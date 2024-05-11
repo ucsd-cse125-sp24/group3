@@ -18,10 +18,13 @@ public:
     ~Cube();
 
     void draw(std::shared_ptr<Shader> shader,
+            glm::vec3 pos,
+            glm::vec3 dim,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
             glm::vec3 lightPos,
-            bool fill) override;
+            bool fill,
+            bool drawBbox) override;
 private:
     GLuint VAO;
     GLuint VBO_positions, VBO_normals, EBO;

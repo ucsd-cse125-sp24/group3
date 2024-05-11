@@ -76,10 +76,13 @@ Mesh::Mesh(
 
 void Mesh::draw(
     std::shared_ptr<Shader> shader,
+    glm::vec3 pos,
+    glm::vec3 dim,
     glm::mat4 viewProj,
     glm::vec3 camPos,
     glm::vec3 lightPos,
-    bool fill) {
+    bool fill,
+    bool drawBbox) {
     // actiavte the shader program
     shader->use();
 
@@ -149,13 +152,16 @@ Model::Model(const std::string& filepath) {
 }
 
 void Model::draw(std::shared_ptr<Shader> shader,
+    glm::vec3 pos,
+    glm::vec3 dim,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
     glm::vec3 lightPos,
-    bool fill) {
+    bool fill,
+    bool drawBbox) {
 
     for(Mesh& mesh : this->meshes) {
-        mesh.draw(shader, viewProj, camPos, lightPos, fill);
+        mesh.draw(shader, pos, dim, viewProj, camPos, lightPos, fill, drawBbox);
     }
 }
 

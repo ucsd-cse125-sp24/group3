@@ -327,10 +327,13 @@ void Client::draw() {
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
                     this->model_shader,
+                    player_pos,
+                    sharedObject->physics.dimensions,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     lightPos,
-                    true);
+                    true,
+                    false);
                 break;
             }
             case ObjectType::Enemy: {
@@ -340,10 +343,13 @@ void Client::draw() {
                 this->bear_model->translateAbsolute(sharedObject->physics.position);
                 this->bear_model->draw(
                     this->model_shader,
+                    sharedObject->physics.position,
+                    sharedObject->physics.dimensions,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     lightPos,
-                    true);
+                    true,
+                    false);
 
      /*           this->light_source->TranslateTo(lightPos);
                 this->light_source->draw(
@@ -364,10 +370,13 @@ void Client::draw() {
                 cube->scale( sharedObject->solidSurface->dimensions);
                 cube->translateAbsolute(sharedObject->physics.position);
                 cube->draw(this->cube_shader,
+                    sharedObject->physics.position,
+                    sharedObject->solidSurface->dimensions,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     glm::vec3(),
-                    true);
+                    true,
+                    false);
                 break;
             }
             default:

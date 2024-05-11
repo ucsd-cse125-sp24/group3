@@ -10,10 +10,11 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
 #include "assimp/material.h"
+
 #include "client/renderable.hpp"
 #include "client/shader.hpp"
+#include "client/util.hpp"
 
 /**
  * Stores position, normal vector, and coordinates 
@@ -86,10 +87,13 @@ class Mesh : public Renderable {
      * mesh
      */
     void draw(std::shared_ptr<Shader> shader,
+            glm::vec3 pos,
+            glm::vec3 dim,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
             glm::vec3 lightPos,
-            bool fill) override;
+            bool fill,
+            bool drawBbox) override;
  private:
      std::vector<Vertex>       vertices;
      std::vector<unsigned int> indices;
@@ -119,10 +123,13 @@ class Model : public Renderable {
      * meshes of the model
      */
     void draw(std::shared_ptr<Shader> shader,
+            glm::vec3 pos,
+            glm::vec3 dim,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
             glm::vec3 lightPos,
-            bool fill) override;
+            bool fill,
+            bool drawBbox) override;
 
     /**
      * Sets the position of the Model to the given x,y,z
@@ -159,12 +166,32 @@ class Model : public Renderable {
      * the model in each axis (x, y, z)
      */
     void scale(const glm::vec3& scale) override;
+
+    /**
+     * Queries the dimensions of a bounding box around 
+     * the model.
+     *
+     * @return a vec3 where each dimension represents the size
+     * in that dimension
+     */
+    glm::vec3 getDimensions();
+
+    /**
+     * Set dimensions by scaling the model accordingly
+     *
+     * @param a vec3 where each dimension represents the size
+     * in that dimension
+     */
+    void setDimensions(const glm::vec3& dimensions);
  private:
     std::vector<Mesh> meshes;
+    Bbox bbox;
+    glm::vec3 dimensions;
 
     void processNode(aiNode* node, const aiScene* scene);
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, const aiTextureType& type);
+
 
     // store the directory of the model file so that textures can be
     // loaded relative to the model file

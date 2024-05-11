@@ -17,10 +17,13 @@ class Renderable {
      * @param
      */
     virtual void draw(std::shared_ptr<Shader> shader,
+            glm::vec3 pos,
+            glm::vec3 dim,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
             glm::vec3 lightPos,
-            bool fill) = 0;
+            bool fill,
+            bool drawBbox) = 0;
 
     /**
      * Sets the position of the item to the given x,y,z
