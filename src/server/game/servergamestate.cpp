@@ -257,6 +257,7 @@ void ServerGameState::updateMovement() {
 					}
 					object->physics.shared.position.y += movementStep.y;
 					object->physics.shared.corner.y += movementStep.y;
+
 				}
 
 				// update gravity factor
@@ -272,6 +273,13 @@ void ServerGameState::updateMovement() {
 			else {
 				object->physics.shared.position += movementStep;
 				object->physics.shared.corner += movementStep;
+			}
+
+			if (object->physics.shared.corner.y <= 0) {
+				// potentially need to make this unconditional further down
+				object->physics.shared.position.y -= object->physics.shared.corner.y;
+				object->physics.shared.corner.y = 0;
+				object->physics.boundary->corner = object->physics.shared.corner;
 			}
 		}
 	}
@@ -476,6 +484,7 @@ void ServerGameState::loadMaze() {
 					SpecificID enemyID = this->objects.createObject(ObjectType::Enemy);
 
 					Enemy* enemy = this->objects.getEnemy(enemyID);
+					enemy->physics.movable = false;
 					enemy->physics.shared.position = this->grid.gridCellCenterPosition(cell);
 					break;
 				}

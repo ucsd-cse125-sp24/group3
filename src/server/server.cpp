@@ -247,7 +247,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     player->physics.shared.position = this->state.getGrid().gridCellCenterPosition(spawnPoint);
 
     player->physics.shared.corner = player->physics.shared.position - glm::vec3(0.5, 0, 0.5);
-    player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f));
+    player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f, 2.0f, 1.0f));
 
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, player->globalID));

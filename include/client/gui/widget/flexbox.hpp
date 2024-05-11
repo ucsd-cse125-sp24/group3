@@ -12,10 +12,10 @@ public:
     using Ptr = std::unique_ptr<Flexbox>;
 
     struct Options {
-        Options(Justify direction, Align alignment, float padding):
+        Options(Dir direction, Align alignment, float padding):
             direction(direction), alignment(alignment), padding(padding) {}
 
-        Justify direction;
+        Dir direction;
         Align   alignment;
         float   padding;
     };
@@ -49,6 +49,12 @@ public:
      * @brief adds a new widget to the flexbox, from the bottom up
      */
     void push(Widget::Ptr&& widget);
+    /**
+     * IMPORTANT: must call once you are done adding every widget to the flexbox
+     * as this performs some final positioning adjustments for certain direction/alignment
+     * orientations
+     */
+    void lock() override;
 
     void render() override;
     

@@ -22,7 +22,7 @@ std::string getFilepath(Font font) {
     switch (font) {
         case Font::MENU: return (dir / "AncientModernTales-a7Po.ttf").string();
         default:
-        case Font::TEXT: return (dir / "AncientModernTales-a7Po.ttf").string();
+        case Font::TEXT: return (dir / "AtlantisInternational-jen0.ttf").string();
     } 
 }
 
@@ -43,6 +43,11 @@ glm::vec3 getRGB(Color color) {
         default:
             return {0.0f, 0.0f, 0.0f};
     }
+}
+
+float getRelativePixels(float pixels) {
+    float screen_factor = static_cast<float>(WINDOW_WIDTH) / static_cast<float>(UNIT_WINDOW_WIDTH);
+    return pixels * screen_factor;
 }
 
 }

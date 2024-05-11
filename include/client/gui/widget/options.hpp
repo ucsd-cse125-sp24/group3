@@ -2,7 +2,7 @@
 
 namespace gui::widget {
 
-enum class Justify {
+enum class Dir {
     VERTICAL,
     HORIZONTAL
 };
