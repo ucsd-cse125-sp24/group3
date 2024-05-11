@@ -4,8 +4,7 @@ set(LIB_NAME game_server_lib)
 set(FILES
     lobbybroadcaster.cpp
     server.cpp
-    game/boxcollider.cpp
-    game/spherecollider.cpp
+    game/collider.cpp
     game/creature.cpp
     game/item.cpp
     game/solidsurface.cpp
