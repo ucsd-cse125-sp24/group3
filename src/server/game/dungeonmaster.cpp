@@ -8,7 +8,7 @@ SharedObject DungeonMaster::toShared() {
 }
 
 DungeonMaster::DungeonMaster() : Object(ObjectType::DungeonMaster) {
-    this->physics.movable = false; // not a movable player, just top-down view
+    this->physics.feels_gravity = false;
 }
 
 DungeonMaster::~DungeonMaster() {

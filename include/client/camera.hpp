@@ -85,7 +85,7 @@ public:
 
     glm::vec3 getPos();
 
-private:
+protected:
     // Perspective controls
     float FOV;       // Field of View Angle (degrees)
     float aspect;    // Aspect Ratio
@@ -110,5 +110,13 @@ private:
     float speed;
 
     glm::mat4 viewProjMat;
+};
+
+class DungeonMasterCamera : public Camera {
+public:
+    DungeonMasterCamera();
+    ~DungeonMasterCamera();
+
+    void update(float xpos, float ypos);
 };
 

@@ -119,7 +119,7 @@ void ServerGameState::update(const EventList& events) {
 				break;
 			}
 			case ActionType::Jump: {
-				if (obj->physics.velocity.y != 0) { break; }
+				if (!obj->physics.feels_gravity || obj->physics.velocity.y != 0) { break; }
 				obj->physics.velocity.y += (startAction.movement * JUMP_SPEED / 2.0f).y;
 				break;
 			}
@@ -238,11 +238,13 @@ void ServerGameState::updateMovement() {
 				}
 
 				// update gravity factor
-				if ((object->physics.shared.corner).y >= 0) {
-					object->physics.velocity.y -= GRAVITY;
-				}
-				else {
-					object->physics.velocity.y = 0.0f;
+				if (object->physics.feels_gravity) {
+					if ((object->physics.shared.corner).y >= 0) {
+						object->physics.velocity.y -= GRAVITY;
+					}
+					else {
+						object->physics.velocity.y = 0.0f;
+					}
 				}
 			}
 
@@ -365,7 +367,6 @@ void ServerGameState::loadMaze() {
 		rows++;
 	}
 
-
 	std::cout << "Number of rows: " << rows << std::endl;
 
 	//	Initialize Grid with the specified rows and columns
@@ -427,6 +428,7 @@ void ServerGameState::loadMaze() {
 	floor->physics.collider = Collider::None;
 
 	floor->physics.movable = false;
+	floor->physics.feels_gravity = false;
 
 	ceiling->physics.shared.dimensions = 
 		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(),
@@ -439,6 +441,7 @@ void ServerGameState::loadMaze() {
 	ceiling->physics.collider = Collider::None;
 
 	ceiling->physics.movable = false;
+	ceiling->physics.feels_gravity = false;
 	
 
 	//	Step 6:	For each GridCell, add an object (if not empty) at the 
@@ -453,6 +456,7 @@ void ServerGameState::loadMaze() {
 
 					Enemy* enemy = this->objects.getEnemy(enemyID);
 					enemy->physics.movable = false;
+					enemy->physics.feels_gravity = false;
 					//	TODO: maybe update this to use the grid cell's corner
 					//	position or something like this?
 					//	Or, offset the position by 1/2 the dimensions of the
@@ -483,6 +487,7 @@ void ServerGameState::loadMaze() {
 					wall->physics.collider = Collider::Box;
 
 					wall->physics.movable = false;
+					wall->physics.feels_gravity = false;
 
 					break;
 				}

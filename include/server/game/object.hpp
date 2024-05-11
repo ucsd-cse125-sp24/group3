@@ -31,6 +31,13 @@ struct Physics {
 	 */
 	bool movable;
 
+
+	/**
+	 * @brief true if the object that contains this Physics struct feels gravity and
+	 * false otherwise
+	 */
+	bool feels_gravity;
+
 	/**
 	 * @brief 3-D vector that denotes this object's current velocity.
 	 */

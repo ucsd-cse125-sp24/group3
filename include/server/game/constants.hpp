@@ -28,6 +28,6 @@
 #define INITIAL_HEALTH 100
 
 /*	Game	*/
-#define	GRAVITY					0.0f
+#define	GRAVITY					0.03f
 #define	PLAYER_SPEED 			1.5f
 #define JUMP_SPEED				0.5f

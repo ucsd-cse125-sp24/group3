@@ -46,7 +46,9 @@ void Session::_handleReceivedPacket(PacketType type, const std::string& data) {
         this->received_events.push_back(event);
     } else if (type == PacketType::ServerAssignEID) {
         this->info.client_eid = deserialize<ServerAssignEIDPacket>(data).eid;
+        this->info.is_dungeon_master = deserialize<ServerAssignEIDPacket>(data).is_dungeon_master;
         std::cout << "Handling ServerAssignEID of " << *this->info.client_eid << "...\n";
+        std::cout << "Is Dungeon Master? " << (*this->info.is_dungeon_master ? "true" : "false") << "...\n";
     } else if (type == PacketType::ClientDeclareInfo) {
         this->info.client_name = deserialize<ClientDeclareInfoPacket>(data).player_name;
         std::cout << "Handling ClientDeclareInfo from " << *this->info.client_name << "...\n";

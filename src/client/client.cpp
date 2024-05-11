@@ -71,7 +71,7 @@ AudioManager* Client::getAudioManager() {
 bool Client::connectAndListen(std::string ip_addr) {
     this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
     this->session = std::make_shared<Session>(std::move(this->socket),
-        SessionInfo(this->config.client.default_name, std::optional<EntityID>{}, std::optional<bool>{}));
+        SessionInfo(this->config.client.default_name, {}, {}));
 
     if (!this->session->connectTo(this->endpoints)) {
         return false;
@@ -268,6 +268,12 @@ void Client::processServerInput(boost::asio::io_context& context) {
 
             // Change the UI to the game hud UI whenever we change into the GAME game phase
             if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
+                // set to Dungeon Master POV if DM
+                if (this->session->getInfo().is_dungeon_master) {
+                    std::cout << "DUNGEON MASTER CAM!" << std::endl;
+                    this->cam = std::make_unique<DungeonMasterCamera>();
+                }
+
                 this->gui_state = GUIState::GAME_HUD;
             }
         }
@@ -358,11 +364,25 @@ void Client::draw() {
             case ObjectType::SolidSurface: {
                 // do not render ceiling if dungeon master
 
-                // ADD BACK: this->session->getInfo().is_dungeon_master && 
-                if (sharedObject->solidSurface->surfaceType != SurfaceType::Ceiling) {
+                if (this->session->getInfo().is_dungeon_master) {
+                    std::cout << "DUNGEON MASTER!" << std::endl;
+                    if (sharedObject->solidSurface->surfaceType != SurfaceType::Ceiling) {
+                        auto cube = std::make_unique<Cube>(glm::vec3(0.4f, 0.5f, 0.7f));
+                        cube->scale(sharedObject->physics.dimensions);
+
+                        cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        cube->draw(this->cube_shader,
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            glm::vec3(),
+                            true);
+                    }
+                }
+                else {
                     auto cube = std::make_unique<Cube>(glm::vec3(0.4f, 0.5f, 0.7f));
-                    cube->scale(sharedObject->solidSurface->dimensions);
-                    cube->translateAbsolute(sharedObject->physics.position);
+                    cube->scale(sharedObject->physics.dimensions);
+
+                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
                     cube->draw(this->cube_shader,
                         this->cam->getViewProj(),
                         this->cam->getPos(),

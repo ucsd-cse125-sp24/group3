@@ -150,7 +150,8 @@ void Server::_doAccept() {
                 new_session->startListen();
                 std::cout << "about to send server assign id packet" <<std::endl;
                 new_session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
-                    ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value() }));
+                    ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value(), 
+                                            .is_dungeon_master = new_session->getInfo().is_dungeon_master.value()}));
             } else {
                 std::cerr << "Error accepting tcp connection: " << ec << std::endl;
             }
@@ -192,45 +193,43 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     }
 
     // first player is Dungeon Master
-    //if (this->state.getLobby().players.size() == 0) {
-    //    std::cout << "the dungeon master baby!" << std::endl;
+    if (this->state.getLobby().players.size() == 0) {
+        std::cout << "the dungeon master baby!" << std::endl;
 
-    //    SpecificID dmID = this->state.objects.createObject(ObjectType::DungeonMaster);
-    //    DungeonMaster* dm = this->state.objects.getDM();
+        SpecificID dmID = this->state.objects.createObject(ObjectType::DungeonMaster);
+        DungeonMaster* dm = this->state.objects.getDM();
 
-    //    //  Spawn player in random spawn point
+        //  Spawn player in random spawn point
 
-    //    //  TODO: Possibly replace this random spawn point with player assignments?
-    //    //  I.e., assign each player a spawn point to avoid multiple players getting
-    //    //  the same spawn point?
-    //    std::srand(std::time(NULL));
-    //    std::vector<GridCell*> spawnPoints = this->state.getGrid().getSpawnPoints();
-    //    size_t randomSpawnIndex = std::rand() % spawnPoints.size();
+        //  TODO: Possibly replace this random spawn point with player assignments?
+        //  I.e., assign each player a spawn point to avoid multiple players getting
+        //  the same spawn point?
+        std::srand(std::time(NULL));
+        std::vector<GridCell*> spawnPoints = this->state.getGrid().getSpawnPoints();
+        size_t randomSpawnIndex = std::rand() % spawnPoints.size();
 
-    //    std::cout << "Number of spawn points: " << spawnPoints.size() << std::endl;
-    //    std::cout << "Player " << dmID << " spawning at spawn point " << randomSpawnIndex << std::endl;
+        std::cout << "Number of spawn points: " << spawnPoints.size() << std::endl;
+        std::cout << "Player " << dmID << " spawning at spawn point " << randomSpawnIndex << std::endl;
 
-    //    GridCell* spawnPoint =
-    //        this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
+        GridCell* spawnPoint =
+            this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
 
-    //    dm->physics.shared.position = this->state.getGrid().gridCellCenterPosition(spawnPoint) + glm::vec3(0.0f, 100.0f, 0.0f);
+        dm->physics.shared.corner = this->state.getGrid().gridCellCenterPosition(spawnPoint) + glm::vec3(0.0f, 25.0f, 0.0f);
 
-    //    dm->physics.shared.corner = dm->physics.shared.position - glm::vec3(0.5, 0, 0.5);
-    //    dm->physics.boundary = new BoxCollider(dm->physics.shared.corner, glm::vec3(1.0f));
+        dm->physics.collider = Collider::Box;
 
-    //    auto session = std::make_shared<Session>(std::move(this->socket),
-    //        SessionInfo({}, dm->globalID, true));
+        auto session = std::make_shared<Session>(std::move(this->socket),
+            SessionInfo({}, dm->globalID, true));
 
-    //    this->sessions.insert(SessionEntry(dm->globalID, addr, session));
+        this->sessions.insert(SessionEntry(dm->globalID, addr, session));
 
-    //    std::cout << "Established new connection with " << addr << ", which was assigned eid "
-    //        << dm->globalID << std::endl;
+        std::cout << "Established new connection with " << addr << ", which was assigned eid "
+            << dm->globalID << std::endl;
 
-    //    return session;
-    //} 
+        return session;
+    } 
 
     // Brand new connection
-    // TODO: reject connection if not in LOBBY GamePhase
     SpecificID playerID = this->state.objects.createObject(ObjectType::Player);
     Player* player = this->state.objects.getPlayer(playerID);
 
@@ -246,7 +245,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     std::cout << "Number of spawn points: " << spawnPoints.size() << std::endl;
     std::cout << "Player " << playerID << " spawning at spawn point " << randomSpawnIndex << std::endl;
 
-    GridCell * spawnPoint = 
+    GridCell* spawnPoint =
         this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
 
     //  TODO: Fix this so that the player spawns at the center of the grid cell,
