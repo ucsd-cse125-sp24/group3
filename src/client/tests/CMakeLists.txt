@@ -39,6 +39,9 @@ target_link_libraries(${TARGET_NAME}
     freetype
 )
 
+target_link_libraries(${LIB_NAME} PRIVATE sfml-audio)
+target_link_libraries(${TARGET_NAME} PRIVATE sfml-audio)
+
 # setup make target
 set(RUN_TESTS_TARGET "run_${TARGET_NAME}")
 add_custom_target(${RUN_TESTS_TARGET})

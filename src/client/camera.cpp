@@ -16,23 +16,13 @@ Camera::Camera() : cameraPos(glm::vec3(0.0f)), cameraFront(glm::vec3(0.0f, 0.0f,
     sensitivity = 0.1f;
     firstMouse = true;
 
-    // cameraPos   = glm::vec3(0.0f);
-    // cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    // cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
-
     worldUp = cameraUp;
 
     speed = 0.125f;
-
-    // viewProjMat = glm::mat4(1.0f);
 }
 
 Camera::~Camera() {
 
-}
-
-glm::mat4 Camera::getViewProj() {
-    return viewProjMat;
 }
 
 glm::vec3 Camera::getPos() {
@@ -72,6 +62,7 @@ void Camera::update(float xpos, float ypos) {
     front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     cameraFront = glm::normalize(front);
 
+    glm::vec3 oldCamUp = cameraUp;
     cameraRight = glm::normalize(glm::cross(cameraFront, worldUp)); 
     cameraUp = glm::normalize(glm::cross(cameraRight, cameraFront));
 
@@ -82,14 +73,13 @@ void Camera::update(float xpos, float ypos) {
 }
 
 glm::vec3 Camera::move(bool is_x_axis, float dir) {
+    glm::vec3 effCameraFront = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
+
     if (is_x_axis) {
-        //glm::vec3 effCameraFront = glm::normalize(cameraFront - cameraFront.y);
-        // cameraPos += dir * speed * effCameraFront;
-        //return dir * speed * effCameraFront;
-        return dir * speed * cameraRight;
+        return dir * glm::normalize(glm::cross(effCameraFront, cameraUp)) * speed;
     } else {
-        // cameraPos += dir * glm::normalize(glm::cross(cameraFront, cameraUp)) * speed;
-        return dir * speed * cameraFront;
+        return dir * speed * effCameraFront;
+        // return dir * speed * cameraRight;
     }
 }
 

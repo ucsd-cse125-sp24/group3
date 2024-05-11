@@ -74,7 +74,13 @@ public:
      */
     void startListen();
 
-    void connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpoints);
+    /**
+     * Connects to the ip
+     * 
+     * @returns true/false if the connection was successful
+     */
+    [[nodiscard("You should check if the connection was successful")]]
+        bool connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpoints);
 
     /**
      * Gets all of the received packets since the last time this function was called.

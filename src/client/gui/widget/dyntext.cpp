@@ -49,8 +49,6 @@ DynText::DynText(const std::string& text, std::shared_ptr<gui::font::Loader> fon
     DynText({0.0f, 0.0f}, text, fonts, options) {}
 
 void DynText::render() {
-    glEnable(GL_CULL_FACE);
-
     DynText::shader->use();
 
     auto projection = GUI_PROJECTION_MATRIX();
@@ -99,8 +97,6 @@ void DynText::render() {
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
-
-    glDisable(GL_CULL_FACE);
 }
 
 void DynText::changeColor(font::Color new_color) {
