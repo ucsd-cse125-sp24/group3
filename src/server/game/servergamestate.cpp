@@ -4,6 +4,7 @@
 #include "server/game/potion.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "server/game/constants.hpp"
+#include "shared/utilities/time.hpp"
 
 #include <fstream>
 
@@ -100,7 +101,12 @@ SharedGameState ServerGameState::generateSharedGameState() {
 void ServerGameState::update(const EventList& events) {
 
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
-		//std::cout << event << std::endl;
+		// skip any events from dead players
+		auto player = dynamic_cast<Player*>(this->objects.getObject(src_eid));
+		if (player != nullptr && !player->info.is_alive) {
+			continue;
+		}
+
 		Object* obj;
 	
         switch (event.type) {
@@ -171,6 +177,7 @@ void ServerGameState::update(const EventList& events) {
 			if (player->inventory.find(useItemEvent.itemNum) != player->inventory.end()) {
 				updateItem(player->typeID, player->inventory.at(useItemEvent.itemNum));
 				player->inventory.erase(useItemEvent.itemNum);
+				player->sharedInventory.inventory.erase(useItemEvent.itemNum);
 				//TODO : should also remove item afterwards
 			}
 			break;
@@ -184,6 +191,8 @@ void ServerGameState::update(const EventList& events) {
 	//	TODO: fill update() method with updating object movement
 	updateMovement();
 	updateTraps();
+	handleDeaths();
+	handleRespawns();
 	
 	//	Increment timestep
 	this->timestep++;
@@ -209,12 +218,10 @@ void ServerGameState::updateMovement() {
 		if (object->physics.movable) {
 			// Check for collision at position to move, if so, dont change position
 			// O(n^2) naive implementation of collision detection
-			//Collider* currentCollider = object->physics.boundary;
 			glm::vec3 movementStep = object->physics.velocity * object->physics.velocityMultiplier;
 
 			// Run collision detection movement if it has a collider
 			if (object->physics.collider != Collider::None) {
-				//currentCollider->corner += movementStep; // only move collider to check
 				object->physics.shared.corner += movementStep;
 
 				// TODO : for possible addition for smooth collision detection, but higher computation
@@ -231,24 +238,6 @@ void ServerGameState::updateMovement() {
 					if (detectCollision(object->physics, otherObj->physics)) {
 						collided = true;
 
-						// If player colliding with items, add it to inventory
-						if (object->type == ObjectType::Player && otherObj->type == ObjectType::Potion) {
-							Player* player = this->objects.getPlayer(object->typeID);
-							Item* item = this->objects.getItem(otherObj->typeID);
-							
-							if (player->inventory.size() < MAX_ITEMS) {
-								for (int x : {1,2,3,4}) {
-									if (!player->inventory.contains(x)) {
-										player->inventory[x] = item->typeID;
-										break;
-									}
-								}
-								item->iteminfo.held = true;
-								item->physics.collider = Collider::None;
-								continue;
-							}
-						}
-
 						// Check x-axis collision
 						object->physics.shared.corner.z -= movementStep.z;
 						if (detectCollision(object->physics, otherObj->physics)) {
@@ -256,47 +245,25 @@ void ServerGameState::updateMovement() {
 						}
 
 						// Check z-axis collision
-						/*currentCollider->corner.z += movementStep.z;
-						currentCollider->corner.x -= movementStep.x;*/
 						object->physics.shared.corner.z += movementStep.z;
 						object->physics.shared.corner.x -= movementStep.x;
 						if (detectCollision(object->physics, otherObj->physics)) {
 							collidedZ = true;
 						}
-						//currentCollider->corner.x += movementStep.x;
 						object->physics.shared.corner.x += movementStep.x;
+
+						object->doCollision(otherObj, this);
+						otherObj->doCollision(object, this);
 					}
 				}
 
-				// Move object if no collision detected (this is already done)
-				/*if (!collided) {
-					object->physics.shared.corner += movementStep;
-				}*/
-				// Revert collider if collided
-				// Separated for x/z axis collisions
-				/*else {*/
-				/*if (!collidedX) {
-					object->physics.shared.corner.x = originalObjectCorner + movementStep.x;
-				}
-				else {
-					currentCollider->corner.x -= movementStep.x;
-				}*/
 				if (collidedX) {
 					object->physics.shared.corner.x -= movementStep.x;
 				}
 
-				/*if (!collidedZ) {
-					object->physics.shared.corner.z += movementStep.z;
-				}
-				else {
-					currentCollider->corner.z -= movementStep.z;
-				}*/
 				if (collidedZ) {
 					object->physics.shared.corner.z -= movementStep.z;
 				}
-
-					//object->physics.shared.corner.y += movementStep.y;
-				//}
 
 				// update gravity factor
 				if ((object->physics.shared.corner).y >= 0) {
@@ -367,7 +334,43 @@ void ServerGameState::updateTraps() {
             trap->reset();
         }
 	}
+}
 
+void ServerGameState::handleDeaths() {
+	// TODO: also handle enemy deaths
+	// unsure of the best way to do this right now
+	// ideally we would be able to get an array of all of the creatures
+	// but the current interface of the object manager doesn't really let you do that
+	// easily
+
+	// thinking that you might have to handle enemies differently either way because
+	// they wont have a SharedPlayerInfo and respawn time stuff they need to
+	auto players = this->objects.getPlayers();
+	for (int p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		if (player->stats.health.current() <= 0 && player->info.is_alive) {
+			player->info.is_alive = false;
+			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
+		}
+	}
+}
+
+void ServerGameState::handleRespawns() {
+	auto players = this->objects.getPlayers();
+	for (int p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		if (!player->info.is_alive) {
+			if (getMsSinceEpoch() >= player->info.respawn_time) {
+				player->physics.shared.corner = this->getGrid().getRandomSpawnPoint();
+				player->info.is_alive = true;
+				player->stats.health.adjustBase(player->stats.health.max());
+			}
+		}
+	}
 }
 
 unsigned int ServerGameState::getTimestep() const {
@@ -543,13 +546,41 @@ void ServerGameState::loadMaze() {
 			GridCell* cell = this->grid.getCell(col, row);
 
 			switch (cell->type) {
-				case CellType::Potion: {
+				case CellType::HealthPotion: {
 					SpecificID potID = this->objects.createObject(ObjectType::Potion);
 					Potion* pot = dynamic_cast<Potion*>(this->objects.getItem(potID));
 					pot->setDuration(HEALTH_DURATION);
 					pot->seteffectScalar(RESTORE_HEALTH);
 					pot->setPotionType(PotionType::Health);
+					pot->physics.shared.dimensions = glm::vec3(1.0f);
 
+					pot->physics.shared.corner =
+						glm::vec3(cell->x * this->grid.getGridCellWidth() + 1,
+							0,
+							cell->y * this->grid.getGridCellWidth() + 1);
+					break;
+				}
+				case CellType::SwiftnessPotion: {
+					SpecificID potID = this->objects.createObject(ObjectType::Potion);
+					Potion* pot = dynamic_cast<Potion*>(this->objects.getItem(potID));
+					pot->setDuration(SPEED_DURATION);
+					pot->seteffectScalar(SPEED_BOOST);
+					pot->setPotionType(PotionType::Swiftness);
+					pot->physics.shared.dimensions = glm::vec3(1.0f);
+
+					pot->physics.shared.corner =
+						glm::vec3(cell->x * this->grid.getGridCellWidth() + 1,
+							0,
+							cell->y * this->grid.getGridCellWidth() + 1);
+					break;
+				}
+				case CellType::InvisibilityPotion: {
+					SpecificID potID = this->objects.createObject(ObjectType::Potion);
+					Potion* pot = dynamic_cast<Potion*>(this->objects.getItem(potID));
+					pot->setDuration(INVIS_DURATION);
+					pot->seteffectScalar(0);
+					pot->setPotionType(PotionType::Invisibility);
+					
 					pot->physics.shared.dimensions = glm::vec3(1.0f);
 
 					pot->physics.shared.corner =

@@ -193,29 +193,9 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     SpecificID playerID = this->state.objects.createObject(ObjectType::Player);
     Player* player = this->state.objects.getPlayer(playerID);
 
-    //  Spawn player in random spawn point
-
-    //  TODO: Possibly replace this random spawn point with player assignments?
-    //  I.e., assign each player a spawn point to avoid multiple players getting
-    //  the same spawn point?
-    std::srand(std::time(NULL));
-    std::vector<GridCell*> spawnPoints = this->state.getGrid().getSpawnPoints();
-    size_t randomSpawnIndex = std::rand() % spawnPoints.size();
-
-    std::cout << "Number of spawn points: " << spawnPoints.size() << std::endl;
-    std::cout << "Player " << playerID << " spawning at spawn point " << randomSpawnIndex << std::endl;
-
-    GridCell * spawnPoint = 
-        this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
-
     //  TODO: Fix this so that the player spawns at the center of the grid cell,
     //  not having the player's corner position in the center of the grid cell
-    player->physics.shared.corner = this->state.getGrid().gridCellCenterPosition(spawnPoint);
-    //player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f, 2.0f, 1.0f));
-
-    //  TODO: Set player dimensions in Player constructor!
-
-    player->physics.collider = Collider::Box;
+    player->physics.shared.corner = this->state.getGrid().getRandomSpawnPoint();
 
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, player->globalID));

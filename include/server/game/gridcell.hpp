@@ -6,7 +6,9 @@ enum class CellType {
 	Spawn,
 	Enemy,
 	SpikeTrap,
-	Potion,
+	HealthPotion,
+	SwiftnessPotion,
+	InvisibilityPotion,
 	Unknown
 };
 

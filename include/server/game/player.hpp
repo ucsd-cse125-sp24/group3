@@ -9,12 +9,15 @@
 
 class Player : public Creature {
 public:
+	SharedPlayerInfo info;
+	SharedInventory sharedInventory;
+
 	std::unordered_map<int, SpecificID> inventory;
 
 	Player();
 	~Player();
 
 	virtual SharedObject toShared() override;
-private:
 
+private:
 };

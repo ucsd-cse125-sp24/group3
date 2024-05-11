@@ -89,6 +89,12 @@ public:
 	std::vector<GridCell*> getSpawnPoints();
 
 	/**
+	 * @brief randomly selects a spawn point
+	 * @return corner coordinate of a randomly selected spawn point
+	 */
+	glm::vec3 getRandomSpawnPoint();
+
+	/**
 	 * @brief Returns the center position (as an Object position vector) of the
 	 * given GridCell's center.
 	 * @param cell GridCell whose center position will be returned as an

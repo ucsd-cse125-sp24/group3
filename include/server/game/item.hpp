@@ -1,15 +1,16 @@
 #pragma once
 
-#include "server/game/constants.hpp"
 #include "server/game/object.hpp"
 #include "shared/game/sharedobject.hpp"
-#include "shared/game/sharedgamestate.hpp"
+#include "server/game/servergamestate.hpp"
 
 class Item : public Object {
 public:
 	SharedItemInfo iteminfo;
 
 	Item(ObjectType type);
+
+	void doCollision(Object* other, ServerGameState* state) override;
 
 	virtual SharedObject toShared() override;
 

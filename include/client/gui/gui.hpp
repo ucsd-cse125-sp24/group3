@@ -34,7 +34,8 @@ enum class GUIState {
     LOBBY_BROWSER,
     LOBBY,
     GAME_HUD,
-    GAME_ESC_MENU
+    GAME_ESC_MENU,
+    DEAD_SCREEN
 };
 
 #define GUI_PROJECTION_MATRIX() glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT);
@@ -359,6 +360,10 @@ private:
      * BUG: Mouse movement is still tracked causing disorienting reorientation upon resuming
      */
     void _layoutGameEscMenu();
+    /**
+     * @brief Displays the screen which appears when the player fucking DIES
+     */
+    void _layoutDeadScreen();
     /// =============================================================================
 };
 

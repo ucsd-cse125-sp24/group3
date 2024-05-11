@@ -6,6 +6,7 @@
 
 using namespace std::chrono_literals;
 
+const int SpikeTrap::DAMAGE = 9999;
 const std::chrono::seconds SpikeTrap::ACTIVE_TIME = 4s;
 const std::chrono::seconds SpikeTrap::TIME_UNTIL_RESET = 10s;
 
@@ -78,4 +79,11 @@ void SpikeTrap::reset() {
     if (this->physics.shared.corner.y >= this->reset_corner.y) {
         Trap::reset();
     }
+}
+
+void SpikeTrap::doCollision(Object* other, ServerGameState* state) {
+    auto creature = dynamic_cast<Creature*>(other);
+    if (creature == nullptr) return; // not a creature, so don't really care
+
+    creature->stats.health.adjustBase(-DAMAGE);
 }

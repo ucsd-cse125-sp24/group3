@@ -8,6 +8,7 @@
 
 SharedObject Player::toShared() {
     auto so = Creature::toShared();
+    so.playerInfo = this->info;
     return so;
 }
 
@@ -18,6 +19,9 @@ Player::Player():
     ))
 {
     this->setModel(ModelType::Player);
+    this->physics.collider = Collider::Box;
+    this->info.is_alive = true;
+    this->info.respawn_time = NULL;
 }
 
 Player::~Player() {
