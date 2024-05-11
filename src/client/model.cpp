@@ -16,6 +16,7 @@
 #include "assimp/aabb.h"
 #include "assimp/material.h"
 #include "assimp/types.h"
+#include "client/renderable.hpp"
 #include "client/util.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include <assimp/Importer.hpp>
@@ -67,17 +68,15 @@ Mesh::Mesh(
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    std::cout << "Loaded mesh with " << vertices.size() << " vertices, and " << textures.size() << " textures" << std::endl;
-    std::cout << "\t diffuse " << glm::to_string(this->material.diffuse) << std::endl;
-    std::cout << "\t ambient " << glm::to_string(this->material.diffuse) << std::endl;
-    std::cout << "\t specular " << glm::to_string(this->material.specular) << std::endl;
-    std::cout << "\t shininess" << this->material.shininess << std::endl;
+    // std::cout << "Loaded mesh with " << vertices.size() << " vertices, and " << textures.size() << " textures" << std::endl;
+    // std::cout << "\t diffuse " << glm::to_string(this->material.diffuse) << std::endl;
+    // std::cout << "\t ambient " << glm::to_string(this->material.diffuse) << std::endl;
+    // std::cout << "\t specular " << glm::to_string(this->material.specular) << std::endl;
+    // std::cout << "\t shininess" << this->material.shininess << std::endl;
 }
 
 void Mesh::draw(
     std::shared_ptr<Shader> shader,
-    glm::vec3 pos,
-    glm::vec3 dim,
     glm::mat4 viewProj,
     glm::vec3 camPos,
     glm::vec3 lightPos,
@@ -149,11 +148,11 @@ Model::Model(const std::string& filepath) {
     }
 
     processNode(scene->mRootNode, scene);
+    std::cout << "Loaded model from " << filepath << std::endl;
+    std::cout << "\tDimensions: " << glm::to_string(this->getDimensions()) << std::endl;
 }
 
 void Model::draw(std::shared_ptr<Shader> shader,
-    glm::vec3 pos,
-    glm::vec3 dim,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
     glm::vec3 lightPos,
@@ -161,31 +160,70 @@ void Model::draw(std::shared_ptr<Shader> shader,
     bool drawBbox) {
 
     for(Mesh& mesh : this->meshes) {
-        mesh.draw(shader, pos, dim, viewProj, camPos, lightPos, fill, drawBbox);
+        mesh.draw(shader, viewProj, camPos, lightPos, fill, drawBbox);
     }
 }
 
 void Model::translateAbsolute(const glm::vec3& new_pos) {
+    Renderable::translateAbsolute(new_pos);
     for(Mesh& mesh : this->meshes) {
         mesh.translateAbsolute(new_pos);
     }
 }
 
 void Model::translateRelative(const glm::vec3& delta) {
+    Renderable::translateRelative(delta);
     for(Mesh& mesh : this->meshes) {
         mesh.translateAbsolute(delta);
     }
 }
 
-void Model::scale(const float& new_factor) {
+void Model::scaleAbsolute(const float& new_factor) {
+    Renderable::scaleAbsolute(new_factor);
     for(Mesh& mesh : this->meshes) {
-        mesh.scale(new_factor);
+        mesh.scaleAbsolute(new_factor);
     }
 }
 
-void Model::scale(const glm::vec3& scale) {
+void Model::scaleAbsolute(const glm::vec3& scale) {
+    Renderable::scaleAbsolute(scale);
     for(Mesh& mesh : this->meshes) {
-        mesh.scale(scale);
+        mesh.scaleAbsolute(scale);
+    }
+}
+
+void Model::scaleRelative(const float& new_factor) {
+    Renderable::scaleRelative(new_factor);
+    for(Mesh& mesh : this->meshes) {
+        mesh.scaleRelative(new_factor);
+    }
+}
+
+void Model::scaleRelative(const glm::vec3& scale) {
+    Renderable::scaleRelative(scale);
+    for(Mesh& mesh : this->meshes) {
+        mesh.scaleRelative(scale);
+    }
+}
+
+void Model::clear() {
+    Renderable::clear();
+    for(Mesh& mesh : this->meshes) {
+        mesh.clear();
+    }
+}
+
+void Model::clearScale() {
+    Renderable::clearScale();
+    for(Mesh& mesh : this->meshes) {
+        mesh.clearScale();
+    }
+}
+
+void Model::clearPosition() {
+    Renderable::clearScale();
+    for(Mesh& mesh : this->meshes) {
+        mesh.clearPosition();
     }
 }
 
@@ -195,7 +233,7 @@ glm::vec3 Model::getDimensions() {
 
 void Model::setDimensions(const glm::vec3& dimensions) {
     auto scaleFactor = dimensions / this->dimensions;
-    this->scale(scaleFactor);
+    this->scaleAbsolute(scaleFactor);
 }
 
 void Model::processNode(aiNode *node, const aiScene *scene) {
@@ -259,7 +297,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     float shininess = 0.0f;
 
     if(mesh->mMaterialIndex >= 0) {
-        std::cout << "processing material of id: " << mesh->mMaterialIndex << std::endl;
+        // std::cout << "processing material of id: " << mesh->mMaterialIndex << std::endl;
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
         std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
@@ -301,7 +339,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, const aiTextureType& type) {
     std::vector<Texture> textures;
-    std::cout << "material has " << mat->GetTextureCount(type) << " textures of type " << aiTextureTypeToString(type) << std::endl;
+    // std::cout << "material has " << mat->GetTextureCount(type) << " textures of type " << aiTextureTypeToString(type) << std::endl;
     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
         aiString str;
         mat->GetTexture(type, i, &str);
@@ -329,14 +367,14 @@ Texture::Texture(const std::string& filepath, const aiTextureType& type) {
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
-    std::cout << "Attempting to load texture at " << filepath << std::endl;
+    // std::cout << "Attempting to load texture at " << filepath << std::endl;
     unsigned char *data = stbi_load(filepath.c_str(), &width, &height, &nrComponents, 0);
     if (!data) {
         std::cout << "Texture failed to load at path: " << filepath << std::endl;
         stbi_image_free(data);
         throw std::exception();
     }
-    std::cout << "Succesfully loaded texture at " << filepath << std::endl;
+    // std::cout << "Succesfully loaded texture at " << filepath << std::endl;
     GLenum format = GL_RED;
     if (nrComponents == 1)
         format = GL_RED;

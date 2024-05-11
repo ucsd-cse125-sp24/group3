@@ -136,8 +136,6 @@ Cube::~Cube() {
 }
 
 void Cube::draw(std::shared_ptr<Shader> shader,
-    glm::vec3 pos, 
-    glm::vec3 dims, 
     glm::mat4 viewProj,
     glm::vec3 camPos, 
     glm::vec3 lightPos,

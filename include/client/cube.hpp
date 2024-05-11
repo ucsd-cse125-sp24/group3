@@ -18,8 +18,6 @@ public:
     ~Cube();
 
     void draw(std::shared_ptr<Shader> shader,
-            glm::vec3 pos,
-            glm::vec3 dim,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
             glm::vec3 lightPos,

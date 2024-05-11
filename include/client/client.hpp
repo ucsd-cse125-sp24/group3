@@ -77,6 +77,7 @@ private:
     std::shared_ptr<Shader> model_shader;
     std::shared_ptr<Shader> light_source_shader;
 
+    std::unique_ptr<Model> cube_model;
     std::unique_ptr<Model> player_model;
     std::unique_ptr<Model> bear_model;
     std::unique_ptr<LightSource> light_source;

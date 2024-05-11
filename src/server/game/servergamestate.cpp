@@ -477,6 +477,7 @@ void ServerGameState::loadMaze() {
 
 					Enemy* enemy = this->objects.getEnemy(enemyID);
 					enemy->physics.shared.position = this->grid.gridCellCenterPosition(cell);
+                    enemy->physics.shared.dimensions = BEAR_DIMENSIONS / 8.0f;
 					break;
 				}
 				case CellType::Wall: {
