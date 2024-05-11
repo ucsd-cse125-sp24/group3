@@ -36,40 +36,6 @@ ServerGameState::ServerGameState(GamePhase start_phase, const GameConfig& config
 	this->phase = start_phase;
 }
 
-//ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) 
-//	: ServerGameState(DEFAULT_MAZE_FILE) {
-//	this->phase = start_phase;
-//	this->timestep_length = config.game.timestep_length_ms;
-//	this->lobby.max_players = config.server.max_players;
-//}
-//
-//ServerGameState::ServerGameState(GamePhase start_phase) 
-//	: ServerGameState(DEFAULT_MAZE_FILE) {
-//	this->phase = start_phase;
-//}
-//
-//ServerGameState::ServerGameState() : ServerGameState(DEFAULT_MAZE_FILE) {}
-//
-//ServerGameState::ServerGameState(std::string maze_file) {
-//	this->phase = GamePhase::LOBBY;
-//	this->timestep = FIRST_TIMESTEP;
-//	this->timestep_length = TIMESTEP_LEN;
-//	this->lobby.max_players = MAX_PLAYERS;
-//	this->maze_file = maze_file;
-//
-//	//	Load maze (Note: This only happens in THIS constructor! All other
-//	//	ServerGameState constructors MUST call this constructor to load the
-//	//	maze environment from a file)
-//	this->loadMaze();
-//}
-//
-//ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config, 
-//	std::string maze_file) : ServerGameState(maze_file) {
-//	this->phase = start_phase;
-//	this->timestep_length = config.game.timestep_length_ms;
-//	this->lobby.max_players = config.server.max_players;
-//}
-
 ServerGameState::~ServerGameState() {}
 
 /*	SharedGameState generation	*/
@@ -476,38 +442,18 @@ void ServerGameState::loadMaze() {
 
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
 
-	SpecificID floorID = this->objects.createObject(ObjectType::SolidSurface);
-	SpecificID ceilingID = this->objects.createObject(ObjectType::SolidSurface);
-
-	SolidSurface* floor = this->objects.getSolidSurface(floorID);
-	SolidSurface* ceiling = this->objects.getSolidSurface(ceilingID);
-
-	//	Set floor and ceiling's x and z dimensions equal to grid dimensions
-	
-	floor->physics.shared.dimensions =
-		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(),
-			0.1,
-			this->grid.getRows() * this->grid.getGridCellWidth());
-
-	floor->physics.shared.corner = glm::vec3(0.0f, -0.1f, 0.0f);
-
-	//	Set floor collider to None
-	floor->physics.collider = Collider::None;
-
-	floor->physics.movable = false;
-
-	ceiling->physics.shared.dimensions = 
-		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(),
-			0.1,
-			this->grid.getRows() * this->grid.getGridCellWidth());
-
-	ceiling->physics.shared.corner = glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f);
-
-	//	Set ceiling collider to None
-	ceiling->physics.collider = Collider::None;
-
-	ceiling->physics.movable = false;
-	
+	// Create Floor
+	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Floor, 
+		glm::vec3(0.0f, -0.1f, 0.0f),
+		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(), 0.1,
+			this->grid.getRows() * this->grid.getGridCellWidth())
+	));
+	// Create Ceiling
+	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Ceiling, 
+		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),
+		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(), 0.1,
+			this->grid.getRows() * this->grid.getGridCellWidth())
+	));
 
 	//	Step 6:	For each GridCell, add an object (if not empty) at the 
 	//	GridCell's position.
@@ -517,58 +463,39 @@ void ServerGameState::loadMaze() {
 
 			switch (cell->type) {
 				case CellType::SpikeTrap: {
-					SpecificID trapID = this->objects.createObject(ObjectType::SpikeTrap);
-					SpikeTrap* trap = dynamic_cast<SpikeTrap*>(this->objects.getTrap(trapID));
-
                     const float HEIGHT_SHOWING = 0.5;
-
-					trap->physics.shared.dimensions = glm::vec3(
+					glm::vec3 dimensions(
 						this->grid.getGridCellWidth(),
 						MAZE_CEILING_HEIGHT,
 						this->grid.getGridCellWidth()
 					);
-					trap->physics.shared.corner = 
-						glm::vec3(cell->x * this->grid.getGridCellWidth(),
-							MAZE_CEILING_HEIGHT - HEIGHT_SHOWING, 
-							cell->y * this->grid.getGridCellWidth());
+					glm::vec3 corner(
+						cell->x * this->grid.getGridCellWidth(),
+						MAZE_CEILING_HEIGHT - HEIGHT_SHOWING, 
+						cell->y * this->grid.getGridCellWidth()
+					);
+
+					this->objects.createObject(new SpikeTrap(corner, dimensions));
 					break;
 				}
 				case CellType::Enemy: {
-					SpecificID enemyID = this->objects.createObject(ObjectType::Enemy);
-
-					Enemy* enemy = this->objects.getEnemy(enemyID);
-					enemy->physics.movable = false;
-					//	TODO: maybe update this to use the grid cell's corner
-					//	position or something like this?
-					//	Or, offset the position by 1/2 the dimensions of the
-					//	object (i.e., so that the Enemy's center position is in
-					//	the center of the grid cell)
-					enemy->physics.shared.corner = this->grid.gridCellCenterPosition(cell);
+					this->objects.createObject(new Enemy(
+						this->grid.gridCellCenterPosition(cell), glm::vec3(0.0f)));
 					break;
 				}
 				case CellType::Wall: {
-					//	Create a new Wall object
-					SpecificID wallID = 
-						this->objects.createObject(ObjectType::SolidSurface);
+					glm::vec3 dimensions(
+						this->grid.getGridCellWidth(),
+						MAZE_CEILING_HEIGHT,
+						this->grid.getGridCellWidth()
+					);
+					glm::vec3 corner(
+						cell->x * this->grid.getGridCellWidth(),
+						0.0f, 
+						cell->y * this->grid.getGridCellWidth()
+					);
 
-					//	TODO: Shouldn't this use the typeID? Change
-					//	createObject() to return the typeID of an object and
-					//	add specific object getters based on their types.
-					SolidSurface* wall = this->objects.getSolidSurface(wallID);
-
-					wall->physics.shared.dimensions =
-						glm::vec3(this->grid.getGridCellWidth(),
-							MAZE_CEILING_HEIGHT,
-							this->grid.getGridCellWidth());
-					
-					wall->physics.shared.corner = 
-						glm::vec3(cell->x * this->grid.getGridCellWidth(),
-							0.0f, 
-							cell->y * this->grid.getGridCellWidth());
-					wall->physics.collider = Collider::Box;
-
-					wall->physics.movable = false;
-
+					this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
 					break;
 				}
 			}

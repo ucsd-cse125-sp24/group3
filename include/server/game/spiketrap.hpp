@@ -8,7 +8,7 @@
 
 class SpikeTrap : public Trap {
 public:
-    SpikeTrap();
+    SpikeTrap(glm::vec3 corner, glm::vec3 dimensions);
 
     const static int DAMAGE;
     const static std::chrono::seconds ACTIVE_TIME; // how long the spikes are down

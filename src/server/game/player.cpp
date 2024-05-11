@@ -9,14 +9,12 @@ SharedObject Player::toShared() {
     return so;
 }
 
-Player::Player():
-    Creature(ObjectType::Player, SharedStats(
+Player::Player(glm::vec3 corner, glm::vec3 facing):
+    Creature(ObjectType::Player, corner, facing, ModelType::Player, SharedStats(
         Stat(0, 100, 100),
         Stat(0, 10, 5)
     ))
 {
-    this->setModel(ModelType::Player);
-    this->physics.collider = Collider::Box;
     this->info.is_alive = true;
     this->info.respawn_time = NULL;
 }

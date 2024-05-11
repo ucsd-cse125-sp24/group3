@@ -10,12 +10,9 @@ const int SpikeTrap::DAMAGE = 9999;
 const std::chrono::seconds SpikeTrap::ACTIVE_TIME = 4s;
 const std::chrono::seconds SpikeTrap::TIME_UNTIL_RESET = 10s;
 
-SpikeTrap::SpikeTrap():
-    Trap(ObjectType::SpikeTrap) 
+SpikeTrap::SpikeTrap(glm::vec3 corner, glm::vec3 dimensions):
+    Trap(ObjectType::SpikeTrap, false, corner, ModelType::Cube, dimensions) 
 {
-    this->setModel(ModelType::Cube);
-    this->physics.collider = Collider::Box;
-    this->physics.movable = false;
     this->dropped_time = std::chrono::system_clock::now();
 }
 

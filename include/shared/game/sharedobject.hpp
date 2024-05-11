@@ -52,7 +52,7 @@ struct SharedItemInfo {
 	ItemType type;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& held& used& scalar& timer& type;
+		ar & held & used & scalar & timer & type;
 	}
 };
 
@@ -70,7 +70,7 @@ struct SharedSolidSurface {
 	SurfaceType surfaceType;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& surfaceType;
+		ar & surfaceType;
 	}
 };
 

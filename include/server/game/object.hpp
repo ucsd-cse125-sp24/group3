@@ -22,6 +22,21 @@ class ServerGameState; // forward declaration to use ptr as parameter
  */
 struct Physics {
 	/**
+	 * @brief constructor for Physics
+	 * NOTE: dimensions is an optional parameter, because most of the time dimensions will be
+	 * set by the setModel function!
+	 * NOTE: velocity defaults to 0
+	 * NOTE: velocityMultitplier defaults to 1
+	 */
+	Physics(bool movable, Collider collider,
+		glm::vec3 corner, glm::vec3 facing,
+		glm::vec3 dimensions = glm::vec3(1.0f)):
+		shared{.corner=corner, .facing=facing, .dimensions=dimensions},
+		movable(movable), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)),
+		collider(collider)
+	{}
+
+	/**
 	 * @brief Shared physics properties (needed by both the server and the 
 	 * client)
 	 */
@@ -83,7 +98,7 @@ public:
 	 */
 	ModelType modelType;
 
-	explicit Object(ObjectType type);
+	Object(ObjectType type, Physics physics, ModelType modelType);
 	virtual ~Object();
 
 	/**

@@ -8,9 +8,13 @@ SharedObject Creature::toShared() {
     return so;
 }
 
-Creature::Creature(ObjectType type, SharedStats stats) : Object(type), stats(stats) {
-    //  Set collider to Box
-    this->physics.collider = Collider::Box;
-}
+Creature::Creature(ObjectType type,
+    glm::vec3 corner,
+    glm::vec3 facing,
+    ModelType modelType,
+    SharedStats stats):
+    Object(type, Physics(true, Collider::Box, corner, facing), modelType), stats(stats)
+    // dimensions in physics set by setModel in Object constructor
+{}
 
 Creature::~Creature() {}

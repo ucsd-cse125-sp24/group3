@@ -4,7 +4,7 @@
 
 class SolidSurface : public Object {
 public:
-	SolidSurface();
+	SolidSurface(bool movable, Collider collider, SurfaceType type, glm::vec3 corner, glm::vec3 dimensions);
 
 	~SolidSurface();
 

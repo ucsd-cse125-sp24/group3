@@ -8,7 +8,12 @@ class Creature : public Object {
 public:
 	SharedStats stats;
 
-	Creature(ObjectType type, SharedStats stats);
+	Creature(ObjectType type, 
+		glm::vec3 corner,
+		glm::vec3 facing,
+		ModelType modelType,
+		SharedStats stats);
+
 	virtual ~Creature();
 
 	virtual SharedObject toShared() override;

@@ -7,7 +7,7 @@
 
 class Trap : public Object {
 public:
-    Trap(ObjectType type);
+    Trap(ObjectType type, bool movable, glm::vec3 corner, ModelType model, glm::vec3 dimensions);
 
     virtual bool shouldTrigger(ServerGameState& state) = 0;
 

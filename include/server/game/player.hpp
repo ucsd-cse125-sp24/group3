@@ -9,7 +9,7 @@ class Player : public Creature {
 public:
 	SharedPlayerInfo info;
 
-	Player();
+	Player(glm::vec3 corner, glm::vec3 facing);
 	~Player();
 
 	virtual SharedObject toShared() override;
