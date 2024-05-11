@@ -23,6 +23,12 @@ class ServerGameState; // forward declaration to use ptr as parameter
 struct Physics {
 	/**
 	 * @brief constructor for Physics
+	 * 
+	 * @param movable Whether or not the object is affected by velocity/gravity
+	 * @param collider Collision type for this object
+	 * @param corner bottom left corner position of the object
+	 * @param facing what direction the object is facing
+	 * 
 	 * NOTE: dimensions is an optional parameter, because most of the time dimensions will be
 	 * set by the setModel function!
 	 * NOTE: velocity defaults to 0
@@ -98,6 +104,11 @@ public:
 	 */
 	ModelType modelType;
 
+	/**
+	 * @param type Type of the object
+	 * @param Physics position/physics info for the object
+	 * @param modelType What kind of model to render for this object
+	 */
 	Object(ObjectType type, Physics physics, ModelType modelType);
 	virtual ~Object();
 
