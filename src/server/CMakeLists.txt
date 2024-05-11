@@ -17,6 +17,8 @@ set(FILES
     game/grid.cpp
     game/trap.cpp
     game/spiketrap.cpp
+    game/arrowtrap.cpp
+    game/projectile.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

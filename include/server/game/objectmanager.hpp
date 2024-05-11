@@ -8,7 +8,9 @@
 #include "server/game/enemy.hpp"
 #include "server/game/solidsurface.hpp"
 
-class Trap; // forward declaration to use Trap*
+// forward declarations to use pointers
+class Trap; 
+class Projectile;
 
 #include "shared/utilities/smartvector.hpp"
 
@@ -236,4 +238,10 @@ private:
 	 * ObjectType::Trap.
 	 */
 	SmartVector<Trap *> traps;
+
+	/**
+	 * @brief SmartVector of projectile pointers to all objects whose ObjectType is
+	 * ObjectType::Projectile.
+	 */
+	SmartVector<Projectile *> projectiles;
 };

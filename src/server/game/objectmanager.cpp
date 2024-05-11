@@ -1,6 +1,8 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/spiketrap.hpp"
+#include "server/game/arrowtrap.hpp"
+#include "server/game/projectile.hpp"
 
 #include <memory>
 
@@ -27,6 +29,12 @@ SpecificID ObjectManager::createObject(Object* object) {
 	object->globalID = globalID;
 
 	switch (object->type) {
+		case ObjectType::Projectile:
+			object->typeID = this->projectiles.push(dynamic_cast<Projectile*>(object));
+			break;
+		case ObjectType::ArrowTrap:
+			object->typeID = this->traps.push(dynamic_cast<ArrowTrap*>(object));
+			break;
 		case ObjectType::SpikeTrap:
 			object->typeID = this->traps.push(dynamic_cast<SpikeTrap*>(object));
 			break;

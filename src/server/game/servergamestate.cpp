@@ -1,6 +1,7 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "server/game/spiketrap.hpp"
+#include "server/game/arrowtrap.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 
@@ -169,74 +170,82 @@ void ServerGameState::updateMovement() {
 		if (object->physics.movable) {
 			// Check for collision at position to move, if so, dont change position
 			// O(n^2) naive implementation of collision detection
-			glm::vec3 movementStep = object->physics.velocity * object->physics.velocityMultiplier;
+			glm::vec3 totalMovementStep = object->physics.velocity * object->physics.velocityMultiplier;
+			glm::vec3 movementStep;
+			if (glm::length(totalMovementStep) > 0.25f) {
+				movementStep = 0.25f * totalMovementStep;
+			} else {
+				movementStep = totalMovementStep;
+			}
 
-			// Run collision detection movement if it has a collider
-			if (object->physics.collider != Collider::None) {
-				object->physics.shared.corner += movementStep;
+			glm::vec3 moved(0.0f);
+			while (moved.x < totalMovementStep.x) {
+				moved += movementStep;
+				// Run collision detection movement if it has a collider
+				if (object->physics.collider != Collider::None) {
+					object->physics.shared.corner += movementStep;
 
-				// TODO : for possible addition for smooth collision detection, but higher computation
-				// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
-				//    Then, take the most steps possible (mario 64 handles it like this)
-				// 2) Using raycasting
+					// TODO : for possible addition for smooth collision detection, but higher computation
+					// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
+					//    Then, take the most steps possible (mario 64 handles it like this)
+					// 2) Using raycasting
 
-				for (int j = 0; j < gameObjects.size(); j++) {
-					if (i == j) { continue; }
-					Object* otherObj = gameObjects.get(j);
+					for (int j = 0; j < gameObjects.size(); j++) {
+						if (i == j) { continue; }
+						Object* otherObj = gameObjects.get(j);
 
-					if (otherObj->physics.collider == Collider::None) { continue; }
+						if (otherObj->physics.collider == Collider::None) { continue; }
 
-					if (detectCollision(object->physics, otherObj->physics)) {
-						collided = true;
-
-						// Check x-axis collision
-						object->physics.shared.corner.z -= movementStep.z;
 						if (detectCollision(object->physics, otherObj->physics)) {
-							collidedX = true;
-						}
+							collided = true;
 
-						// Check z-axis collision
-						object->physics.shared.corner.z += movementStep.z;
+							// Check x-axis collision
+							object->physics.shared.corner.z -= movementStep.z;
+							if (detectCollision(object->physics, otherObj->physics)) {
+								collidedX = true;
+							}
+
+							// Check z-axis collision
+							object->physics.shared.corner.z += movementStep.z;
+							object->physics.shared.corner.x -= movementStep.x;
+							if (detectCollision(object->physics, otherObj->physics)) {
+								collidedZ = true;
+							}
+							object->physics.shared.corner.x += movementStep.x;
+
+							object->doCollision(otherObj, this);
+							otherObj->doCollision(object, this);
+						}
+					}
+
+					if (collidedX) {
 						object->physics.shared.corner.x -= movementStep.x;
-						if (detectCollision(object->physics, otherObj->physics)) {
-							collidedZ = true;
-						}
-						object->physics.shared.corner.x += movementStep.x;
+					}
 
-						object->doCollision(otherObj, this);
-						otherObj->doCollision(object, this);
+					if (collidedZ) {
+						object->physics.shared.corner.z -= movementStep.z;
+					}
+
+					// update gravity factor
+					if ((object->physics.shared.corner).y > 0) {
+						object->physics.velocity.y -= GRAVITY;
+					}
+					else {
+						object->physics.velocity.y = 0.0f;
 					}
 				}
-
-				if (collidedX) {
-					object->physics.shared.corner.x -= movementStep.x;
-				}
-
-				if (collidedZ) {
-					object->physics.shared.corner.z -= movementStep.z;
-				}
-
-				// update gravity factor
-				if ((object->physics.shared.corner).y >= 0) {
-					object->physics.velocity.y -= GRAVITY;
-				}
 				else {
-					object->physics.velocity.y = 0.0f;
+					object->physics.shared.corner += movementStep;
+				}
+
+				if (object->physics.shared.corner.y <= 0) {
+					object->physics.shared.corner.y = 0;
+				}
+
+				if (collided) {
+					break; // don't need to do the further movement steps until we reach totalmovement step
 				}
 			}
-
-			// if current object do not have a collider / this shouldn't happen though
-			else {
-				object->physics.shared.corner += movementStep;
-			}
-
-			if (object->physics.shared.corner.y <= 0) {
-				// potentially need to make this unconditional further down
-				object->physics.shared.corner.y = 0;
-				//object->physics.boundary->corner = object->physics.shared.corner;
-			}
-
-
 		}
 	}
 }
@@ -264,10 +273,10 @@ void ServerGameState::updateTraps() {
 		auto trap = traps.get(i);
 		if (trap == nullptr) { continue; } // unsure if i need this?
 		if (trap->shouldTrigger(*this)) {
-			trap->trigger();
+			trap->trigger(*this);
 		}
         if (trap->shouldReset(*this)) {
-            trap->reset();
+            trap->reset(*this);
         }
 	}
 }
@@ -462,6 +471,20 @@ void ServerGameState::loadMaze() {
 			GridCell* cell = this->grid.getCell(col, row);
 
 			switch (cell->type) {
+				case CellType::ArrowTrap: {
+					glm::vec3 dimensions(
+						this->grid.getGridCellWidth() / 2,
+						0.5f,
+						this->grid.getGridCellWidth() / 2
+					);
+					glm::vec3 corner(
+						cell->x * this->grid.getGridCellWidth(),
+						1.0f,
+						cell->y * this->grid.getGridCellWidth()
+					);
+					this->objects.createObject(new ArrowTrap(corner, dimensions));
+					break;
+				}
 				case CellType::SpikeTrap: {
                     const float HEIGHT_SHOWING = 0.5;
 					glm::vec3 dimensions(

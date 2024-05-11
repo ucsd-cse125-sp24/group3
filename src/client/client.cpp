@@ -365,6 +365,28 @@ void Client::draw() {
                     true);
                 break;
             }
+            case ObjectType::ArrowTrap: {
+                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 0.5f, 0.5f));
+                cube->scale( sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
+                break;
+            }
+            case ObjectType::Projectile: {
+                auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 1.0f, 1.0f));
+                cube->scale( sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
+                break;
+            }
             default:
                 break;
         }

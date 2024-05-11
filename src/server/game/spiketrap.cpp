@@ -11,7 +11,7 @@ const std::chrono::seconds SpikeTrap::ACTIVE_TIME = 4s;
 const std::chrono::seconds SpikeTrap::TIME_UNTIL_RESET = 10s;
 
 SpikeTrap::SpikeTrap(glm::vec3 corner, glm::vec3 dimensions):
-    Trap(ObjectType::SpikeTrap, false, corner, ModelType::Cube, dimensions) 
+    Trap(ObjectType::SpikeTrap, false, corner, Collider::Box, ModelType::Cube, dimensions) 
 {
     this->dropped_time = std::chrono::system_clock::now();
 }
@@ -52,8 +52,8 @@ bool SpikeTrap::shouldTrigger(ServerGameState& state) {
     return false;
 }
 
-void SpikeTrap::trigger() {
-    Trap::trigger();
+void SpikeTrap::trigger(ServerGameState& state) {
+    Trap::trigger(state);
 
     this->reset_corner = this->physics.shared.corner;
     this->reset_dimensions = this->physics.shared.dimensions;
@@ -69,12 +69,12 @@ bool SpikeTrap::shouldReset(ServerGameState& state) {
     return (this->info.triggered && (now - this->dropped_time) > ACTIVE_TIME);
 }
 
-void SpikeTrap::reset() {
+void SpikeTrap::reset(ServerGameState& state) {
     this->physics.movable = false;
     this->physics.shared.corner.y += 0.1;
 
     if (this->physics.shared.corner.y >= this->reset_corner.y) {
-        Trap::reset();
+        Trap::reset(state);
     }
 }
 

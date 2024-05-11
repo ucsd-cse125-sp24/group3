@@ -18,7 +18,9 @@ enum class ObjectType {
 	SolidSurface,
 	Player,
 	Enemy,
-	SpikeTrap
+	SpikeTrap,
+	ArrowTrap,
+	Projectile
 };
 
 /**
