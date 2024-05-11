@@ -31,7 +31,7 @@ std::string objectTypeString(ObjectType type);
 struct SharedStats {
 	SharedStats():
 		health(0,0,0), speed(0,0,0) {}
-	SharedStats(Stat<int> health, Stat<int> speed):
+	SharedStats(Stat<int>&& health, Stat<int>&& speed):
 		health(health), speed(speed) {}
 
 	Stat<int> health;

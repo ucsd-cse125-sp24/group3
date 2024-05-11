@@ -12,7 +12,7 @@ Creature::Creature(ObjectType type,
     glm::vec3 corner,
     glm::vec3 facing,
     ModelType modelType,
-    SharedStats stats):
+    SharedStats&& stats):
     Object(type, Physics(true, Collider::Box, corner, facing), modelType), stats(stats)
     // dimensions in physics set by setModel in Object constructor
 {}

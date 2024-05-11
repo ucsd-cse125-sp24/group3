@@ -12,7 +12,7 @@ public:
 		glm::vec3 corner,
 		glm::vec3 facing,
 		ModelType modelType,
-		SharedStats stats);
+		SharedStats&& stats);
 
 	virtual ~Creature();
 
