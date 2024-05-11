@@ -290,6 +290,16 @@ void Client::draw() {
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
+
+                    // reset back to game mode if this is the first frame in which you are respawned
+                    if (this->gui_state == GUIState::DEAD_SCREEN && sharedObject->playerInfo->is_alive) {
+                        this->gui_state = GUIState::GAME_HUD;
+                    }
+
+                    // Check if you are actually still alive
+                    if (!sharedObject->playerInfo->is_alive) {
+                        this->gui_state = GUIState::DEAD_SCREEN;
+                    }
                     break;
                 }
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);

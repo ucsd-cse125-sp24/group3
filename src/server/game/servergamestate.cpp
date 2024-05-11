@@ -99,7 +99,12 @@ SharedGameState ServerGameState::generateSharedGameState() {
 void ServerGameState::update(const EventList& events) {
 
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
-		//std::cout << event << std::endl;
+		// skip any events from dead players
+		auto player = dynamic_cast<Player*>(this->objects.getObject(src_eid));
+		if (player != nullptr && !player->info.is_alive) {
+			continue;
+		}
+
 		Object* obj;
 	
         switch (event.type) {
@@ -172,6 +177,7 @@ void ServerGameState::update(const EventList& events) {
 	updateMovement();
 	updateTraps();
 	handleDeaths();
+	handleRespawns();
 	
 	//	Increment timestep
 	this->timestep++;
@@ -314,7 +320,7 @@ void ServerGameState::handleDeaths() {
 		auto player = players.get(p);
 		if (player == nullptr) continue;
 
-		if (player->stats.health.current() <= 0) {
+		if (player->stats.health.current() <= 0 && player->info.is_alive) {
 			player->info.is_alive = false;
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
 		}
@@ -331,6 +337,7 @@ void ServerGameState::handleRespawns() {
 			if (getMsSinceEpoch() >= player->info.respawn_time) {
 				player->physics.shared.corner = this->getGrid().getRandomSpawnPoint();
 				player->info.is_alive = true;
+				player->stats.health.adjustBase(player->stats.health.max());
 			}
 		}
 	}
