@@ -11,6 +11,7 @@ Potion::Potion():
     this->duration = 0;
     this->effectScalar = 0;
     this->potType = PotionType::Health;
+    this->physics.collider = Collider::Box;
     this->iteminfo.type = ItemType::Potion;
 }
 

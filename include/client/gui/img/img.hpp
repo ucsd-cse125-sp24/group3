@@ -16,10 +16,14 @@ namespace gui::img {
  */
 enum class ImgID {
     Yoshi,
-    AwesomeSauce
+    AwesomeSauce,
+    ItemFrame,
+    HealthPotion,
+    SwiftnessPotion,
+    InvisPotion
 };
 #define GET_ALL_IMG_IDS() \
-    {ImgID::Yoshi, ImgID::AwesomeSauce}
+    {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::ItemFrame, ImgID::HealthPotion, ImgID::SwiftnessPotion, ImgID::InvisPotion}
 
 /**
  * Representation of a loaded image

@@ -12,8 +12,8 @@ std::unique_ptr<Shader> StaticImg::shader = nullptr;
 StaticImg::StaticImg(glm::vec2 origin, gui::img::Img img):
     Widget(Type::StaticImg, origin), img(img)
 {
-    this->width = img.width;
-    this->height = img.height;
+    this->width = img.width * 2;
+    this->height = img.height * 2;
     this->texture_id = img.texture_id;
 }
 
@@ -28,8 +28,8 @@ StaticImg::~StaticImg() {
 
 void StaticImg::render() {
     // ⚠ SUS SHIT ⚠
-    float width_percent = (2.0f / (WINDOW_WIDTH)) * (img.width);
-    float height_percent = (2.0f / (WINDOW_HEIGHT)) * (img.height);
+    float width_percent = (2.0f / (WINDOW_WIDTH)) * (img.width) * 2;
+    float height_percent = (2.0f / (WINDOW_HEIGHT)) * (img.height) * 2;
     glm::vec2 bottom_left = (2.0f * (origin / glm::vec2(WINDOW_WIDTH, WINDOW_HEIGHT))) - glm::vec2(1.0f, 1.0f);
 
     float vertices[] = {
@@ -66,6 +66,7 @@ void StaticImg::render() {
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    glDisable(GL_CULL_FACE);
     StaticImg::shader->use();
 
     // glm::mat4 projection = GUI_PROJECTION_MATRIX();
@@ -83,6 +84,8 @@ void StaticImg::render() {
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
+
+    glEnable(GL_CULL_FACE);
 }
 
 }

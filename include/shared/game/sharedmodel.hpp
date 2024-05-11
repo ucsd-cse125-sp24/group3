@@ -6,5 +6,9 @@
 enum class ModelType {
 	Cube,
 	Player,
-	WarrenBear
+	WarrenBear,
+	HealthPotion,
+	SwiftnessPotion,
+	InvisibilityPotion,
+	Frame
 };

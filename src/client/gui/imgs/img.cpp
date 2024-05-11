@@ -10,6 +10,10 @@ std::string getImgFilepath(ImgID img) {
         default:
         case ImgID::Yoshi: return (img_root / "Yoshi.png").string();
         case ImgID::AwesomeSauce: return (img_root / "awesomeface.png").string();
+        case ImgID::ItemFrame: return (img_root / "frame.png").string();
+        case ImgID::HealthPotion: return (img_root / "pot_health.png").string();
+        case ImgID::SwiftnessPotion: return (img_root / "pot_swiftness.png").string();
+        case ImgID::InvisPotion: return (img_root / "pot_invisibility.png").string();
 
     }
 }

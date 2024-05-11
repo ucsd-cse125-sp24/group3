@@ -42,14 +42,15 @@ struct SharedStats {
 	}
 };
 
+
 struct SharedInventory {
 	// need to share itemtype data...
-	std::unordered_map<int, SpecificID> inventory;
+	std::unordered_map<int, ModelType> inventory;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& dimensions& surfaceType;
+		ar& inventory;
 	}
-};
+}; 
 
 /**
  * @brief An enum for the type of an item
@@ -143,6 +144,7 @@ public:
 	boost::optional<SharedItemInfo> iteminfo;
 	boost::optional<SharedSolidSurface> solidSurface;
 	boost::optional<SharedTrapInfo> trapInfo;
+	boost::optional<SharedInventory> inventoryInfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}

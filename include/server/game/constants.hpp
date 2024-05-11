@@ -10,7 +10,7 @@
 #define MAX_WALLS 1000
 #define MAX_TRAPS 10
 #define MAX_SPELLS 4
-#define MAX_ITEMS 5
+#define MAX_ITEMS 4
 
 /*	Constants	*/
 #define	FIRST_TIMESTEP			0

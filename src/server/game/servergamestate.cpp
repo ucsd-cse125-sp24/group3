@@ -237,14 +237,14 @@ void ServerGameState::updateMovement() {
 							Item* item = this->objects.getItem(otherObj->typeID);
 							
 							if (player->inventory.size() < MAX_ITEMS) {
-								for (int x : {1,2,3,4,5}) {
-									if (!player->inventory.contains(i)) {
+								for (int x : {1,2,3,4}) {
+									if (!player->inventory.contains(x)) {
 										player->inventory[x] = item->typeID;
 										break;
 									}
 								}
 								item->iteminfo.held = true;
-								item->physics.boundary = NULL;
+								item->physics.collider = Collider::None;
 								continue;
 							}
 						}
@@ -551,13 +551,11 @@ void ServerGameState::loadMaze() {
 					pot->setPotionType(PotionType::Health);
 
 					pot->physics.shared.dimensions = glm::vec3(1.0f);
-					pot->physics.shared.position = this->grid.gridCellCenterPosition(cell) +
-						glm::vec3(0, 0.5, 0);
+
 					pot->physics.shared.corner =
 						glm::vec3(cell->x * this->grid.getGridCellWidth() + 1,
 							0,
 							cell->y * this->grid.getGridCellWidth() + 1);
-					pot->physics.boundary = new BoxCollider(pot->physics.shared.corner, pot->physics.shared.dimensions);
 					break;
 				}
 				case CellType::SpikeTrap: {

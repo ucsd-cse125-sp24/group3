@@ -345,6 +345,12 @@ private:
      * TODO: this is not implemented yet
      */
     void _layoutGameHUD();
+
+    /**
+    * @brief Displays the Game HUD for both gameHUD and EscMenu layout
+    */
+    void _sharedGameHUD();
+
     /**
      * @brief Displays the menu which appears when the player presses Escape while playing
      * 

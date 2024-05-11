@@ -359,7 +359,7 @@ void Client::draw() {
                 if (!sharedObject->iteminfo->held) {
                     auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
                     cube->scale(sharedObject->physics.dimensions);
-                    cube->translateAbsolute(sharedObject->physics.position);
+                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
                     cube->draw(this->cube_shader,
                         this->cam->getViewProj(),
                         this->cam->getPos(),
