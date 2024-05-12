@@ -4,29 +4,12 @@
 
 /*	Constructors and Destructors	*/
 
-Object::Object(ObjectType type) {
+Object::Object(ObjectType type, Physics physics, ModelType modelType):
+	physics(physics)
+{
 	//	Set object type to Object
 	this->type = type;
-
-	//	Set collider (by default, no collider)
-	this->physics.collider = Collider::None;
-
-	//	Set model information
-	this->setModel(ModelType::Cube);
-	
-	//	Initialize object Physics
-	//	By default, the newly created object spawns at the origin without any
-	//	velocity or acceleration, and is movable. The object faces toward the
-	//	x-axis.
-
-	this->physics.shared.corner = glm::vec3(0.0f, 0.0f, 0.0f);
-	this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
-
-	this->physics.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
-	this->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
-
-	this->physics.movable = true;
-	this->physics.feels_gravity = true;
+	this->setModel(modelType);
 }
 
 Object::~Object() {}
@@ -34,17 +17,16 @@ Object::~Object() {}
 void Object::setModel(ModelType type) {
 	//	Set model information
 	this->modelType = type;
-	this->physics.shared.dimensions = Object::models.find(this->modelType)->second;
+
+	// Right now all of our cube's dimensions are being set manually
+	// so we really only want to do this change if this is an actual model
+	// with preset dimensions
+	// Maybe we need to think of a better way to do this later on
+	if (type != ModelType::Cube) {
+		this->physics.shared.dimensions = Object::models.find(this->modelType)->second;
+	}
 
 }
-
-//void Object::setDimensions(glm::vec3 dimensions) {
-//	//	Update this Object's SharedPhysics dimensions to the given value
-//	this->physics.shared.dimensions = dimensions;
-//
-//	//	IMPORTANT! Update the render model's scaling to the new dimensions!
-//	this->model.scale = dimensions / this->model.dimensions;
-//}
 
 /*	Static properties	*/
 std::unordered_map<ModelType, glm::vec3> Object::models ({
@@ -61,7 +43,6 @@ SharedObject Object::toShared() {
 	shared.globalID = this->globalID;
 	shared.type = this->type;
 	shared.physics = this->physics.shared;
-	//shared.model = this->model;
 	shared.modelType = this->modelType;
 
 	return shared;

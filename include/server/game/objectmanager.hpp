@@ -9,6 +9,8 @@
 #include "server/game/dungeonmaster.hpp"
 #include "server/game/solidsurface.hpp"
 
+class Trap; // forward declaration to use Trap*
+
 #include "shared/utilities/smartvector.hpp"
 
 class ObjectManager {
@@ -28,7 +30,7 @@ public:
 	 * @param type the type of object to create
 	 * @return the SpecificID of the newly created object
 	 */
-	SpecificID createObject(ObjectType type);
+	SpecificID createObject(Object* object);
 
 	/**
 	 * @brief Attempts to remove an object with the given EntityID.
@@ -100,6 +102,13 @@ public:
 	Enemy* getEnemy(SpecificID enemyID);
 
 	/**
+	 * @brief Attempts to retrieve the Trap with the given SpecificID.
+	 * @param trapID lSpecificID of the Trap to retrieve
+	 * @return A pointer 
+	 */
+	Trap* getTrap(SpecificID trapID);
+
+	/**
 	 * @brief Get a list of all objects in this game instance at the current
 	 * timestep.
 	 * @return SmartVector of Object pointers of all objects in the game
@@ -138,6 +147,14 @@ public:
 	 * instance.
 	 */
 	SmartVector<Enemy*> getEnemies();
+
+	/**
+	 * @brief Get a list of all Traps in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Trap pointers of all Trap objects in the game
+	 * instance
+	 */
+	SmartVector<Trap*> getTraps();
 
 	/*	SharedGameState generation	*/
 	
@@ -216,6 +233,12 @@ private:
 	 * ObjectType::Enemy.
 	 */
 	SmartVector<Enemy *> enemies;
+
+	/**
+	 * @brief SmartVector of Trap pointers to all objects whose ObjectType is
+	 * ObjectType::Trap.
+	 */
+	SmartVector<Trap *> traps;
 
 	DungeonMaster * dm;
 };

@@ -1,5 +1,6 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
+#include "server/game/spiketrap.hpp"
 
 #include <memory>
 
@@ -20,55 +21,20 @@ ObjectManager::~ObjectManager() {
 
 /*	Object CRUD methods	*/
 
-SpecificID ObjectManager::createObject(ObjectType type) {
+SpecificID ObjectManager::createObject(Object* object) {
 	//	Create a new object with the given type
-	EntityID globalID;
-	SpecificID typeID;
+	EntityID globalID = this->objects.push(object);
+	object->globalID = globalID;
 
-	switch (type) {
-		case ObjectType::Item: {
-			//	Create a new object of type Item
-			Item* item = new Item();
-
-			//	Push to type-specific items vector
-			typeID = (SpecificID)this->items.push(item);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(item);
-
-			//	Set items' type and global IDs
-			item->typeID = typeID;
-			item->globalID = globalID;
+	switch (object->type) {
+		case ObjectType::SpikeTrap:
+			object->typeID = this->traps.push(dynamic_cast<SpikeTrap*>(object));
 			break;
-		}
-		case ObjectType::SolidSurface: {
-			//	Create a new object of type SolidSurface
-			SolidSurface* solidSurface = new SolidSurface();
-
-			//	Push to type-specific solid_surfaces vector
-			typeID = (SpecificID)this->solid_surfaces.push(solidSurface);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(solidSurface);
-
-			//	Set solidSurface's type and global IDs
-			solidSurface->typeID = typeID;
-			solidSurface->globalID = globalID;
+		case ObjectType::Item:
+			object->typeID = this->items.push(dynamic_cast<Item*>(object));
 			break;
-		}
-		case ObjectType::Player: {
-			//	Create a new object of type Player
-			Player* player = new Player();
-
-			//	Push to type-specific players vector
-			typeID = (SpecificID)this->players.push(player);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(player);
-
-			//	Set object's type and global IDs
-			player->typeID = typeID;
-			player->globalID = globalID;
+		case ObjectType::SolidSurface:
+			object->typeID = this->solid_surfaces.push(dynamic_cast<SolidSurface*>(object));
 			break;
 		}
 		case ObjectType::DungeonMaster: {
@@ -139,10 +105,18 @@ SpecificID ObjectManager::createObject(ObjectType type) {
             object->globalID = globalID;
             break;
         }
+		case ObjectType::Player:
+			object->typeID = this->players.push(dynamic_cast<Player*>(object));
+			break;
+        case ObjectType::Enemy:
+			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
+			break;
+        default:
+			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << "\n";
+			std::exit(1);
 	}
 
-	//	Return new object's specificID
-	return typeID;
+	return object->typeID;
 }
 
 bool ObjectManager::removeObject(EntityID globalID) {
@@ -227,6 +201,10 @@ Enemy* ObjectManager::getEnemy(SpecificID enemyID) {
 	return this->enemies.get(enemyID);
 }
 
+Trap* ObjectManager::getTrap(SpecificID trapID) {
+	return this->traps.get(trapID);
+}
+
 SmartVector<Item*> ObjectManager::getItems() {
 	return this->items;
 }
@@ -241,6 +219,10 @@ SmartVector<Player*> ObjectManager::getPlayers() {
 
 SmartVector<Enemy*> ObjectManager::getEnemies() {
 	return this->enemies;
+}
+
+SmartVector<Trap*> ObjectManager::getTraps() {
+	return this->traps;
 }
 
 /*	SharedGameState generation	*/

@@ -15,6 +15,8 @@ set(FILES
     game/enemy.cpp
     game/gridcell.cpp
     game/grid.cpp
+    game/trap.cpp
+    game/spiketrap.cpp
     game/dungeonmaster.cpp
 )
 
