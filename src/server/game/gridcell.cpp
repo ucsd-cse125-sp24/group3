@@ -16,7 +16,7 @@ CellType charToCellType(char c) {
 	case 'X':
 		return CellType::SpikeTrap;
 	case '&':
-		return CellType::ArrowTrap;
+		return CellType::FireballTrap;
 	case '+':
 		return CellType::FloorSpikeFull;
 	case '|':

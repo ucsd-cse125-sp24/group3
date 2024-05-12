@@ -1,7 +1,7 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/spiketrap.hpp"
-#include "server/game/arrowtrap.hpp"
+#include "server/game/fireballtrap.hpp"
 #include "server/game/projectile.hpp"
 
 #include <memory>
@@ -32,7 +32,7 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::Projectile:
 			object->typeID = this->projectiles.push(dynamic_cast<Projectile*>(object));
 			break;
-		case ObjectType::ArrowTrap:
+		case ObjectType::FireballTrap:
 		case ObjectType::FakeWall:
 		case ObjectType::SpikeTrap:
 		case ObjectType::FloorSpike:
@@ -78,7 +78,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		//	SmartVector
 		this->base_objects.remove(object->typeID);
 		break;
-	case ObjectType::ArrowTrap:
+	case ObjectType::FireballTrap:
 	case ObjectType::SpikeTrap:
 		this->traps.remove(object->typeID);
 		break;

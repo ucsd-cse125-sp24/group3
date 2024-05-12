@@ -6,7 +6,7 @@ enum class CellType {
 	Spawn,
 	Enemy,
 	SpikeTrap,
-	ArrowTrap,
+	FireballTrap,
 	FloorSpikeHorizontal,
 	FloorSpikeVertical,
 	FloorSpikeFull,

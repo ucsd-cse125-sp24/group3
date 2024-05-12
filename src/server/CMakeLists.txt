@@ -17,7 +17,7 @@ set(FILES
     game/grid.cpp
     game/trap.cpp
     game/spiketrap.cpp
-    game/arrowtrap.cpp
+    game/fireballtrap.cpp
     game/projectile.cpp
     game/floorspike.cpp
     game/fakewall.cpp

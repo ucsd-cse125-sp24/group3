@@ -1,7 +1,7 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "server/game/spiketrap.hpp"
-#include "server/game/arrowtrap.hpp"
+#include "server/game/fireballtrap.hpp"
 #include "server/game/floorspike.hpp"
 #include "server/game/fakewall.hpp"
 #include "server/game/projectile.hpp"
@@ -518,7 +518,7 @@ void ServerGameState::loadMaze() {
 			GridCell* cell = this->grid.getCell(col, row);
 
 			switch (cell->type) {
-				case CellType::ArrowTrap: {
+				case CellType::FireballTrap: {
 					glm::vec3 dimensions(
 						this->grid.getGridCellWidth() / 2,
 						0.5f,
@@ -529,7 +529,7 @@ void ServerGameState::loadMaze() {
 						1.0f,
 						cell->y * this->grid.getGridCellWidth()
 					);
-					this->objects.createObject(new ArrowTrap(corner, dimensions));
+					this->objects.createObject(new FireballTrap(corner, dimensions));
 					break;
 				}
 				case CellType::SpikeTrap: {

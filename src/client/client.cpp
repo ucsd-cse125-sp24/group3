@@ -384,7 +384,7 @@ void Client::draw() {
                     true);
                 break;
             }
-            case ObjectType::ArrowTrap: {
+            case ObjectType::FireballTrap: {
                 auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 0.5f, 0.5f));
                 cube->scale( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());

@@ -1,4 +1,4 @@
-#include "server/game/arrowtrap.hpp"
+#include "server/game/fireballtrap.hpp"
 #include "server/game/servergamestate.hpp"
 #include "shared/utilities/rng.hpp"
 #include "server/game/objectmanager.hpp"
@@ -8,17 +8,17 @@
 
 using namespace std::chrono_literals;
 
-const std::chrono::seconds ArrowTrap::TIME_UNTIL_RESET = 4s;
-const int ArrowTrap::SHOOT_DIST = 5;
+const std::chrono::seconds FireballTrap::TIME_UNTIL_RESET = 4s;
+const int FireballTrap::SHOOT_DIST = 5;
 
-ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions):
-    Trap(ObjectType::ArrowTrap, false, corner, Collider::None, ModelType::Cube, dimensions) 
+FireballTrap::FireballTrap(glm::vec3 corner, glm::vec3 dimensions):
+    Trap(ObjectType::FireballTrap, false, corner, Collider::None, ModelType::Cube, dimensions) 
 {
     this->shoot_time = std::chrono::system_clock::now();
     this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
 }
 
-bool ArrowTrap::shouldTrigger(ServerGameState& state) {
+bool FireballTrap::shouldTrigger(ServerGameState& state) {
     if (this->info.triggered) {
         return false;
     }
@@ -45,7 +45,7 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
     }
 
     // convert grid units to actual distance values
-    const float SHOOT_DIST_UNITS = state.getGrid().getGridCellWidth() * ArrowTrap::SHOOT_DIST;
+    const float SHOOT_DIST_UNITS = state.getGrid().getGridCellWidth() * FireballTrap::SHOOT_DIST;
     if (closest_dist <= SHOOT_DIST_UNITS && player_to_shoot_at != nullptr) {
         this->physics.shared.facing = glm::normalize(player_to_shoot_at->physics.shared.getCenterPosition() - this_pos);
         this->target = player_to_shoot_at->globalID;
@@ -55,7 +55,7 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
     return false;
 }
 
-void ArrowTrap::trigger(ServerGameState& state) {
+void FireballTrap::trigger(ServerGameState& state) {
     Trap::trigger(state);
 
     state.objects.createObject(new Projectile(
@@ -69,19 +69,19 @@ void ArrowTrap::trigger(ServerGameState& state) {
     this->shoot_time = std::chrono::system_clock::now();
 }
 
-bool ArrowTrap::shouldReset(ServerGameState& state) {
+bool FireballTrap::shouldReset(ServerGameState& state) {
     auto now = std::chrono::system_clock::now();
     return (now - this->shoot_time > TIME_UNTIL_RESET);
 }
 
-void ArrowTrap::reset(ServerGameState& state) {
+void FireballTrap::reset(ServerGameState& state) {
     Trap::reset(state);
 }
 
-void ArrowTrap::doCollision(Object* other, ServerGameState* state) {
+void FireballTrap::doCollision(Object* other, ServerGameState* state) {
 }
 
-float ArrowTrap::canSee(Object* other, ServerGameState* state) {
+float FireballTrap::canSee(Object* other, ServerGameState* state) {
     glm::vec3 other_pos = other->physics.shared.getCenterPosition();
     glm::vec3 this_pos = this->physics.shared.getCenterPosition();
 

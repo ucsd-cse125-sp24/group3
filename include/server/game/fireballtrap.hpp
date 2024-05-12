@@ -6,13 +6,13 @@
 #include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 
-class ArrowTrap : public Trap {
+class FireballTrap: public Trap {
 public:
     /**
      * @param corner Corner position of the spike trap
      * @param dimensions dimensions of the spike trap (probably will change once we use a non cube model to not have this)
      */
-    ArrowTrap(glm::vec3 corner, glm::vec3 dimensions);
+    FireballTrap(glm::vec3 corner, glm::vec3 dimensions);
 
     const static std::chrono::seconds TIME_UNTIL_RESET; // how long from initial activation until it can activate again
     const static int SHOOT_DIST; // how many grid cells away it can shoot you from
