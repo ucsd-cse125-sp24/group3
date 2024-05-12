@@ -307,9 +307,9 @@ void Client::draw() {
                 }
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
 
-                auto player_pos = sharedObject->physics.getCenterPosition();
+                auto player_pos = sharedObject->physics.corner;
 
-                this->bear_model->setDimensions(sharedObject->physics.dimensions);
+                this->player_model->setDimensions(sharedObject->physics.dimensions);
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
                     this->model_shader,
@@ -323,8 +323,10 @@ void Client::draw() {
             case ObjectType::Enemy: {
                 // warren bear is an enemy because why not
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
+                auto bear_pos = sharedObject->physics.corner;
+
                 this->bear_model->setDimensions(sharedObject->physics.dimensions);
-                this->bear_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->bear_model->translateAbsolute(bear_pos);
                 this->bear_model->draw(
                     this->model_shader,
                     this->cam->getViewProj(),
