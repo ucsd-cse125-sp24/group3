@@ -36,75 +36,10 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::SolidSurface:
 			object->typeID = this->solid_surfaces.push(dynamic_cast<SolidSurface*>(object));
 			break;
-		}
-		case ObjectType::DungeonMaster: {
-			this->dm = new DungeonMaster();
-
-			//	TODO: Maybe change SmartVector's index return value? size_t is
-			//	larger than uint32 (which is what SpecificID and EntityID are
-			//	defined as)
-			//	Push to type-specific base_objects vector
-			typeID = (SpecificID)this->base_objects.push(this->dm);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(this->dm);
-
-			//	Set object's type and global IDs
-			this->dm->typeID = typeID;
-			this->dm->globalID = globalID;
+		case ObjectType::DungeonMaster: { // has no type ID
+			this->dm = dynamic_cast<DungeonMaster*>(object);
 			break;
 		}
-        case ObjectType::Enemy: {
-            //	Create a new object of type Enemy
-            Enemy* enemy = new Enemy();
-
-			//	Push to type-specific enemies vector
-            typeID = (SpecificID)this->enemies.push(enemy);
-
-            //	Push to global objects vector
-            globalID = (EntityID)this->objects.push(enemy);
-
-            //	Set object's type and global IDs
-            enemy->typeID = typeID;
-            enemy->globalID = globalID;
-            break;
-        }
-		case ObjectType::Object: {
-			//	Create a new object of type Object
-			Object* object = new Object(ObjectType::Object);
-
-			//	TODO: Maybe change SmartVector's index return value? size_t is
-			//	larger than uint32 (which is what SpecificID and EntityID are
-			//	defined as)
-			//	Push to type-specific base_objects vector
-			typeID = (SpecificID)this->base_objects.push(object);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(object);
-
-            //	Set object's type and global IDs
-            object->typeID = typeID;
-            object->globalID = globalID;
-            break;
-        }
-        default: {
-            //	Create a new object of type Object
-            Object* object = new Object(ObjectType::Object);
-
-            //	TODO: Maybe change SmartVector's index return value? size_t is
-            //	larger than uint32 (which is what SpecificID and EntityID are
-            //	defined as)
-            //	Push to type-specific base_objects vector
-            typeID = (SpecificID)this->base_objects.push(object);
-
-            //	Push to global objects vector
-            globalID = (EntityID)this->objects.push(object);
-
-            //	Set object's type and global IDs
-            object->typeID = typeID;
-            object->globalID = globalID;
-            break;
-        }
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
 			break;

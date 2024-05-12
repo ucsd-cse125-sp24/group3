@@ -6,9 +6,9 @@
 #include "shared/game/sharedobject.hpp"
 
 
-class DungeonMaster : public Object {
+class DungeonMaster : public Creature {
 public:
-	DungeonMaster();
+	DungeonMaster(glm::vec3 corner, glm::vec3 facing);
 	~DungeonMaster();
 
 	virtual SharedObject toShared() override;

@@ -375,7 +375,6 @@ void Client::draw() {
                 // do not render ceiling if dungeon master
 
                 if (this->session->getInfo().is_dungeon_master) {
-                    std::cout << "DUNGEON MASTER!" << std::endl;
                     if (sharedObject->solidSurface->surfaceType != SurfaceType::Ceiling) {
                         auto cube = std::make_unique<Cube>(glm::vec3(0.4f, 0.5f, 0.7f));
                         cube->scale(sharedObject->physics.dimensions);

@@ -3,11 +3,15 @@
 #include <iostream>
 
 SharedObject DungeonMaster::toShared() {
-    auto so = Object::toShared();
+    auto so = Creature::toShared();
     return so;
 }
 
-DungeonMaster::DungeonMaster() : Object(ObjectType::DungeonMaster) {
+DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) : 
+    Creature(ObjectType::DungeonMaster, corner, facing, ModelType::Cube, SharedStats(
+    Stat(0, 100, 100),
+    Stat(0, 10, 5)
+)) {
     this->physics.feels_gravity = false;
 }
 

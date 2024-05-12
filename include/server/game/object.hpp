@@ -38,7 +38,7 @@ struct Physics {
 		glm::vec3 corner, glm::vec3 facing,
 		glm::vec3 dimensions = glm::vec3(1.0f)):
 		shared{.corner=corner, .facing=facing, .dimensions=dimensions},
-		movable(movable), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)),
+		movable(movable), feels_gravity(true), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)),
 		collider(collider)
 	{}
 

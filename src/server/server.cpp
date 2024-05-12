@@ -196,7 +196,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     if (this->state.getLobby().players.size() == 0) {
         std::cout << "the dungeon master baby!" << std::endl;
 
-        SpecificID dmID = this->state.objects.createObject(ObjectType::DungeonMaster);
+        SpecificID dmID = this->state.objects.createObject(new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
         DungeonMaster* dm = this->state.objects.getDM();
 
         //  Spawn player in random spawn point
@@ -204,19 +204,6 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         //  TODO: Possibly replace this random spawn point with player assignments?
         //  I.e., assign each player a spawn point to avoid multiple players getting
         //  the same spawn point?
-        std::srand(std::time(NULL));
-        std::vector<GridCell*> spawnPoints = this->state.getGrid().getSpawnPoints();
-        size_t randomSpawnIndex = std::rand() % spawnPoints.size();
-
-        std::cout << "Number of spawn points: " << spawnPoints.size() << std::endl;
-        std::cout << "Player " << dmID << " spawning at spawn point " << randomSpawnIndex << std::endl;
-
-        GridCell* spawnPoint =
-            this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
-
-        dm->physics.shared.corner = this->state.getGrid().gridCellCenterPosition(spawnPoint) + glm::vec3(0.0f, 25.0f, 0.0f);
-
-        dm->physics.collider = Collider::Box;
 
         auto session = std::make_shared<Session>(std::move(this->socket),
             SessionInfo({}, dm->globalID, true));

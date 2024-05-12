@@ -17,7 +17,7 @@ enum class ObjectType {
 	Item,
 	SolidSurface,
 	Player,
-	SpikeTrap
+	SpikeTrap,
 	Enemy,
 	DungeonMaster
 };
