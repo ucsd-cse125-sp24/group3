@@ -164,6 +164,10 @@ bool Client::init() {
     auto lightFragFilepath = shaders_dir / "lightsource.frag";
     this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
 
+    auto solid_surface_vert_path = shaders_dir / "solidsurface.vert";
+    auto solid_surface_frag_path = shaders_dir / "solidsurface.frag";
+    this->solid_surface_shader = std::make_shared<Shader>(solid_surface_vert_path.string(), solid_surface_frag_path.string());
+
     this->gui_state = GUIState::TITLE_SCREEN;
 
     this->audioManager->init();
@@ -337,12 +341,13 @@ void Client::draw() {
                 break;
             }
             case ObjectType::SolidSurface: {
+                auto lightPos = glm::vec3(-2.0f, 10.0f, 0.0f);
                 this->cube_model->setDimensions(sharedObject->physics.dimensions);
                 this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->cube_model->draw(this->cube_shader,
+                this->cube_model->draw(this->solid_surface_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    lightPos,
                     true,
                     false);
                 break;
