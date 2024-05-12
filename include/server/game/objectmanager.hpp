@@ -244,5 +244,5 @@ private:
 	 */
 	SmartVector<Trap *> traps;
 
-	DungeonMaster * dm; // cppcheck-suppress uninitMemberVar
+	DungeonMaster * dm; 
 };

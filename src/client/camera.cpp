@@ -106,7 +106,7 @@ void DungeonMasterCamera::update(float xpos, float ypos) {
 
     float xoffset = xpos - lastX;
     lastX = xpos;
-    lastY = ypos;
+    lastY = ypos; // cppcheck-suppress redundantAssignment
 
     xoffset *= sensitivity;
 

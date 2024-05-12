@@ -6,7 +6,7 @@
 
 /*	Constructors and Destructors	*/
 
-ObjectManager::ObjectManager() {
+ObjectManager::ObjectManager() { // cppcheck-suppress uninitMemberVar
 	////	Initialize global SmartVector
 	//this->objects = SmartVector<Object*>();
 
