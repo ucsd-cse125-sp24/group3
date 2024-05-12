@@ -17,11 +17,11 @@ void Item::doCollision(Object* other, ServerGameState* state) {
 	auto player = dynamic_cast<Player*>(other);
 	if (player == nullptr) return; // only allow players to pick up items
 
-	if (player->inventory.size() < MAX_ITEMS) {
-		for (int x : {1, 2, 3, 4}) {
-			if (!player->inventory.contains(x)) {
-				player->inventory[x] = this->typeID;
-				player->sharedInventory.inventory[x] = this->modelType;
+	if (player->inventory.size() < player->sharedInventory.inventory_size) {
+		for (int i = 1; i <= player->sharedInventory.inventory_size; i++) {
+			if (!player->inventory.contains(i)) {
+				player->inventory[i] = this->typeID;
+				player->sharedInventory.inventory[i] = this->modelType;
 				break;
 			}
 		}

@@ -10,7 +10,6 @@
 #define MAX_WALLS 1000
 #define MAX_TRAPS 10
 #define MAX_SPELLS 4
-#define MAX_ITEMS 4
 
 /*	Constants	*/
 #define	FIRST_TIMESTEP			0
@@ -26,6 +25,9 @@
 
 // Player Stat Constants
 #define INITIAL_HEALTH 100
+
+/*	Inventory	*/
+#define	INVENTORY_SIZE			4
 
 /*	Potion Stats	*/
 #define	RESTORE_HEALTH			20

@@ -370,6 +370,7 @@ void GUI::_sharedGameHUD() {
     }
 
     auto self = client->gameState.objects.at(*self_eid);
+    auto inventory_size = self->inventoryInfo->inventory_size;
 
     // Flexbox for the items 
     // Loading itemframe again if no item
@@ -378,9 +379,9 @@ void GUI::_sharedGameHUD() {
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
     );
-    for (int x : {1, 2, 3, 4}) {
-        if (self->inventoryInfo->inventory.contains(x)) {
-            switch (self->inventoryInfo->inventory.at(x)) {
+    for (int i = 1; i <= inventory_size; i++) {
+        if (self->inventoryInfo->inventory.contains(i)) {
+            switch (self->inventoryInfo->inventory.at(i)) {
             case ModelType::HealthPotion: {
                 itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion)));
                 break;
@@ -409,8 +410,8 @@ void GUI::_sharedGameHUD() {
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
     );
 
-    for (int x : {1, 2, 3, 4}) {
-        if (self->inventoryInfo->selected == x) {
+    for (int i = 1; i <= inventory_size; i++) {
+        if (self->inventoryInfo->selected == i) {
             frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame)));
         }
         else {
