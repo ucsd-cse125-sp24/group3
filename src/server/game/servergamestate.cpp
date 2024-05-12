@@ -2,6 +2,7 @@
 #include "shared/game/sharedgamestate.hpp"
 #include "server/game/spiketrap.hpp"
 #include "server/game/arrowtrap.hpp"
+#include "server/game/floorspike.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 
@@ -207,6 +208,14 @@ void ServerGameState::updateMovement() {
 						if (otherObj->physics.collider == Collider::None) { continue; }
 
 						if (detectCollision(object->physics, otherObj->physics)) {
+							
+							if (otherObj->type == ObjectType::FloorSpike) {
+								object->doCollision(otherObj, this);
+								otherObj->doCollision(object, this);
+								continue;
+							}
+							
+
 							collided = true;
 
 							// Check x-axis collision
@@ -529,6 +538,29 @@ void ServerGameState::loadMaze() {
 					);
 
 					this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
+					break;
+				}
+				case CellType::FloorSpikeFull:
+				case CellType::FloorSpikeHorizontal:
+				case CellType::FloorSpikeVertical: {
+					glm::vec3 corner(
+						cell->x * this->grid.getGridCellWidth(),
+						0.0f, 
+						cell->y * this->grid.getGridCellWidth()
+					);
+
+					FloorSpike::Orientation orientation;
+					if (cell->type == CellType::FloorSpikeFull) {
+						orientation = FloorSpike::Orientation::Full;
+					} else if (cell->type == CellType::FloorSpikeHorizontal) {
+						orientation = FloorSpike::Orientation::Horizontal;
+						corner.z += this->grid.getGridCellWidth() * 0.25f;
+					} else {
+						orientation = FloorSpike::Orientation::Vertical;
+						corner.x += this->grid.getGridCellWidth() * 0.25f;
+					}
+
+					this->objects.createObject(new FloorSpike(corner, orientation, this->grid.getGridCellWidth()));
 					break;
 				}
 			}

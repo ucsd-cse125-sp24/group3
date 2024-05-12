@@ -17,6 +17,12 @@ CellType charToCellType(char c) {
 		return CellType::SpikeTrap;
 	case '&':
 		return CellType::ArrowTrap;
+	case '+':
+		return CellType::FloorSpikeFull;
+	case '|':
+		return CellType::FloorSpikeVertical;
+	case '-':
+		return CellType::FloorSpikeHorizontal;
 	default:
 		return CellType::Unknown;
 	}

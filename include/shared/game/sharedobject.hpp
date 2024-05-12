@@ -20,7 +20,8 @@ enum class ObjectType {
 	Enemy,
 	SpikeTrap,
 	ArrowTrap,
-	Projectile
+	Projectile,
+	FloorSpike
 };
 
 /**

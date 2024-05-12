@@ -33,10 +33,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 			object->typeID = this->projectiles.push(dynamic_cast<Projectile*>(object));
 			break;
 		case ObjectType::ArrowTrap:
-			object->typeID = this->traps.push(dynamic_cast<ArrowTrap*>(object));
-			break;
 		case ObjectType::SpikeTrap:
-			object->typeID = this->traps.push(dynamic_cast<SpikeTrap*>(object));
+		case ObjectType::FloorSpike:
+			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
 			break;
 		case ObjectType::Item:
 			object->typeID = this->items.push(dynamic_cast<Item*>(object));
@@ -51,7 +50,8 @@ SpecificID ObjectManager::createObject(Object* object) {
 			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
 			break;
         default:
-			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << "\n";
+			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << 
+				"\nDid you remember to add a new switch statement to ObjectManager::createObject?\n";
 			std::exit(1);
 	}
 
