@@ -171,6 +171,28 @@ void ServerGameState::updateMovement() {
 			// O(n^2) naive implementation of collision detection
 			glm::vec3 movementStep = object->physics.velocity * object->physics.velocityMultiplier;
 
+			// handle edge case Dungeon Master
+			if (object->type == ObjectType::DungeonMaster) {
+				object->physics.shared.corner += movementStep;
+
+				// Rows * grid cell width = z length and columns * grid cell width = x length
+				// check z length
+				bool zInBounds = (object->physics.shared.corner.z <= this->grid.getRows() * this->grid.getGridCellWidth()) && (object->physics.shared.corner.z >= 0);
+
+				// check x length
+				bool xInBounds = (object->physics.shared.corner.x <= this->grid.getColumns() * this->grid.getGridCellWidth()) && (object->physics.shared.corner.x >= 0);
+
+				if (!zInBounds) {
+					object->physics.shared.corner.z -= movementStep.z;
+				}
+
+				if (!xInBounds) {
+					object->physics.shared.corner.x -= movementStep.x;
+				}
+
+				continue;
+			}
+
 			// Run collision detection movement if it has a collider
 			if (object->physics.collider != Collider::None) {
 				object->physics.shared.corner += movementStep;
