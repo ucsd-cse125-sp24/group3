@@ -7,7 +7,7 @@
 
 using namespace std::chrono_literals;
 
-const std::chrono::seconds ArrowTrap::TIME_UNTIL_RESET = 3s;
+const std::chrono::seconds ArrowTrap::TIME_UNTIL_RESET = 1s;
 
 ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions):
     Trap(ObjectType::ArrowTrap, false, corner, Collider::None, ModelType::Cube, dimensions) 
@@ -21,22 +21,31 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
         return false;
     }
 
+    glm::vec3 this_pos = this->physics.shared.getCenterPosition();
+
     auto players = state.objects.getPlayers();
+    Player* player_to_shoot_at = nullptr;
+    float closest_dist = std::numeric_limits<float>::max();
     for (int p = 0; p < players.size(); p++) {
         auto player = players.get(p);
         if (player == nullptr) continue;
 
-        auto center_pos = player->physics.shared.getCenterPosition();
+        glm::vec3 player_pos = player->physics.shared.getCenterPosition();
 
-        bool is_in_front = (
-            true
-        );
-
-        // Trigger the trap if the player is underneath, and only on a random roll (per tick)
-        // This can give the player time to realize they are standing under a trap.
-        if (is_in_front && randomInt(0, 100) != 0) {
-            return true;
+        // TODO: dont try to shoot through walls
+        float curr_dist = glm::distance(player_pos, this->physics.shared.getCenterPosition());
+        if (closest_dist > curr_dist) {
+            player_to_shoot_at = player;
+            closest_dist = curr_dist;
         }
+    }
+
+    const static float SHOOT_DIST = state.getGrid().getGridCellWidth() * 5;
+
+    if (closest_dist <= SHOOT_DIST && player_to_shoot_at != nullptr) {
+        this->physics.shared.facing = glm::normalize(player_to_shoot_at->physics.shared.getCenterPosition() - this_pos);
+
+        return true;
     }
 
     return false;
@@ -46,7 +55,7 @@ void ArrowTrap::trigger(ServerGameState& state) {
     Trap::trigger(state);
 
     state.objects.createObject(new Projectile(
-        this->physics.shared.corner, this->physics.shared.facing, ModelType::Cube, 10));
+        this->physics.shared.getCenterPosition(), this->physics.shared.facing, ModelType::Cube, 10));
 
     this->shoot_time = std::chrono::system_clock::now();
 }

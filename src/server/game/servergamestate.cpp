@@ -172,15 +172,16 @@ void ServerGameState::updateMovement() {
 			// O(n^2) naive implementation of collision detection
 			glm::vec3 totalMovementStep = object->physics.velocity * object->physics.velocityMultiplier;
 			glm::vec3 movementStep;
-			if (glm::length(totalMovementStep) > 0.25f) {
-				movementStep = 0.25f * totalMovementStep;
+			int numSteps = 0;
+			if (glm::length(totalMovementStep) > 0.20f) {
+				movementStep = 0.20f * totalMovementStep;
 			} else {
 				movementStep = totalMovementStep;
+				numSteps = 4;
 			}
 
-			glm::vec3 moved(0.0f);
-			while (moved.x < totalMovementStep.x) {
-				moved += movementStep;
+			while (numSteps < 5) {
+				numSteps++;
 				// Run collision detection movement if it has a collider
 				if (object->physics.collider != Collider::None) {
 					object->physics.shared.corner += movementStep;
@@ -242,7 +243,7 @@ void ServerGameState::updateMovement() {
 					object->physics.shared.corner.y = 0;
 				}
 
-				if (collided) {
+				if (collidedX && collidedZ) {
 					break; // don't need to do the further movement steps until we reach totalmovement step
 				}
 			}

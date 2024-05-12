@@ -77,6 +77,22 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		//	SmartVector
 		this->base_objects.remove(object->typeID);
 		break;
+	case ObjectType::ArrowTrap:
+	case ObjectType::SpikeTrap:
+		this->traps.remove(object->typeID);
+		break;
+	case ObjectType::Item:
+		this->items.remove(object->typeID);
+		break;
+	case ObjectType::Player:
+		this->players.remove(object->typeID);
+		break;
+	case ObjectType::Projectile:
+		this->projectiles.remove(object->typeID);
+		break;
+	case ObjectType::Enemy:
+		this->enemies.remove(object->typeID);
+		break;
 	}
 
 	//	Delete object
