@@ -105,12 +105,10 @@ void DungeonMasterCamera::update(float xpos, float ypos) {
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
     lastX = xpos;
     lastY = ypos;
 
     xoffset *= sensitivity;
-    yoffset *= sensitivity;
 
     yaw += xoffset;
 

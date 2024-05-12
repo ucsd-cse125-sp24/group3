@@ -92,6 +92,10 @@ public:
 	 */
 	Player* getPlayer(SpecificID playerID);
 
+	/**
+	 * @brief Get the Dungeon Master pointer
+	 * @return A pointer to the Dungeon Master
+	 */
 	DungeonMaster* getDM();
 
 	/**
@@ -240,5 +244,5 @@ private:
 	 */
 	SmartVector<Trap *> traps;
 
-	DungeonMaster * dm;
+	DungeonMaster * dm; // cppcheck-suppress uninitMemberVar
 };

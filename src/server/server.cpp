@@ -196,7 +196,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     if (this->state.getLobby().players.size() == 0) {
         std::cout << "the dungeon master baby!" << std::endl;
 
-        SpecificID dmID = this->state.objects.createObject(new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
+        this->state.objects.createObject(new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
         DungeonMaster* dm = this->state.objects.getDM();
 
         //  Spawn player in random spawn point
