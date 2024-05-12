@@ -5,23 +5,18 @@
 #include "server/game/creature.hpp"
 #include "shared/game/sharedobject.hpp"
 
-//struct PlayerStats {
-//	int health;
-//
-//
-//};
-
-
 class Player : public Creature {
 public:
-	//PlayerStats stats;
+	SharedPlayerInfo info;
 
-	// player can have items
-
-	Player();
+	/**
+	 * @param Corner corner position of the player 
+	 * @param facing what direction the player should spawn in facing
+	 */
+	Player(glm::vec3 corner, glm::vec3 facing);
 	~Player();
 
 	virtual SharedObject toShared() override;
-private:
 
+private:
 };

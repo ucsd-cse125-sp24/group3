@@ -289,13 +289,25 @@ void Client::draw() {
             case ObjectType::Player: {
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
-                    glm::vec3 pos = sharedObject->physics.position;
+                    //  TODO: Update the player eye level to an acceptable level
+                    glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
+
+                    // reset back to game mode if this is the first frame in which you are respawned
+                    if (this->gui_state == GUIState::DEAD_SCREEN && sharedObject->playerInfo->is_alive) {
+                        this->gui_state = GUIState::GAME_HUD;
+                    }
+
+                    // Check if you are actually still alive
+                    if (!sharedObject->playerInfo->is_alive) {
+                        this->gui_state = GUIState::DEAD_SCREEN;
+                    }
                     break;
                 }
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
-                auto player_pos = glm::vec3(sharedObject->physics.position.x, sharedObject->physics.position.y + 0.1, sharedObject->physics.position.z);
+
+                auto player_pos = sharedObject->physics.getCenterPosition();
 
                 this->bear_model->setDimensions(sharedObject->physics.dimensions);
                 this->player_model->translateAbsolute(player_pos);
@@ -312,7 +324,7 @@ void Client::draw() {
                 // warren bear is an enemy because why not
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
                 this->bear_model->setDimensions(sharedObject->physics.dimensions);
-                this->bear_model->translateAbsolute(sharedObject->physics.position);
+                this->bear_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->bear_model->draw(
                     this->model_shader,
                     this->cam->getViewProj(),
@@ -323,9 +335,21 @@ void Client::draw() {
                 break;
             }
             case ObjectType::SolidSurface: {
-                this->cube_model->setDimensions(sharedObject->solidSurface->dimensions);
-                this->cube_model->translateAbsolute(sharedObject->physics.position);
+                this->cube_model->setDimensions(sharedObject->physics.dimensions);
+                this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->cube_model->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true,
+                    false);
+                break;
+            }
+            case ObjectType::SpikeTrap: {
+                auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
+                cube->scaleAbsolute( sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     glm::vec3(),
@@ -345,7 +369,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     /* Store player EID for use in certain key handling */ 
     std::optional<EntityID> eid;
 
-    if (this->session->getInfo().client_eid.has_value()) {
+    if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
         eid = this->session->getInfo().client_eid.value();
     }
 

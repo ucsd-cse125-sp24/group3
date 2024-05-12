@@ -1,7 +1,8 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
-#include "server/game/boxcollider.hpp"
+#include "server/game/spiketrap.hpp"
 #include "shared/utilities/root_path.hpp"
+#include "shared/utilities/time.hpp"
 
 #include <fstream>
 
@@ -35,40 +36,6 @@ ServerGameState::ServerGameState(GamePhase start_phase, const GameConfig& config
 	this->phase = start_phase;
 }
 
-//ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config) 
-//	: ServerGameState(DEFAULT_MAZE_FILE) {
-//	this->phase = start_phase;
-//	this->timestep_length = config.game.timestep_length_ms;
-//	this->lobby.max_players = config.server.max_players;
-//}
-//
-//ServerGameState::ServerGameState(GamePhase start_phase) 
-//	: ServerGameState(DEFAULT_MAZE_FILE) {
-//	this->phase = start_phase;
-//}
-//
-//ServerGameState::ServerGameState() : ServerGameState(DEFAULT_MAZE_FILE) {}
-//
-//ServerGameState::ServerGameState(std::string maze_file) {
-//	this->phase = GamePhase::LOBBY;
-//	this->timestep = FIRST_TIMESTEP;
-//	this->timestep_length = TIMESTEP_LEN;
-//	this->lobby.max_players = MAX_PLAYERS;
-//	this->maze_file = maze_file;
-//
-//	//	Load maze (Note: This only happens in THIS constructor! All other
-//	//	ServerGameState constructors MUST call this constructor to load the
-//	//	maze environment from a file)
-//	this->loadMaze();
-//}
-//
-//ServerGameState::ServerGameState(GamePhase start_phase, GameConfig config, 
-//	std::string maze_file) : ServerGameState(maze_file) {
-//	this->phase = start_phase;
-//	this->timestep_length = config.game.timestep_length_ms;
-//	this->lobby.max_players = config.server.max_players;
-//}
-
 ServerGameState::~ServerGameState() {}
 
 /*	SharedGameState generation	*/
@@ -98,7 +65,12 @@ SharedGameState ServerGameState::generateSharedGameState() {
 void ServerGameState::update(const EventList& events) {
 
 	for (const auto& [src_eid, event] : events) { // cppcheck-suppress unusedVariable
-		//std::cout << event << std::endl;
+		// skip any events from dead players
+		auto player = dynamic_cast<Player*>(this->objects.getObject(src_eid));
+		if (player != nullptr && !player->info.is_alive) {
+			continue;
+		}
+
 		Object* obj;
 	
         switch (event.type) {
@@ -169,6 +141,9 @@ void ServerGameState::update(const EventList& events) {
 	//	TODO: fill update() method with updating object movement
 	useItem();
 	updateMovement();
+	updateTraps();
+	handleDeaths();
+	handleRespawns();
 	
 	//	Increment timestep
 	this->timestep++;
@@ -194,12 +169,11 @@ void ServerGameState::updateMovement() {
 		if (object->physics.movable) {
 			// Check for collision at position to move, if so, dont change position
 			// O(n^2) naive implementation of collision detection
-			Collider* currentCollider = object->physics.boundary;
 			glm::vec3 movementStep = object->physics.velocity * object->physics.velocityMultiplier;
 
 			// Run collision detection movement if it has a collider
-			if (currentCollider != NULL) {
-				currentCollider->corner += movementStep; // only move collider to check
+			if (object->physics.collider != Collider::None) {
+				object->physics.shared.corner += movementStep;
 
 				// TODO : for possible addition for smooth collision detection, but higher computation
 				// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
@@ -209,55 +183,37 @@ void ServerGameState::updateMovement() {
 				for (int j = 0; j < gameObjects.size(); j++) {
 					if (i == j) { continue; }
 					Object* otherObj = gameObjects.get(j);
-					Collider* otherCollider = otherObj->physics.boundary;
 
-					if (otherCollider == NULL) { continue; }
+					if (otherObj->physics.collider == Collider::None) { continue; }
 
-					if (currentCollider->detectCollision(otherCollider)) {
+					if (detectCollision(object->physics, otherObj->physics)) {
 						collided = true;
 
 						// Check x-axis collision
-						currentCollider->corner.z -= movementStep.z;
-						if (currentCollider->detectCollision(otherCollider)) {
+						object->physics.shared.corner.z -= movementStep.z;
+						if (detectCollision(object->physics, otherObj->physics)) {
 							collidedX = true;
 						}
 
 						// Check z-axis collision
-						currentCollider->corner.z += movementStep.z;
-						currentCollider->corner.x -= movementStep.x;
-						if (currentCollider->detectCollision(otherCollider)) {
+						object->physics.shared.corner.z += movementStep.z;
+						object->physics.shared.corner.x -= movementStep.x;
+						if (detectCollision(object->physics, otherObj->physics)) {
 							collidedZ = true;
 						}
-						currentCollider->corner.x += movementStep.x;
-					}
-				}
-
-				// Move object if no collision detected
-				if (!collided) {
-					object->physics.shared.position += movementStep;
-					object->physics.shared.corner += movementStep;
-				}
-				// Revert collider if collided
-				// Seperated for x/z axis collisions
-				else {
-					if (!collidedX) {
-						object->physics.shared.position.x += movementStep.x;
 						object->physics.shared.corner.x += movementStep.x;
-					}
-					else {
-						currentCollider->corner.x -= movementStep.x;
-					}
 
-					if (!collidedZ) {
-						object->physics.shared.position.z += movementStep.z;
-						object->physics.shared.corner.z += movementStep.z;
+						object->doCollision(otherObj, this);
+						otherObj->doCollision(object, this);
 					}
-					else {
-						currentCollider->corner.z -= movementStep.z;
-					}
-					object->physics.shared.position.y += movementStep.y;
-					object->physics.shared.corner.y += movementStep.y;
+				}
 
+				if (collidedX) {
+					object->physics.shared.corner.x -= movementStep.x;
+				}
+
+				if (collidedZ) {
+					object->physics.shared.corner.z -= movementStep.z;
 				}
 
 				// update gravity factor
@@ -271,16 +227,15 @@ void ServerGameState::updateMovement() {
 
 			// if current object do not have a collider / this shouldn't happen though
 			else {
-				object->physics.shared.position += movementStep;
 				object->physics.shared.corner += movementStep;
 			}
 
 			if (object->physics.shared.corner.y <= 0) {
 				// potentially need to make this unconditional further down
-				object->physics.shared.position.y -= object->physics.shared.corner.y;
 				object->physics.shared.corner.y = 0;
-				object->physics.boundary->corner = object->physics.shared.corner;
 			}
+
+
 		}
 	}
 }
@@ -296,6 +251,60 @@ void ServerGameState::useItem() {
 
 		if (item == nullptr)
 			continue;
+	}
+}
+
+void ServerGameState::updateTraps() {
+	// check for activations
+
+	// This object moved, so we should check to see if a trap should trigger because of it
+	auto traps = this->objects.getTraps();
+	for (int i = 0; i < traps.size(); i++) {
+		auto trap = traps.get(i);
+		if (trap == nullptr) { continue; } // unsure if i need this?
+		if (trap->shouldTrigger(*this)) {
+			trap->trigger();
+		}
+        if (trap->shouldReset(*this)) {
+            trap->reset();
+        }
+	}
+}
+
+void ServerGameState::handleDeaths() {
+	// TODO: also handle enemy deaths
+	// unsure of the best way to do this right now
+	// ideally we would be able to get an array of all of the creatures
+	// but the current interface of the object manager doesn't really let you do that
+	// easily
+
+	// thinking that you might have to handle enemies differently either way because
+	// they wont have a SharedPlayerInfo and respawn time stuff they need to
+	auto players = this->objects.getPlayers();
+	for (int p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		if (player->stats.health.current() <= 0 && player->info.is_alive) {
+			player->info.is_alive = false;
+			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
+		}
+	}
+}
+
+void ServerGameState::handleRespawns() {
+	auto players = this->objects.getPlayers();
+	for (int p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		if (!player->info.is_alive) {
+			if (getMsSinceEpoch() >= player->info.respawn_time) {
+				player->physics.shared.corner = this->getGrid().getRandomSpawnPoint();
+				player->info.is_alive = true;
+				player->stats.health.adjustBase(player->stats.health.max());
+			}
+		}
 	}
 }
 
@@ -432,46 +441,18 @@ void ServerGameState::loadMaze() {
 
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
 
-	SpecificID floorID = this->objects.createObject(ObjectType::SolidSurface);
-	SpecificID ceilingID = this->objects.createObject(ObjectType::SolidSurface);
-
-	SolidSurface* floor = this->objects.getSolidSurface(floorID);
-	SolidSurface* ceiling = this->objects.getSolidSurface(ceilingID);
-
-	//	Set floor and ceiling's x and z dimensions equal to grid dimensions
-	
-	floor->shared.dimensions =
-		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(),
-			0.1,
-			this->grid.getRows() * this->grid.getGridCellWidth());
-
-	floor->physics.shared.position =
-		glm::vec3(floor->shared.dimensions.x / 2, 
-			-0.05,
-			floor->shared.dimensions.z / 2);
-
-	floor->physics.shared.corner = glm::vec3(0.0f, -0.1f, 0.0f);
-	//floor->physics.boundary = new BoxCollider(floor->physics.shared.corner, floor->shared.dimensions);
-
-	floor->physics.movable = false;
-
-	ceiling->shared.dimensions = 
-		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(),
-			0.1,
-			this->grid.getRows() * this->grid.getGridCellWidth());
-
-	ceiling->physics.shared.position =
-		glm::vec3(floor->shared.dimensions.x / 2, 
-			MAZE_CEILING_HEIGHT + 0.05,
-			floor->shared.dimensions.z / 2);
-
-	ceiling->physics.shared.corner = glm::vec3(0.0f, -0.1f, 0.0f);
-
-	// Not sure we would need colliders for ceiling
-	//ceiling->physics.boundary = new BoxCollider(ceiling->physics.shared.corner, ceiling->shared.dimensions);
-
-	ceiling->physics.movable = false;
-	
+	// Create Floor
+	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Floor, 
+		glm::vec3(0.0f, -0.1f, 0.0f),
+		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(), 0.1,
+			this->grid.getRows() * this->grid.getGridCellWidth())
+	));
+	// Create Ceiling
+	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Ceiling, 
+		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),
+		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(), 0.1,
+			this->grid.getRows() * this->grid.getGridCellWidth())
+	));
 
 	//	Step 6:	For each GridCell, add an object (if not empty) at the 
 	//	GridCell's position.
@@ -480,45 +461,40 @@ void ServerGameState::loadMaze() {
 			GridCell* cell = this->grid.getCell(col, row);
 
 			switch (cell->type) {
-				case CellType::Enemy: {
-					SpecificID enemyID = this->objects.createObject(ObjectType::Enemy);
+				case CellType::SpikeTrap: {
+                    const float HEIGHT_SHOWING = 0.5;
+					glm::vec3 dimensions(
+						this->grid.getGridCellWidth(),
+						MAZE_CEILING_HEIGHT,
+						this->grid.getGridCellWidth()
+					);
+					glm::vec3 corner(
+						cell->x * this->grid.getGridCellWidth(),
+						MAZE_CEILING_HEIGHT - HEIGHT_SHOWING, 
+						cell->y * this->grid.getGridCellWidth()
+					);
 
-					Enemy* enemy = this->objects.getEnemy(enemyID);
-					enemy->physics.movable = false;
-					enemy->physics.shared.position = this->grid.gridCellCenterPosition(cell);
-                    enemy->physics.shared.dimensions = BEAR_DIMENSIONS / 8.0f;
+					this->objects.createObject(new SpikeTrap(corner, dimensions));
+					break;
+				}
+				case CellType::Enemy: {
+					this->objects.createObject(new Enemy(
+						this->grid.gridCellCenterPosition(cell), glm::vec3(0.0f)));
 					break;
 				}
 				case CellType::Wall: {
-					//	Create a new Wall object
-					SpecificID wallID = 
-						this->objects.createObject(ObjectType::SolidSurface);
+					glm::vec3 dimensions(
+						this->grid.getGridCellWidth(),
+						MAZE_CEILING_HEIGHT,
+						this->grid.getGridCellWidth()
+					);
+					glm::vec3 corner(
+						cell->x * this->grid.getGridCellWidth(),
+						0.0f, 
+						cell->y * this->grid.getGridCellWidth()
+					);
 
-					//	TODO: Shouldn't this use the typeID? Change
-					//	createObject() to return the typeID of an object and
-					//	add specific object getters based on their types.
-					SolidSurface* wall = this->objects.getSolidSurface(wallID);
-
-					wall->shared.dimensions =
-						glm::vec3(this->grid.getGridCellWidth(),
-							MAZE_CEILING_HEIGHT,
-							this->grid.getGridCellWidth());
-
-					wall->physics.shared.position =
-						this->grid.gridCellCenterPosition(cell)
-						+ glm::vec3(0, MAZE_CEILING_HEIGHT / 2, 0);
-						/*glm::vec3((0.5 + cell->x) * this->grid.getGridCellWidth(),
-							MAZE_CEILING_HEIGHT / 2,
-							(0.5 + cell->y) * this->grid.getGridCellWidth());*/
-					
-					wall->physics.shared.corner = 
-						glm::vec3(cell->x * this->grid.getGridCellWidth(),
-							0.0f, 
-							cell->y * this->grid.getGridCellWidth());
-					wall->physics.boundary = new BoxCollider(wall->physics.shared.corner, wall->shared.dimensions);
-
-					wall->physics.movable = false;
-
+					this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
 					break;
 				}
 			}

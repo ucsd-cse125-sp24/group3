@@ -199,9 +199,6 @@ public:
 				else if (property.compare("physics.movable") == 0) {
 					std::cout << (object->physics.movable ? "true" : "false") << std::endl;
 				}
-				else if (property.compare("physics.shared.position") == 0) {
-					std::cout << glm::to_string(object->physics.shared.position) << std::endl;
-				}
 				else if (property.compare("physics.velocity") == 0) {
 					std::cout << glm::to_string(object->physics.velocity) << std::endl;
 				}
@@ -257,7 +254,10 @@ public:
 		//	This command ignores arguments
 
 		//	Create a new base object in the game state
-		SpecificID typeID = state.objects.createObject(ObjectType::Object);
+		//SpecificID typeID = state.objects.createObject(ObjectType::Object);
+		SpecificID typeID = state.objects.createObject(new Object(ObjectType::Object,
+			Physics(true, Collider::None, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), Object::models.find(ModelType::Cube)->second),
+			ModelType::Cube));
 		Object* obj = state.objects.getBaseObject(typeID);
 
 		std::cout << "Created new object (global id " << obj->globalID << ")" << std::endl;
@@ -346,18 +346,6 @@ public:
 		}
 
 		//	Set property
-		if (property.compare("physics.shared.position.x") == 0) {
-			obj->physics.shared.position.x = value;
-			std::cout << "Set object (global id " << id << ") position.x to " << value << ".\n";
-		}
-		else if (property.compare("physics.shared.position.y") == 0) {
-			obj->physics.shared.position.y = value;
-			std::cout << "Set object (global id " << id << ") position.y to " << value << ".\n";
-		}
-		else if (property.compare("physics.shared.position.z") == 0) {
-			obj->physics.shared.position.z = value;
-			std::cout << "Set object (global id " << id << ") position.z to " << value << ".\n";
-		}
 		else if (property.compare("physics.velocity.x") == 0) {
 			obj->physics.velocity.x = value;
 			std::cout << "Set object (global id " << id << ") velocity.x to " << value << ".\n";

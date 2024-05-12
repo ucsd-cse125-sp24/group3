@@ -15,9 +15,6 @@
 #include <unordered_map>
 #include <queue>
 
-//	From sharedgamestate.hpp
-//struct SharedGameState;
-
 /// Represents a list of events from a certain client with a specified ID
 using EventList = std::vector<std::pair<EntityID, Event>>;
 
@@ -74,6 +71,12 @@ public:
 	//	TODO: Add implementations of items
 
 	void useItem();
+
+	void updateTraps();
+
+	void handleDeaths();
+
+	void handleRespawns();
 
 	/*	SharedGameState generation	*/
 
@@ -186,6 +189,4 @@ private:
 	 * @brief 2-D Grid of GridCells (filled after loadMaze() is called).
 	 */
 	Grid grid;
-
-	//	TODO: Add reference to passed-in Event queue.
 };
