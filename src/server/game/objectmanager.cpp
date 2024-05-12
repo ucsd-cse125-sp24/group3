@@ -36,6 +36,7 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::FakeWall:
 		case ObjectType::SpikeTrap:
 		case ObjectType::FloorSpike:
+		case ObjectType::ArrowTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
 			break;
 		case ObjectType::Item:

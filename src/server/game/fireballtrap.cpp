@@ -8,7 +8,7 @@
 
 using namespace std::chrono_literals;
 
-const std::chrono::seconds FireballTrap::TIME_UNTIL_RESET = 4s;
+const std::chrono::seconds FireballTrap::TIME_UNTIL_RESET = 2s;
 const int FireballTrap::SHOOT_DIST = 5;
 
 FireballTrap::FireballTrap(glm::vec3 corner, glm::vec3 dimensions):
@@ -63,7 +63,7 @@ void FireballTrap::trigger(ServerGameState& state) {
         this->physics.shared.facing, 
         glm::vec3(0.4f, 0.4f, 0.4f),
         ModelType::Cube,
-        Projectile::Options(10, 0.30f, 0.50f, true, true, 0.15f, target)
+        Projectile::Options(25, 0.30f, 0.50f, true, true, 0.15f, target)
     ));
 
     this->shoot_time = std::chrono::system_clock::now();

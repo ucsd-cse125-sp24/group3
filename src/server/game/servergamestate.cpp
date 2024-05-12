@@ -5,6 +5,7 @@
 #include "server/game/floorspike.hpp"
 #include "server/game/fakewall.hpp"
 #include "server/game/projectile.hpp"
+#include "server/game/arrowtrap.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 
@@ -166,10 +167,10 @@ void ServerGameState::updateMovement() {
 	//	positions and velocities if they are movable.
 
 	// If objects are moving too fast, we split their movement into NUM_INCREMENTAL_STEPS smaller steps
-	const int NUM_INCREMENTAL_STEPS = 5;
+	const int NUM_INCREMENTAL_STEPS = 6;
 	// This is the threshold that determines if we need to do incremental steps for the movement
 	// if the magnitude of movementStep is greater than this value, then we do incremental steps for the movement
-	const float SINGLE_MOVE_THRESHOLD = 0.20f;
+	const float SINGLE_MOVE_THRESHOLD = 0.33f;
 
 	// Don't set this directly, it is determined by NUM_INCREMENTAL_STEPS, and is just the reciprical
 	const float INCREMENTAL_MOVE_RATIO = 1.0f / NUM_INCREMENTAL_STEPS;
@@ -594,6 +595,36 @@ void ServerGameState::loadMaze() {
 					}
 
 					this->objects.createObject(new FloorSpike(corner, orientation, this->grid.getGridCellWidth()));
+					break;
+				}
+
+				case CellType::ArrowTrapDown:
+				case CellType::ArrowTrapLeft:
+				case CellType::ArrowTrapRight:
+				case CellType::ArrowTrapUp: {
+					ArrowTrap::Direction dir;
+					if (cell->type == CellType::ArrowTrapDown) {
+						dir = ArrowTrap::Direction::DOWN;
+					} else if (cell->type == CellType::ArrowTrapUp) {
+						dir = ArrowTrap::Direction::UP;
+					} else if (cell->type == CellType::ArrowTrapLeft) {
+						dir = ArrowTrap::Direction::LEFT;
+					} else {
+						dir = ArrowTrap::Direction::RIGHT;
+					}
+
+					glm::vec3 dimensions(
+						this->grid.getGridCellWidth(),
+						2.0f,
+						this->grid.getGridCellWidth()
+					);
+					glm::vec3 corner(
+						cell->x * this->grid.getGridCellWidth(),
+						0.0f, 
+						cell->y * this->grid.getGridCellWidth()
+					);
+
+					this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
 					break;
 				}
 			}

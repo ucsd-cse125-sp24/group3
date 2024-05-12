@@ -1,13 +1,26 @@
 #include "server/game/object.hpp"
 
+#include <optional>
 #include <deque>
+#include <iostream>
 
 class Projectile : public Object {
 public:
     struct Options {
-        Options(int damage, float h_mult, float v_mult, bool disappear, bool homing, float homing_strength, EntityID target):
+        Options(int damage, float h_mult, float v_mult,
+            bool disappear, bool homing, float homing_strength, 
+            std::optional<EntityID> target
+        ):
             damage(damage), h_mult(h_mult), v_mult(v_mult),
-            disappearOnContact(disappear), homing(homing), homing_strength(homing_strength), target(target) {}
+            disappearOnContact(disappear), homing(homing), homing_strength(homing_strength), target(target)
+        {
+            if (homing && !target.has_value()) {
+                std::cerr << "FATAL: homing projectile created without target.\n"
+                    << "We could potentially implement this to home on the closest Player / Enemy object,\n"
+                    << "But this isn't implemented yet.\n";
+                std::exit(1);
+            }
+        }
 
         float h_mult;
         float v_mult;
@@ -15,7 +28,7 @@ public:
         bool disappearOnContact;
         bool homing;
         float homing_strength;
-        EntityID target;
+        std::optional<EntityID> target;
     };
 
     Projectile(glm::vec3 corner, glm::vec3 facing, 

@@ -11,6 +11,10 @@ enum class CellType {
 	FloorSpikeVertical,
 	FloorSpikeFull,
 	FakeWall,
+	ArrowTrapUp,
+	ArrowTrapDown,
+	ArrowTrapLeft,
+	ArrowTrapRight,
 	Unknown
 };
 

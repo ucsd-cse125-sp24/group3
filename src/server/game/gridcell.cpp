@@ -25,6 +25,14 @@ CellType charToCellType(char c) {
 		return CellType::FloorSpikeHorizontal;
 	case 'F':
 		return CellType::FakeWall;
+	case '^':
+		return CellType::ArrowTrapUp;
+	case 'v':
+		return CellType::ArrowTrapDown;
+	case '>':
+		return CellType::ArrowTrapRight;
+	case '<':
+		return CellType::ArrowTrapLeft;
 	default:
 		return CellType::Unknown;
 	}
