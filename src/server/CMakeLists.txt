@@ -20,6 +20,7 @@ set(FILES
     game/arrowtrap.cpp
     game/projectile.cpp
     game/floorspike.cpp
+    game/fakewall.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

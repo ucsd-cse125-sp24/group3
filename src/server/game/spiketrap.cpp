@@ -35,9 +35,7 @@ bool SpikeTrap::shouldTrigger(ServerGameState& state) {
 
         auto center_pos = player->physics.shared.getCenterPosition();
 
-        // Trigger the trap if the player is underneath, and only on a random roll (per tick)
-        // This can give the player time to realize they are standing under a trap.
-        if (isUnderneath(player) && randomInt(0, 100) != 0) {
+        if (isUnderneath(player)) {
             return true;
         }
     }

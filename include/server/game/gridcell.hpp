@@ -10,6 +10,7 @@ enum class CellType {
 	FloorSpikeHorizontal,
 	FloorSpikeVertical,
 	FloorSpikeFull,
+	FakeWall,
 	Unknown
 };
 

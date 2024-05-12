@@ -354,6 +354,25 @@ void Client::draw() {
                     true);
                 break;
             }
+            case ObjectType::FakeWall: {
+                glm::vec3 color;
+                if (sharedObject->trapInfo->triggered) {
+                    color = glm::vec3(0.4f, 0.5f, 0.7f);
+                } else {
+                    // off-color if not currently "visible"
+                    // TODO: change to translucent
+                    color = glm::vec3(0.5f, 0.6f, 0.8f);
+                }
+                auto cube = std::make_unique<Cube>(color);
+                cube->scale(sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
+                break;
+            }
             case ObjectType::SpikeTrap: {
                 auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
                 cube->scale( sharedObject->physics.dimensions);

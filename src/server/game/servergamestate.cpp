@@ -3,6 +3,7 @@
 #include "server/game/spiketrap.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/floorspike.hpp"
+#include "server/game/fakewall.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 
@@ -525,7 +526,8 @@ void ServerGameState::loadMaze() {
 						this->grid.gridCellCenterPosition(cell), glm::vec3(0.0f)));
 					break;
 				}
-				case CellType::Wall: {
+				case CellType::Wall:
+				case CellType::FakeWall: {
 					glm::vec3 dimensions(
 						this->grid.getGridCellWidth(),
 						MAZE_CEILING_HEIGHT,
@@ -537,7 +539,11 @@ void ServerGameState::loadMaze() {
 						cell->y * this->grid.getGridCellWidth()
 					);
 
-					this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
+					if (cell->type == CellType::FakeWall) {
+						this->objects.createObject(new FakeWall(corner, dimensions));
+					} else if (cell->type == CellType::Wall) {
+						this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
+					}
 					break;
 				}
 				case CellType::FloorSpikeFull:

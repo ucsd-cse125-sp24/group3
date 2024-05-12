@@ -21,7 +21,8 @@ enum class ObjectType {
 	SpikeTrap,
 	ArrowTrap,
 	Projectile,
-	FloorSpike
+	FloorSpike,
+	FakeWall
 };
 
 /**

@@ -23,6 +23,8 @@ CellType charToCellType(char c) {
 		return CellType::FloorSpikeVertical;
 	case '-':
 		return CellType::FloorSpikeHorizontal;
+	case 'F':
+		return CellType::FakeWall;
 	default:
 		return CellType::Unknown;
 	}
