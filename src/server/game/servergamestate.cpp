@@ -245,14 +245,6 @@ void ServerGameState::updateMovement() {
 					if (collidedZ) {
 						object->physics.shared.corner.z -= movementStep.z;
 					}
-
-					// update gravity factor
-					if ((object->physics.shared.corner).y > 0) {
-						object->physics.velocity.y -= GRAVITY;
-					}
-					else {
-						object->physics.velocity.y = 0.0f;
-					}
 				}
 				else {
 					object->physics.shared.corner += movementStep;
@@ -265,6 +257,14 @@ void ServerGameState::updateMovement() {
 				if (collidedX && collidedZ) {
 					break; // don't need to do the further movement steps until we reach totalmovement step
 				}
+			}
+
+			// update gravity factor
+			if ((object->physics.shared.corner).y > 0) {
+				object->physics.velocity.y -= GRAVITY;
+			}
+			else {
+				object->physics.velocity.y = 0.0f;
 			}
 		}
 	}
