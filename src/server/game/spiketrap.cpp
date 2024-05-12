@@ -35,16 +35,9 @@ bool SpikeTrap::shouldTrigger(ServerGameState& state) {
 
         auto center_pos = player->physics.shared.getCenterPosition();
 
-        bool is_underneath = (
-            center_pos.x >= this->physics.shared.corner.x &&
-            center_pos.x <= this->physics.shared.corner.x + this->physics.shared.dimensions.x &&
-            center_pos.z >= this->physics.shared.corner.z &&
-            center_pos.z <= this->physics.shared.corner.z + this->physics.shared.dimensions.z
-        );
-
         // Trigger the trap if the player is underneath, and only on a random roll (per tick)
         // This can give the player time to realize they are standing under a trap.
-        if (is_underneath && randomInt(0, 100) != 0) {
+        if (isUnderneath(player) && randomInt(0, 100) != 0) {
             return true;
         }
     }
@@ -82,5 +75,21 @@ void SpikeTrap::doCollision(Object* other, ServerGameState* state) {
     auto creature = dynamic_cast<Creature*>(other);
     if (creature == nullptr) return; // not a creature, so don't really care
 
-    creature->stats.health.adjustBase(-DAMAGE);
+    // if it is falling
+    if (this->physics.velocity.y < 0 && this->physics.shared.corner.y != 0) {
+        creature->stats.health.adjustBase(-DAMAGE);
+    }
+}
+
+bool SpikeTrap::isUnderneath(Object* other) {
+    auto other_center = other->physics.shared.getCenterPosition();
+    auto self_corner = this->physics.shared.corner;
+    auto self_dims = this->physics.shared.dimensions;
+
+    return (
+        other_center.x >= self_corner.x &&
+        other_center.x <= self_corner.x + self_dims.x &&
+        other_center.z >= self_corner.z &&
+        other_center.z <= self_corner.z + self_dims.z
+    );
 }

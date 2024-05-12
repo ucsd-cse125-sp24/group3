@@ -32,4 +32,6 @@ private:
     glm::vec3 reset_pos;
     glm::vec3 reset_corner;
     glm::vec3 reset_dimensions;
+
+    bool isUnderneath(Object* other);
 };
