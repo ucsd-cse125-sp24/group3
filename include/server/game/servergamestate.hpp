@@ -68,7 +68,7 @@ public:
 
 	void updateMovement();
 
-	void updateItem(SpecificID player, SpecificID item);
+	void updateItems();
 
 	void updateTraps();
 

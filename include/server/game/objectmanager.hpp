@@ -29,7 +29,7 @@ public:
 	 * @param type the type of object to create
 	 * @return the SpecificID of the newly created object
 	 */
-	SpecificID createObject(ObjectType type);
+	SpecificID createObject(Object* object);
 
 	/**
 	 * @brief Attempts to remove an object with the given EntityID.

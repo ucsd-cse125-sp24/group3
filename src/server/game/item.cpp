@@ -4,11 +4,12 @@
 #include "server/game/objectmanager.hpp"
 
 /*  Constructors and Destructors    */
-Item::Item(ObjectType type) :
-    Object(type), iteminfo(SharedItemInfo{ .held = false, .used = false }) 
-{
-	this->setModel(ModelType::Cube);
-    this->physics.movable = false;
+Item::Item(ObjectType type, bool movable, glm::vec3 corner, ModelType model, glm::vec3 dimensions):
+    Object(type, Physics(movable, Collider::Box, corner, dimensions), ModelType::Cube),
+	iteminfo(SharedItemInfo{ .held = false, .used = false })
+{}
+
+void Item::useItem(Object* other, ServerGameState& state) {
 }
 
 void Item::doCollision(Object* other, ServerGameState* state) {

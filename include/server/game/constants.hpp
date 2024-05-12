@@ -31,9 +31,10 @@
 #define	RESTORE_HEALTH			20
 #define HEALTH_DURATION			0
 
-#define	SPEED_BOOST 			1.2f
-#define SPEED_DURATION			15
+#define	NAUSEA_SCALAR			-1.0f
+#define NAUSEA_DURATION			10
 
+#define INVIS_OPACITY			0.5
 #define INVIS_DURATION			15
 
 /*	Game	*/

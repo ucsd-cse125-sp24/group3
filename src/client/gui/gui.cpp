@@ -385,8 +385,8 @@ void GUI::_sharedGameHUD() {
                 itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion)));
                 break;
             }
-            case ModelType::SwiftnessPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SwiftnessPotion)));
+            case ModelType::NauseaPotion: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::NauseaPotion)));
                 break;
             }
             case ModelType::InvisibilityPotion: {

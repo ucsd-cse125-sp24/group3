@@ -13,7 +13,7 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::ItemFrame: return (img_root / "frame.png").string();
         case ImgID::SelectedFrame: return (img_root / "selected_frame.png").string();
         case ImgID::HealthPotion: return (img_root / "pot_health.png").string();
-        case ImgID::SwiftnessPotion: return (img_root / "pot_swiftness.png").string();
+        case ImgID::NauseaPotion: return (img_root / "pot_nausea.png").string();
         case ImgID::InvisPotion: return (img_root / "pot_invisibility.png").string();
     }
 }

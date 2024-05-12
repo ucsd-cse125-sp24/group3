@@ -8,7 +8,11 @@
 
 class SpikeTrap : public Trap {
 public:
-    SpikeTrap();
+    /**
+     * @param corner Corner position of the spike trap
+     * @param dimensions dimensions of the spike trap (probably will change once we use a non cube model to not have this)
+     */
+    SpikeTrap(glm::vec3 corner, glm::vec3 dimensions);
 
     const static int DAMAGE;
     const static std::chrono::seconds ACTIVE_TIME; // how long the spikes are down

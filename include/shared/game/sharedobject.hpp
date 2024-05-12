@@ -15,10 +15,10 @@
 enum class ObjectType {
 	Object,	//	Generic object type (base class)
 	SolidSurface,
+	Potion,
 	Player,
 	Enemy,
-	SpikeTrap,
-	Potion
+	SpikeTrap
 };
 
 /**
@@ -31,7 +31,7 @@ std::string objectTypeString(ObjectType type);
 struct SharedStats {
 	SharedStats():
 		health(0,0,0), speed(0,0,0) {}
-	SharedStats(Stat<int> health, Stat<int> speed):
+	SharedStats(Stat<int>&& health, Stat<int>&& speed):
 		health(health), speed(speed) {}
 
 	Stat<int> health;
@@ -66,10 +66,9 @@ enum class ItemType {
 struct SharedItemInfo {
 	bool held; // for rendering
 	bool used; // for rendering
-	ItemType type;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& type& used& held;
+		ar& used& held;
 	}
 };
 
@@ -87,7 +86,7 @@ struct SharedSolidSurface {
 	SurfaceType surfaceType;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& surfaceType;
+		ar & surfaceType;
 	}
 };
 

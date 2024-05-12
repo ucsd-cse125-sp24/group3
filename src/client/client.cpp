@@ -356,7 +356,7 @@ void Client::draw() {
             }
             case ObjectType::SpikeTrap: {
                 auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
-                cube->scale( sharedObject->physics.dimensions);
+                cube->scale(sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
@@ -366,7 +366,7 @@ void Client::draw() {
                 break;
             }
             case ObjectType::Potion: {
-                if (!sharedObject->iteminfo->held) {
+                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
                     auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
                     cube->scale(sharedObject->physics.dimensions);
                     cube->translateAbsolute(sharedObject->physics.getCenterPosition());

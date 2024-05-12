@@ -17,8 +17,8 @@ CellType charToCellType(char c) {
 		return CellType::SpikeTrap;
 	case 'h':
 		return CellType::HealthPotion;
-	case 's':
-		return CellType::SwiftnessPotion;
+	case 'n':
+		return CellType::NauseaPotion;
 	case 'i':
 		return CellType::InvisibilityPotion;
 	default:

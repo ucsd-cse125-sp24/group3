@@ -190,12 +190,8 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
-    SpecificID playerID = this->state.objects.createObject(ObjectType::Player);
-    Player* player = this->state.objects.getPlayer(playerID);
-
-    //  TODO: Fix this so that the player spawns at the center of the grid cell,
-    //  not having the player's corner position in the center of the grid cell
-    player->physics.shared.corner = this->state.getGrid().getRandomSpawnPoint();
+    Player* player = new Player(this->state.getGrid().getRandomSpawnPoint(), glm::vec3(0.0f));
+    this->state.objects.createObject(player);
 
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, player->globalID));

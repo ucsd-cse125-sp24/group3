@@ -1,7 +1,7 @@
 #include "server/game/collider.hpp"
 #include "server/game/object.hpp"
 
-bool detectCollision(Physics& obj1, Physics& obj2) {
+bool detectCollision(const Physics& obj1, const Physics& obj2) {
 	switch (obj1.collider) {
 		case Collider::Sphere:
 			return detectCollisionSphere(obj1, obj2);
@@ -16,7 +16,7 @@ bool detectCollision(Physics& obj1, Physics& obj2) {
 	}
 }
 
-bool detectCollisionSphere(Physics& sphere, Physics& obj) {
+bool detectCollisionSphere(const Physics& sphere, const Physics& obj) {
 	//	Verify that the first argument's collider is indeed a Sphere
 	assert(sphere.collider == Collider::Sphere);
 
@@ -63,7 +63,7 @@ bool detectCollisionSphere(Physics& sphere, Physics& obj) {
 	return false;
 }
 
-bool detectCollisionBox(Physics& box, Physics& obj) {
+bool detectCollisionBox(const Physics& box, const Physics& obj) {
 	//	Verify that the first argument's collider is indeed a Box
 	assert(box.collider == Collider::Box);
 

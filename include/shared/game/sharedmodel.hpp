@@ -8,7 +8,7 @@ enum class ModelType {
 	Player,
 	WarrenBear,
 	HealthPotion,
-	SwiftnessPotion,
+	NauseaPotion,
 	InvisibilityPotion,
 	Frame
 };
