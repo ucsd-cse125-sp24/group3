@@ -2,8 +2,10 @@
 #include "shared/game/sharedobject.hpp"
 
 /*  Constructors and Destructors    */
-Item::Item() : Object(ObjectType::Item) { // cppcheck-suppress uninitMemberVar
-
+// TODO: actually make the item constructor take params
+// and fill in these values (probably on ted's branch, hi ted!)
+Item::Item():
+    Object(ObjectType::Item, Physics(false, Collider::Box, glm::vec3(0.0f), glm::vec3(0.0f)), ModelType::Cube) { // cppcheck-suppress uninitMemberVar
 }
 
 Item::~Item() {

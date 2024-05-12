@@ -5,6 +5,7 @@
 
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/game/stat.hpp"
 #include "shared/game/sharedmodel.hpp"
 
 /**
@@ -16,7 +17,8 @@ enum class ObjectType {
 	Item,
 	SolidSurface,
 	Player,
-	Enemy
+	Enemy,
+	SpikeTrap
 };
 
 /**
@@ -27,11 +29,16 @@ enum class ObjectType {
 std::string objectTypeString(ObjectType type);
 
 struct SharedStats {
-	float health;
-	float speed;
+	SharedStats():
+		health(0,0,0), speed(0,0,0) {}
+	SharedStats(Stat<int>&& health, Stat<int>&& speed):
+		health(health), speed(speed) {}
+
+	Stat<int> health;
+	Stat<int> speed;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& health& speed;
+		ar & health & speed;
 	}
 };
 
@@ -45,7 +52,7 @@ struct SharedItemInfo {
 	ItemType type;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& held& used& scalar& timer& type;
+		ar & held & used & scalar & timer & type;
 	}
 };
 
@@ -63,7 +70,7 @@ struct SharedSolidSurface {
 	SurfaceType surfaceType;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& surfaceType;
+		ar & surfaceType;
 	}
 };
 
@@ -98,6 +105,23 @@ struct SharedPhysics {
 	}
 };
 
+struct SharedTrapInfo {
+	bool triggered;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & triggered;
+	}
+};
+
+struct SharedPlayerInfo {
+	bool is_alive;
+	time_t respawn_time; // unix timestamp in ms when the player will be respawned
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & is_alive & respawn_time;
+	}
+};
+
 /**
  * @brief Representation of the Object class used by ServerGameState, containing
  * exactly the subset of Object data required by the client.
@@ -109,15 +133,17 @@ public:
 	SharedPhysics physics;
 	ModelType modelType;
 
-	boost::optional<SharedStats> stats;	
+	boost::optional<SharedStats> stats;
 	boost::optional<SharedItemInfo> iteminfo;
 	boost::optional<SharedSolidSurface> solidSurface;
+	boost::optional<SharedTrapInfo> trapInfo;
+	boost::optional<SharedPlayerInfo> playerInfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& globalID & type& physics & modelType & stats & iteminfo & solidSurface;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo;
 	}
 private:
 };

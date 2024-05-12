@@ -6,6 +6,7 @@
 #include "shared/utilities/rng.hpp"
 #include "client/client.hpp"
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/utilities/time.hpp"
 
 namespace gui {
 
@@ -151,6 +152,10 @@ void GUI::layoutFrame(GUIState state) {
         case GUIState::LOBBY:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             this->_layoutLobby();
+            break;
+        case GUIState::DEAD_SCREEN:
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            this->_layoutDeadScreen();
             break;
         case GUIState::NONE:
             break;
@@ -356,7 +361,22 @@ void GUI::_layoutLobby() {
 }
 
 void GUI::_layoutGameHUD() {
+    auto self_eid = client->session->getInfo().client_eid;
+    if (!self_eid.has_value()) {
+        return;
+    }
 
+    auto self = client->gameState.objects.at(*self_eid);
+
+    auto health_txt = widget::CenterText::make(
+        std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
+        font::Font::MENU,
+        font::Size::MEDIUM,
+        font::Color::RED,
+        fonts,
+        font::getRelativePixels(10)
+    );
+    this->addWidget(std::move(health_txt));
 }
 
 void GUI::_layoutGameEscMenu() {
@@ -380,6 +400,33 @@ void GUI::_layoutGameEscMenu() {
     flex->push(std::move(exit_game_txt));
 
     this->addWidget(std::move(flex));
+}
+
+void GUI::_layoutDeadScreen() {
+    auto self_eid = client->session->getInfo().client_eid;
+    if (!self_eid.has_value()) {
+        return;
+    }
+    auto self = client->gameState.objects.at(*self_eid);
+
+    auto time_until_respawn = (self->playerInfo->respawn_time - getMsSinceEpoch()) / 1000;
+
+    this->addWidget(widget::CenterText::make(
+        "You died...",
+        font::Font::MENU,
+        font::Size::LARGE,
+        font::Color::RED,
+        fonts,
+        FRAC_WINDOW_HEIGHT(1, 2)
+    ));
+    this->addWidget(widget::CenterText::make(
+        "Respawning in " + std::to_string(time_until_respawn),
+        font::Font::TEXT,
+        font::Size::MEDIUM,
+        font::Color::BLACK,
+        fonts,
+        FRAC_WINDOW_HEIGHT(1, 3)
+    ));
 }
 
 void GUI::_handleClick(float x, float y) {
