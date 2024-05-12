@@ -27,4 +27,11 @@ public:
 
 private:
     std::chrono::time_point<std::chrono::system_clock> shoot_time;
+
+    /**
+     * TODO: optimize this to use spatial collision detection
+     * @param object Object to test if this trap can see
+     * @return distance in meters towards the object, or negative if cannot see.
+     */
+    float canSee(Object* object, ServerGameState* state);
 };

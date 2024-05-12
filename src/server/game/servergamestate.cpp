@@ -161,7 +161,7 @@ void ServerGameState::updateMovement() {
 	// If objects are moving too fast, we split their movement into NUM_INCREMENTAL_STEPS smaller steps
 	const int NUM_INCREMENTAL_STEPS = 5;
 	// This is the threshold that determines if we need to do incremental steps for the movement
-	// if the movementStep is greater than this value, then we do incremental steps for the movement
+	// if the magnitude of movementStep is greater than this value, then we do incremental steps for the movement
 	const float SINGLE_MOVE_THRESHOLD = 0.20f;
 
 	// Don't set this directly, it is determined by NUM_INCREMENTAL_STEPS, and is just the reciprical
