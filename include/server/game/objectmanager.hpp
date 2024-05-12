@@ -155,6 +155,14 @@ public:
 	 */
 	SmartVector<Trap*> getTraps();
 
+	/**
+	 * @brief Get a list of all Projectiles in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Projectile pointers of all Projectile objects in the game
+	 * instance
+	 */
+	SmartVector<Projectile*> getProjectiles();
+
 	/*	SharedGameState generation	*/
 	
 	/**

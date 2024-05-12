@@ -140,6 +140,14 @@ public:
      */
 	virtual void doCollision(Object* other, ServerGameState* state) {};
 
+	/**
+	 * @brief code to run for this object on every tick
+	 * 
+	 * NOTE: by default does nothing, but certain objects can override
+	 * this to do specific effects
+	 */
+	virtual void doTick(ServerGameState* state) {}
+
 	/*	Debugger Methods	*/
 
 	std::string to_string(unsigned int tab_offset);

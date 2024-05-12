@@ -8,7 +8,7 @@
 
 using namespace std::chrono_literals;
 
-const std::chrono::seconds ArrowTrap::TIME_UNTIL_RESET = 1s;
+const std::chrono::seconds ArrowTrap::TIME_UNTIL_RESET = 4s;
 const int ArrowTrap::SHOOT_DIST = 5;
 
 ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions):
@@ -48,7 +48,7 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
     const float SHOOT_DIST_UNITS = state.getGrid().getGridCellWidth() * ArrowTrap::SHOOT_DIST;
     if (closest_dist <= SHOOT_DIST_UNITS && player_to_shoot_at != nullptr) {
         this->physics.shared.facing = glm::normalize(player_to_shoot_at->physics.shared.getCenterPosition() - this_pos);
-
+        this->target = player_to_shoot_at->globalID;
         return true;
     }
 
@@ -59,7 +59,12 @@ void ArrowTrap::trigger(ServerGameState& state) {
     Trap::trigger(state);
 
     state.objects.createObject(new Projectile(
-        this->physics.shared.getCenterPosition(), this->physics.shared.facing, ModelType::Cube, 10));
+        this->physics.shared.getCenterPosition(),
+        this->physics.shared.facing, 
+        glm::vec3(0.4f, 0.4f, 0.4f),
+        ModelType::Cube,
+        Projectile::Options(10, 0.30f, 0.50f, true, true, 0.15f, target)
+    ));
 
     this->shoot_time = std::chrono::system_clock::now();
 }

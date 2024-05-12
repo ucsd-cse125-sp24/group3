@@ -28,6 +28,8 @@ public:
 private:
     std::chrono::time_point<std::chrono::system_clock> shoot_time;
 
+    EntityID target;
+
     /**
      * TODO: optimize this to use spatial collision detection
      * @param object Object to test if this trap can see

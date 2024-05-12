@@ -177,6 +177,10 @@ SmartVector<Trap*> ObjectManager::getTraps() {
 	return this->traps;
 }
 
+SmartVector<Projectile*> ObjectManager::getProjectiles() {
+	return this->projectiles;
+}
+
 /*	SharedGameState generation	*/
 
 std::vector<std::shared_ptr<SharedObject>> ObjectManager::toShared() {

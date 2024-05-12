@@ -4,6 +4,7 @@
 #include "server/game/arrowtrap.hpp"
 #include "server/game/floorspike.hpp"
 #include "server/game/fakewall.hpp"
+#include "server/game/projectile.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 
@@ -143,13 +144,19 @@ void ServerGameState::update(const EventList& events) {
 
 	//	TODO: fill update() method with updating object movement
 	useItem();
+	doObjectTicks();
 	updateMovement();
 	updateTraps();
 	handleDeaths();
 	handleRespawns();
+	deleteEntities();
 	
 	//	Increment timestep
 	this->timestep++;
+}
+
+void ServerGameState::markForDeletion(EntityID id) {
+	this->entities_to_delete.insert(id);
 }
 
 void ServerGameState::updateMovement() {
@@ -205,6 +212,7 @@ void ServerGameState::updateMovement() {
 					for (int j = 0; j < gameObjects.size(); j++) {
 						if (i == j) { continue; }
 						Object* otherObj = gameObjects.get(j);
+						if (otherObj == nullptr) continue;
 
 						if (otherObj->physics.collider == Collider::None) { continue; }
 
@@ -284,6 +292,16 @@ void ServerGameState::useItem() {
 	}
 }
 
+void ServerGameState::doObjectTicks() {
+	auto objects = this->objects.getObjects();
+	for (int o = 0; o < objects.size(); o++) {
+		auto obj = objects.get(o);
+		if (obj == nullptr) continue;
+
+		obj->doTick(this);
+	}
+}
+
 void ServerGameState::updateTraps() {
 	// check for activations
 
@@ -336,6 +354,15 @@ void ServerGameState::handleRespawns() {
 			}
 		}
 	}
+}
+
+void ServerGameState::deleteEntities() {
+	for (EntityID id : this->entities_to_delete) {
+		this->objects.removeObject(id);
+	}
+
+	std::unordered_set<EntityID> empty;
+	std::swap(this->entities_to_delete, empty);
 }
 
 unsigned int ServerGameState::getTimestep() const {

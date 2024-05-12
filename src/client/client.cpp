@@ -396,7 +396,7 @@ void Client::draw() {
                 break;
             }
             case ObjectType::Projectile: {
-                auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 1.0f, 1.0f));
+                auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
                 cube->scale( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
                 cube->draw(this->cube_shader,
