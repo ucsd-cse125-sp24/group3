@@ -190,7 +190,7 @@ struct SpawnEntityEvent {
  */
 struct SelectItemEvent {
     SelectItemEvent() {}
-    SelectItemEvent(EntityID playerEID, int itemNum) : playerEID(playerEID), itemNum(itemNum) {}
+    explicit SelectItemEvent(EntityID playerEID, int itemNum) : playerEID(playerEID), itemNum(itemNum) {}
 
     EntityID playerEID;
     int itemNum;
@@ -206,7 +206,7 @@ struct SelectItemEvent {
  */
 struct UseItemEvent {
     UseItemEvent() {}
-    UseItemEvent(EntityID playerEID) : playerEID(playerEID) {}
+    explicit UseItemEvent(EntityID playerEID) : playerEID(playerEID) {}
 
     EntityID playerEID;
 
@@ -220,7 +220,7 @@ struct UseItemEvent {
  */
 struct DropItemEvent {
     DropItemEvent() {}
-    DropItemEvent(EntityID playerEID) : playerEID(playerEID){}
+    explicit DropItemEvent(EntityID playerEID) : playerEID(playerEID){}
 
     EntityID playerEID;
 

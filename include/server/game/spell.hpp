@@ -1,6 +1,5 @@
 #pragma once
 
-#include "server/game/item.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
 
@@ -10,7 +9,7 @@ enum class SpellType {
 
 class Spell : public Item {
 public:
-    Potion();
+    Spell(glm::vec3 corner, glm::vec3 dimensions);
 
     SpellType spellType;
 

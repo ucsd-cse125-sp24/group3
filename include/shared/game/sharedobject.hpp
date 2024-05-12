@@ -18,7 +18,8 @@ enum class ObjectType {
 	Potion,
 	Player,
 	Enemy,
-	SpikeTrap
+	SpikeTrap,
+	Spell
 };
 
 /**

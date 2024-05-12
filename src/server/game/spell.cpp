@@ -5,11 +5,10 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/object.hpp"
 
-Spell::Spell():
-    Item(ObjectType::Spell)
-
+Spell::Spell(glm::vec3 corner, glm::vec3 dimensions):
+    Item(ObjectType::Spell, false, corner, ModelType::Cube, dimensions)
+{
     this->spellType = SpellType::Fireball;
-    this->iteminfo.type = ItemType::Spell;
 }
 
 void Spell::setSpellType(SpellType type) {

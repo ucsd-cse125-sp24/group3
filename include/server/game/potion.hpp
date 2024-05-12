@@ -18,7 +18,7 @@ public:
     int effectScalar;
     PotionType potType;
 
-    void useItem(Object* other, ServerGameState& state);
+    void useItem(Object* other, ServerGameState& state) override;
     bool timeOut();
     void revertEffect(ServerGameState& state);
 

@@ -18,9 +18,10 @@ public:
 	Item(ObjectType type, bool movable, glm::vec3 corner, ModelType model, glm::vec3 dimensions);
 
     virtual void useItem(Object* other, ServerGameState& state);
+
 	void doCollision(Object* other, ServerGameState* state) override;
 
-	virtual SharedObject toShared() override;
+	SharedObject toShared() override;
 
 private:
 

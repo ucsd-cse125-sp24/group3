@@ -13,6 +13,7 @@ Potion::Potion(glm::vec3 corner, glm::vec3 dimensions, PotionType type):
     this->duration = 0;
     this->effectScalar = 0;
     this->potType = type;
+    this->usedPlayer = nullptr;
 
     switch (type) {
     case PotionType::Health:
