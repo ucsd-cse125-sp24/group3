@@ -156,6 +156,15 @@ void ServerGameState::updateMovement() {
 	//	Iterate through all objects in the ServerGameState and update their
 	//	positions and velocities if they are movable.
 
+	// If objects are moving too fast, we split their movement into NUM_INCREMENTAL_STEPS smaller steps
+	const int NUM_INCREMENTAL_STEPS = 5;
+	// This is the threshold that determines if we need to do incremental steps for the movement
+	// if the movementStep is greater than this value, then we do incremental steps for the movement
+	const float SINGLE_MOVE_THRESHOLD = 0.20f;
+
+	// Don't set this directly, it is determined by NUM_INCREMENTAL_STEPS, and is just the reciprical
+	const float INCREMENTAL_MOVE_RATIO = 1.0f / NUM_INCREMENTAL_STEPS;
+
 	SmartVector<Object*> gameObjects = this->objects.getObjects();
 	for (int i = 0; i < gameObjects.size(); i++) {
 		Object* object = gameObjects.get(i);
@@ -173,14 +182,14 @@ void ServerGameState::updateMovement() {
 			glm::vec3 totalMovementStep = object->physics.velocity * object->physics.velocityMultiplier;
 			glm::vec3 movementStep;
 			int numSteps = 0;
-			if (glm::length(totalMovementStep) > 0.20f) {
-				movementStep = 0.20f * totalMovementStep;
+			if (glm::length(totalMovementStep) > SINGLE_MOVE_THRESHOLD) {
+				movementStep = INCREMENTAL_MOVE_RATIO * totalMovementStep;
 			} else {
 				movementStep = totalMovementStep;
-				numSteps = 4;
+				numSteps = NUM_INCREMENTAL_STEPS - 1;
 			}
 
-			while (numSteps < 5) {
+			while (numSteps < NUM_INCREMENTAL_STEPS) {
 				numSteps++;
 				// Run collision detection movement if it has a collider
 				if (object->physics.collider != Collider::None) {

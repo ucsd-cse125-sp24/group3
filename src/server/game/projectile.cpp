@@ -13,8 +13,8 @@ Projectile::Projectile(glm::vec3 corner, glm::vec3 facing, ModelType model, int 
 }
 
 void Projectile::doCollision(Object* other, ServerGameState* state) {
-    this->physics.velocity = glm::vec3(0.0f, 0.0f, 0.0f);
-    this->physics.movable = false;
+    this->physics.velocity.x = 0;
+    this->physics.velocity.z = 0;
     this->physics.collider = Collider::None;
 
     // do damage if creature

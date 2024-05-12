@@ -8,6 +8,7 @@
 using namespace std::chrono_literals;
 
 const std::chrono::seconds ArrowTrap::TIME_UNTIL_RESET = 1s;
+const int ArrowTrap::SHOOT_DIST = 5;
 
 ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions):
     Trap(ObjectType::ArrowTrap, false, corner, Collider::None, ModelType::Cube, dimensions) 
@@ -40,9 +41,9 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
         }
     }
 
-    const static float SHOOT_DIST = state.getGrid().getGridCellWidth() * 5;
-
-    if (closest_dist <= SHOOT_DIST && player_to_shoot_at != nullptr) {
+    // convert grid units to actual distance values
+    const float SHOOT_DIST_UNITS = state.getGrid().getGridCellWidth() * ArrowTrap::SHOOT_DIST;
+    if (closest_dist <= SHOOT_DIST_UNITS && player_to_shoot_at != nullptr) {
         this->physics.shared.facing = glm::normalize(player_to_shoot_at->physics.shared.getCenterPosition() - this_pos);
 
         return true;

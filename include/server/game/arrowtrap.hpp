@@ -15,6 +15,7 @@ public:
     ArrowTrap(glm::vec3 corner, glm::vec3 dimensions);
 
     const static std::chrono::seconds TIME_UNTIL_RESET; // how long from initial activation until it can activate again
+    const static int SHOOT_DIST; // how many grid cells away it can shoot you from
 
     bool shouldTrigger(ServerGameState& state) override;
     void trigger(ServerGameState& state) override;
