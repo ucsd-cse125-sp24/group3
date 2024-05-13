@@ -47,6 +47,7 @@ void ArrowTrap::trigger(ServerGameState& state) {
         this->physics.shared.getCenterPosition().z   
     );
 
+    // TODO scale with grid size?
     switch (this->dir) {
         case ArrowTrap::Direction::UP:
             arrow_origin.z -= 3.0f;

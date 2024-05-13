@@ -50,7 +50,7 @@ void SpikeTrap::trigger(ServerGameState& state) {
     this->reset_dimensions = this->physics.shared.dimensions;
 
     this->physics.movable = true;
-    this->physics.velocity.y = -8.0f * GRAVITY;
+    this->physics.velocity.y = -50.0f * GRAVITY;
 
     this->dropped_time = std::chrono::system_clock::now();
 }
