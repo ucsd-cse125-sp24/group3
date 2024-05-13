@@ -455,6 +455,12 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         eid = this->session->getInfo().client_eid.value();
     }
 
+    std::optional<bool> is_dm;
+
+    if (this->session != nullptr && this->session->getInfo().is_dungeon_master.has_value()) {
+        is_dm = this->session->getInfo().is_dungeon_master.value();
+    }
+
     if (action == GLFW_PRESS) {
         switch (key) {
         case GLFW_KEY_ESCAPE:
@@ -479,37 +485,49 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
         case GLFW_KEY_E:
             if (eid.has_value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
+                if (is_dm.has_value() && !is_dm.value()) {
+                    this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
+                }
             }
             break;
 
         case GLFW_KEY_Q:
             if (eid.has_value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::DropItem, DropItemEvent(eid.value())));
+                if (is_dm.has_value() && !is_dm.value()) {
+                    this->session->sendEventAsync(Event(eid.value(), EventType::DropItem, DropItemEvent(eid.value())));
+                }
             }
             break;
 
         case GLFW_KEY_1:
             if (eid.has_value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
+                if (is_dm.has_value() && !is_dm.value()) {
+                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
+                }
             }
             break;
 
         case GLFW_KEY_2:
             if (eid.has_value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 2)));
+                if (is_dm.has_value() && !is_dm.value()) {
+                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 2)));
+                }
             }
             break;
 
         case GLFW_KEY_3:
             if (eid.has_value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 3)));
+                if (is_dm.has_value() && !is_dm.value()) {
+                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 3)));
+                }
             }
             break;
 
         case GLFW_KEY_4:
             if (eid.has_value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 4)));
+                if (is_dm.has_value() && !is_dm.value()) {
+                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 4)));
+                }
             }
             break;
 
