@@ -13,7 +13,7 @@ SharedObject Player::toShared() {
 
 Player::Player(glm::vec3 corner, glm::vec3 facing):
     Creature(ObjectType::Player, corner, facing, ModelType::Player, SharedStats(
-        Stat(0, 100, 50),
+        Stat(0, 100, 100),
         Stat(0, 10, 5)
     )),
     sharedInventory(SharedInventory { .selected = 1, .inventory_size = INVENTORY_SIZE })

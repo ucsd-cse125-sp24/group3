@@ -6,6 +6,9 @@
 #include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 
+/**
+ * Spike trap which falls from the ceiling if a player walks underneath
+ */
 class SpikeTrap : public Trap {
 public:
     /**
@@ -19,12 +22,12 @@ public:
     const static std::chrono::seconds TIME_UNTIL_RESET; // how long from initial activation until it can activate again
 
     bool shouldTrigger(ServerGameState& state) override;
-    void trigger() override;
+    void trigger(ServerGameState& state) override;
 
     bool shouldReset(ServerGameState& state) override;
-    void reset() override;
+    void reset(ServerGameState& state) override;
 
-    void doCollision(Object* other, ServerGameState* state) override;
+    void doCollision(Object* other, ServerGameState& state) override;
 
 private:
     std::chrono::time_point<std::chrono::system_clock> dropped_time;
@@ -32,4 +35,6 @@ private:
     glm::vec3 reset_pos;
     glm::vec3 reset_corner;
     glm::vec3 reset_dimensions;
+
+    bool isUnderneath(Object* other);
 };

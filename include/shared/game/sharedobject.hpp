@@ -19,7 +19,13 @@ enum class ObjectType {
 	Player,
 	Enemy,
 	SpikeTrap,
-	Spell
+	FireballTrap,
+	Projectile,
+	FloorSpike,
+	FakeWall,
+	ArrowTrap,
+	Spell,
+	Item
 };
 
 /**

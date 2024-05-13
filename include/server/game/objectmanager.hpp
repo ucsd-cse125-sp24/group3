@@ -7,7 +7,9 @@
 #include "server/game/enemy.hpp"
 #include "server/game/solidsurface.hpp"
 
-class Trap; // forward declaration to use Trap*
+// forward declarations to use pointers
+class Trap; 
+class Projectile;
 class Item;
 
 #include "shared/utilities/smartvector.hpp"
@@ -153,6 +155,14 @@ public:
 	 */
 	SmartVector<Trap*> getTraps();
 
+	/**
+	 * @brief Get a list of all Projectiles in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Projectile pointers of all Projectile objects in the game
+	 * instance
+	 */
+	SmartVector<Projectile*> getProjectiles();
+
 	/*	SharedGameState generation	*/
 	
 	/**
@@ -236,4 +246,10 @@ private:
 	 * ObjectType::Trap.
 	 */
 	SmartVector<Trap *> traps;
+
+	/**
+	 * @brief SmartVector of projectile pointers to all objects whose ObjectType is
+	 * ObjectType::Projectile.
+	 */
+	SmartVector<Projectile *> projectiles;
 };

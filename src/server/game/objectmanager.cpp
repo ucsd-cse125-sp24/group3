@@ -1,6 +1,8 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/spiketrap.hpp"
+#include "server/game/fireballtrap.hpp"
+#include "server/game/projectile.hpp"
 #include "server/game/potion.hpp"
 
 #include <memory>
@@ -28,8 +30,15 @@ SpecificID ObjectManager::createObject(Object* object) {
 	object->globalID = globalID;
 
 	switch (object->type) {
+		case ObjectType::Projectile:
+			object->typeID = this->projectiles.push(dynamic_cast<Projectile*>(object));
+			break;
+		case ObjectType::FireballTrap:
+		case ObjectType::FakeWall:
 		case ObjectType::SpikeTrap:
-			object->typeID = this->traps.push(dynamic_cast<SpikeTrap*>(object));
+		case ObjectType::FloorSpike:
+		case ObjectType::ArrowTrap:
+			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
 			break;
 		case ObjectType::Potion:
 			object->typeID = this->items.push(dynamic_cast<Potion*>(object));
@@ -44,7 +53,8 @@ SpecificID ObjectManager::createObject(Object* object) {
 			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
 			break;
         default:
-			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << "\n";
+			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << 
+				"\nDid you remember to add a new switch statement to ObjectManager::createObject?\n";
 			std::exit(1);
 	}
 
@@ -69,6 +79,22 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		//	Remove object pointer from the base_objects type-specific 
 		//	SmartVector
 		this->base_objects.remove(object->typeID);
+		break;
+	case ObjectType::FireballTrap:
+	case ObjectType::SpikeTrap:
+		this->traps.remove(object->typeID);
+		break;
+	case ObjectType::Item:
+		this->items.remove(object->typeID);
+		break;
+	case ObjectType::Player:
+		this->players.remove(object->typeID);
+		break;
+	case ObjectType::Projectile:
+		this->projectiles.remove(object->typeID);
+		break;
+	case ObjectType::Enemy:
+		this->enemies.remove(object->typeID);
 		break;
 	case ObjectType::Potion:
 		this->items.remove(object->typeID);
@@ -154,6 +180,10 @@ SmartVector<Enemy*> ObjectManager::getEnemies() {
 
 SmartVector<Trap*> ObjectManager::getTraps() {
 	return this->traps;
+}
+
+SmartVector<Projectile*> ObjectManager::getProjectiles() {
+	return this->projectiles;
 }
 
 /*	SharedGameState generation	*/
