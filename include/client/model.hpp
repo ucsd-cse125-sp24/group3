@@ -90,8 +90,7 @@ class Mesh : public Renderable {
             glm::mat4 viewProj,
             glm::vec3 camPos, 
             glm::vec3 lightPos,
-            bool fill,
-            bool drawBbox) override;
+            bool fill) override;
  private:
      std::vector<Vertex>       vertices;
      std::vector<unsigned int> indices;
@@ -124,8 +123,7 @@ class Model : public Renderable {
             glm::mat4 viewProj,
             glm::vec3 camPos, 
             glm::vec3 lightPos,
-            bool fill,
-            bool drawBbox) override;
+            bool fill) override;
 
     /**
      * Sets the position of the Model to the given x,y,z

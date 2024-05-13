@@ -320,8 +320,8 @@ void Client::draw() {
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     lightPos,
-                    true,
-                    false);
+                    true);
+                this->drawBbox(sharedObject);
                 break;
             }
             case ObjectType::Enemy: {
@@ -336,8 +336,8 @@ void Client::draw() {
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     lightPos,
-                    true,
-                    false);
+                    true);
+                this->drawBbox(sharedObject);
                 break;
             }
             case ObjectType::SolidSurface: {
@@ -348,8 +348,7 @@ void Client::draw() {
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     lightPos,
-                    true,
-                    false);
+                    true);
                 break;
             }
             case ObjectType::SpikeTrap: {
@@ -360,13 +359,31 @@ void Client::draw() {
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     glm::vec3(),
-                    true,
-                    false);
+                    true);
                 break;
             }
             default:
                 break;
         }
+    }
+}
+
+void Client::drawBbox(std::shared_ptr<SharedObject> object) {
+    if (this->config.client.draw_bboxes) {
+        auto bbox_pos = object->physics.corner; 
+        // for some reason the y axis of the bbox is off by half  
+        // the dimension of the object. when trying getCenterPosition
+        // it was off on the x axis. 
+        bbox_pos.y += object->physics.dimensions.y / 2.0f; 
+
+        auto object_bbox = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 1.0f));
+        object_bbox->scaleAbsolute(object->physics.dimensions);
+        object_bbox->translateAbsolute(bbox_pos);
+        object_bbox->draw(this->cube_shader,
+            this->cam->getViewProj(),
+            this->cam->getPos(),
+            glm::vec3(),
+            false);
     }
 }
 

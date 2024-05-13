@@ -139,8 +139,7 @@ void Cube::draw(std::shared_ptr<Shader> shader,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
     glm::vec3 lightPos,
-    bool fill,
-    bool drawBboxs) {
+    bool fill) {
 
     // actiavte the shader program
     shader->use();

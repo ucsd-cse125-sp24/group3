@@ -21,6 +21,7 @@
 #include "client/audiomanager.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/game/sharedobject.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
@@ -169,6 +170,12 @@ private:
      * @brief Draws all objects in the SharedGameState.
      */
     void draw();
+
+    /**
+     * @brief Draw bounding box around a given SharedObject
+     * only if the client.draw_bboxes field is set to true
+     */
+    void drawBbox(std::shared_ptr<SharedObject> object);
 
     /* Current game state */
     SharedGameState gameState;

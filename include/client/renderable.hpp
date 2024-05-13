@@ -20,8 +20,7 @@ class Renderable {
             glm::mat4 viewProj,
             glm::vec3 camPos, 
             glm::vec3 lightPos,
-            bool fill,
-            bool drawBbox) = 0;
+            bool fill) = 0;
 
     /**
      * Sets the position of the item to the given x,y,z

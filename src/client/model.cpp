@@ -80,8 +80,7 @@ void Mesh::draw(
     glm::mat4 viewProj,
     glm::vec3 camPos,
     glm::vec3 lightPos,
-    bool fill,
-    bool drawBbox) {
+    bool fill) {
     // actiavte the shader program
     shader->use();
 
@@ -156,11 +155,10 @@ void Model::draw(std::shared_ptr<Shader> shader,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
     glm::vec3 lightPos,
-    bool fill,
-    bool drawBbox) {
+    bool fill) {
 
     for(Mesh& mesh : this->meshes) {
-        mesh.draw(shader, viewProj, camPos, lightPos, fill, drawBbox);
+        mesh.draw(shader, viewProj, camPos, lightPos, fill);
     }
 }
 

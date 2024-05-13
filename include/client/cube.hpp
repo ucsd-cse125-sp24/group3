@@ -21,8 +21,7 @@ public:
             glm::mat4 viewProj,
             glm::vec3 camPos, 
             glm::vec3 lightPos,
-            bool fill,
-            bool drawBbox) override;
+            bool fill) override;
 private:
     GLuint VAO;
     GLuint VBO_positions, VBO_normals, EBO;
