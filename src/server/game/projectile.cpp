@@ -36,5 +36,5 @@ void Projectile::doCollision(Object* other, ServerGameState& state) {
     Creature* creature = dynamic_cast<Creature*>(other);
     if (creature == nullptr) return;
 
-    creature->stats.health.adjustBase(-this->opt.damage);
+    creature->stats.health.decrease(this->opt.damage);
 }

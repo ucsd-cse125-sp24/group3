@@ -1,6 +1,7 @@
 #pragma once
 
 #include "shared/utilities/serialize_macro.hpp"
+#include <iostream>
 
 template <typename T>
 class Stat {
@@ -15,16 +16,36 @@ public:
         }
     }
     
-    T adjustBase(T delta) {
+    T increase(T delta) {
         return _adjust(_base, delta);
     }
 
-    T adjustMod(T delta) {
-        return _adjust(_mod, delta);
+    T decrease(T delta) {
+        return _adjust(_base, -delta);
     }
 
-    T adjustMult(T delta) {
-        return _adjust(_mult, delta);
+    void increaseMax(T delta) {
+        _max += delta;
+    }
+
+    void decreaseMax(T delta) {
+        _max -= delta;
+    }
+
+    T addMod(T delta) {
+        _mod += delta;
+    }
+
+    T subMod(T delta) {
+        _mod -= delta;
+    }
+
+    T addMult(T delta) {
+        _mult += delta;
+    }
+
+    T subMult(T delta) {
+        _mult -= delta;
     }
 
     T current() const {
@@ -59,6 +80,7 @@ private:
             overflow = _min - val;
             val = _min;
         }
+
         return overflow;
     }
 };

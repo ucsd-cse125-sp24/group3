@@ -75,7 +75,7 @@ void SpikeTrap::doCollision(Object* other, ServerGameState& state) {
 
     // if it is falling
     if (this->physics.velocity.y < 0 && this->physics.shared.corner.y != 0) {
-        creature->stats.health.adjustBase(-DAMAGE);
+        creature->stats.health.decrease(DAMAGE);
     }
 }
 

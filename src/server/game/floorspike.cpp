@@ -31,5 +31,5 @@ void FloorSpike::doCollision(Object* obj, ServerGameState& state) {
     auto creature = dynamic_cast<Creature*>(obj);
     if (creature == nullptr) return;
 
-    creature->stats.health.adjustBase(-DAMAGE);
+    creature->stats.health.decrease(DAMAGE);
 }

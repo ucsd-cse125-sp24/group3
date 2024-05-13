@@ -396,7 +396,7 @@ void ServerGameState::handleRespawns() {
 			if (getMsSinceEpoch() >= player->info.respawn_time) {
 				player->physics.shared.corner = this->getGrid().getRandomSpawnPoint();
 				player->info.is_alive = true;
-				player->stats.health.adjustBase(player->stats.health.max());
+				player->stats.health.increase(player->stats.health.max());
 			}
 		}
 	}
