@@ -2,7 +2,7 @@
 // Code adapted from https://learnopengl.com/Getting-started/Camera
 
 Camera::Camera() : cameraPos(glm::vec3(0.0f)), cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)), cameraUp(glm::vec3(0.0f, 1.0f, 0.0f)), viewProjMat(glm::mat4(1.0f)) {
-    FOV = 75.0f;
+    FOV = 90.0f;
     aspect = 1.33f;
     nearClip = 0.1f;
     farClip = 100.0f;

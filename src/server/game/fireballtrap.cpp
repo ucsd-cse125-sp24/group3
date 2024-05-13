@@ -9,7 +9,7 @@
 using namespace std::chrono_literals;
 
 const std::chrono::seconds FireballTrap::TIME_UNTIL_RESET = 2s;
-const int FireballTrap::SHOOT_DIST = 5;
+const int FireballTrap::SHOOT_DIST = 15;
 
 FireballTrap::FireballTrap(glm::vec3 corner, glm::vec3 dimensions):
     Trap(ObjectType::FireballTrap, false, corner, Collider::None, ModelType::Cube, dimensions) 
@@ -56,6 +56,11 @@ bool FireballTrap::shouldTrigger(ServerGameState& state) {
 }
 
 void FireballTrap::trigger(ServerGameState& state) {
+    // start a little bit towards the player so the fireball doesn't commit die instantly
+    // with an adjacent wall
+    auto target_obj = state.objects.getObject(this->target);
+    if (target_obj == nullptr) return;
+
     Trap::trigger(state);
 
     state.objects.createObject(new HomingFireball(
@@ -89,7 +94,7 @@ float FireballTrap::canSee(Object* other, ServerGameState* state) {
 
     glm::vec3 curr_pos = this_pos;
     for (int i = 1; i < NUM_STEPS; i++) {
-        curr_pos += step;
+        curr_pos -= step;
         auto walls = state->objects.getSolidSurfaces();
         // TODO: optimized collision detection
         for (int w = 0; w < walls.size(); w++) {

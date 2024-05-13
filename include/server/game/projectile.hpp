@@ -74,7 +74,7 @@ class HomingFireball : public Projectile {
 public:
     inline static const int DAMAGE = 25;
     inline static const float H_MULT = 0.4;
-    inline static const float V_MULT = 0.5;
+    inline static const float V_MULT = 0.0; // not affected by gravity
     inline static const float HOMING_STRENGTH = 0.1f;
 
     HomingFireball(glm::vec3 corner, glm::vec3 facing, std::optional<EntityID> target):
