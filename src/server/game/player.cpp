@@ -16,7 +16,7 @@ Player::Player(glm::vec3 corner, glm::vec3 facing):
         Stat(0, 100, 50),
         Stat(0, 10, 5)
     )),
-    sharedInventory(SharedInventory { .selected = false, .inventory_size = INVENTORY_SIZE })
+    sharedInventory(SharedInventory { .selected = 1, .inventory_size = INVENTORY_SIZE })
 {
     this->info.is_alive = true;
     this->info.respawn_time = NULL;
