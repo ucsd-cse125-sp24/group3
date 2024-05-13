@@ -49,7 +49,7 @@ void set_opengl_settings(GLFWwindow* window) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // Set clear color to black.
-    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     // Set cursor position to (0, 0)
     glfwSetCursorPos(window, 0, 0);

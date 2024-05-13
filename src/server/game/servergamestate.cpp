@@ -477,6 +477,14 @@ void ServerGameState::loadMaze() {
 
 					Enemy* enemy = this->objects.getEnemy(enemyID);
 					enemy->physics.shared.position = this->grid.gridCellCenterPosition(cell);
+                                        // Put a torch on each wall
+					SpecificID torchID = 
+						this->objects.createObject(ObjectType::Torchlight);
+                    Torchlight* torchlight = this->objects.getTorchlight(torchID);
+                    torchlight->physics.shared.position = glm::vec3(
+                            this->grid.gridCellCenterPosition(cell) +
+                            glm::vec3(1.0f, MAZE_CEILING_HEIGHT / 2, 0));
+
 					break;
 				}
 				case CellType::Wall: {
@@ -508,6 +516,14 @@ void ServerGameState::loadMaze() {
 					wall->physics.boundary = new BoxCollider(wall->physics.shared.corner, wall->shared.dimensions);
 
 					wall->physics.movable = false;
+
+     //                // Put a torch on each wall
+					// SpecificID torchID = 
+					// 	this->objects.createObject(ObjectType::Torchlight);
+     //                Torchlight* torchlight = this->objects.getTorchlight(torchID);
+     //                torchlight->physics.shared.position = glm::vec3(
+     //                        this->grid.gridCellCenterPosition(cell) +
+     //                        glm::vec3(1.0f, MAZE_CEILING_HEIGHT / 2, 0));
 
 					break;
 				}

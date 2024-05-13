@@ -16,7 +16,8 @@ enum class ObjectType {
 	Item,
 	SolidSurface,
 	Player,
-	Enemy
+	Enemy,
+    Torchlight,
 };
 
 /**

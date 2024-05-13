@@ -77,9 +77,9 @@ void Mesh::draw(
     std::shared_ptr<Shader> shader,
     glm::mat4 viewProj,
     glm::vec3 camPos,
-    glm::vec3 lightPos,
+    std::vector<Light> lightSources,
     bool fill) {
-    // actiavte the shader program
+    // activate the shader program
     shader->use();
 
     // vertex shader uniforms
@@ -95,7 +95,14 @@ void Mesh::draw(
     shader->setVec3("viewPos", camPos);
     auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     shader->setVec3("lightColor",  lightColor);
-    shader->setVec3("lightPos", lightPos);
+    // std::cout << glm::to_string(lightSources.at(0).pos) << std::endl;
+    shader->setVec3("pointLights[0].position", lightSources.at(0).pos);
+    shader->setFloat("pointLights[0].constant", 1.0f);
+    shader->setFloat("pointLights[0].linear", 0.22f);
+    shader->setFloat("pointLights[0].quadratic", 0.20f);
+    shader->setVec3("pointLights[0].ambient", lightColor);
+    shader->setVec3("pointLights[0].diffuse", lightColor);
+    shader->setVec3("pointLights[0].specular", lightColor);
 
     if (textures.size() == 0) {
     } else {
@@ -145,11 +152,11 @@ Model::Model(const std::string& filepath) {
 void Model::draw(std::shared_ptr<Shader> shader,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
-    glm::vec3 lightPos,
+    std::vector<Light> lightSources,
     bool fill) {
 
     for(Mesh& mesh : this->meshes) {
-        mesh.draw(shader, viewProj, camPos, lightPos, fill);
+        mesh.draw(shader, viewProj, camPos, lightSources, fill);
     }
 }
 

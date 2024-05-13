@@ -88,7 +88,7 @@ class Mesh : public Renderable {
     void draw(std::shared_ptr<Shader> shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            glm::vec3 lightPos,
+            std::vector<Light> lightSources,
             bool fill) override;
  private:
      std::vector<Vertex>       vertices;
@@ -121,7 +121,7 @@ class Model : public Renderable {
     void draw(std::shared_ptr<Shader> shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            glm::vec3 lightPos,
+            std::vector<Light> lightSources,
             bool fill) override;
 
     /**

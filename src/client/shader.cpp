@@ -63,6 +63,7 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) {
     if(!success) {
         glGetShaderInfoLog(vertex, 512, NULL, infoLog);
         std::cout << "ERROR: Fragment shader compilation failed\n" << infoLog << std::endl;
+        throw std::exception();
     };
 
     if (vertex == 0 && fragment == 0) {

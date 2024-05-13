@@ -80,6 +80,7 @@ private:
     std::unique_ptr<Model> player_model;
     std::unique_ptr<Model> bear_model;
     std::unique_ptr<LightSource> light_source;
+    std::unique_ptr<Model> torchlight_model;
 
     float playerMovementDelta = 0.05f;
 

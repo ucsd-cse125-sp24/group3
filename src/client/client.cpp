@@ -19,6 +19,7 @@
 #include "client/shader.hpp"
 #include "client/model.hpp"
 #include "glm/fwd.hpp"
+#include "server/game/object.hpp"
 #include "server/game/solidsurface.hpp"
 #include "shared/game/event.hpp"
 #include "shared/game/sharedobject.hpp"
@@ -172,6 +173,9 @@ bool Client::init() {
     auto lightFragFilepath = shaders_dir / "lightsource.frag";
     this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
 
+    auto torchlight_model_path = graphics_assets_dir / "cube.obj";
+    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
+
     this->gui_state = GUIState::TITLE_SCREEN;
 
     return true;
@@ -304,6 +308,19 @@ void Client::processServerInput(boost::asio::io_context& context) {
 void Client::draw() {
     glm::vec3 test(1.0f);
 
+    std::vector<Light> lightSources;
+    for (int i = 0; i < this->gameState.objects.size(); i++) {
+        std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
+        if (sharedObject == nullptr) {
+            continue;
+        }
+        if (sharedObject->type == ObjectType::Torchlight) {
+            lightSources.push_back(Light {
+                sharedObject->physics.position
+            });
+        }
+    }
+
     for (int i = 0; i < this->gameState.objects.size(); i++) {
         std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
 
@@ -318,6 +335,12 @@ void Client::draw() {
                     glm::vec3 pos = sharedObject->physics.position;
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
+
+                    // this->light_source->TranslateTo(pos2);
+                    // this->light_source->draw(
+                    //     this->light_source_shader,
+                    //     this->cam->getViewProj());
+
                     break;
                 }
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
@@ -329,26 +352,22 @@ void Client::draw() {
                     this->model_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightPos,
+                    lightSources,
                     true);
                 break;
             }
             case ObjectType::Enemy: {
                 // warren bear is an enemy because why not
                 // auto pos = glm::vec3(0.0f, 0.0f, 0.0f);
-                auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
+                // auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
                 this->bear_model->translateAbsolute(sharedObject->physics.position);
                 this->bear_model->draw(
                     this->model_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightPos,
+                    lightSources,
                     true);
 
-     /*           this->light_source->TranslateTo(lightPos);
-                this->light_source->draw(
-                    this->light_source_shader,
-                    this->cam->getViewProj());*/
 
                 // Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f));
                 // cube->translateAbsolute(lightPos);
@@ -360,13 +379,25 @@ void Client::draw() {
                 break;
             }
             case ObjectType::SolidSurface: {
-                auto cube = std::make_unique<Cube>(glm::vec3(0.4f,0.5f,0.7f));
+                std::unique_ptr<Cube> cube = std::make_unique<Cube>(glm::vec3(0.4f,0.5f,0.7f));
                 cube->scale( sharedObject->solidSurface->dimensions);
                 cube->translateAbsolute(sharedObject->physics.position);
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    lightSources, 
+                    true);
+                break;
+            }
+            case ObjectType::Torchlight: {
+                // std::cout << "rendering torch" << std::endl;
+                auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
+                this->torchlight_model->translateAbsolute(sharedObject->physics.position);
+                this->torchlight_model->draw(
+                    this->light_source_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    lightSources,
                     true);
                 break;
             }

@@ -1,5 +1,6 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
+#include "server/game/torchlight.hpp"
 
 #include <memory>
 
@@ -84,6 +85,21 @@ SpecificID ObjectManager::createObject(ObjectType type) {
             //	Set object's type and global IDs
             enemy->typeID = typeID;
             enemy->globalID = globalID;
+            break;
+        }
+        case ObjectType::Torchlight: {
+            //	Create a new object of type Torchlight
+            Torchlight* torchlight = new Torchlight();
+
+			//	Push to type-specific enemies vector
+            typeID = (SpecificID)this->torchlights.push(torchlight);
+
+            //	Push to global objects vector
+            globalID = (EntityID)this->objects.push(torchlight);
+
+            //	Set object's type and global IDs
+            torchlight->typeID = typeID;
+            torchlight->globalID = globalID;
             break;
         }
 		case ObjectType::Object: {
@@ -204,6 +220,10 @@ Player* ObjectManager::getPlayer(SpecificID playerID) {
 
 Enemy* ObjectManager::getEnemy(SpecificID enemyID) {
 	return this->enemies.get(enemyID);
+}
+
+Torchlight* ObjectManager::getTorchlight(SpecificID torchlightID) {
+	return this->torchlights.get(torchlightID);
 }
 
 SmartVector<Item*> ObjectManager::getItems() {

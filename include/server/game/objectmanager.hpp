@@ -8,6 +8,7 @@
 #include "server/game/enemy.hpp"
 #include "server/game/solidsurface.hpp"
 
+#include "server/game/torchlight.hpp"
 #include "shared/utilities/smartvector.hpp"
 
 class ObjectManager {
@@ -95,6 +96,13 @@ public:
 	 * @return A pointer 
 	 */
 	Enemy* getEnemy(SpecificID enemyID);
+
+	/**
+	 * @brief Attempts to retrieve the Torchlight with the given SpecificID.
+	 * @param enemyID SpecificID of the Torchlight to retrieve
+	 * @return A pointer 
+	 */
+	Torchlight* getTorchlight(SpecificID torchlightID);
 
 	/**
 	 * @brief Get a list of all objects in this game instance at the current
@@ -213,4 +221,10 @@ private:
 	 * ObjectType::Enemy.
 	 */
 	SmartVector<Enemy *> enemies;
+
+	/**
+	 * @brief SmartVector of TorchLight pointers to all objects whose ObjectType is
+	 * ObjectType::Enemy.
+	 */
+	SmartVector<Torchlight *> torchlights;
 };

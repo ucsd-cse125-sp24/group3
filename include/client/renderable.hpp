@@ -1,10 +1,15 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include <glm/glm.hpp>
 
 #include "client/shader.hpp"
+
+struct Light {
+    glm::vec3 pos;
+};
 
 class Renderable {
  public:
@@ -19,7 +24,7 @@ class Renderable {
     virtual void draw(std::shared_ptr<Shader> shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            glm::vec3 lightPos,
+            std::vector<Light> lightSources,
             bool fill) = 0;
 
     /**

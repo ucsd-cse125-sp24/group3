@@ -14,6 +14,7 @@ set(FILES
     game/objectmanager.cpp
     game/player.cpp
     game/enemy.cpp
+    game/torchlight.cpp
     game/gridcell.cpp
     game/grid.cpp
 )
