@@ -58,12 +58,10 @@ bool FireballTrap::shouldTrigger(ServerGameState& state) {
 void FireballTrap::trigger(ServerGameState& state) {
     Trap::trigger(state);
 
-    state.objects.createObject(new Projectile(
+    state.objects.createObject(new HomingFireball(
         this->physics.shared.getCenterPosition(),
-        this->physics.shared.facing, 
-        glm::vec3(0.4f, 0.4f, 0.4f),
-        ModelType::Cube,
-        Projectile::Options(25, 0.30f, 0.50f, true, true, 0.15f, target)
+        this->physics.shared.facing,
+        this->target
     ));
 
     this->shoot_time = std::chrono::system_clock::now();

@@ -41,36 +41,8 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
 void ArrowTrap::trigger(ServerGameState& state) {
     Trap::trigger(state);
 
-    // TODO remove this stuff when projectile just takes a model
-    // and we don't need to size it, instead probably just pass through
-    // a model and direction
-    const float ARROW_WIDTH = 0.2f;    
-    const float ARROW_LENGTH = 1.0f;    
-    const float ARROW_HEIGHT = 0.2f;
-
-    float arrow_x_dim;
-    float arrow_z_dim;
-
-    switch (this->dir) {
-        case ArrowTrap::Direction::UP:
-        case ArrowTrap::Direction::DOWN:
-            arrow_x_dim = ARROW_WIDTH;
-            arrow_z_dim = ARROW_LENGTH;
-            break;
-        case ArrowTrap::Direction::LEFT:
-        case ArrowTrap::Direction::RIGHT:
-            arrow_x_dim = ARROW_LENGTH;
-            arrow_z_dim = ARROW_WIDTH;
-            break;
-    }
-
-    state.objects.createObject(new Projectile(
-        this->physics.shared.getCenterPosition(),
-        this->physics.shared.facing, 
-        glm::vec3(arrow_x_dim, 0.2f, arrow_z_dim),
-        ModelType::Cube,
-        Projectile::Options(10, 1.2f, 0.0f, false, false, 0.0f, {})
-    ));
+    state.objects.createObject(new Arrow(
+        this->physics.shared.getCenterPosition(), this->physics.shared.facing, this->dir));
 
     this->shoot_time = std::chrono::system_clock::now();
 }
