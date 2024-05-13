@@ -51,6 +51,7 @@ struct GameConfig {
         /// @brief Whether or not the client should listen for server lobby broadcasts
         bool lobby_discovery;
         int window_width;
+        bool draw_bboxes;
     } client;
 
     /**

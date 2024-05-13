@@ -3,13 +3,15 @@
 #include <memory>
 
 #include "server/game/object.hpp"
-#include "server/game/item.hpp"
 #include "server/game/player.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/solidsurface.hpp"
-
 #include "server/game/torchlight.hpp"
 #include "shared/utilities/smartvector.hpp"
+
+class Trap; // forward declaration to use Trap*
+class Item;
+
 
 class ObjectManager {
 public:
@@ -28,7 +30,7 @@ public:
 	 * @param type the type of object to create
 	 * @return the SpecificID of the newly created object
 	 */
-	SpecificID createObject(ObjectType type);
+	SpecificID createObject(Object* object);
 
 	/**
 	 * @brief Attempts to remove an object with the given EntityID.
@@ -99,10 +101,17 @@ public:
 
 	/**
 	 * @brief Attempts to retrieve the Torchlight with the given SpecificID.
-	 * @param enemyID SpecificID of the Torchlight to retrieve
+	 * @param torchlightID SpecificID of the Torchlight to retrieve
 	 * @return A pointer 
 	 */
 	Torchlight* getTorchlight(SpecificID torchlightID);
+
+    /**
+	 * @brief Attempts to retrieve the Trap with the given SpecificID.
+	 * @param trapID lSpecificID of the Trap to retrieve
+	 * @return A pointer 
+	 */
+	Trap* getTrap(SpecificID trapID);
 
 	/**
 	 * @brief Get a list of all objects in this game instance at the current
@@ -143,6 +152,14 @@ public:
 	 * instance.
 	 */
 	SmartVector<Enemy*> getEnemies();
+
+	/**
+	 * @brief Get a list of all Traps in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Trap pointers of all Trap objects in the game
+	 * instance
+	 */
+	SmartVector<Trap*> getTraps();
 
 	/*	SharedGameState generation	*/
 	
@@ -227,4 +244,10 @@ private:
 	 * ObjectType::Enemy.
 	 */
 	SmartVector<Torchlight *> torchlights;
+
+    /**
+	 * @brief SmartVector of Trap pointers to all objects whose ObjectType is
+	 * ObjectType::Trap.
+	 */
+	SmartVector<Trap *> traps;
 };

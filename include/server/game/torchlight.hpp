@@ -6,8 +6,10 @@
 
 class Torchlight : public Object {
 public:
-
-	Torchlight();
+	/**
+	 * @param corner Corner position of the surface
+	 */
+	Torchlight(glm::vec3 corner);
 	~Torchlight();
 
 	virtual SharedObject toShared() override;

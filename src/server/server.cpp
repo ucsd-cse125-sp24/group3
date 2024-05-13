@@ -14,12 +14,12 @@
 #include <chrono>
 
 #include "boost/variant/get.hpp"
+#include "server/game/potion.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/player.hpp"
 #include "shared/game/event.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
-#include "server/game/boxcollider.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
@@ -190,27 +190,8 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
-    SpecificID playerID = this->state.objects.createObject(ObjectType::Player);
-    Player* player = this->state.objects.getPlayer(playerID);
-
-    //  Spawn player in random spawn point
-
-    //  TODO: Possibly replace this random spawn point with player assignments?
-    //  I.e., assign each player a spawn point to avoid multiple players getting
-    //  the same spawn point?
-    std::srand(std::time(NULL));
-    std::vector<GridCell*> spawnPoints = this->state.getGrid().getSpawnPoints();
-    size_t randomSpawnIndex = std::rand() % spawnPoints.size();
-
-    std::cout << "Number of spawn points: " << spawnPoints.size() << std::endl;
-    std::cout << "Player " << playerID << " spawning at spawn point " << randomSpawnIndex << std::endl;
-
-    GridCell * spawnPoint = 
-        this->state.getGrid().getSpawnPoints().at(randomSpawnIndex);
-
-    player->physics.shared.position = this->state.getGrid().gridCellCenterPosition(spawnPoint);
-    player->physics.shared.corner = player->physics.shared.position - glm::vec3(0.5, 0, 0.5);
-    player->physics.boundary = new BoxCollider(player->physics.shared.corner, glm::vec3(1.0f));
+    Player* player = new Player(this->state.getGrid().getRandomSpawnPoint(), glm::vec3(0.0f));
+    this->state.objects.createObject(player);
 
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, player->globalID));

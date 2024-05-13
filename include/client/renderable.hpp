@@ -46,22 +46,45 @@ class Renderable {
 
     /**
      * Scale the Model across all axes (x,y,z)
-     * by a factor
+     * by a factor. This will not stack up on top of any 
+     * previous scaling.
      *
      * @param new_factor describes how much to scale the model by.
      * Ex: setting it to 0.5 will cut the model's rendered size  
      * in half.
      */
-    virtual void scale(const float& new_factor);
+    virtual void scaleAbsolute(const float& new_factor);
 
     /**
      * Scale the item across all axes (x,y,z)
-     * by the scale factor in each axis.
+     * by the scale factor in each axis. This will not stack 
+     * up on top of any previous scaling.
      *
      * @param the scale vector describes how much to independently scale 
      * the item in each axis (x, y, z)
      */
-    virtual void scale(const glm::vec3& scale);
+    virtual void scaleAbsolute(const glm::vec3& scale);
+
+    /**
+     * Scale the Model across all axes (x,y,z)
+     * by a factor. This will stack 
+     * up on top of any previous scaling.
+     *
+     * @param new_factor describes how much to scale the model by.
+     * Ex: setting it to 0.5 will cut the model's rendered size  
+     * in half.
+     */
+    virtual void scaleRelative(const float& new_factor);
+
+    /**
+     * Scale the item across all axes (x,y,z)
+     * by the scale factor in each axis. This 
+     * will stack up on top of any previous scaling.
+     *
+     * @param the scale vector describes how much to independently scale 
+     * the item in each axis (x, y, z)
+     */
+    virtual void scaleRelative(const glm::vec3& scale);
 
     /**
      * Gets the model matrix given all the transformations 
@@ -70,6 +93,22 @@ class Renderable {
      * @return updated model matrix
      */
     glm::mat4 getModelMat();
+
+    /**
+     * Clear transformations and reset the model matrix 
+     * to the identity.
+     */
+    virtual void clear();
+
+    /**
+     * Reset scale factors in each dimension to 1.0
+     */
+    virtual void clearScale();
+
+    /**
+     * Reset translation to position (0, 0, 0)
+     */
+    virtual void clearPosition();
  private:
     glm::mat4 model;
 };

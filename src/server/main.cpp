@@ -20,7 +20,5 @@ int main(int argc, char** argv) {
 
         // Wait until next tick
         context.run_for(wait_time);
-
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }

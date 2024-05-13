@@ -4,8 +4,7 @@ set(LIB_NAME game_server_lib)
 set(FILES
     lobbybroadcaster.cpp
     server.cpp
-    game/boxcollider.cpp
-    game/spherecollider.cpp
+    game/collider.cpp
     game/creature.cpp
     game/item.cpp
     game/solidsurface.cpp
@@ -17,6 +16,9 @@ set(FILES
     game/torchlight.cpp
     game/gridcell.cpp
     game/grid.cpp
+    game/trap.cpp
+    game/spiketrap.cpp
+    game/potion.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

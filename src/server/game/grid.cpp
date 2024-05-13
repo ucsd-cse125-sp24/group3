@@ -1,4 +1,5 @@
 #include "server/game/grid.hpp"
+#include "shared/utilities/rng.hpp"
 
 /*	Constructors and Destructors	*/
 Grid::Grid(int rows, int columns) : rows(rows), columns(columns) {
@@ -74,6 +75,14 @@ std::vector<std::vector<GridCell*>> Grid::getGrid() {
 
 std::vector<GridCell*> Grid::getSpawnPoints() {
 	return this->spawnCells;
+}
+
+glm::vec3 Grid::getRandomSpawnPoint() {
+    //  TODO: Possibly replace this random spawn point with player assignments?
+    //  I.e., assign each player a spawn point to avoid multiple players getting
+    //  the same spawn point?
+    size_t randomSpawnIndex = randomInt(0, this->spawnCells.size() - 1);
+	return this->gridCellCenterPosition(this->spawnCells.at(randomSpawnIndex));
 }
 
 glm::vec3 Grid::gridCellCenterPosition(GridCell* cell) {

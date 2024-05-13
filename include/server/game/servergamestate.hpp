@@ -5,18 +5,15 @@
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/smartvector.hpp"
 #include "server/game/object.hpp"
-#include "server/game/objectmanager.hpp"
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"
+#include "server/game/objectmanager.hpp"
 
 #include <string>
 #include <vector>
 #include <chrono>
 #include <unordered_map>
 #include <queue>
-
-//	From sharedgamestate.hpp
-//struct SharedGameState;
 
 /// Represents a list of events from a certain client with a specified ID
 using EventList = std::vector<std::pair<EntityID, Event>>;
@@ -71,9 +68,13 @@ public:
 
 	void updateMovement();
 
-	//	TODO: Add implementations of items
+	void updateItems();
 
-	void useItem();
+	void updateTraps();
+
+	void handleDeaths();
+
+	void handleRespawns();
 
 	/*	SharedGameState generation	*/
 
@@ -186,6 +187,4 @@ private:
 	 * @brief 2-D Grid of GridCells (filled after loadMaze() is called).
 	 */
 	Grid grid;
-
-	//	TODO: Add reference to passed-in Event queue.
 };

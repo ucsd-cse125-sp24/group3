@@ -1,6 +1,8 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/torchlight.hpp"
+#include "server/game/spiketrap.hpp"
+#include "server/game/potion.hpp"
 
 #include <memory>
 
@@ -21,127 +23,36 @@ ObjectManager::~ObjectManager() {
 
 /*	Object CRUD methods	*/
 
-SpecificID ObjectManager::createObject(ObjectType type) {
+SpecificID ObjectManager::createObject(Object* object) {
 	//	Create a new object with the given type
-	EntityID globalID;
-	SpecificID typeID;
+	EntityID globalID = this->objects.push(object);
+	object->globalID = globalID;
 
-	switch (type) {
-		case ObjectType::Item: {
-			//	Create a new object of type Item
-			Item* item = new Item();
-
-			//	Push to type-specific items vector
-			typeID = (SpecificID)this->items.push(item);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(item);
-
-			//	Set items' type and global IDs
-			item->typeID = typeID;
-			item->globalID = globalID;
+	switch (object->type) {
+		case ObjectType::SpikeTrap:
+			object->typeID = this->traps.push(dynamic_cast<SpikeTrap*>(object));
 			break;
-		}
-		case ObjectType::SolidSurface: {
-			//	Create a new object of type SolidSurface
-			SolidSurface* solidSurface = new SolidSurface();
-
-			//	Push to type-specific solid_surfaces vector
-			typeID = (SpecificID)this->solid_surfaces.push(solidSurface);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(solidSurface);
-
-			//	Set solidSurface's type and global IDs
-			solidSurface->typeID = typeID;
-			solidSurface->globalID = globalID;
+		case ObjectType::Potion:
+			object->typeID = this->items.push(dynamic_cast<Potion*>(object));
 			break;
-		}
-		case ObjectType::Player: {
-			//	Create a new object of type Player
-			Player* player = new Player();
-
-			//	Push to type-specific players vector
-			typeID = (SpecificID)this->players.push(player);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(player);
-
-			//	Set object's type and global IDs
-			player->typeID = typeID;
-			player->globalID = globalID;
+		case ObjectType::SolidSurface:
+			object->typeID = this->solid_surfaces.push(dynamic_cast<SolidSurface*>(object));
 			break;
-		}
-        case ObjectType::Enemy: {
-            //	Create a new object of type Enemy
-            Enemy* enemy = new Enemy();
-
-			//	Push to type-specific enemies vector
-            typeID = (SpecificID)this->enemies.push(enemy);
-
-            //	Push to global objects vector
-            globalID = (EntityID)this->objects.push(enemy);
-
-            //	Set object's type and global IDs
-            enemy->typeID = typeID;
-            enemy->globalID = globalID;
+        case ObjectType::Torchlight:
+            object->typeID = this->torchlights.push(dynamic_cast<Torchlight*>(object));
             break;
-        }
-        case ObjectType::Torchlight: {
-            //	Create a new object of type Torchlight
-            Torchlight* torchlight = new Torchlight();
-
-			//	Push to type-specific enemies vector
-            typeID = (SpecificID)this->torchlights.push(torchlight);
-
-            //	Push to global objects vector
-            globalID = (EntityID)this->objects.push(torchlight);
-
-            //	Set object's type and global IDs
-            torchlight->typeID = typeID;
-            torchlight->globalID = globalID;
-            break;
-        }
-		case ObjectType::Object: {
-			//	Create a new object of type Object
-			Object* object = new Object(ObjectType::Object);
-
-			//	TODO: Maybe change SmartVector's index return value? size_t is
-			//	larger than uint32 (which is what SpecificID and EntityID are
-			//	defined as)
-			//	Push to type-specific base_objects vector
-			typeID = (SpecificID)this->base_objects.push(object);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(object);
-
-            //	Set object's type and global IDs
-            object->typeID = typeID;
-            object->globalID = globalID;
-            break;
-        }
-        default: {
-            //	Create a new object of type Object
-            Object* object = new Object(ObjectType::Object);
-
-            //	TODO: Maybe change SmartVector's index return value? size_t is
-            //	larger than uint32 (which is what SpecificID and EntityID are
-            //	defined as)
-            //	Push to type-specific base_objects vector
-            typeID = (SpecificID)this->base_objects.push(object);
-
-            //	Push to global objects vector
-            globalID = (EntityID)this->objects.push(object);
-
-            //	Set object's type and global IDs
-            object->typeID = typeID;
-            object->globalID = globalID;
-            break;
-        }
+		case ObjectType::Player:
+			object->typeID = this->players.push(dynamic_cast<Player*>(object));
+			break;
+        case ObjectType::Enemy:
+			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
+			break;
+        default:
+			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << "\n";
+			std::exit(1);
 	}
 
-	//	Return new object's specificID
-	return typeID;
+	return object->typeID;
 }
 
 bool ObjectManager::removeObject(EntityID globalID) {
@@ -162,6 +73,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		//	Remove object pointer from the base_objects type-specific 
 		//	SmartVector
 		this->base_objects.remove(object->typeID);
+		break;
+	case ObjectType::Potion:
+		this->items.remove(object->typeID);
 		break;
 	}
 
@@ -226,6 +140,10 @@ Torchlight* ObjectManager::getTorchlight(SpecificID torchlightID) {
 	return this->torchlights.get(torchlightID);
 }
 
+Trap* ObjectManager::getTrap(SpecificID trapID) {
+	return this->traps.get(trapID);
+}
+
 SmartVector<Item*> ObjectManager::getItems() {
 	return this->items;
 }
@@ -240,6 +158,10 @@ SmartVector<Player*> ObjectManager::getPlayers() {
 
 SmartVector<Enemy*> ObjectManager::getEnemies() {
 	return this->enemies;
+}
+
+SmartVector<Trap*> ObjectManager::getTraps() {
+	return this->traps;
 }
 
 /*	SharedGameState generation	*/

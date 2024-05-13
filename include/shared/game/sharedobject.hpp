@@ -3,9 +3,10 @@
 #include <optional>
 #include <glm/glm.hpp>
 
-//#include "server/game/object.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/game/stat.hpp"
+#include "shared/game/sharedmodel.hpp"
 
 /**
  * @brief An enum for the type of an object; the fields here should match all
@@ -13,11 +14,13 @@
  */
 enum class ObjectType {
 	Object,	//	Generic object type (base class)
-	Item,
 	SolidSurface,
+	Potion,
 	Player,
 	Enemy,
     Torchlight,
+	SpikeTrap,
+	Spell
 };
 
 /**
@@ -28,25 +31,47 @@ enum class ObjectType {
 std::string objectTypeString(ObjectType type);
 
 struct SharedStats {
-	float health;
-	float speed;
+	SharedStats():
+		health(0,0,0), speed(0,0,0) {}
+	SharedStats(Stat<int>&& health, Stat<int>&& speed):
+		health(health), speed(speed) {}
+
+	Stat<int> health;
+	Stat<int> speed;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& health& speed;
+		ar & health & speed;
 	}
 };
 
-struct SharedItemInfo {
-	enum ItemType { healing, swiftness, invisible, key };
 
-	bool held; // for rendering
-	bool used;
-	float scalar;
-	float timer;
-	ItemType type;
+struct SharedInventory {
+	// need to share itemtype data...
+	int selected;
+	int inventory_size;
+	std::unordered_map<int, ModelType> inventory;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& held& used& scalar& timer& type;
+		ar& selected& inventory_size& inventory;
+	}
+}; 
+
+/**
+ * @brief An enum for the type of an item
+ */
+enum class ItemType {
+	Weapon,
+	Spell,
+	Potion,
+	Blank
+};
+
+struct SharedItemInfo {
+	bool held; // for rendering
+	bool used; // for rendering
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& used& held;
 	}
 };
 
@@ -58,28 +83,17 @@ enum class SurfaceType {
 
 struct SharedSolidSurface {
 	/**
-	 * @brief Dimensions of the solid surface in 3 dimensions. The position of
-	 * the SolidSurface object is at the center of the object.
-	 */
-	glm::vec3 dimensions;
-
-	/**
 	 * @brief Type of solid surface, e.g. wall, floor, ceiling, etc.(relevant
 	 * for rendering)
 	 */
 	SurfaceType surfaceType;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& dimensions& surfaceType;
+		ar & surfaceType;
 	}
 };
 
 struct SharedPhysics {
-	/**
-	 * @brief 3-D vector that denotes this object's current position.
-	 */
-	glm::vec3 position;
-
 	/**
 	 * @brief 3-D vector that denotes this object's bottom left corner 
 	 * (min x and z coordinates).
@@ -99,8 +113,31 @@ struct SharedPhysics {
 	 */
 	glm::vec3 dimensions;
 
+	/**
+	 * @brief Calculates and returns the center position of this object.
+	 * @return glm::vec3 that denotes the center position of this object.
+	 */
+	glm::vec3 getCenterPosition();
+
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& position& corner& facing & dimensions;
+		ar& corner& facing & dimensions;
+	}
+};
+
+struct SharedTrapInfo {
+	bool triggered;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & triggered;
+	}
+};
+
+struct SharedPlayerInfo {
+	bool is_alive;
+	time_t respawn_time; // unix timestamp in ms when the player will be respawned
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & is_alive & respawn_time;
 	}
 };
 
@@ -113,16 +150,20 @@ public:
 	EntityID globalID;
 	ObjectType type;
 	SharedPhysics physics;
+	ModelType modelType;
 
-	boost::optional<SharedStats> stats;	
+	boost::optional<SharedStats> stats;
 	boost::optional<SharedItemInfo> iteminfo;
 	boost::optional<SharedSolidSurface> solidSurface;
+	boost::optional<SharedTrapInfo> trapInfo;
+	boost::optional<SharedPlayerInfo> playerInfo;
+	boost::optional<SharedInventory> inventoryInfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& globalID & type& physics & stats & iteminfo & solidSurface;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo;
 	}
 private:
 };
