@@ -32,19 +32,19 @@ public:
         _max -= delta;
     }
 
-    T addMod(T delta) {
+    void addMod(T delta) {
         _mod += delta;
     }
 
-    T subMod(T delta) {
+    void subMod(T delta) {
         _mod -= delta;
     }
 
-    T addMult(T delta) {
+    void addMult(T delta) {
         _mult += delta;
     }
 
-    T subMult(T delta) {
+    void subMult(T delta) {
         _mult -= delta;
     }
 
