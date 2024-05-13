@@ -227,6 +227,9 @@ void ServerGameState::updateMovement() {
 			// Check for collision at position to move, if so, dont change position
 			// O(n^2) naive implementation of collision detection
 			glm::vec3 totalMovementStep = object->physics.velocity * object->physics.velocityMultiplier;
+			totalMovementStep.x *= object->physics.nauseous;
+			totalMovementStep.z *= object->physics.nauseous;
+
 			glm::vec3 movementStep;
 			int numSteps = 0;
 			if (glm::length(totalMovementStep) > SINGLE_MOVE_THRESHOLD) {
