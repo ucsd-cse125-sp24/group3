@@ -94,16 +94,21 @@ void Mesh::draw(
     shader->setVec3("material.ambient", this->material.ambient);
     shader->setVec3("material.specular", this->material.specular);
     shader->setFloat("material.shininess", this->material.shininess);
-    shader->setVec3("viewPos", camPos);
-    auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-    shader->setVec3("lightColor",  lightColor);
 
+    shader->setVec3("viewPos", camPos);
+
+    auto lightColor = glm::vec3(1.0f, 0.5f, 0.03f);
+    shader->setVec3("lightColor", lightColor);
+
+    // for now we only support one light...
     if (!lightSources.empty()) {
-        // std::cout << glm::to_string(lightSources.at(0).pos) << std::endl;
+        // needed for attenuation
         shader->setVec3("pointLights[0].position", lightSources.at(0).pos);
         shader->setFloat("pointLights[0].constant", 1.0f);
-        shader->setFloat("pointLights[0].linear", 0.22f);
-        shader->setFloat("pointLights[0].quadratic", 0.20f);
+        shader->setFloat("pointLights[0].linear", 0.07f);
+        shader->setFloat("pointLights[0].quadratic", 0.017f);
+
+        // light color
         shader->setVec3("pointLights[0].ambient", lightColor);
         shader->setVec3("pointLights[0].diffuse", lightColor);
         shader->setVec3("pointLights[0].specular", lightColor);

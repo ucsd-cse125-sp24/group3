@@ -300,6 +300,9 @@ void Client::draw() {
             });
         }
     }
+    // tmp: single point light testing
+    auto light_pos = glm::vec3(4.0f, 4.0f, 15.0f);
+    lightSources.push_back(Light{light_pos});
 
     for (int i = 0; i < this->gameState.objects.size(); i++) {
         std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
@@ -312,6 +315,17 @@ void Client::draw() {
             case ObjectType::Player: {
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+                    // std::cout << glm::to_string(sharedObject->physics.getCenterPosition()) << std::endl;
+                    auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 1.0f, 1.0f));
+                    cube->scaleAbsolute(glm::vec3(1.0f));
+                    cube->translateAbsolute(light_pos);
+                    cube->draw(this->cube_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        lightSources, 
+                        true);
+
+
                     //  TODO: Update the player eye level to an acceptable level
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
@@ -360,7 +374,6 @@ void Client::draw() {
                 break;
             }
             case ObjectType::SolidSurface: {
-                auto lightPos = glm::vec3(-2.0f, 10.0f, 0.0f);
                 this->cube_model->setDimensions(sharedObject->physics.dimensions);
                 this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->cube_model->draw(this->solid_surface_shader,
