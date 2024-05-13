@@ -97,9 +97,6 @@ void Mesh::draw(
 
     shader->setVec3("viewPos", camPos);
 
-    auto lightColor = glm::vec3(1.0f, 0.5f, 0.03f);
-    shader->setVec3("lightColor", lightColor);
-
     // for now we only support one light...
     if (!lightSources.empty()) {
         // needed for attenuation
@@ -109,9 +106,11 @@ void Mesh::draw(
         shader->setFloat("pointLights[0].quadratic", 0.017f);
 
         // light color
-        shader->setVec3("pointLights[0].ambient", lightColor);
-        shader->setVec3("pointLights[0].diffuse", lightColor);
-        shader->setVec3("pointLights[0].specular", lightColor);
+        auto amberOrange = glm::vec3(1.0f, 0.5f, 0.03f);
+        auto darkOrange = glm::vec3(0.5f, 0.25f, 0.015f);
+        shader->setVec3("pointLights[0].ambient", darkOrange);
+        shader->setVec3("pointLights[0].diffuse", amberOrange);
+        shader->setVec3("pointLights[0].specular", darkOrange);
     }
 
     if (textures.size() == 0) {
