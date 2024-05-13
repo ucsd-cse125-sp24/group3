@@ -97,9 +97,27 @@ void Mesh::draw(
 
     shader->setVec3("viewPos", camPos);
 
+    static float time = 0.0f;
+    static bool increasing = true;
+    if (increasing) {
+        time += 0.0005;
+    } else {
+        time -= 0.0005;
+    }
+    if (time >= 1.0f) {
+        increasing = false;
+    } 
+    if (time <= 0.0f) {
+        increasing = true;
+    }
+    // float intensity = pow(2, -10 * time);
+    float intensity = pow(2, 10 * time - 10);
+    // float intensity = 1 - pow(1 - time, 4);
+
     // for now we only support one light...
     if (!lightSources.empty()) {
         // needed for attenuation
+        shader->setFloat("pointLights[0].intensity", 1 - intensity);
         shader->setVec3("pointLights[0].position", lightSources.at(0).pos);
         shader->setFloat("pointLights[0].constant", 1.0f);
         shader->setFloat("pointLights[0].linear", 0.07f);
