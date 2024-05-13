@@ -11,7 +11,7 @@ using namespace std::chrono_literals;
 const std::chrono::seconds ArrowTrap::TIME_UNTIL_RESET = 4s;
 
 ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, ArrowTrap::Direction dir):
-    Trap(ObjectType::ArrowTrap, false, corner, Collider::None, ModelType::Cube, dimensions) 
+    Trap(ObjectType::ArrowTrap, false, corner, Collider::Box, ModelType::Cube, dimensions) 
 {
     this->dir = dir;
     this->shoot_time = std::chrono::system_clock::now();
@@ -41,8 +41,29 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
 void ArrowTrap::trigger(ServerGameState& state) {
     Trap::trigger(state);
 
-    state.objects.createObject(new Arrow(
-        this->physics.shared.getCenterPosition(), this->physics.shared.facing, this->dir));
+    glm::vec3 arrow_origin(
+        this->physics.shared.getCenterPosition().x,
+        2.0f,
+        this->physics.shared.getCenterPosition().z   
+    );
+
+    switch (this->dir) {
+        case ArrowTrap::Direction::UP:
+            arrow_origin.z -= 3.0f;
+            break;
+        case ArrowTrap::Direction::DOWN:
+            arrow_origin.z += 2.0f;
+            break;
+        case ArrowTrap::Direction::LEFT:
+            arrow_origin.x -= 3.0f;
+            break;
+        case ArrowTrap::Direction::RIGHT:
+            arrow_origin.x += 2.0f;
+            break;
+    }
+
+    state.objects.createObject(new Arrow(arrow_origin,
+        this->physics.shared.facing, this->dir));
 
     this->shoot_time = std::chrono::system_clock::now();
 }

@@ -50,10 +50,10 @@ private:
 
 class HomingFireball : public Projectile {
 public:
-    static const int DAMAGE = 25;
-    static const float H_MULT = 0.4;
-    static const float V_MULT = 0.5;
-    static const float HOMING_STRENGTH = 0.1f;
+    inline static const int DAMAGE = 25;
+    inline static const float H_MULT = 0.4;
+    inline static const float V_MULT = 0.5;
+    inline static const float HOMING_STRENGTH = 0.1f;
 
     HomingFireball(glm::vec3 corner, glm::vec3 facing, std::optional<EntityID> target):
         Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube,
@@ -63,9 +63,9 @@ public:
 
 class Arrow : public Projectile {
 public:
-    static const int DAMAGE = 10;
-    static const float H_MULT = 1.20f;
-    static const float V_MULT = 0.0f; // not affected by gravity
+    inline static const int DAMAGE = 10;
+    inline static const float H_MULT = 1.20f;
+    inline static const float V_MULT = 0.0f; // not affected by gravity
 
     Arrow(glm::vec3 corner, glm::vec3 facing, ArrowTrap::Direction dir):
         Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Cube,

@@ -615,7 +615,7 @@ void ServerGameState::loadMaze() {
 
 					glm::vec3 dimensions(
 						this->grid.getGridCellWidth(),
-						2.0f,
+						MAZE_CEILING_HEIGHT,
 						this->grid.getGridCellWidth()
 					);
 					glm::vec3 corner(
