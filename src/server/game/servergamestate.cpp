@@ -224,7 +224,7 @@ void ServerGameState::updateMovement() {
 					std::cout << std::endl;
 
 					//	Iterate through the object's occupied grid cells
-					for (glm::vec2 cellPos : object->gridCellPositions) {
+					for (glm::ivec2 cellPos : object->gridCellPositions) {
 						//	Get vector of Object pointers that occupy this cell
 						std::vector<Object*>& objectsInCell =
 							this->objects.cellToObjects.at(cellPos);
