@@ -6,6 +6,17 @@
 #include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 
+/**
+ * Trap which shoots arrows on a timer in a specified direction
+ * 
+ * The arrows fly until they collide with something, at which point they disappear.
+ * 
+ * Originally I wanted arrows to "stick" into walls, but this would lead to a large amount of
+ * arrows stuck to the wall, causing the game state to be larger and larger.
+ * 
+ * We can probably re-implement this after optimizing the newtorking code to only send
+ * info about objects that have updated.
+ */
 class ArrowTrap: public Trap {
 public:
     enum class Direction {
@@ -22,7 +33,8 @@ public:
      */
     ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir);
 
-    const static std::chrono::seconds TIME_UNTIL_RESET; // how long from initial activation until it can activate again
+    /// how long from initial activation until it can activate again
+    const static std::chrono::seconds TIME_UNTIL_RESET;
 
     bool shouldTrigger(ServerGameState& state) override;
     void trigger(ServerGameState& state) override;
@@ -31,6 +43,8 @@ public:
     void reset(ServerGameState& state) override;
 
 private:
+    /// The time at which the trap last shot
     std::chrono::time_point<std::chrono::system_clock> shoot_time;
+    /// The direction towards which the trap is shooting
     Direction dir;
 };

@@ -6,6 +6,9 @@
 #include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 
+/**
+ * A spike trap which lines the floor and deals damage to players that walk over them
+ */
 class FloorSpike : public Trap {
 public:
     enum class Orientation {

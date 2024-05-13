@@ -6,6 +6,9 @@
 #include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 
+/**
+ * A trap which shoots a homing fireball if there is a player close enough and in sight
+ */
 class FireballTrap: public Trap {
 public:
     /**

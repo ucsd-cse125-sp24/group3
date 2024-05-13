@@ -6,6 +6,9 @@
 #include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 
+/**
+ * Spike trap which falls from the ceiling if a player walks underneath
+ */
 class SpikeTrap : public Trap {
 public:
     /**

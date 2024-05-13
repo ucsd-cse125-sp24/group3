@@ -6,6 +6,12 @@
 #include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 
+/**
+ * A fake wall trap. It is essentially an empty space that is rendered as a wall.
+ * 
+ * The trap being "triggered" means that it looks like a wall, the trap being "not triggered"
+ * means that it is see-through, or looks a little off.
+ */
 class FakeWall : public Trap {
 public:
     /**
