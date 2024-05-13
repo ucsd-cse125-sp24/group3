@@ -18,6 +18,7 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->timestep_length = config.game.timestep_length_ms;
 	this->lobby.max_players = config.server.max_players;
 	this->lobby.name = config.server.lobby_name;
+	this->is_dungeon_master = config.server.is_dungeon_master;
 
 	this->maps_directory = config.game.maze.directory;
 	this->maze_file = config.game.maze.maze_file;
@@ -104,7 +105,11 @@ void ServerGameState::update(const EventList& events) {
 			}
 			case ActionType::Zoom: { // only for DM
 				DungeonMaster * dm = this->objects.getDM();
-				dm->physics.shared.corner += startAction.movement;
+
+				std::cout << dm->physics.shared.corner.y << std::endl;
+
+				if ((dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f))
+					dm->physics.shared.corner += startAction.movement;
 
 				break;
 			}

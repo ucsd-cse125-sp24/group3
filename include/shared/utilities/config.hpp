@@ -43,6 +43,8 @@ struct GameConfig {
         bool lobby_broadcast;
         /// @brief max number of players this server allows
         int max_players;
+        /// @brief will this machine be running as DM or no?
+        bool is_dungeon_master;
     } server;
     /// @brief Config settings for the client
     struct {

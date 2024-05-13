@@ -151,6 +151,8 @@ public:
 	 */
 	std::string to_string();
 
+	bool is_dungeon_master;
+
 private:
 	/**
 	 *  Timestep length in milliseconds.

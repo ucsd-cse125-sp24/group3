@@ -365,7 +365,13 @@ void GUI::_layoutLobby() {
 
 void GUI::_sharedGameHUD() {
     auto self_eid = client->session->getInfo().client_eid;
-    if (!self_eid.has_value() || client->session->getInfo().is_dungeon_master) {
+    auto is_dm = client->session->getInfo().is_dungeon_master;
+
+    if (!self_eid.has_value()) {
+        return;
+    }
+
+    if (is_dm.has_value() && is_dm.value()) {
         return;
     }
 
