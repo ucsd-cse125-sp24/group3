@@ -14,11 +14,35 @@ class SharedObject;
 //	From sharedobject.hpp
 struct SharedPhysics;
 
+class ServerGameState; // forward declaration to use ptr as parameter
+
 /**
  * @brief Physics struct that contains all movement / collision related data for
  * a particular object
  */
 struct Physics {
+	/**
+	 * @brief constructor for Physics
+	 * 
+	 * @param movable Whether or not the object is affected by velocity/gravity
+	 * @param collider Collision type for this object
+	 * @param corner bottom left corner position of the object
+	 * @param facing what direction the object is facing
+	 * 
+	 * NOTE: dimensions is an optional parameter, because most of the time dimensions will be
+	 * set by the setModel function!
+	 * NOTE: velocity defaults to 0
+	 * NOTE: velocityMultitplier defaults to 1
+	 * NOTE: Dizziness defaults to 1
+	 */
+	Physics(bool movable, Collider collider,
+		glm::vec3 corner, glm::vec3 facing,
+		glm::vec3 dimensions = glm::vec3(1.0f)):
+		shared{.corner=corner, .facing=facing, .dimensions=dimensions},
+		movable(movable), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)), nauseous(1.0f),
+		collider(collider)
+	{}
+
 	/**
 	 * @brief Shared physics properties (needed by both the server and the 
 	 * client)
@@ -40,6 +64,11 @@ struct Physics {
 	 * @brief 3-D vector that denotes this object's velocity multiplier.
 	 */
 	glm::vec3 velocityMultiplier;
+
+	/**
+	 * @brief Factor for potion of nausea
+	 */
+	float nauseous;
 
 	/**
 	 * @brief This object's collider type.
@@ -81,7 +110,12 @@ public:
 	 */
 	ModelType modelType;
 
-	explicit Object(ObjectType type);
+	/**
+	 * @param type Type of the object
+	 * @param Physics position/physics info for the object
+	 * @param modelType What kind of model to render for this object
+	 */
+	Object(ObjectType type, Physics physics, ModelType modelType);
 	virtual ~Object();
 
 	/**
@@ -103,6 +137,14 @@ public:
 	 * @return A SharedObject representation of this object.
 	 */
 	virtual SharedObject toShared();
+
+	/**
+	 * @brief Code to run when this object collides with another
+	 * 
+	 * NOTE: default implementation does nothing
+	 * only override behaviors will matter
+     */
+	virtual void doCollision(Object* other, ServerGameState* state) {};
 
 	/*	Debugger Methods	*/
 

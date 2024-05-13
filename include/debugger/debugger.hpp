@@ -254,7 +254,10 @@ public:
 		//	This command ignores arguments
 
 		//	Create a new base object in the game state
-		SpecificID typeID = state.objects.createObject(ObjectType::Object);
+		//SpecificID typeID = state.objects.createObject(ObjectType::Object);
+		SpecificID typeID = state.objects.createObject(new Object(ObjectType::Object,
+			Physics(true, Collider::None, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), Object::models.find(ModelType::Cube)->second),
+			ModelType::Cube));
 		Object* obj = state.objects.getBaseObject(typeID);
 
 		std::cout << "Created new object (global id " << obj->globalID << ")" << std::endl;

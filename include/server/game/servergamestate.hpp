@@ -5,9 +5,9 @@
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/smartvector.hpp"
 #include "server/game/object.hpp"
-#include "server/game/objectmanager.hpp"
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"
+#include "server/game/objectmanager.hpp"
 
 #include <string>
 #include <vector>
@@ -68,9 +68,13 @@ public:
 
 	void updateMovement();
 
-	//	TODO: Add implementations of items
+	void updateItems();
 
-	void useItem();
+	void updateTraps();
+
+	void handleDeaths();
+
+	void handleRespawns();
 
 	/*	SharedGameState generation	*/
 

@@ -24,7 +24,7 @@ enum class Collider {
  * @return  true if a collision (overlap) is detected between the two objects'
  * surfaces, and false otherwise.
  */
-bool detectCollision(Physics& obj1, Physics& obj2);
+bool detectCollision(const Physics& obj1, const Physics& obj2);
 
 /** 
  * @brief  Detects whether a collision has occurred between two objects given
@@ -34,7 +34,7 @@ bool detectCollision(Physics& obj1, Physics& obj2);
  * @return  true if a collision is detected between the sphere and the second
  * object, and false otherwise.
  */
-bool detectCollisionSphere(Physics& sphere, Physics& obj);
+bool detectCollisionSphere(const Physics& sphere, const Physics& obj);
 
 /**
  * @brief  Detects whether a collision has occurred between two objects given
@@ -44,4 +44,4 @@ bool detectCollisionSphere(Physics& sphere, Physics& obj);
  * @return  true if a collision is detected between the box and the second
  * object, and false otherwise.
  */
-bool detectCollisionBox(Physics& box, Physics& obj);
+bool detectCollisionBox(const Physics& box, const Physics& obj);

@@ -5,6 +5,10 @@ enum class CellType {
 	Wall,
 	Spawn,
 	Enemy,
+	SpikeTrap,
+	HealthPotion,
+	NauseaPotion,
+	InvisibilityPotion,
 	Unknown
 };
 
