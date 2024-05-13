@@ -220,8 +220,8 @@ void ServerGameState::updateMovement() {
 						if (detectCollision(object->physics, otherObj->physics)) {
 							
 							if (otherObj->type == ObjectType::FloorSpike) {
-								object->doCollision(otherObj, this);
-								otherObj->doCollision(object, this);
+								object->doCollision(otherObj, *this);
+								otherObj->doCollision(object, *this);
 								continue;
 							}
 							
@@ -242,8 +242,8 @@ void ServerGameState::updateMovement() {
 							}
 							object->physics.shared.corner.x += movementStep.x;
 
-							object->doCollision(otherObj, this);
-							otherObj->doCollision(object, this);
+							object->doCollision(otherObj, *this);
+							otherObj->doCollision(object, *this);
 						}
 					}
 
@@ -299,7 +299,7 @@ void ServerGameState::doObjectTicks() {
 		auto obj = objects.get(o);
 		if (obj == nullptr) continue;
 
-		obj->doTick(this);
+		obj->doTick(*this);
 	}
 }
 

@@ -12,9 +12,9 @@ Projectile::Projectile(glm::vec3 corner, glm::vec3 facing, glm::vec3 dimensions,
     this->physics.velocity = glm::normalize(facing);
 }
 
-void Projectile::doTick(ServerGameState* state) {
+void Projectile::doTick(ServerGameState& state) {
     if (!this->opt.homing) return;
-    Object* target = state->objects.getObject(*this->opt.target);
+    Object* target = state.objects.getObject(*this->opt.target);
     if (target == nullptr) return;
 
     auto pos_to_go_to = target->physics.shared.getCenterPosition();
@@ -25,24 +25,12 @@ void Projectile::doTick(ServerGameState* state) {
     this->physics.shared.facing = this->physics.velocity;
 }
 
-void Projectile::doCollision(Object* other, ServerGameState* state) {
+void Projectile::doCollision(Object* other, ServerGameState& state) {
     this->physics.velocity.x = 0;
     this->physics.velocity.z = 0;
     this->physics.collider = Collider::None;
 
-    if (this->opt.disappearOnContact) {
-        // certain projectiles should unconditionally get destroyed on any contact
-        state->markForDeletion(this->globalID);
-    } else if (other->type == ObjectType::SolidSurface) {
-        // certain projectiles should get stuck in the wall
-        this->physics.movable = false; // get stuck in the wall
-    } else {
-        // It looks very strange if arrows and other non deletion projectiles
-        // hit a player, because they then just float in the air. So we should
-        // just also delete them.
-        state->markForDeletion(this->globalID);
-    }
-
+    state.markForDeletion(this->globalID);
 
     // do damage if creature
     Creature* creature = dynamic_cast<Creature*>(other);

@@ -138,7 +138,7 @@ public:
 	 * NOTE: default implementation does nothing
 	 * only override behaviors will matter
      */
-	virtual void doCollision(Object* other, ServerGameState* state) {};
+	virtual void doCollision(Object* other, ServerGameState& state) {};
 
 	/**
 	 * @brief code to run for this object on every tick
@@ -146,7 +146,7 @@ public:
 	 * NOTE: by default does nothing, but certain objects can override
 	 * this to do specific effects
 	 */
-	virtual void doTick(ServerGameState* state) {}
+	virtual void doTick(ServerGameState& state) {}
 
 	/*	Debugger Methods	*/
 

@@ -69,7 +69,7 @@ void SpikeTrap::reset(ServerGameState& state) {
     }
 }
 
-void SpikeTrap::doCollision(Object* other, ServerGameState* state) {
+void SpikeTrap::doCollision(Object* other, ServerGameState& state) {
     auto creature = dynamic_cast<Creature*>(other);
     if (creature == nullptr) return; // not a creature, so don't really care
 

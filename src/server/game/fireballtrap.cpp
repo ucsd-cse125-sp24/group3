@@ -76,7 +76,7 @@ void FireballTrap::reset(ServerGameState& state) {
     Trap::reset(state);
 }
 
-void FireballTrap::doCollision(Object* other, ServerGameState* state) {
+void FireballTrap::doCollision(Object* other, ServerGameState& state) {
 }
 
 float FireballTrap::canSee(Object* other, ServerGameState* state) {

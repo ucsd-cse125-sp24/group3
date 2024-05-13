@@ -24,7 +24,7 @@ public:
     bool shouldReset(ServerGameState& state) override;
     void reset(ServerGameState& state) override;
 
-    void doCollision(Object* other, ServerGameState* state) override;
+    void doCollision(Object* other, ServerGameState& state) override;
 
 private:
     std::chrono::time_point<std::chrono::system_clock> dropped_time;

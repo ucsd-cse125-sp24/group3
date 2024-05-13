@@ -10,11 +10,11 @@ class Projectile : public Object {
 public:
     struct Options {
         Options(int damage, float h_mult, float v_mult,
-            bool disappear, bool homing, float homing_strength, 
+            bool homing, float homing_strength, 
             std::optional<EntityID> target
         ):
             damage(damage), h_mult(h_mult), v_mult(v_mult),
-            disappearOnContact(disappear), homing(homing), homing_strength(homing_strength),
+            homing(homing), homing_strength(homing_strength),
             target(target)
         {
             if (homing && !target.has_value()) {
@@ -38,9 +38,9 @@ public:
         glm::vec3 dimensions, ModelType model,
         Options options);
 
-    void doCollision(Object* other, ServerGameState* state) override;
+    void doCollision(Object* other, ServerGameState& state) override;
 
-    void doTick(ServerGameState* state) override;
+    void doTick(ServerGameState& state) override;
 
 private:
     void _addTargetPosLag(glm::vec3 target_pos);
@@ -57,7 +57,7 @@ public:
 
     HomingFireball(glm::vec3 corner, glm::vec3 facing, std::optional<EntityID> target):
         Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube,
-            Options(DAMAGE, H_MULT, V_MULT, true, true, HOMING_STRENGTH, target))
+            Options(DAMAGE, H_MULT, V_MULT, true, HOMING_STRENGTH, target))
     {}
 };
 
@@ -69,11 +69,7 @@ public:
 
     Arrow(glm::vec3 corner, glm::vec3 facing, ArrowTrap::Direction dir):
         Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Cube,
-            Options(DAMAGE, 
-                H_MULT, V_MULT,
-                false, false,
-                0.0f,
-                {}))
+            Options(DAMAGE, H_MULT, V_MULT, false, 0.0f, {}))
     {
         // temp hack to get the correct direction until we load in a model and can rotate it
 
