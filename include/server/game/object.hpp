@@ -105,6 +105,12 @@ public:
 	ModelType modelType;
 
 	/**
+	 * @brief Vector of (x, y) positions of GridCells currently occupied by this
+	 * object
+	 */
+	std::vector<glm::vec2> gridCellPositions;
+
+	/**
 	 * @param type Type of the object
 	 * @param Physics position/physics info for the object
 	 * @param modelType What kind of model to render for this object

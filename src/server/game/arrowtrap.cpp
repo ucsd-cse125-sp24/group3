@@ -45,7 +45,7 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
     }
 
     // convert grid units to actual distance values
-    const float SHOOT_DIST_UNITS = state.getGrid().getGridCellWidth() * ArrowTrap::SHOOT_DIST;
+    const float SHOOT_DIST_UNITS = Grid::grid_cell_width * ArrowTrap::SHOOT_DIST;
     if (closest_dist <= SHOOT_DIST_UNITS && player_to_shoot_at != nullptr) {
         this->physics.shared.facing = glm::normalize(player_to_shoot_at->physics.shared.getCenterPosition() - this_pos);
 
