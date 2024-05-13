@@ -150,11 +150,13 @@ private:
  */
 struct SessionEntry {
     SessionEntry(EntityID id, 
+        bool is_dungeon_master,
         boost::asio::ip::address ip, 
         std::shared_ptr<Session> session)
-        : id(id), ip(ip), session(session) {}
+        : id(id), is_dungeon_master(is_dungeon_master), ip(ip), session(session) {}
 
     EntityID id;
+    bool is_dungeon_master;
     boost::asio::ip::address ip;
     std::weak_ptr<Session> session;
 };

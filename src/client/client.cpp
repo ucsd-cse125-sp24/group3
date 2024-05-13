@@ -147,19 +147,26 @@ bool Client::init() {
     auto model_frag_path = shaders_dir / "model.frag";
     this->model_shader = std::make_shared<Shader>(model_vert_path.string(), model_frag_path.string());
 
+    auto cube_model_path = graphics_assets_dir / "cube.obj";
+    this->cube_model = std::make_unique<Model>(cube_model_path.string());
+
     auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
     this->bear_model = std::make_unique<Model>(bear_model_path.string());
-    this->bear_model->scale(0.25);
+    // this->bear_model->scaleAbsolute(0.25);
 
     auto player_model_path = graphics_assets_dir / "Fire-testing.obj";
     this->player_model = std::make_unique<Model>(player_model_path.string());
-    this->player_model->scale(0.25);
+    this->player_model->scaleAbsolute(0.25);
 
     this->light_source = std::make_unique<LightSource>();
 
     auto lightVertFilepath = shaders_dir / "lightsource.vert";
     auto lightFragFilepath = shaders_dir / "lightsource.frag";
     this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
+
+    auto solid_surface_vert_path = shaders_dir / "solidsurface.vert";
+    auto solid_surface_frag_path = shaders_dir / "solidsurface.frag";
+    this->solid_surface_shader = std::make_shared<Shader>(solid_surface_vert_path.string(), solid_surface_frag_path.string());
 
     this->gui_state = GUIState::TITLE_SCREEN;
 
@@ -333,8 +340,9 @@ void Client::draw() {
                 }
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
 
-                auto player_pos = sharedObject->physics.getCenterPosition();
+                auto player_pos = sharedObject->physics.corner;
 
+                this->player_model->setDimensions(sharedObject->physics.dimensions);
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
                     this->model_shader,
@@ -342,33 +350,23 @@ void Client::draw() {
                     this->cam->getPos(),
                     lightPos,
                     true);
+                this->drawBbox(sharedObject);
                 break;
             }
             case ObjectType::Enemy: {
                 // warren bear is an enemy because why not
-                // auto pos = glm::vec3(0.0f, 0.0f, 0.0f);
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
+                auto bear_pos = sharedObject->physics.corner;
 
-                this->bear_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->bear_model->setDimensions(sharedObject->physics.dimensions);
+                this->bear_model->translateAbsolute(bear_pos);
                 this->bear_model->draw(
                     this->model_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     lightPos,
                     true);
-
-     /*           this->light_source->TranslateTo(lightPos);
-                this->light_source->draw(
-                    this->light_source_shader,
-                    this->cam->getViewProj());*/
-
-                // Cube* cube = new Cube(glm::vec3(0.4f,0.5f,0.7f));
-                // cube->translateAbsolute(lightPos);
-                // cube->draw(this->cube_shader,
-                //     this->cam->getViewProj(),
-                //     this->cam->getPos(),
-                //     glm::vec3(),
-                //     false);
+                this->drawBbox(sharedObject);
                 break;
             }
             case ObjectType::SolidSurface: {
@@ -376,21 +374,43 @@ void Client::draw() {
 
                 if (this->session->getInfo().is_dungeon_master) {
                     if (sharedObject->solidSurface->surfaceType != SurfaceType::Ceiling) {
-                        auto cube = std::make_unique<Cube>(glm::vec3(0.4f, 0.5f, 0.7f));
-                        cube->scale(sharedObject->physics.dimensions);
-
-                        cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                        cube->draw(this->cube_shader,
+                        auto lightPos = glm::vec3(-2.0f, 10.0f, 0.0f);
+                        this->cube_model->setDimensions(sharedObject->physics.dimensions);
+                        this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        this->cube_model->draw(this->solid_surface_shader,
                             this->cam->getViewProj(),
                             this->cam->getPos(),
-                            glm::vec3(),
+                            lightPos,
                             true);
                     }
                 }
                 else {
-                    auto cube = std::make_unique<Cube>(glm::vec3(0.4f, 0.5f, 0.7f));
-                    cube->scale(sharedObject->physics.dimensions);
-
+                    auto lightPos = glm::vec3(-2.0f, 10.0f, 0.0f);
+                    this->cube_model->setDimensions(sharedObject->physics.dimensions);
+                    this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    this->cube_model->draw(this->solid_surface_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        lightPos,
+                        true);
+                }
+                break;
+            }
+            case ObjectType::SpikeTrap: {
+                auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
+                cube->scaleAbsolute( sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
+                break;
+            }
+            case ObjectType::Potion: {
+                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+                    auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
+                    cube->scaleAbsolute(sharedObject->physics.dimensions);
                     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
                     cube->draw(this->cube_shader,
                         this->cam->getViewProj(),
@@ -400,20 +420,28 @@ void Client::draw() {
                 }
                 break;
             }
-            case ObjectType::SpikeTrap: {
-                auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
-                cube->scale( sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader,
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    glm::vec3(),
-                    true);
-                break;
-            }
             default:
                 break;
         }
+    }
+}
+
+void Client::drawBbox(std::shared_ptr<SharedObject> object) {
+    if (this->config.client.draw_bboxes) {
+        auto bbox_pos = object->physics.corner; 
+        // for some reason the y axis of the bbox is off by half  
+        // the dimension of the object. when trying getCenterPosition
+        // it was off on the x axis. 
+        bbox_pos.y += object->physics.dimensions.y / 2.0f; 
+
+        auto object_bbox = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 1.0f));
+        object_bbox->scaleAbsolute(object->physics.dimensions);
+        object_bbox->translateAbsolute(bbox_pos);
+        object_bbox->draw(this->cube_shader,
+            this->cam->getViewProj(),
+            this->cam->getPos(),
+            glm::vec3(),
+            false);
     }
 }
 
@@ -447,6 +475,42 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_BACKSPACE:
             this->gui.captureBackspace();
             Client::time_of_last_keystroke = getMsSinceEpoch();
+            break;
+
+        case GLFW_KEY_E:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
+            }
+            break;
+
+        case GLFW_KEY_Q:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::DropItem, DropItemEvent(eid.value())));
+            }
+            break;
+
+        case GLFW_KEY_1:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
+            }
+            break;
+
+        case GLFW_KEY_2:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 2)));
+            }
+            break;
+
+        case GLFW_KEY_3:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 3)));
+            }
+            break;
+
+        case GLFW_KEY_4:
+            if (eid.has_value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 4)));
+            }
             break;
 
         /* For movement keys (WASD), activate flags and use it to generate

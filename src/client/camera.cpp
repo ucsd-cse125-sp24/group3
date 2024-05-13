@@ -75,7 +75,7 @@ glm::vec3 Camera::move(bool is_x_axis, float dir) {
     glm::vec3 effCameraFront = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
 
     if (is_x_axis) {
-        return dir * glm::normalize(glm::cross(effCameraFront, cameraUp)) * speed;
+        return dir * speed * glm::normalize(glm::cross(effCameraFront, cameraUp));
     } else {
         return dir * speed * effCameraFront;
         // return dir * speed * cameraRight;

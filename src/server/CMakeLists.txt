@@ -18,6 +18,7 @@ set(FILES
     game/trap.cpp
     game/spiketrap.cpp
     game/dungeonmaster.cpp
+    game/potion.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

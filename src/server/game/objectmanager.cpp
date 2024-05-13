@@ -1,6 +1,7 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/spiketrap.hpp"
+#include "server/game/potion.hpp"
 
 #include <memory>
 
@@ -30,8 +31,8 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::SpikeTrap:
 			object->typeID = this->traps.push(dynamic_cast<SpikeTrap*>(object));
 			break;
-		case ObjectType::Item:
-			object->typeID = this->items.push(dynamic_cast<Item*>(object));
+		case ObjectType::Potion:
+			object->typeID = this->items.push(dynamic_cast<Potion*>(object));
 			break;
 		case ObjectType::SolidSurface:
 			object->typeID = this->solid_surfaces.push(dynamic_cast<SolidSurface*>(object));
@@ -72,6 +73,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		//	Remove object pointer from the base_objects type-specific 
 		//	SmartVector
 		this->base_objects.remove(object->typeID);
+		break;
+	case ObjectType::Potion:
+		this->items.remove(object->typeID);
 		break;
 	}
 

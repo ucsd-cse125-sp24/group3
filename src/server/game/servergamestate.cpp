@@ -1,7 +1,9 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "server/game/spiketrap.hpp"
+#include "server/game/potion.hpp"
 #include "shared/utilities/root_path.hpp"
+#include "server/game/constants.hpp"
 #include "shared/utilities/time.hpp"
 
 #include <fstream>
@@ -124,13 +126,48 @@ void ServerGameState::update(const EventList& events) {
 			break;
 		}
 	
-        case EventType::MoveRelative:
+		case EventType::MoveRelative:
 		{
 			//currently just sets the velocity to given 
-            auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-            Object* objMoveRel = this->objects.getObject(moveRelativeEvent.entity_to_move);
-            objMoveRel->physics.velocity += moveRelativeEvent.movement;
-            break;
+			auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
+			Object* objMoveRel = this->objects.getObject(moveRelativeEvent.entity_to_move);
+			objMoveRel->physics.velocity += moveRelativeEvent.movement;
+			break;
+
+		}
+		case EventType::SelectItem:
+		{
+			auto selectItemEvent = boost::get<SelectItemEvent>(event.data);
+			player->sharedInventory.selected = selectItemEvent.itemNum;
+			break;
+		}
+		case EventType::UseItem:
+		{
+			auto useItemEvent = boost::get<UseItemEvent>(event.data);
+			int itemSelected = player->sharedInventory.selected;
+
+			if (player->inventory.find(itemSelected) != player->inventory.end()) {
+				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
+				item->useItem(player, *this);
+				player->inventory.erase(itemSelected);
+				player->sharedInventory.inventory.erase(itemSelected);
+				//TODO : should also remove item afterwards
+			}
+			break;
+		}
+		case EventType::DropItem:
+		{
+			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
+			int itemSelected = player->sharedInventory.selected;
+			if (player->inventory.find(itemSelected) != player->inventory.end()) {
+				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
+				item->iteminfo.held = false;
+				item->physics.collider = Collider::Box;
+				item->physics.shared.corner = (player->physics.shared.corner + (player->physics.shared.facing * 4.0f)) * glm::vec3(1.0f, 0.0f, 1.0f);
+				player->inventory.erase(itemSelected);
+				player->sharedInventory.inventory.erase(itemSelected);
+			}
+			break;
 		}
 
 		// default:
@@ -139,8 +176,8 @@ void ServerGameState::update(const EventList& events) {
     }
 
 	//	TODO: fill update() method with updating object movement
-	useItem();
 	updateMovement();
+	updateItems();
 	updateTraps();
 	handleDeaths();
 	handleRespawns();
@@ -170,6 +207,8 @@ void ServerGameState::updateMovement() {
 			// Check for collision at position to move, if so, dont change position
 			// O(n^2) naive implementation of collision detection
 			glm::vec3 movementStep = object->physics.velocity * object->physics.velocityMultiplier;
+			movementStep.x *= object->physics.nauseous;
+			movementStep.z *= object->physics.nauseous;
 
 			// handle edge case Dungeon Master
 			if (object->type == ObjectType::DungeonMaster) {
@@ -209,6 +248,12 @@ void ServerGameState::updateMovement() {
 					if (otherObj->physics.collider == Collider::None) { continue; }
 
 					if (detectCollision(object->physics, otherObj->physics)) {
+
+						// If item, resolve it here
+						if (otherObj->type == ObjectType::Potion) {
+							otherObj->doCollision(object, this);
+							continue;
+						}
 						collided = true;
 
 						// Check x-axis collision
@@ -258,23 +303,25 @@ void ServerGameState::updateMovement() {
 				// potentially need to make this unconditional further down
 				object->physics.shared.corner.y = 0;
 			}
-
-
 		}
 	}
 }
 
-void ServerGameState::useItem() {
-	// Update whatever is necesssary for item
-	// This method may need to be broken down for different types
-	// of item types
-
-	SmartVector<Item*> items = this->objects.getItems();
+void ServerGameState::updateItems() {
+	auto items = this->objects.getItems();
 	for (int i = 0; i < items.size(); i++) {
-		const Item* item = items.get(i);
+		auto item = items.get(i);
+		if (item == nullptr) { continue; }
 
-		if (item == nullptr)
-			continue;
+		if (item->type == ObjectType::Potion) {
+			Potion* pot = dynamic_cast<Potion*>(item);
+			if (pot->iteminfo.used) {
+				if (pot->timeOut()) {
+					pot->revertEffect(*this);
+				}
+			}
+		}
+		
 	}
 }
 
@@ -484,6 +531,36 @@ void ServerGameState::loadMaze() {
 			GridCell* cell = this->grid.getCell(col, row);
 
 			switch (cell->type) {
+				case CellType::HealthPotion: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x * this->grid.getGridCellWidth() + 1,
+							0,
+							cell->y * this->grid.getGridCellWidth() + 1);
+
+					this->objects.createObject(new Potion(corner, dimensions, PotionType::Health));
+					break;
+				}
+				case CellType::NauseaPotion: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x* this->grid.getGridCellWidth() + 1,
+						0,
+						cell->y* this->grid.getGridCellWidth() + 1);
+
+					this->objects.createObject(new Potion(corner, dimensions, PotionType::Nausea));
+					break;
+				}
+				case CellType::InvisibilityPotion: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x* this->grid.getGridCellWidth() + 1,
+						0,
+						cell->y* this->grid.getGridCellWidth() + 1);
+
+					this->objects.createObject(new Potion(corner, dimensions, PotionType::Invisibility));
+					break;
+				}
 				case CellType::SpikeTrap: {
                     const float HEIGHT_SHOWING = 0.5;
 					glm::vec3 dimensions(

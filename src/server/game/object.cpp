@@ -31,9 +31,13 @@ void Object::setModel(ModelType type) {
 /*	Static properties	*/
 std::unordered_map<ModelType, glm::vec3> Object::models ({
 	{ModelType::Cube, glm::vec3(1.0, 1.0, 1.0) },
-	//	TODO: Update these to the correct dimensions!!
-	{ModelType::Player, glm::vec3(1.0, 2.0, 1.0)},
-	{ModelType::WarrenBear, glm::vec3(3.0, 3.0, 3.0)}
+    // NOTE: making the player dimensions pretty small since 
+    // otherwise it collides with the maze passages and you  
+    // can't move around anywhere. we should eventually solve this
+    // by tucking in the player's arms since right now they're 
+    // spread out in the model
+	{ModelType::Player, (FIRE_PLAYER_DIMENSIONS / 4.0f)},
+	{ModelType::WarrenBear, (BEAR_DIMENSIONS / 4.0f)}
 });
 
 /*	SharedGameState generation	*/
