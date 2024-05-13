@@ -108,7 +108,7 @@ public:
 	 * Grid that has the returned coordinates (meaning the input position is out
 	 * of bounds of a given maze).
 	 */
-	static glm::vec2 getGridCellFromPosition(glm::vec3 position);
+	static glm::ivec2 getGridCellFromPosition(glm::vec3 position);
 
 	/**
 	 * @brief Returns a vector of positions of GridCells that contain the
@@ -120,7 +120,7 @@ public:
 	 * extends from p1 to p2. If p1.x > p2.x or p1.z > p2.z, returns an empty
 	 * vector.
 	 */
-	static std::vector<glm::vec2> getCellsFromPositionRange(glm::vec3 p1,
+	static std::vector<glm::ivec2> getCellsFromPositionRange(glm::vec3 p1,
 		glm::vec3 p2);
 
 private:

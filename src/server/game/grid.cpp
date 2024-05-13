@@ -1,5 +1,6 @@
 #include "server/game/grid.hpp"
 #include "shared/utilities/rng.hpp"
+#include <iostream>
 
 /*	Constructors and Destructors	*/
 Grid::Grid(int rows, int columns) : rows(rows), columns(columns) {
@@ -89,7 +90,7 @@ glm::vec3 Grid::gridCellCenterPosition(GridCell* cell) {
 //	Initialize GridCell width to default value
 const float Grid::grid_cell_width = DEFAULT_GRIDCELL_WIDTH;
 
-glm::vec2 Grid::getGridCellFromPosition(glm::vec3 position) {
+glm::ivec2 Grid::getGridCellFromPosition(glm::vec3 position) {
 	//	Consider a GridCell with 2-D Grid coordinates (x, y).
 	//	A 3-D game world position (x_w, y_w, z_w) is within that GridCell 
 	//	iff
@@ -101,29 +102,34 @@ glm::vec2 Grid::getGridCellFromPosition(glm::vec3 position) {
 	//	determine the coordinates of the GridCell containing it via
 	//	x = floor(x_w / grid_cell_width) and y = floor(y_w / grid_cell_width)
 
-	return glm::vec2(glm::floor(position.x / grid_cell_width),
+	return glm::ivec2(glm::floor(position.x / grid_cell_width),
 		glm::floor(position.z / grid_cell_width));
 }
 
-std::vector<glm::vec2> Grid::getCellsFromPositionRange(glm::vec3 p1, glm::vec3 p2) {
-	std::vector<glm::vec2> cellPositions;
+std::vector<glm::ivec2> Grid::getCellsFromPositionRange(glm::vec3 p1, glm::vec3 p2) {
+	std::vector<glm::ivec2> cellPositions;
 	//	Get GridCell positions for p1 and p2
-	glm::vec2 gridCellStart = Grid::getGridCellFromPosition(p1);
-	glm::vec2 gridCellEnd = Grid::getGridCellFromPosition(p2);
+	glm::ivec2 gridCellStart = Grid::getGridCellFromPosition(p1);
+	glm::ivec2 gridCellEnd = Grid::getGridCellFromPosition(p2);
+
+	/*std::cout << "First grid cell: " << glm::to_string(gridCellStart) << " ";
+	std::cout << "Second grid cell: " << glm::to_string(gridCellEnd) << std::endl;*/
 
 	if (gridCellStart.x > gridCellEnd.x || gridCellStart.y > gridCellEnd.y) {
-		return std::vector<glm::vec2>();
+		return std::vector<glm::ivec2>();
 	}
 
 	if (gridCellStart == gridCellEnd) {
-		return std::vector<glm::vec2> { gridCellStart };
+		return std::vector<glm::ivec2> { gridCellStart };
 	}
 
-	for (int x = gridCellStart.x; x < gridCellEnd.x; x++) {
-		for (int y = gridCellStart.y; y < gridCellEnd.y; y++) {
-			cellPositions.push_back(glm::vec2(x, y));
+	for (int x = gridCellStart.x; x <= gridCellEnd.x; x++) {
+		for (int y = gridCellStart.y; y <= gridCellEnd.y; y++) {
+			cellPositions.push_back(glm::ivec2(x, y));
 		}
 	}
+
+	//std::cout << "cellPositions length: " << cellPositions.size() << std::endl;
 
 	return cellPositions;
 }

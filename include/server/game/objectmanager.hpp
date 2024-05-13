@@ -182,13 +182,13 @@ public:
 	 * object. If the object pointer is nullptr, an empty vector will be
 	 * returned.
 	 */
-	std::vector<glm::vec2> objectGridCells(Object* object);
+	std::vector<glm::ivec2> objectGridCells(Object* object);
 
 	/**
 	 * @brief Hashmap that maps GridCell (x, y) positions to a vector of Objects
 	 * that occupy / overlap that GridCell.
 	 */
-	std::unordered_map<glm::vec2, std::vector<Object*>> cellToObjects;
+	std::unordered_map<glm::ivec2, std::vector<Object*>> cellToObjects;
 
 	/*	SharedGameState generation	*/
 	

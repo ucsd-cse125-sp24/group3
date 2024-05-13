@@ -108,7 +108,7 @@ public:
 	 * @brief Vector of (x, y) positions of GridCells currently occupied by this
 	 * object
 	 */
-	std::vector<glm::vec2> gridCellPositions;
+	std::vector<glm::ivec2> gridCellPositions;
 
 	/**
 	 * @param type Type of the object

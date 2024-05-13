@@ -226,7 +226,7 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 	}
 }
 
-std::vector<glm::vec2> ObjectManager::objectGridCells(Object* object) {
+std::vector<glm::ivec2> ObjectManager::objectGridCells(Object* object) {
 	return Grid::getCellsFromPositionRange(object->physics.shared.corner,
 		object->physics.shared.corner + object->physics.shared.dimensions);
 }

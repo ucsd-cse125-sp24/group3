@@ -158,157 +158,330 @@ void ServerGameState::updateMovement() {
 	//	Iterate through all objects in the ServerGameState and update their
 	//	positions and velocities if they are movable.
 
-	//	If objects are moving too fast, we split their movmeent into
-	//	NUM_INCREMENTAL_STEPS
+	// If objects are moving too fast, we split their movement into NUM_INCREMENTAL_STEPS smaller steps
 	const int NUM_INCREMENTAL_STEPS = 5;
-	//	This is the threshold that determines if we need to use incremental
-	//	steps for the movement.
-	//	If the magnitude of movementStep is greater than this value, then we use
-	//	incremental steps for the movement.
+	// This is the threshold that determines if we need to do incremental steps for the movement
+	// if the magnitude of movementStep is greater than this value, then we do incremental steps for the movement
 	const float SINGLE_MOVE_THRESHOLD = 0.20f;
 
-	//	Don't set this directly, it is determined by NUM_INCREMENTAL_STEPS, and
-	//	is just the reciprocal
+	// Don't set this directly, it is determined by NUM_INCREMENTAL_STEPS, and is just the reciprical
 	const float INCREMENTAL_MOVE_RATIO = 1.0f / NUM_INCREMENTAL_STEPS;
 
 	SmartVector<Object*> gameObjects = this->objects.getObjects();
 	for (int i = 0; i < gameObjects.size(); i++) {
 		Object* object = gameObjects.get(i);
 
-		if (object == nullptr || !(object->physics.movable))
+		if (object == nullptr)
 			continue;
 
-		bool collidedX, collidedZ;
-		collidedX = collidedZ = false;
+		bool collided = false; // cppcheck-suppress variableScope
+		bool collidedX = false; // cppcheck-suppress variableScope
+		bool collidedZ = false; // cppcheck-suppress variableScope
 
-		//	Compute object's movement step
-		glm::vec3 totalMovementStep = 
-			object->physics.velocity * object->physics.velocityMultiplier;
-		glm::vec3 movementStep;
-		glm::vec3 newPosition;
-		int numSteps = 0;
-		if (object->physics.collider == Collider::None
-			|| glm::length(totalMovementStep) <= SINGLE_MOVE_THRESHOLD) {
-			movementStep = totalMovementStep;
-			numSteps = NUM_INCREMENTAL_STEPS - 1;
-		}
-		else {
-			movementStep = INCREMENTAL_MOVE_RATIO * totalMovementStep;
-		}
+		if (object->physics.movable) {
+			// Check for collision at position to move, if so, dont change position
+			// O(n^2) naive implementation of collision detection
+			glm::vec3 totalMovementStep = object->physics.velocity * object->physics.velocityMultiplier;
+			glm::vec3 movementStep;
+			int numSteps = 0;
+			if (glm::length(totalMovementStep) > SINGLE_MOVE_THRESHOLD) {
+				movementStep = INCREMENTAL_MOVE_RATIO * totalMovementStep;
+			}
+			else {
+				movementStep = totalMovementStep;
+				numSteps = NUM_INCREMENTAL_STEPS - 1;
+			}
 
-		while (numSteps < NUM_INCREMENTAL_STEPS) {
-			numSteps++;
+			while (numSteps < NUM_INCREMENTAL_STEPS) {
+				numSteps++;
+				// Run collision detection movement if it has a collider
+				if (object->physics.collider != Collider::None) {
+					//object->physics.shared.corner += movementStep;
+					this->objects.moveObject(object, object->physics.shared.corner
+						+ movementStep);
 
-			//	Compute new position
-			newPosition = object->physics.shared.corner + movementStep;
+					// TODO : for possible addition for smooth collision detection, but higher computation
+					// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
+					//    Then, take the most steps possible (mario 64 handles it like this)
+					// 2) Using raycasting
 
-			//	Move object to new position
-			this->objects.moveObject(object, newPosition);
+					/*for (int j = 0; j < gameObjects.size(); j++) {
+						if (i == j) { continue; }
+						Object* otherObj = gameObjects.get(j);*/
 
-			//	Perform collision detection if it the object has a collider
-			if (object->physics.collider != Collider::None) {
-				//	Iterate through object's occupied grid cells
-				for (glm::vec2 cellPos : object->gridCellPositions) {
-					//	Get vector of Object pointers that occupy this cell
-					std::vector<Object*>& objectsInCell =
-						this->objects.cellToObjects.at(cellPos);
+					/*std::cout << "Cells occupied by object: ";
 
-					//	Iterate through all objects in this grid cell
-					for (Object* otherObj : objectsInCell) {
-						//	Skip if this object is the current object or if this
-						//	object has no collider
-						if (object->globalID == otherObj->globalID
-							|| otherObj->physics.collider == Collider::None)
-							continue;
+					for (glm::vec2 cellPos : object->gridCellPositions) {
+						std::cout << "( " << cellPos.x << ", " << cellPos.y << ") ";
+					}
+					std::cout << std::endl;
 
-						//	Check for collision
-						if (detectCollision(object->physics, otherObj->physics)) {
-							std::cout << "Detected collision! EID: "
-								<< object->globalID << " with EID " << otherObj->globalID << std::endl;
-							//	If other object is a floor spike trap, handle
-							//	collision differently
-							if (otherObj->type == ObjectType::FloorSpike) {
+					std::cout << "List of grid cell position keys: " << std::endl;
+					for (auto it : this->objects.cellToObjects) {
+						std::cout << glm::to_string(it.first) << " ";
+					}*/
+
+					std::cout << std::endl;
+
+					//	Iterate through the object's occupied grid cells
+					for (glm::vec2 cellPos : object->gridCellPositions) {
+						//	Get vector of Object pointers that occupy this cell
+						std::vector<Object*>& objectsInCell =
+							this->objects.cellToObjects.at(cellPos);
+
+						//	Iterate through all objects in this grid cell
+						for (Object* otherObj : objectsInCell) {
+							if (otherObj->globalID == object->globalID) { continue; }
+							if (otherObj->physics.collider == Collider::None) { continue; }
+
+							if (detectCollision(object->physics, otherObj->physics)) {
+								
+
+								if (otherObj->type == ObjectType::FloorSpike) {
+									object->doCollision(otherObj, this);
+									otherObj->doCollision(object, this);
+									continue;
+								}
+
+
+								collided = true;
+
+								// Check x-axis collision
+								//object->physics.shared.corner.z -= movementStep.z;
+								this->objects.moveObject(object, glm::vec3(
+									object->physics.shared.corner.x,
+									object->physics.shared.corner.y,
+									object->physics.shared.corner.z - movementStep.z
+								));
+								if (detectCollision(object->physics, otherObj->physics)) {
+									collidedX = true;
+								}
+
+								// Check z-axis collision
+								/*object->physics.shared.corner.z += movementStep.z;
+								object->physics.shared.corner.x -= movementStep.x;*/
+								this->objects.moveObject(object, glm::vec3(
+									object->physics.shared.corner.x - movementStep.x,
+									object->physics.shared.corner.y,
+									object->physics.shared.corner.z + movementStep.z
+								));
+								if (detectCollision(object->physics, otherObj->physics)) {
+									collidedZ = true;
+								}
+								//object->physics.shared.corner.x += movementStep.x;
+								this->objects.moveObject(object, glm::vec3(
+									object->physics.shared.corner.x + movementStep.x,
+									object->physics.shared.corner.y,
+									object->physics.shared.corner.z
+								));
+
 								object->doCollision(otherObj, this);
 								otherObj->doCollision(object, this);
-								continue;
 							}
-
-							//	Normal collision resolution follows
-
-							//	Check for x-axis collision
-							this->objects.moveObject(object, glm::vec3(
-								newPosition.x,
-								newPosition.y,
-								newPosition.z - movementStep.z
-							));
-
-							if (detectCollision(object->physics, otherObj->physics)) {
-								collidedX = true;
-							}
-
-							//	Check for z-axis collision
-							this->objects.moveObject(object, glm::vec3(
-								newPosition.x - movementStep.x,
-								newPosition.y,
-								newPosition.z
-							));
-
-							if (detectCollision(object->physics, otherObj->physics)) {
-								collidedZ = true;
-							}
-
-							//	Update object's position
-							this->objects.moveObject(object, newPosition);
-
-							//	Collision response
-							object->doCollision(otherObj, this);
-							otherObj->doCollision(object, this);
 						}
 					}
+
+					if (collidedX) {
+						//object->physics.shared.corner.x -= movementStep.x;
+						this->objects.moveObject(object, glm::vec3(
+							object->physics.shared.corner.x - movementStep.x,
+							object->physics.shared.corner.y,
+							object->physics.shared.corner.z
+						));
+					}
+
+					if (collidedZ) {
+						//object->physics.shared.corner.z -= movementStep.z;
+						this->objects.moveObject(object, glm::vec3(
+							object->physics.shared.corner.x,
+							object->physics.shared.corner.y,
+							object->physics.shared.corner.z - movementStep.z
+						));
+					}
+				}
+				else {
+					//object->physics.shared.corner += movementStep;
+					this->objects.moveObject(object, 
+						object->physics.shared.corner + movementStep);
 				}
 
-				//	Update new position if collided
-				if (collidedX || collidedZ) {
-					if (collidedX) {
-						newPosition.x -= movementStep.x;
-					}
-					if (collidedZ) {
-						newPosition.z -= movementStep.z;
-					}
-
-					//	Update object's position to updated new position
-					this->objects.moveObject(object, newPosition);
+				if (object->physics.shared.corner.y <= 0) {
+					object->physics.shared.corner.y = 0;
 				}
 
 				if (collidedX && collidedZ) {
-					//	This means the object is stopped;
-					//	skip any additional incremental steps
-					break;
+					break; // don't need to do the further movement steps until we reach totalmovement step
 				}
 			}
-		}
 
-		if (object->physics.shared.corner.y > 0) {
-			//	Object is in the air - add gravity to velocity
-			object->physics.velocity.y -= GRAVITY;
-		}
-		else {
-			object->physics.velocity.y = 0.0f;
-		}
-
-		//	Clamp object position to floor if y position is less 0
-		if (object->physics.shared.corner.y < 0) {
-			//	Technically, we don't need to call moveObject() here since we're
-			//	only updating the object's y position (doesn't affect occupied
-			//	grid cells)
-			this->objects.moveObject(object, glm::vec3(
-				object->physics.shared.corner.x,
-				0,
-				object->physics.shared.corner.z
-			));
+			// update gravity factor
+			if ((object->physics.shared.corner).y > 0) {
+				object->physics.velocity.y -= GRAVITY;
+			}
+			else {
+				object->physics.velocity.y = 0.0f;
+			}
 		}
 	}
 }
+
+//void ServerGameState::updateMovement() {
+//	//	Update all movable objects' movement
+//
+//	//	Iterate through all objects in the ServerGameState and update their
+//	//	positions and velocities if they are movable.
+//
+//	//	If objects are moving too fast, we split their movmeent into
+//	//	NUM_INCREMENTAL_STEPS
+//	const int NUM_INCREMENTAL_STEPS = 5;
+//	//	This is the threshold that determines if we need to use incremental
+//	//	steps for the movement.
+//	//	If the magnitude of movementStep is greater than this value, then we use
+//	//	incremental steps for the movement.
+//	const float SINGLE_MOVE_THRESHOLD = 0.20f;
+//
+//	//	Don't set this directly, it is determined by NUM_INCREMENTAL_STEPS, and
+//	//	is just the reciprocal
+//	const float INCREMENTAL_MOVE_RATIO = 1.0f / NUM_INCREMENTAL_STEPS;
+//
+//	SmartVector<Object*> gameObjects = this->objects.getObjects();
+//	for (int i = 0; i < gameObjects.size(); i++) {
+//		Object* object = gameObjects.get(i);
+//
+//		if (object == nullptr || !(object->physics.movable))
+//			continue;
+//
+//		bool collidedX, collidedZ;
+//		collidedX = collidedZ = false;
+//
+//		//	Compute object's movement step
+//		glm::vec3 totalMovementStep = 
+//			object->physics.velocity * object->physics.velocityMultiplier;
+//		glm::vec3 movementStep;
+//		glm::vec3 newPosition;
+//		int numSteps = 0;
+//		if (object->physics.collider == Collider::None
+//			|| glm::length(totalMovementStep) <= SINGLE_MOVE_THRESHOLD) {
+//			movementStep = totalMovementStep;
+//			numSteps = NUM_INCREMENTAL_STEPS - 1;
+//		}
+//		else {
+//			movementStep = INCREMENTAL_MOVE_RATIO * totalMovementStep;
+//		}
+//
+//		while (numSteps < NUM_INCREMENTAL_STEPS) {
+//			numSteps++;
+//
+//			//	Compute new position
+//			newPosition = object->physics.shared.corner + movementStep;
+//
+//			//	Move object to new position
+//			this->objects.moveObject(object, newPosition);
+//
+//			//	Perform collision detection if it the object has a collider
+//			if (object->physics.collider != Collider::None) {
+//				//	Iterate through object's occupied grid cells
+//				for (glm::vec2 cellPos : object->gridCellPositions) {
+//					//	Get vector of Object pointers that occupy this cell
+//					std::vector<Object*>& objectsInCell =
+//						this->objects.cellToObjects.at(cellPos);
+//
+//					//	Iterate through all objects in this grid cell
+//					for (Object* otherObj : objectsInCell) {
+//						//	Skip if this object is the current object or if this
+//						//	object has no collider
+//						if (object->globalID == otherObj->globalID
+//							|| otherObj->physics.collider == Collider::None)
+//							continue;
+//
+//						//	Check for collision
+//						if (detectCollision(object->physics, otherObj->physics)) {
+//							std::cout << "Detected collision! EID: "
+//								<< object->globalID << " with EID " << otherObj->globalID << std::endl;
+//							//	If other object is a floor spike trap, handle
+//							//	collision differently
+//							if (otherObj->type == ObjectType::FloorSpike) {
+//								object->doCollision(otherObj, this);
+//								otherObj->doCollision(object, this);
+//								continue;
+//							}
+//
+//							//	Normal collision resolution follows
+//
+//							//	Check for x-axis collision
+//							this->objects.moveObject(object, glm::vec3(
+//								newPosition.x,
+//								newPosition.y,
+//								newPosition.z - movementStep.z
+//							));
+//
+//							if (detectCollision(object->physics, otherObj->physics)) {
+//								collidedX = true;
+//							}
+//
+//							//	Check for z-axis collision
+//							this->objects.moveObject(object, glm::vec3(
+//								newPosition.x - movementStep.x,
+//								newPosition.y,
+//								newPosition.z
+//							));
+//
+//							if (detectCollision(object->physics, otherObj->physics)) {
+//								collidedZ = true;
+//							}
+//
+//							//	Update object's position
+//							this->objects.moveObject(object, newPosition);
+//
+//							//	Collision response
+//							object->doCollision(otherObj, this);
+//							otherObj->doCollision(object, this);
+//						}
+//					}
+//				}
+//
+//				//	Update new position if collided
+//				if (collidedX || collidedZ) {
+//					if (collidedX) {
+//						newPosition.x -= movementStep.x;
+//					}
+//					if (collidedZ) {
+//						newPosition.z -= movementStep.z;
+//					}
+//
+//					//	Update object's position to updated new position
+//					this->objects.moveObject(object, newPosition);
+//				}
+//
+//				if (collidedX && collidedZ) {
+//					//	This means the object is stopped;
+//					//	skip any additional incremental steps
+//					break;
+//				}
+//			}
+//		}
+//
+//		if (object->physics.shared.corner.y > 0) {
+//			//	Object is in the air - add gravity to velocity
+//			object->physics.velocity.y -= GRAVITY;
+//		}
+//		else {
+//			object->physics.velocity.y = 0.0f;
+//		}
+//
+//		//	Clamp object position to floor if y position is less 0
+//		if (object->physics.shared.corner.y < 0) {
+//			//	Technically, we don't need to call moveObject() here since we're
+//			//	only updating the object's y position (doesn't affect occupied
+//			//	grid cells)
+//			this->objects.moveObject(object, glm::vec3(
+//				object->physics.shared.corner.x,
+//				0,
+//				object->physics.shared.corner.z
+//			));
+//		}
+//	}
+//}
 
 //void ServerGameState::updateMovement() {
 //	//	Update all movable objects' movement
