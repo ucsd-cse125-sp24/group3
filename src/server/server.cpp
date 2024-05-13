@@ -62,7 +62,7 @@ EventList Server::getAllClientEvents() {
     EventList allEvents;
 
     // Loop through each session
-    for (const auto& [eid, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
+    for (const auto& [eid, is_dm, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
         if (auto s = session.lock()) {
             // Get events from the current session
             std::vector<Event> sessionEvents = s->getEvents();
@@ -80,7 +80,7 @@ EventList Server::getAllClientEvents() {
 }
 
 void Server::sendUpdateToAllClients(Event event) {
-    for (const auto& [_eid, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
+    for (const auto& [_eid, is_dm, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
         if (auto s = session.lock()) {
             s->sendEventAsync(event);
         }
@@ -94,7 +94,7 @@ std::chrono::milliseconds Server::doTick() {
         case GamePhase::LOBBY:
             // Go through sessions and update GameState lobby info
             // TODO: move this into updateGameState or something else
-            for (const auto& [eid, ip, session]: this->sessions) {
+            for (const auto& [eid, is_dm, ip, session]: this->sessions) {
                 if (auto s = session.lock()) {
                     this->state.addPlayerToLobby(eid, s->getInfo().client_name.value_or("UNKNOWN NAME"));
                 } else {
@@ -174,8 +174,8 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
             // TODO: need to change probably?
             auto new_session = std::make_shared<Session>(std::move(this->socket),
-                SessionInfo({}, old_id, false));
-            by_ip.replace(old_session, SessionEntry(old_id, addr, new_session));
+                SessionInfo({}, old_id, old_session->is_dungeon_master));
+            by_ip.replace(old_session, SessionEntry(old_id, old_session->is_dungeon_master, addr, new_session));
 
             std::cout << "Reestablished connection with " << addr 
                 << ", which was previously assigned eid " << old_id << std::endl;
@@ -208,7 +208,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         auto session = std::make_shared<Session>(std::move(this->socket),
             SessionInfo({}, dm->globalID, true));
 
-        this->sessions.insert(SessionEntry(dm->globalID, addr, session));
+        this->sessions.insert(SessionEntry(dm->globalID, true, addr, session));
 
         std::cout << "Established new connection with " << addr << ", which was assigned eid "
             << dm->globalID << std::endl;
@@ -224,7 +224,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     auto session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo({}, player->globalID, false));
 
-    this->sessions.insert(SessionEntry(player->globalID, addr, session));
+    this->sessions.insert(SessionEntry(player->globalID, false, addr, session));
 
     std::cout << "Established new connection with " << addr << ", which was assigned eid "
         << player->globalID << std::endl;
