@@ -217,6 +217,9 @@ private:
     bool is_held_left = false;
     bool is_held_space = false;
 
+    bool is_held_i = false;
+    bool is_held_o = false;
+
     bool is_left_mouse_down = false;
 
     /* Mouse position coordinates */

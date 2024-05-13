@@ -102,6 +102,12 @@ void ServerGameState::update(const EventList& events) {
 				obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
 				break;
 			}
+			case ActionType::Zoom: { // only for DM
+				DungeonMaster * dm = this->objects.getDM();
+				dm->physics.shared.corner += startAction.movement;
+
+				break;
+			}
 			default: {}
 			}
 			break;

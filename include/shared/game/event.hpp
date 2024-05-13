@@ -43,6 +43,7 @@ enum class ActionType {
     MoveCam,
     Jump,
     Sprint,
+    Zoom
 };
 
 /**

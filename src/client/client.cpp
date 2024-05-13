@@ -246,6 +246,14 @@ void Client::idleCallback(boost::asio::io_context& context) {
             this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Jump)));
         }
 
+        if (this->session->getInfo().is_dungeon_master.value() && is_held_i) {
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, -1.0f, 0.0f), ActionType::Zoom)));
+        }
+
+        if (this->session->getInfo().is_dungeon_master.value() && is_held_o) {
+            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Zoom)));
+        }
+
         // If movement 0, send stopevent
         if ((sentCamMovement != cam_movement) && cam_movement == glm::vec3(0.0f)) {
             this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement, ActionType::MoveCam)));
@@ -555,6 +563,12 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             is_held_space = true;
             break;
 
+        case GLFW_KEY_I: // zoom in
+            is_held_i = true;
+            break;
+        case GLFW_KEY_O: // zoom in
+            is_held_o = true;
+            break;
         /* Send an event to start 'shift' movement (i.e. sprint) */
         case GLFW_KEY_LEFT_SHIFT:
             if (eid.has_value()) {
@@ -595,6 +609,12 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             }
             break;
 
+        case GLFW_KEY_O: // zoom out
+            is_held_o = false;
+            break;
+        case GLFW_KEY_I: // zoom out
+            is_held_i = false;
+            break;
         default:
             break;
         }
