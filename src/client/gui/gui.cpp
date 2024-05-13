@@ -6,6 +6,7 @@
 #include "shared/utilities/rng.hpp"
 #include "client/client.hpp"
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/game/sharedobject.hpp"
 #include "shared/utilities/time.hpp"
 
 namespace gui {
@@ -139,6 +140,7 @@ void GUI::layoutFrame(GUIState state) {
             break;
         case GUIState::GAME_ESC_MENU:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            this->_sharedGameHUD();
             this->_layoutGameEscMenu();
             break;
         case GUIState::LOBBY_BROWSER:
@@ -147,6 +149,7 @@ void GUI::layoutFrame(GUIState state) {
             break;
         case GUIState::GAME_HUD:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            this->_sharedGameHUD();
             this->_layoutGameHUD();
             break;
         case GUIState::LOBBY:
@@ -360,6 +363,65 @@ void GUI::_layoutLobby() {
     this->addWidget(std::move(waiting_msg));
 }
 
+void GUI::_sharedGameHUD() {
+    auto self_eid = client->session->getInfo().client_eid;
+    if (!self_eid.has_value()) {
+        return;
+    }
+
+    auto self = client->gameState.objects.at(*self_eid);
+    auto inventory_size = self->inventoryInfo->inventory_size;
+
+    // Flexbox for the items 
+    // Loading itemframe again if no item
+    auto itemflex = widget::Flexbox::make(
+        glm::vec2(0.0f, 0.0f),         
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+    );
+    for (int i = 1; i <= inventory_size; i++) {
+        if (self->inventoryInfo->inventory.contains(i)) {
+            switch (self->inventoryInfo->inventory.at(i)) {
+            case ModelType::HealthPotion: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion)));
+                break;
+            }
+            case ModelType::NauseaPotion: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::NauseaPotion)));
+                break;
+            }
+            case ModelType::InvisibilityPotion: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion)));
+                break;
+            }
+            }
+        }
+        else {
+            itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame)));
+        }
+    }
+
+    this->addWidget(std::move(itemflex));
+
+    // Flexbox for the item frames
+    auto frameflex = widget::Flexbox::make(
+        glm::vec2(0.0f, 0.0f),          //position relative to screen
+        glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
+    );
+
+    for (int i = 1; i <= inventory_size; i++) {
+        if (self->inventoryInfo->selected == i) {
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame)));
+        }
+        else {
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame)));
+        }
+    }
+
+    this->addWidget(std::move(frameflex));
+}
+
 void GUI::_layoutGameHUD() {
     auto self_eid = client->session->getInfo().client_eid;
     if (!self_eid.has_value()) {
@@ -374,7 +436,7 @@ void GUI::_layoutGameHUD() {
         font::Size::MEDIUM,
         font::Color::RED,
         fonts,
-        font::getRelativePixels(10)
+        font::getRelativePixels(70)
     );
     this->addWidget(std::move(health_txt));
 }

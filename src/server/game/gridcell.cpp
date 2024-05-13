@@ -33,6 +33,12 @@ CellType charToCellType(char c) {
 		return CellType::ArrowTrapRight;
 	case '<':
 		return CellType::ArrowTrapLeft;
+	case 'h':
+		return CellType::HealthPotion;
+	case 'n':
+		return CellType::NauseaPotion;
+	case 'i':
+		return CellType::InvisibilityPotion;
 	default:
 		return CellType::Unknown;
 	}

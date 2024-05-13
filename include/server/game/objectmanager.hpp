@@ -3,7 +3,6 @@
 #include <memory>
 
 #include "server/game/object.hpp"
-#include "server/game/item.hpp"
 #include "server/game/player.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/solidsurface.hpp"
@@ -11,6 +10,7 @@
 // forward declarations to use pointers
 class Trap; 
 class Projectile;
+class Item;
 
 #include "shared/utilities/smartvector.hpp"
 

@@ -14,8 +14,8 @@
  */
 enum class ObjectType {
 	Object,	//	Generic object type (base class)
-	Item,
 	SolidSurface,
+	Potion,
 	Player,
 	Enemy,
 	SpikeTrap,
@@ -23,7 +23,9 @@ enum class ObjectType {
 	Projectile,
 	FloorSpike,
 	FakeWall,
-	ArrowTrap
+	ArrowTrap,
+	Spell,
+	Item
 };
 
 /**
@@ -47,17 +49,34 @@ struct SharedStats {
 	}
 };
 
-struct SharedItemInfo {
-	enum ItemType { healing, swiftness, invisible, key };
 
-	bool held; // for rendering
-	bool used;
-	float scalar;
-	float timer;
-	ItemType type;
+struct SharedInventory {
+	// need to share itemtype data...
+	int selected;
+	int inventory_size;
+	std::unordered_map<int, ModelType> inventory;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & held & used & scalar & timer & type;
+		ar& selected& inventory_size& inventory;
+	}
+}; 
+
+/**
+ * @brief An enum for the type of an item
+ */
+enum class ItemType {
+	Weapon,
+	Spell,
+	Potion,
+	Blank
+};
+
+struct SharedItemInfo {
+	bool held; // for rendering
+	bool used; // for rendering
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& used& held;
 	}
 };
 
@@ -143,12 +162,13 @@ public:
 	boost::optional<SharedSolidSurface> solidSurface;
 	boost::optional<SharedTrapInfo> trapInfo;
 	boost::optional<SharedPlayerInfo> playerInfo;
+	boost::optional<SharedInventory> inventoryInfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo;
 	}
 private:
 };

@@ -15,6 +15,9 @@ enum class CellType {
 	ArrowTrapDown,
 	ArrowTrapLeft,
 	ArrowTrapRight,
+	HealthPotion,
+	NauseaPotion,
+	InvisibilityPotion,
 	Unknown
 };
 

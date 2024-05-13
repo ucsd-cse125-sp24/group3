@@ -34,6 +34,9 @@ enum class EventType {
     MoveRelative,
     MoveAbsolute,
     SpawnEntity,
+    SelectItem,
+    UseItem,
+    DropItem,
 };
 
 enum class ActionType {
@@ -180,6 +183,50 @@ struct SpawnEntityEvent {
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         // TODO:
     }
+};
+
+/**
+ * Event for selecting which item to use 
+ */
+struct SelectItemEvent {
+    SelectItemEvent() {}
+    explicit SelectItemEvent(EntityID playerEID, int itemNum) : playerEID(playerEID), itemNum(itemNum) {}
+
+    EntityID playerEID;
+    int itemNum;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& playerEID& itemNum;
+    }
+
+};
+
+/**
+ * Event for entity to use item
+ */
+struct UseItemEvent {
+    UseItemEvent() {}
+    explicit UseItemEvent(EntityID playerEID) : playerEID(playerEID) {}
+
+    EntityID playerEID;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& playerEID;
+    }
+};
+
+/**
+ * Event for dropping item in inventory
+ */
+struct DropItemEvent {
+    DropItemEvent() {}
+    explicit DropItemEvent(EntityID playerEID) : playerEID(playerEID){}
+
+    EntityID playerEID;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& playerEID;
+    }
 
 };
 
@@ -195,7 +242,10 @@ using EventData = boost::variant<
     StopActionEvent,
     MoveRelativeEvent,
     MoveAbsoluteEvent,
-    SpawnEntityEvent
+    SpawnEntityEvent,
+    SelectItemEvent,
+    UseItemEvent,
+    DropItemEvent
 >;
 
 /**
