@@ -16,6 +16,7 @@ FireballTrap::FireballTrap(glm::vec3 corner, glm::vec3 dimensions):
 {
     this->shoot_time = std::chrono::system_clock::now();
     this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
+    this->target = 0; // wont be accessed until set elsewhere, so safe to set to 0
 }
 
 bool FireballTrap::shouldTrigger(ServerGameState& state) {

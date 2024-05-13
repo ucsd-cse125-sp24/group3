@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-Projectile::Projectile(glm::vec3 corner, glm::vec3 facing, glm::vec3 dimensions, ModelType model, Options options):
+Projectile::Projectile(glm::vec3 corner, glm::vec3 facing, glm::vec3 dimensions, ModelType model, Options&& options):
     Object(ObjectType::Projectile, Physics(true, Collider::Box, corner, facing, dimensions), model),
     opt(options)
 {

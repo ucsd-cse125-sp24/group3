@@ -45,7 +45,6 @@ public:
         float h_mult;
         float v_mult;
         int damage;
-        bool disappearOnContact;
         bool homing;
         float homing_strength;
         std::optional<EntityID> target;
@@ -60,7 +59,7 @@ public:
      */
     Projectile(glm::vec3 corner, glm::vec3 facing, 
         glm::vec3 dimensions, ModelType model,
-        Options options);
+        Options&& options);
 
     void doCollision(Object* other, ServerGameState& state) override;
 
