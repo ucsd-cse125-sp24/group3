@@ -17,6 +17,11 @@ set(FILES
     game/grid.cpp
     game/trap.cpp
     game/spiketrap.cpp
+    game/fireballtrap.cpp
+    game/arrowtrap.cpp
+    game/projectile.cpp
+    game/floorspike.cpp
+    game/fakewall.cpp
     game/dungeonmaster.cpp
     game/potion.cpp
 )

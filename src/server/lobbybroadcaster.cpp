@@ -74,10 +74,6 @@ void LobbyBroadcaster::_lobbyBroadcastWorker() {
 
         std::unique_lock<std::mutex> lock(this->mut);
         std::string packet_data = serialize<ServerLobbyBroadcastPacket>(this->bcast_info);
-        std::cout << "Broadcasting lobby info for " << this->bcast_info.lobby_name
-            << " (" << this->bcast_info.slots_taken << "/"
-            << this->bcast_info.slots_taken + this->bcast_info.slots_avail
-            << ")" << std::endl;
         this->socket.send_to(boost::asio::buffer(packet_data), endpt);
     }
 

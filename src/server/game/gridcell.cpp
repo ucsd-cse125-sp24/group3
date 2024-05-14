@@ -15,6 +15,24 @@ CellType charToCellType(char c) {
 		return CellType::Enemy;
 	case 'X':
 		return CellType::SpikeTrap;
+	case '&':
+		return CellType::FireballTrap;
+	case '+':
+		return CellType::FloorSpikeFull;
+	case '|':
+		return CellType::FloorSpikeVertical;
+	case '-':
+		return CellType::FloorSpikeHorizontal;
+	case 'F':
+		return CellType::FakeWall;
+	case '^':
+		return CellType::ArrowTrapUp;
+	case 'v':
+		return CellType::ArrowTrapDown;
+	case '>':
+		return CellType::ArrowTrapRight;
+	case '<':
+		return CellType::ArrowTrapLeft;
 	case 'h':
 		return CellType::HealthPotion;
 	case 'n':
