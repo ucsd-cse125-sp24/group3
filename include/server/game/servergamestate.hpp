@@ -68,6 +68,20 @@ public:
 
 	void updateMovement();
 
+	/**
+	 * @brief Detects whether a collision occurs with other objects when the
+	 * given object moves to the given position.
+	 * @param object Object to perform collision detection for
+	 * @param newCornerPosition Corner position object moves to at which 
+	 * collision detection is performed
+	 * @note This method moves the object to the given position - i.e., it
+	 * updates the object's gridCellPositions vector and the ObjectManager's
+	 * cellToObjects unordered_map.
+	 * @return true if the object overlaps (collides) with any other object that
+	 * has a collider at the given position, and false otherwise.
+	 */
+	bool hasObjectCollided(Object* object, glm::vec3 newCornerPosition);
+
 	//	TODO: Add implementations of items
 
 	void useItem();
