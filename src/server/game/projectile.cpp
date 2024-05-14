@@ -1,6 +1,7 @@
 #include "server/game/projectile.hpp"
 #include "server/game/creature.hpp"
 #include "server/game/servergamestate.hpp"
+#include "server/game/spell.hpp"
 
 #include <iostream>
 
@@ -32,9 +33,41 @@ void Projectile::doCollision(Object* other, ServerGameState& state) {
 
     state.markForDeletion(this->globalID);
 
-    // do damage if creature
-    Creature* creature = dynamic_cast<Creature*>(other);
-    if (creature == nullptr) return;
+    if (!this->opt.isSpell) {
+        // do damage if creature
+        Creature* creature = dynamic_cast<Creature*>(other);
+        if (creature == nullptr) return;
 
-    creature->stats.health.decrease(this->opt.damage);
+        creature->stats.health.decrease(this->opt.damage);
+    } 
+    //handle cases for spell projectiles
+    else {
+        SpellOrb* orb = dynamic_cast<SpellOrb*>(this);
+        switch (orb->sType) {
+        case SpellType::Fireball: {
+            // do damage if creature
+            Creature* creature = dynamic_cast<Creature*>(other);
+            if (creature != nullptr) {
+                creature->stats.health.decrease(this->opt.damage);
+                return;
+            }
+
+            // destory wall if it hits a wall
+            SolidSurface* wall = dynamic_cast<SolidSurface*>(other);
+            if (wall != nullptr && wall->shared.surfaceType == SurfaceType::Wall) {
+                state.markForDeletion(wall->globalID);
+                return;
+            }
+        }
+
+        case SpellType::HealOrb: {
+            // heal if creature
+            Creature* creature = dynamic_cast<Creature*>(other);
+            if (creature != nullptr) {
+                creature->stats.health.increase(this->opt.damage);
+                return;
+            }
+        }
+        }
+    }
 }

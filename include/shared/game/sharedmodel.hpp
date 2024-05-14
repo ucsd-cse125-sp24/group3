@@ -10,5 +10,7 @@ enum class ModelType {
 	HealthPotion,
 	NauseaPotion,
 	InvisibilityPotion,
+	FireSpell,
+	HealSpell,
 	Frame
 };

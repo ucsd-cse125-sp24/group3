@@ -4,6 +4,7 @@
 #include "server/game/fireballtrap.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/potion.hpp"
+#include "server/game/spell.hpp"
 
 #include <memory>
 
@@ -39,6 +40,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::FloorSpike:
 		case ObjectType::ArrowTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
+			break;
+		case ObjectType::Spell:
+			object->typeID = this->items.push(dynamic_cast<Spell*>(object));
 			break;
 		case ObjectType::Potion:
 			object->typeID = this->items.push(dynamic_cast<Potion*>(object));
@@ -96,6 +100,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Enemy:
 		this->enemies.remove(object->typeID);
 		break;
+	case ObjectType::Spell:
 	case ObjectType::Potion:
 		this->items.remove(object->typeID);
 		break;

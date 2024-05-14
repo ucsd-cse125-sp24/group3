@@ -394,6 +394,14 @@ void GUI::_sharedGameHUD() {
                 itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion)));
                 break;
             }
+            case ModelType::FireSpell: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FireSpell)));
+                break;
+            }
+            case ModelType::HealSpell: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell)));
+                break;
+            }
             }
         }
         else {

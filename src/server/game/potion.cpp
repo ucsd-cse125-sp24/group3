@@ -43,7 +43,6 @@ void Potion::useItem(Object* other, ServerGameState& state) {
     switch (this->potType) {
     case PotionType::Health: {
         player->stats.health.increase(this->effectScalar);
-        //state.objects.removeObject(this->globalID);
         break;
     }
     case PotionType::Nausea: {
@@ -76,5 +75,6 @@ void Potion::revertEffect(ServerGameState& state) {
         break;
     }
     }
-    //state.objects.removeObject(this->globalID);
+
+    state.markForDeletion(this->globalID);
 }

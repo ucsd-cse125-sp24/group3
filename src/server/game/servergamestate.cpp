@@ -154,8 +154,11 @@ void ServerGameState::update(const EventList& events) {
 			if (player->inventory.find(itemSelected) != player->inventory.end()) {
 				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
 				item->useItem(player, *this);
-				player->inventory.erase(itemSelected);
-				player->sharedInventory.inventory.erase(itemSelected);
+
+				if(item->iteminfo.used){
+					player->inventory.erase(itemSelected);
+					player->sharedInventory.inventory.erase(itemSelected);
+				}
 				//TODO : should also remove item afterwards
 			}
 			break;
@@ -264,7 +267,7 @@ void ServerGameState::updateMovement() {
 								otherObj->doCollision(object, *this);
 								continue;
 							}
-							if (otherObj->type == ObjectType::Potion) {
+							if (otherObj->type == ObjectType::Potion || otherObj->type == ObjectType::Spell) {
 								otherObj->doCollision(object, *this);
 								continue;
 							}
@@ -579,6 +582,26 @@ void ServerGameState::loadMaze() {
 						cell->y * this->grid.getGridCellWidth()
 					);
 					this->objects.createObject(new FireballTrap(corner, dimensions));
+					break;
+				}
+				case CellType::FireSpell: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x * this->grid.getGridCellWidth() + 1,
+						0,
+						cell->y * this->grid.getGridCellWidth() + 1);
+
+					this->objects.createObject(new Spell(corner, dimensions, SpellType::Fireball));
+					break;
+				}
+				case CellType::HealSpell: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x * this->grid.getGridCellWidth() + 1,
+						0,
+						cell->y * this->grid.getGridCellWidth() + 1);
+
+					this->objects.createObject(new Spell(corner, dimensions, SpellType::HealOrb));
 					break;
 				}
 				case CellType::HealthPotion: {

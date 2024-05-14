@@ -3,6 +3,9 @@
 #include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 
+/**
+ * Class for any possible items that can go in the inventory
+ */
 class Item : public Object {
 public:
 	SharedItemInfo iteminfo;
@@ -14,7 +17,6 @@ public:
      * @param model     Model applied for the item
      * @param dimensions Dimensions of the item
      */
-
 	Item(ObjectType type, bool movable, glm::vec3 corner, ModelType model, glm::vec3 dimensions);
 
     virtual void useItem(Object* other, ServerGameState& state);

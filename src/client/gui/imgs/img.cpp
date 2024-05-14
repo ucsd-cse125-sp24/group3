@@ -15,6 +15,8 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::HealthPotion: return (img_root / "pot_health.png").string();
         case ImgID::NauseaPotion: return (img_root / "pot_nausea.png").string();
         case ImgID::InvisPotion: return (img_root / "pot_invisibility.png").string();
+        case ImgID::FireSpell: return (img_root / "fire_wand.png").string();
+        case ImgID::HealSpell: return (img_root / "heal_wand.png").string();
     }
 }
 

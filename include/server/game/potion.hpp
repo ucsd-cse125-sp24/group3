@@ -4,14 +4,22 @@
 #include "server/game/object.hpp"
 #include <chrono>
 
+/*
+ *  Different types of potions
+ */
 enum class PotionType {
 	Health,
     Nausea,
-    Invisibility
+    Invisibility //currently not implemented / open for any other types
 };
 
 class Potion : public Item {
 public:
+    /**
+     * @param corner    Corner position of the Potion
+     * @param model     Model applied for the Potion
+     * @param type      Type of Potion
+     */
     Potion(glm::vec3 corner, glm::vec3 dimensions, PotionType type);
 
     int duration; 

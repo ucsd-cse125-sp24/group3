@@ -29,6 +29,9 @@
 /*	Inventory	*/
 #define	INVENTORY_SIZE			4
 
+/*	Spell Constants	*/
+#define	CAST_LIMIT				2
+
 /*	Potion Stats	*/
 #define	RESTORE_HEALTH			20
 #define HEALTH_DURATION			0
