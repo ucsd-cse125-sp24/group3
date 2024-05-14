@@ -83,7 +83,7 @@ struct SharedItemInfo {
 enum class SurfaceType {
 	Wall,
 	Floor,
-	Ceiling
+	Ceiling,
 };
 
 struct SharedSolidSurface {

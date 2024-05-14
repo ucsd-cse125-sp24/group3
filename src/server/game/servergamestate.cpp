@@ -150,7 +150,6 @@ void ServerGameState::update(const EventList& events) {
 		{
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
 			int itemSelected = player->sharedInventory.selected;
-
 			if (player->inventory.find(itemSelected) != player->inventory.end()) {
 				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
 				item->useItem(player, *this);
@@ -159,7 +158,6 @@ void ServerGameState::update(const EventList& events) {
 					player->inventory.erase(itemSelected);
 					player->sharedInventory.inventory.erase(itemSelected);
 				}
-				//TODO : should also remove item afterwards
 			}
 			break;
 		}
@@ -169,9 +167,8 @@ void ServerGameState::update(const EventList& events) {
 			int itemSelected = player->sharedInventory.selected;
 			if (player->inventory.find(itemSelected) != player->inventory.end()) {
 				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
-				item->iteminfo.held = false;
-				item->physics.collider = Collider::Box;
-				item->physics.shared.corner = (player->physics.shared.corner + (player->physics.shared.facing * 4.0f)) * glm::vec3(1.0f, 0.0f, 1.0f);
+				item->dropItem(player, *this, 4.0f);
+
 				player->inventory.erase(itemSelected);
 				player->sharedInventory.inventory.erase(itemSelected);
 			}
@@ -386,6 +383,21 @@ void ServerGameState::handleDeaths() {
 		if (player == nullptr) continue;
 
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
+			//handle dropping items (sets collider to none so it doesn't pick up items when dead)
+			player->physics.collider = Collider::None;
+			for (int i = 1; i <= player->sharedInventory.inventory_size; i++) {
+				if (player->inventory.contains(i)) {
+            		Item* item = dynamic_cast<Item*>(this->objects.getItem(player->inventory.at(i)));
+					item->dropItem(player, *this, 2.0f);
+					player->inventory.erase(i);
+					player->sharedInventory.inventory.erase(i);
+				}
+				// hardcode "random" drops
+				if (i == 1){ player->physics.shared.facing *= -1.0f; }
+				if (i == 2){ player->physics.shared.facing *= 0.5f; }
+				if (i == 3){ player->physics.shared.facing *= -1.0f; }
+			}
+
 			player->info.is_alive = false;
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
 		}
@@ -400,6 +412,7 @@ void ServerGameState::handleRespawns() {
 
 		if (!player->info.is_alive) {
 			if (getMsSinceEpoch() >= player->info.respawn_time) {
+				player->physics.collider = Collider::Box;
 				player->physics.shared.corner = this->getGrid().getRandomSpawnPoint();
 				player->info.is_alive = true;
 				player->stats.health.increase(player->stats.health.max());

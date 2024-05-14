@@ -21,6 +21,8 @@ public:
 
     virtual void useItem(Object* other, ServerGameState& state);
 
+    void dropItem(Object* other, ServerGameState& state, float dropDistance);
+
 	void doCollision(Object* other, ServerGameState& state) override;
 
 	SharedObject toShared() override;

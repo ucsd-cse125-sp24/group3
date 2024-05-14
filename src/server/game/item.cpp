@@ -12,6 +12,16 @@ Item::Item(ObjectType type, bool movable, glm::vec3 corner, ModelType model, glm
 void Item::useItem(Object* other, ServerGameState& state) {
 }
 
+void Item::dropItem(Object* other, ServerGameState& state, float dropDistance) {
+
+	auto player = dynamic_cast<Player*>(other);
+	if (player == nullptr) return; // only allow players to drop items
+
+	this->iteminfo.held = false;
+	this->physics.collider = Collider::Box;
+	this->physics.shared.corner = (player->physics.shared.corner + (player->physics.shared.facing * dropDistance)) * glm::vec3(1.0f, 0.0f, 1.0f);
+}
+
 void Item::doCollision(Object* other, ServerGameState& state) {
 
 	auto player = dynamic_cast<Player*>(other);

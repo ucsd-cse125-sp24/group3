@@ -53,11 +53,15 @@ void Projectile::doCollision(Object* other, ServerGameState& state) {
             }
 
             // destory wall if it hits a wall
+            // Implement "weak" wall that can break in few hits
+            // before enabling this
+
+            /*
             SolidSurface* wall = dynamic_cast<SolidSurface*>(other);
             if (wall != nullptr && wall->shared.surfaceType == SurfaceType::Wall) {
                 state.markForDeletion(wall->globalID);
                 return;
-            }
+            } */
         }
 
         case SpellType::HealOrb: {
