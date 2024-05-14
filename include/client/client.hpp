@@ -175,7 +175,7 @@ private:
      * @brief Draw bounding box around a given SharedObject
      * only if the client.draw_bboxes field is set to true
      */
-    void drawBbox(std::shared_ptr<SharedObject> object);
+    void drawBbox(boost::optional<SharedObject> object);
 
     /* Current game state */
     SharedGameState gameState;

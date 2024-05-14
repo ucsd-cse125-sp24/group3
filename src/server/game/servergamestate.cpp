@@ -1,5 +1,4 @@
 #include "server/game/servergamestate.hpp"
-#include "shared/game/sharedgamestate.hpp"
 #include "server/game/spiketrap.hpp"
 #include "server/game/fireballtrap.hpp"
 #include "server/game/floorspike.hpp"
@@ -7,9 +6,11 @@
 #include "server/game/projectile.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/potion.hpp"
-#include "shared/utilities/root_path.hpp"
 #include "server/game/constants.hpp"
+#include "shared/game/sharedgamestate.hpp"
+#include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
+#include "shared/network/constants.hpp"
 
 #include <fstream>
 
@@ -46,25 +47,27 @@ ServerGameState::ServerGameState(GamePhase start_phase, const GameConfig& config
 ServerGameState::~ServerGameState() {}
 
 /*	SharedGameState generation	*/
-SharedGameState ServerGameState::generateSharedGameState() {
-	//	Create a new SharedGameState instance and populate it with this
-	//	ServerGameState's data
-	SharedGameState shared;
+std::vector<SharedGameState> ServerGameState::generateSharedGameState() {
+	std::vector<SharedGameState> partial_updates;
 
-	//	Initialize object vector
-	shared.objects = this->objects.toShared();
+	auto all_objects = this->objects.toShared();
 
-	//	Copy timestep data
-	shared.timestep = this->timestep;
-	shared.timestep_length = this->timestep_length;
+	for (int i = 0; i < all_objects.size(); i += OBJECTS_PER_UPDATE) {
+		SharedGameState curr_update;
+		curr_update.timestep = this->timestep;
+		curr_update.timestep_length = this->timestep_length;
+		curr_update.lobby = this->lobby;
+		curr_update.phase = this->phase;
 
-	//	Copy Lobby data
-	shared.lobby = this->lobby;
-	
-	//	Copy GamePhase
-	shared.phase = this->phase;
+		for (int j = 0; j < OBJECTS_PER_UPDATE && i + j < all_objects.size(); j++) {
+			EntityID curr_id = i + j;
+			curr_update.objects.insert({curr_id, all_objects.at(curr_id)});
+		}
 
-	return shared;
+		partial_updates.push_back(curr_update);
+	}
+
+	return partial_updates;
 }
 
 /*	Update methods	*/

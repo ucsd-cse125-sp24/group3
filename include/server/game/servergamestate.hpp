@@ -92,10 +92,10 @@ public:
 	/**
 	 * @brief Generate a SharedGameState object from this ServerGameState
 	 * instance.
-	 * @return ShareGameState instance that represents this ServerGameState
-	 * instance.
+	 * @return vector of partial ShareGameState instances that represent different pieces
+	 * of the SharedGameState instance
 	 */
-	SharedGameState generateSharedGameState();
+	std::vector<SharedGameState> generateSharedGameState();
 
 	/*	Other getters and setters	*/
 

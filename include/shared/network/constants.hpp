@@ -1,3 +1,5 @@
 #pragma once
 
 #define NETWORK_BUFFER_SIZE 1000000
+
+#define OBJECTS_PER_UPDATE 200

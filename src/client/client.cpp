@@ -271,7 +271,7 @@ void Client::processServerInput(boost::asio::io_context& context) {
     for (Event event : this->session->getEvents()) {
         if (event.type == EventType::LoadGameState) {
             GamePhase old_phase = this->gameState.phase;
-            this->gameState = boost::get<LoadGameStateEvent>(event.data).state;
+            this->gameState.update(boost::get<LoadGameStateEvent>(event.data).state);
 
             // Change the UI to the game hud UI whenever we change into the GAME game phase
             if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
@@ -282,10 +282,9 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
-    for (int i = 0; i < this->gameState.objects.size(); i++) {
-        std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
+    for (auto& [id, sharedObject] : this->gameState.objects) {
 
-        if (sharedObject == nullptr) {
+        if (!sharedObject.has_value()) {
             continue;
         }
 
@@ -445,7 +444,7 @@ void Client::draw() {
     }
 }
 
-void Client::drawBbox(std::shared_ptr<SharedObject> object) {
+void Client::drawBbox(boost::optional<SharedObject> object) {
     if (this->config.client.draw_bboxes) {
         auto bbox_pos = object->physics.corner; 
         // for some reason the y axis of the bbox is off by half  

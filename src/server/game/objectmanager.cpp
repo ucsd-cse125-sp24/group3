@@ -188,21 +188,16 @@ SmartVector<Projectile*> ObjectManager::getProjectiles() {
 
 /*	SharedGameState generation	*/
 
-std::vector<std::shared_ptr<SharedObject>> ObjectManager::toShared() {
-	std::vector<std::shared_ptr<SharedObject>> shared;
+std::vector<boost::optional<SharedObject>> ObjectManager::toShared() {
+	std::vector<boost::optional<SharedObject>> shared;
 
-	//	Fill shared SmartVector of SharedObjects
 	for (int i = 0; i < this->objects.size(); i++) {
 		Object* object = this->objects.get(i);
 
 		if (object == nullptr) {
-			//	Push empty object to SharedObject SmartVector
-			shared.push_back(nullptr);
-		}
-		else {
-			//	Create a SharedObject representation for this object and push it
-			//	to the SharedObject SmartVector
-			shared.push_back(std::make_shared<SharedObject>(object->toShared()));
+			shared.push_back({});
+		} else {
+			shared.push_back(object->toShared());
 		}
 	}
 

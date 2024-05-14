@@ -114,10 +114,9 @@ std::chrono::milliseconds Server::doTick() {
 
             this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
 
-            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
-            // Tell each client the current lobby status
-
-            std::cout << "waiting for " << this->state.getLobby().max_players << " players" << std::endl;
+            for (const auto& partial_update : this->state.generateSharedGameState()) {
+                sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
+            }
 
             break;
         case GamePhase::GAME: {
@@ -125,7 +124,9 @@ std::chrono::milliseconds Server::doTick() {
 
             updateGameState(allClientEvents);
 
-            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
+            for (const auto& partial_update: this->state.generateSharedGameState()) {
+                sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
+            }
             break;
         }
         default:
