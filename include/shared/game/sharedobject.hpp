@@ -20,7 +20,6 @@ enum class ObjectType {
 	SpikeTrap,
 	Enemy,
 	DungeonMaster,
-	SpikeTrap,
 	FireballTrap,
 	Projectile,
 	FloorSpike,
