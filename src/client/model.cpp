@@ -34,6 +34,11 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
+/** maximum number of supported point lights.
+ *  must match the corresponding macro 
+ *  in the fragment shader
+ */
+#define NR_POINT_LIGHTS 8
 
 Mesh::Mesh(
     const std::vector<Vertex>& vertices,
@@ -110,25 +115,25 @@ void Mesh::draw(
     if (time <= 0.0f) {
         increasing = true;
     }
-    // float intensity = pow(2, -10 * time);
-    float intensity = pow(2, 10 * time - 10);
-    // float intensity = 1 - pow(1 - time, 4);
 
-    // for now we only support one light...
-    if (!lightSources.empty()) {
+    float intensity = pow(2, 10 * time - 10);
+    
+    // set lightsource uniforms 
+    for (ssize_t i = 0; i < lightSources.size(); i++) {
+        std::string pointLight = "pointLights[" + std::to_string(i) + "]";
         // needed for attenuation
-        shader->setFloat("pointLights[0].intensity", 1 - intensity);
-        shader->setVec3("pointLights[0].position", lightSources.at(0).pos);
-        shader->setFloat("pointLights[0].constant", 1.0f);
-        shader->setFloat("pointLights[0].linear", 0.07f);
-        shader->setFloat("pointLights[0].quadratic", 0.017f);
+        shader->setFloat(pointLight + ".intensity", 1 - intensity);
+        shader->setVec3(pointLight + ".position", lightSources.at(0).pos);
+        shader->setFloat(pointLight + ".constant", 1.0f);
+        shader->setFloat(pointLight + ".linear", 0.07f);
+        shader->setFloat(pointLight + ".quadratic", 0.017f);
 
         // light color
         auto amberOrange = glm::vec3(1.0f, 0.5f, 0.03f);
         auto darkOrange = glm::vec3(0.5f, 0.25f, 0.015f);
-        shader->setVec3("pointLights[0].ambient", darkOrange);
-        shader->setVec3("pointLights[0].diffuse", amberOrange);
-        shader->setVec3("pointLights[0].specular", darkOrange);
+        shader->setVec3(pointLight + ".ambient", darkOrange);
+        shader->setVec3(pointLight + ".diffuse", amberOrange);
+        shader->setVec3(pointLight + ".specular", darkOrange);
     }
 
     if (textures.size() == 0) {
