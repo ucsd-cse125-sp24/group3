@@ -92,10 +92,16 @@ public:
 	/**
 	 * @brief Generate a SharedGameState object from this ServerGameState
 	 * instance.
-	 * @return ShareGameState instance that represents this ServerGameState
-	 * instance.
+	 * @param send_all True if you should send a 100% update to the client, false
+	 * if you should just send the updated objects
+	 * 
+	 * NOTE: if send_all is false and you generate an update based on the diffs, this
+	 * function will clear the updated_entities unordered_set for you
+	 * 
+	 * @return vector of partial ShareGameState instances that represent different pieces
+	 * of the SharedGameState instance
 	 */
-	SharedGameState generateSharedGameState();
+	std::vector<SharedGameState> generateSharedGameState(bool send_all);
 
 	/*	Other getters and setters	*/
 
@@ -165,6 +171,12 @@ private:
 	 * list of entities to delete at the end of the tick
      */
 	std::unordered_set<EntityID> entities_to_delete;
+
+	/**
+	 * list of entities that have been changed, so we only have to include
+	 * these in partial updates to the clients 
+	 */
+	std::unordered_set<EntityID> updated_entities;
 
 	/**
 	 *  Timestep length in milliseconds.

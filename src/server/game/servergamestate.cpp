@@ -8,9 +8,11 @@
 #include "server/game/projectile.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/potion.hpp"
-#include "shared/utilities/root_path.hpp"
 #include "server/game/constants.hpp"
+#include "shared/game/sharedgamestate.hpp"
+#include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
+#include "shared/network/constants.hpp"
 
 #include <fstream>
 
@@ -47,25 +49,55 @@ ServerGameState::ServerGameState(GamePhase start_phase, const GameConfig& config
 ServerGameState::~ServerGameState() {}
 
 /*	SharedGameState generation	*/
-SharedGameState ServerGameState::generateSharedGameState() {
-	//	Create a new SharedGameState instance and populate it with this
-	//	ServerGameState's data
-	SharedGameState shared;
+std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_all) {
+	std::vector<SharedGameState> partial_updates;
+	auto all_objects = this->objects.toShared();
 
-	//	Initialize object vector
-	shared.objects = this->objects.toShared();
+	auto getUpdateTemplate = [this]() {
+		SharedGameState curr_update;
+		curr_update.timestep = this->timestep;
+		curr_update.timestep_length = this->timestep_length;
+		curr_update.lobby = this->lobby;
+		curr_update.phase = this->phase;
+		return curr_update;
+	};
 
-	//	Copy timestep data
-	shared.timestep = this->timestep;
-	shared.timestep_length = this->timestep_length;
+	if (send_all) {
+		for (int i = 0; i < all_objects.size(); i += OBJECTS_PER_UPDATE) {
+			SharedGameState curr_update = getUpdateTemplate();
 
-	//	Copy Lobby data
-	shared.lobby = this->lobby;
-	
-	//	Copy GamePhase
-	shared.phase = this->phase;
+			for (int j = 0; j < OBJECTS_PER_UPDATE && i + j < all_objects.size(); j++) {
+				EntityID curr_id = i + j;
+				curr_update.objects.insert({curr_id, all_objects.at(curr_id)});
+			}
 
-	return shared;
+			partial_updates.push_back(curr_update);
+		}
+	} else {
+		SharedGameState curr_update = getUpdateTemplate();
+
+		int num_in_curr_update = 0;
+		for (EntityID id : this->updated_entities) {
+			curr_update.objects.insert({id, all_objects.at(id)});
+			num_in_curr_update++;
+
+			if (num_in_curr_update >= OBJECTS_PER_UPDATE) {
+				partial_updates.push_back(curr_update);
+				curr_update = getUpdateTemplate();
+				num_in_curr_update = 0;
+			}
+		}
+
+		if (num_in_curr_update > 0) {
+			partial_updates.push_back(curr_update);
+		}
+
+		// wipe updated entities list
+		std::unordered_set<EntityID> empty;
+		std::swap(this->updated_entities, empty);
+	}
+
+	return partial_updates;
 }
 
 /*	Update methods	*/
@@ -84,14 +116,17 @@ void ServerGameState::update(const EventList& events) {
         switch (event.type) {
 		case EventType::ChangeFacing: {
             auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
-            Object* objChangeFace = this->objects.getObject(changeFacingEvent.entity_to_change_face);
-            objChangeFace->physics.shared.facing = changeFacingEvent.facing;
+            obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+            obj->physics.shared.facing = changeFacingEvent.facing;
+			this->updated_entities.insert({obj->globalID});
             break;
 		}
 	
 		case EventType::StartAction: {
 			auto startAction = boost::get<StartActionEvent>(event.data);
 			obj = this->objects.getObject(startAction.entity_to_act);
+			this->updated_entities.insert({obj->globalID});
+			
 			//switch case for action (currently using keys)
 			switch (startAction.action) {
 			case ActionType::MoveCam: {
@@ -116,6 +151,7 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StopAction: {
 			auto stopAction = boost::get<StopActionEvent>(event.data);
 			obj = this->objects.getObject(stopAction.entity_to_act);
+			this->updated_entities.insert({obj->globalID});
 			//switch case for action (currently using keys)
 			switch (stopAction.action) {
 			case ActionType::MoveCam: {
@@ -136,8 +172,9 @@ void ServerGameState::update(const EventList& events) {
 		{
 			//currently just sets the velocity to given 
 			auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-			Object* objMoveRel = this->objects.getObject(moveRelativeEvent.entity_to_move);
-			objMoveRel->physics.velocity += moveRelativeEvent.movement;
+			obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
+			obj->physics.velocity += moveRelativeEvent.movement;
+			this->updated_entities.insert(obj->globalID);
 			break;
 
 		}
@@ -145,12 +182,14 @@ void ServerGameState::update(const EventList& events) {
 		{
 			auto selectItemEvent = boost::get<SelectItemEvent>(event.data);
 			player->sharedInventory.selected = selectItemEvent.itemNum;
+			this->updated_entities.insert(player->globalID);
 			break;
 		}
 		case EventType::UseItem:
 		{
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
 			int itemSelected = player->sharedInventory.selected;
+			this->updated_entities.insert(player->globalID);
 
 			if (player->inventory.find(itemSelected) != player->inventory.end()) {
 				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
@@ -165,6 +204,8 @@ void ServerGameState::update(const EventList& events) {
 		{
 			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
 			int itemSelected = player->sharedInventory.selected;
+			this->updated_entities.insert(player->globalID);
+
 			if (player->inventory.find(itemSelected) != player->inventory.end()) {
 				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
 				item->iteminfo.held = false;
@@ -225,6 +266,10 @@ void ServerGameState::updateMovement() {
 		bool collidedZ = false; // cppcheck-suppress variableScope
 
 		if (object->physics.movable) {
+			// right now just marking all movable objects as updated, even if they didn't move
+			// might be smarter to check 
+			this->updated_entities.insert(object->globalID);
+
 			// Check for collision at position to move, if so, dont change position
 			// O(n^2) naive implementation of collision detection
 			glm::vec3 totalMovementStep = object->physics.velocity * object->physics.velocityMultiplier;
@@ -260,6 +305,11 @@ void ServerGameState::updateMovement() {
 
 						if (detectCollision(object->physics, otherObj->physics)) {
 							
+							// just be conservative and mark the other obj has updated
+							// will prevent a lot of errors by trying to be more fine tuned
+							// and this doesn't really hurt us that much
+							this->updated_entities.insert(otherObj->globalID);
+
 							if (otherObj->type == ObjectType::FloorSpike) {
 								object->doCollision(otherObj, *this);
 								otherObj->doCollision(object, *this);
@@ -335,6 +385,7 @@ void ServerGameState::updateItems() {
 			if (pot->iteminfo.used) {
 				if (pot->timeOut()) {
 					pot->revertEffect(*this);
+					this->updated_entities.insert(pot->globalID);
 				}
 			}
 		}
@@ -348,7 +399,9 @@ void ServerGameState::doObjectTicks() {
 		auto obj = objects.get(o);
 		if (obj == nullptr) continue;
 
-		obj->doTick(*this);
+		if (obj->doTick(*this)) {
+			this->updated_entities.insert(obj->globalID);
+		}
 	}
 }
 
@@ -362,9 +415,11 @@ void ServerGameState::updateTraps() {
 		if (trap == nullptr) { continue; } // unsure if i need this?
 		if (trap->shouldTrigger(*this)) {
 			trap->trigger(*this);
+			this->updated_entities.insert(trap->globalID);
 		}
         if (trap->shouldReset(*this)) {
             trap->reset(*this);
+			this->updated_entities.insert(trap->globalID);
         }
 	}
 }
@@ -384,6 +439,7 @@ void ServerGameState::handleDeaths() {
 		if (player == nullptr) continue;
 
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
+			this->updated_entities.insert(player->globalID);
 			player->info.is_alive = false;
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
 		}
@@ -398,6 +454,7 @@ void ServerGameState::handleRespawns() {
 
 		if (!player->info.is_alive) {
 			if (getMsSinceEpoch() >= player->info.respawn_time) {
+				this->updated_entities.insert(player->globalID);
 				player->physics.shared.corner = this->getGrid().getRandomSpawnPoint();
 				player->info.is_alive = true;
 				player->stats.health.increase(player->stats.health.max());
@@ -409,6 +466,7 @@ void ServerGameState::handleRespawns() {
 void ServerGameState::deleteEntities() {
 	for (EntityID id : this->entities_to_delete) {
 		this->objects.removeObject(id);
+		this->updated_entities.insert(id);
 	}
 
 	std::unordered_set<EntityID> empty;
