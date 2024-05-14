@@ -4,6 +4,7 @@
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/smartvector.hpp"
+#include "shared/utilities/custom_hash.hpp"
 #include "server/game/object.hpp"
 #include "server/game/objectmanager.hpp"
 #include "shared/game/event.hpp"
@@ -203,4 +204,12 @@ private:
 	 * @brief 2-D Grid of GridCells (filled after loadMaze() is called).
 	 */
 	Grid grid;
+
+	/**
+	 * @brief Set of pairs of pointers to Objects that have collided in the
+	 * current timestep.
+	 * Maintained by hasObjectCollided() (which adds object pairs to it upon
+	 * collision detection) and updateMovement() (which clears it)
+	 */
+	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
 };
