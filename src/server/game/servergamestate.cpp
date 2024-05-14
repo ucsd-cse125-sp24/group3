@@ -270,6 +270,8 @@ void ServerGameState::updateMovement() {
 		//	Object is movable - compute total movement step
 		glm::vec3 totalMovementStep = 
 			object->physics.velocity * object->physics.velocityMultiplier;
+		totalMovementStep.x *= object->physics.nauseous;
+		totalMovementStep.z *= object->physics.nauseous;
 
 		//	If the object doesn't have a collider, update its movement without
 		//	collision detection
