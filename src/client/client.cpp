@@ -287,9 +287,8 @@ void Client::processServerInput(boost::asio::io_context& context) {
 
 void Client::draw() {
     std::vector<Light> lightSources;
-    for (int i = 0; i < this->gameState.objects.size(); i++) {
-        std::shared_ptr<SharedObject> sharedObject = this->gameState.objects.at(i);
-        if (sharedObject == nullptr) {
+    for (auto& [id, sharedObject] : this->gameState.objects) {
+        if (!sharedObject.has_value()) {
             continue;
         }
         if (sharedObject->type == ObjectType::Torchlight) {
@@ -395,7 +394,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    lightSources,
                     true);
                 break;
             }
@@ -429,7 +428,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    lightSources,
                     true);
                 break;
             }
@@ -440,7 +439,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    lightSources,
                     true);
                 break;
             }
@@ -452,7 +451,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    lightSources,
                     true);
                 break;
             }
@@ -463,7 +462,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    lightSources,
                     true);
                 break;
             }
