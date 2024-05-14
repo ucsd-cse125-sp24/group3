@@ -63,7 +63,7 @@ public:
 
     void doCollision(Object* other, ServerGameState& state) override;
 
-    void doTick(ServerGameState& state) override;
+    bool doTick(ServerGameState& state) override;
 
 private:
     Options opt;
