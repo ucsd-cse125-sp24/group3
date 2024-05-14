@@ -12,10 +12,10 @@ Projectile::Projectile(glm::vec3 corner, glm::vec3 facing, glm::vec3 dimensions,
     this->physics.velocity = glm::normalize(facing);
 }
 
-void Projectile::doTick(ServerGameState& state) {
-    if (!this->opt.homing) return;
+bool Projectile::doTick(ServerGameState& state) {
+    if (!this->opt.homing) return false;
     Object* target = state.objects.getObject(*this->opt.target);
-    if (target == nullptr) return;
+    if (target == nullptr) return false;
 
     auto pos_to_go_to = target->physics.shared.getCenterPosition();
     auto dir_to_target = glm::normalize(pos_to_go_to - this->physics.shared.getCenterPosition());
@@ -23,6 +23,8 @@ void Projectile::doTick(ServerGameState& state) {
     this->physics.velocity += dir_to_target * this->opt.homing_strength;
     this->physics.velocity = glm::normalize(this->physics.velocity);
     this->physics.shared.facing = this->physics.velocity;
+
+    return true;
 }
 
 void Projectile::doCollision(Object* other, ServerGameState& state) {

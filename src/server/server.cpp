@@ -113,25 +113,21 @@ std::chrono::milliseconds Server::doTick() {
             }
 
             this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
-
-            for (const auto& partial_update : this->state.generateSharedGameState()) {
-                sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
-            }
-
             break;
         case GamePhase::GAME: {
             EventList allClientEvents = getAllClientEvents();
 
             updateGameState(allClientEvents);
-
-            for (const auto& partial_update: this->state.generateSharedGameState()) {
-                sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
-            }
             break;
         }
         default:
             std::cerr << "Invalid GamePhase on server:" << static_cast<int>(this->state.getPhase()) << std::endl;
             std::exit(1);
+    }
+
+    // send partial updates to the clients
+    for (const auto& partial_update: this->state.generateSharedGameState(false)) {
+        sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
     }
 
     // Calculate how long we need to wait until the next tick
@@ -148,6 +144,11 @@ void Server::_doAccept() {
             if (!ec) {
                 auto addr = this->socket.remote_endpoint().address();
                 auto new_session = this->_handleNewSession(addr);
+
+                // send complete gamestate to the new person who connected
+                for (auto& partial_update : this->state.generateSharedGameState(true)) {
+                    new_session->sendEventAsync(Event(0, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
+                }
 
                 new_session->startListen();
                 std::cout << "about to send server assign id packet" <<std::endl;
