@@ -19,7 +19,7 @@ public:
 
     virtual void useItem(Object* other, ServerGameState& state);
 
-	void doCollision(Object* other, ServerGameState* state) override;
+	void doCollision(Object* other, ServerGameState& state) override;
 
 	SharedObject toShared() override;
 

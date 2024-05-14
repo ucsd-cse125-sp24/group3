@@ -381,6 +381,25 @@ void Client::draw() {
                     true);
                 break;
             }
+            case ObjectType::FakeWall: {
+                glm::vec3 color;
+                if (sharedObject->trapInfo->triggered) {
+                    color = glm::vec3(0.4f, 0.5f, 0.7f);
+                } else {
+                    // off-color if not currently "visible"
+                    // TODO: change to translucent
+                    color = glm::vec3(0.5f, 0.6f, 0.8f);
+                }
+                auto cube = std::make_unique<Cube>(color);
+                cube->scaleAbsolute(sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
+                break;
+            }
             case ObjectType::SpikeTrap: {
                 auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
@@ -401,6 +420,51 @@ void Client::draw() {
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     lightSources,
+                    true);
+                break;
+            }
+            case ObjectType::FireballTrap: {
+                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 0.5f, 0.5f));
+                cube->scaleAbsolute( sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
+                break;
+            }
+            case ObjectType::ArrowTrap: {
+                auto cube = std::make_unique<Cube>(glm::vec3(0.5f, 0.3f, 0.2f));
+                cube->scaleAbsolute( sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
+                break;
+            }
+            case ObjectType::Projectile: {
+                // TODO use model
+                auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
+                cube->scaleAbsolute( sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
+                break;
+            }
+            case ObjectType::FloorSpike: {
+                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.0f));
+                cube->scaleAbsolute( sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
                     true);
                 break;
             }

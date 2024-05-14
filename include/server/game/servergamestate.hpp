@@ -63,6 +63,11 @@ public:
 	 */
 	void update(const EventList& events);
 
+	/**
+	 * @brief tell the gamestate to delete this entity at the end of the tick
+	 */
+	void markForDeletion(EntityID id);
+
 	//	TODO: Add specific update methods (E.g., updateMovement() to update
 	//	object movement)
 
@@ -70,11 +75,15 @@ public:
 
 	void updateItems();
 
+	void doObjectTicks();
+
 	void updateTraps();
 
 	void handleDeaths();
 
 	void handleRespawns();
+
+	void deleteEntities();
 
 	/*	SharedGameState generation	*/
 
@@ -152,6 +161,11 @@ public:
 	std::string to_string();
 
 private:
+	/**
+	 * list of entities to delete at the end of the tick
+     */
+	std::unordered_set<EntityID> entities_to_delete;
+
 	/**
 	 *  Timestep length in milliseconds.
 	 */

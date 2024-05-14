@@ -2,6 +2,11 @@
 #include "server/game/torchlight.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "server/game/spiketrap.hpp"
+#include "server/game/fireballtrap.hpp"
+#include "server/game/floorspike.hpp"
+#include "server/game/fakewall.hpp"
+#include "server/game/projectile.hpp"
+#include "server/game/arrowtrap.hpp"
 #include "server/game/potion.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "server/game/constants.hpp"
@@ -177,14 +182,20 @@ void ServerGameState::update(const EventList& events) {
     }
 
 	//	TODO: fill update() method with updating object movement
+	doObjectTicks();
 	updateMovement();
 	updateItems();
 	updateTraps();
 	handleDeaths();
 	handleRespawns();
+	deleteEntities();
 	
 	//	Increment timestep
 	this->timestep++;
+}
+
+void ServerGameState::markForDeletion(EntityID id) {
+	this->entities_to_delete.insert(id);
 }
 
 void ServerGameState::updateMovement() {
@@ -192,6 +203,15 @@ void ServerGameState::updateMovement() {
 
 	//	Iterate through all objects in the ServerGameState and update their
 	//	positions and velocities if they are movable.
+
+	// If objects are moving too fast, we split their movement into NUM_INCREMENTAL_STEPS smaller steps
+	const int NUM_INCREMENTAL_STEPS = 6;
+	// This is the threshold that determines if we need to do incremental steps for the movement
+	// if the magnitude of movementStep is greater than this value, then we do incremental steps for the movement
+	const float SINGLE_MOVE_THRESHOLD = 0.33f;
+
+	// Don't set this directly, it is determined by NUM_INCREMENTAL_STEPS, and is just the reciprical
+	const float INCREMENTAL_MOVE_RATIO = 1.0f / NUM_INCREMENTAL_STEPS;
 
 	SmartVector<Object*> gameObjects = this->objects.getObjects();
 	for (int i = 0; i < gameObjects.size(); i++) {
@@ -207,78 +227,98 @@ void ServerGameState::updateMovement() {
 		if (object->physics.movable) {
 			// Check for collision at position to move, if so, dont change position
 			// O(n^2) naive implementation of collision detection
-			glm::vec3 movementStep = object->physics.velocity * object->physics.velocityMultiplier;
-			movementStep.x *= object->physics.nauseous;
-			movementStep.z *= object->physics.nauseous;
+			glm::vec3 totalMovementStep = object->physics.velocity * object->physics.velocityMultiplier;
+			totalMovementStep.x *= object->physics.nauseous;
+			totalMovementStep.z *= object->physics.nauseous;
 
-			// Run collision detection movement if it has a collider
-			if (object->physics.collider != Collider::None) {
-				object->physics.shared.corner += movementStep;
+			glm::vec3 movementStep;
+			int numSteps = 0;
+			if (glm::length(totalMovementStep) > SINGLE_MOVE_THRESHOLD) {
+				movementStep = INCREMENTAL_MOVE_RATIO * totalMovementStep;
+			} else {
+				movementStep = totalMovementStep;
+				numSteps = NUM_INCREMENTAL_STEPS - 1;
+			}
 
-				// TODO : for possible addition for smooth collision detection, but higher computation
-				// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
-				//    Then, take the most steps possible (mario 64 handles it like this)
-				// 2) Using raycasting
+			while (numSteps < NUM_INCREMENTAL_STEPS) {
+				numSteps++;
+				// Run collision detection movement if it has a collider
+				if (object->physics.collider != Collider::None) {
+					object->physics.shared.corner += movementStep;
 
-				for (int j = 0; j < gameObjects.size(); j++) {
-					if (i == j) { continue; }
-					Object* otherObj = gameObjects.get(j);
+					// TODO : for possible addition for smooth collision detection, but higher computation
+					// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
+					//    Then, take the most steps possible (mario 64 handles it like this)
+					// 2) Using raycasting
 
-					if (otherObj->physics.collider == Collider::None) { continue; }
+					for (int j = 0; j < gameObjects.size(); j++) {
+						if (i == j) { continue; }
+						Object* otherObj = gameObjects.get(j);
+						if (otherObj == nullptr) continue;
 
-					if (detectCollision(object->physics, otherObj->physics)) {
+						if (otherObj->physics.collider == Collider::None) { continue; }
 
-						// If item, resolve it here
-						if (otherObj->type == ObjectType::Potion) {
-							otherObj->doCollision(object, this);
-							continue;
-						}
-						collided = true;
-
-						// Check x-axis collision
-						object->physics.shared.corner.z -= movementStep.z;
 						if (detectCollision(object->physics, otherObj->physics)) {
-							collidedX = true;
-						}
+							
+							if (otherObj->type == ObjectType::FloorSpike) {
+								object->doCollision(otherObj, *this);
+								otherObj->doCollision(object, *this);
+								continue;
+							}
+							if (otherObj->type == ObjectType::Potion) {
+								otherObj->doCollision(object, *this);
+								continue;
+							}
+							
 
-						// Check z-axis collision
-						object->physics.shared.corner.z += movementStep.z;
+							collided = true;
+
+							// Check x-axis collision
+							object->physics.shared.corner.z -= movementStep.z;
+							if (detectCollision(object->physics, otherObj->physics)) {
+								collidedX = true;
+							}
+
+							// Check z-axis collision
+							object->physics.shared.corner.z += movementStep.z;
+							object->physics.shared.corner.x -= movementStep.x;
+							if (detectCollision(object->physics, otherObj->physics)) {
+								collidedZ = true;
+							}
+							object->physics.shared.corner.x += movementStep.x;
+
+							object->doCollision(otherObj, *this);
+							otherObj->doCollision(object, *this);
+						}
+					}
+
+					if (collidedX) {
 						object->physics.shared.corner.x -= movementStep.x;
-						if (detectCollision(object->physics, otherObj->physics)) {
-							collidedZ = true;
-						}
-						object->physics.shared.corner.x += movementStep.x;
+					}
 
-						object->doCollision(otherObj, this);
-						otherObj->doCollision(object, this);
+					if (collidedZ) {
+						object->physics.shared.corner.z -= movementStep.z;
 					}
 				}
-
-				if (collidedX) {
-					object->physics.shared.corner.x -= movementStep.x;
-				}
-
-				if (collidedZ) {
-					object->physics.shared.corner.z -= movementStep.z;
-				}
-
-				// update gravity factor
-				if ((object->physics.shared.corner).y >= 0) {
-					object->physics.velocity.y -= GRAVITY;
-				}
 				else {
-					object->physics.velocity.y = 0.0f;
+					object->physics.shared.corner += movementStep;
+				}
+
+				if (object->physics.shared.corner.y <= 0) {
+					object->physics.shared.corner.y = 0;
+				}
+
+				if (collidedX && collidedZ) {
+					break; // don't need to do the further movement steps until we reach totalmovement step
 				}
 			}
 
-			// if current object do not have a collider / this shouldn't happen though
-			else {
-				object->physics.shared.corner += movementStep;
+			// update gravity factor
+			if ((object->physics.shared.corner).y > 0) {
+				object->physics.velocity.y -= GRAVITY;
 			}
-
-			if (object->physics.shared.corner.y <= 0) {
-				// potentially need to make this unconditional further down
-				object->physics.shared.corner.y = 0;
+			else {
+				object->physics.velocity.y = 0.0f;
 			}
 		}
 	}
@@ -302,6 +342,16 @@ void ServerGameState::updateItems() {
 	}
 }
 
+void ServerGameState::doObjectTicks() {
+	auto objects = this->objects.getObjects();
+	for (int o = 0; o < objects.size(); o++) {
+		auto obj = objects.get(o);
+		if (obj == nullptr) continue;
+
+		obj->doTick(*this);
+	}
+}
+
 void ServerGameState::updateTraps() {
 	// check for activations
 
@@ -311,10 +361,10 @@ void ServerGameState::updateTraps() {
 		auto trap = traps.get(i);
 		if (trap == nullptr) { continue; } // unsure if i need this?
 		if (trap->shouldTrigger(*this)) {
-			trap->trigger();
+			trap->trigger(*this);
 		}
         if (trap->shouldReset(*this)) {
-            trap->reset();
+            trap->reset(*this);
         }
 	}
 }
@@ -350,10 +400,19 @@ void ServerGameState::handleRespawns() {
 			if (getMsSinceEpoch() >= player->info.respawn_time) {
 				player->physics.shared.corner = this->getGrid().getRandomSpawnPoint();
 				player->info.is_alive = true;
-				player->stats.health.adjustBase(player->stats.health.max());
+				player->stats.health.increase(player->stats.health.max());
 			}
 		}
 	}
+}
+
+void ServerGameState::deleteEntities() {
+	for (EntityID id : this->entities_to_delete) {
+		this->objects.removeObject(id);
+	}
+
+	std::unordered_set<EntityID> empty;
+	std::swap(this->entities_to_delete, empty);
 }
 
 unsigned int ServerGameState::getTimestep() const {
@@ -510,6 +569,20 @@ void ServerGameState::loadMaze() {
 
 
 			switch (cell->type) {
+				case CellType::FireballTrap: {
+					glm::vec3 dimensions(
+						this->grid.getGridCellWidth() / 2,
+						0.5f,
+						this->grid.getGridCellWidth() / 2
+					);
+					glm::vec3 corner(
+						cell->x * this->grid.getGridCellWidth(),
+						1.0f,
+						cell->y * this->grid.getGridCellWidth()
+					);
+					this->objects.createObject(new FireballTrap(corner, dimensions));
+					break;
+				}
 				case CellType::HealthPotion: {
 					glm::vec3 dimensions(1.0f);
 					glm::vec3 corner(cell->x * this->grid.getGridCellWidth() + 1,
@@ -560,7 +633,8 @@ void ServerGameState::loadMaze() {
 						this->grid.gridCellCenterPosition(cell), glm::vec3(0.0f)));
 					break;
 				}
-				case CellType::Wall: {
+				case CellType::Wall:
+				case CellType::FakeWall: {
 					glm::vec3 dimensions(
 						this->grid.getGridCellWidth(),
 						MAZE_CEILING_HEIGHT,
@@ -572,7 +646,64 @@ void ServerGameState::loadMaze() {
 						cell->y * this->grid.getGridCellWidth()
 					);
 
-					this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
+					if (cell->type == CellType::FakeWall) {
+						this->objects.createObject(new FakeWall(corner, dimensions));
+					} else if (cell->type == CellType::Wall) {
+						this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
+					}
+					break;
+				}
+				case CellType::FloorSpikeFull:
+				case CellType::FloorSpikeHorizontal:
+				case CellType::FloorSpikeVertical: {
+					glm::vec3 corner(
+						cell->x * this->grid.getGridCellWidth(),
+						0.0f, 
+						cell->y * this->grid.getGridCellWidth()
+					);
+
+					FloorSpike::Orientation orientation;
+					if (cell->type == CellType::FloorSpikeFull) {
+						orientation = FloorSpike::Orientation::Full;
+					} else if (cell->type == CellType::FloorSpikeHorizontal) {
+						orientation = FloorSpike::Orientation::Horizontal;
+						corner.z += this->grid.getGridCellWidth() * 0.25f;
+					} else {
+						orientation = FloorSpike::Orientation::Vertical;
+						corner.x += this->grid.getGridCellWidth() * 0.25f;
+					}
+
+					this->objects.createObject(new FloorSpike(corner, orientation, this->grid.getGridCellWidth()));
+					break;
+				}
+
+				case CellType::ArrowTrapDown:
+				case CellType::ArrowTrapLeft:
+				case CellType::ArrowTrapRight:
+				case CellType::ArrowTrapUp: {
+					ArrowTrap::Direction dir;
+					if (cell->type == CellType::ArrowTrapDown) {
+						dir = ArrowTrap::Direction::DOWN;
+					} else if (cell->type == CellType::ArrowTrapUp) {
+						dir = ArrowTrap::Direction::UP;
+					} else if (cell->type == CellType::ArrowTrapLeft) {
+						dir = ArrowTrap::Direction::LEFT;
+					} else {
+						dir = ArrowTrap::Direction::RIGHT;
+					}
+
+					glm::vec3 dimensions(
+						this->grid.getGridCellWidth(),
+						MAZE_CEILING_HEIGHT,
+						this->grid.getGridCellWidth()
+					);
+					glm::vec3 corner(
+						cell->x * this->grid.getGridCellWidth(),
+						0.0f, 
+						cell->y * this->grid.getGridCellWidth()
+					);
+
+					this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
 					break;
 				}
 			}

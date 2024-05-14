@@ -12,7 +12,7 @@ Item::Item(ObjectType type, bool movable, glm::vec3 corner, ModelType model, glm
 void Item::useItem(Object* other, ServerGameState& state) {
 }
 
-void Item::doCollision(Object* other, ServerGameState* state) {
+void Item::doCollision(Object* other, ServerGameState& state) {
 
 	auto player = dynamic_cast<Player*>(other);
 	if (player == nullptr) return; // only allow players to pick up items
