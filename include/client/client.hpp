@@ -21,6 +21,7 @@
 #include "client/audiomanager.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/game/sharedobject.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
@@ -170,6 +171,12 @@ private:
      */
     void draw();
 
+    /**
+     * @brief Draw bounding box around a given SharedObject
+     * only if the client.draw_bboxes field is set to true
+     */
+    void drawBbox(boost::optional<SharedObject> object);
+
     /* Current game state */
     SharedGameState gameState;
 
@@ -177,8 +184,10 @@ private:
     std::shared_ptr<Shader> cube_shader; 
     std::shared_ptr<Shader> model_shader;
     std::shared_ptr<Shader> light_source_shader;
+    std::shared_ptr<Shader> solid_surface_shader;
 
     /* Character models and lighting objects, might need to move to different classes later */
+    std::unique_ptr<Model> cube_model;
     std::unique_ptr<Model> player_model;
     std::unique_ptr<Model> bear_model;
     std::unique_ptr<LightSource> light_source;

@@ -6,16 +6,35 @@
 #include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 
-class ArrowTrap : public Trap {
+/**
+ * Trap which shoots arrows on a timer in a specified direction
+ * 
+ * The arrows fly until they collide with something, at which point they disappear.
+ * 
+ * Originally I wanted arrows to "stick" into walls, but this would lead to a large amount of
+ * arrows stuck to the wall, causing the game state to be larger and larger.
+ * 
+ * We can probably re-implement this after optimizing the newtorking code to only send
+ * info about objects that have updated.
+ */
+class ArrowTrap: public Trap {
 public:
+    enum class Direction {
+        LEFT,
+        UP,
+        DOWN,
+        RIGHT
+    };
+
     /**
      * @param corner Corner position of the spike trap
-     * @param dimensions dimensions of the spike trap (probably will change once we use a non cube model to not have this)
+     * @param dimensions TODO: remove once we use real model with size
+     * @param dir What direction it should shoot in
      */
-    ArrowTrap(glm::vec3 corner, glm::vec3 dimensions);
+    ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir);
 
-    const static std::chrono::seconds TIME_UNTIL_RESET; // how long from initial activation until it can activate again
-    const static int SHOOT_DIST; // how many grid cells away it can shoot you from
+    /// how long from initial activation until it can activate again
+    const static std::chrono::seconds TIME_UNTIL_RESET;
 
     bool shouldTrigger(ServerGameState& state) override;
     void trigger(ServerGameState& state) override;
@@ -23,15 +42,9 @@ public:
     bool shouldReset(ServerGameState& state) override;
     void reset(ServerGameState& state) override;
 
-    void doCollision(Object* other, ServerGameState* state) override;
-
 private:
+    /// The time at which the trap last shot
     std::chrono::time_point<std::chrono::system_clock> shoot_time;
-
-    /**
-     * TODO: optimize this to use spatial collision detection
-     * @param object Object to test if this trap can see
-     * @return distance in meters towards the object, or negative if cannot see.
-     */
-    float canSee(Object* object, ServerGameState* state);
+    /// The direction towards which the trap is shooting
+    Direction dir;
 };

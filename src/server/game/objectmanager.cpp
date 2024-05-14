@@ -1,8 +1,9 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/spiketrap.hpp"
-#include "server/game/arrowtrap.hpp"
+#include "server/game/fireballtrap.hpp"
 #include "server/game/projectile.hpp"
+#include "server/game/potion.hpp"
 
 #include <memory>
 
@@ -32,14 +33,15 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::Projectile:
 			object->typeID = this->projectiles.push(dynamic_cast<Projectile*>(object));
 			break;
-		case ObjectType::ArrowTrap:
+		case ObjectType::FireballTrap:
 		case ObjectType::FakeWall:
 		case ObjectType::SpikeTrap:
 		case ObjectType::FloorSpike:
+		case ObjectType::ArrowTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
 			break;
-		case ObjectType::Item:
-			object->typeID = this->items.push(dynamic_cast<Item*>(object));
+		case ObjectType::Potion:
+			object->typeID = this->items.push(dynamic_cast<Potion*>(object));
 			break;
 		case ObjectType::SolidSurface:
 			object->typeID = this->solid_surfaces.push(dynamic_cast<SolidSurface*>(object));
@@ -81,7 +83,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		//	SmartVector
 		this->base_objects.remove(object->typeID);
 		break;
-	case ObjectType::ArrowTrap:
+	case ObjectType::FireballTrap:
 	case ObjectType::SpikeTrap:
 		this->traps.remove(object->typeID);
 		break;
@@ -96,6 +98,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		break;
 	case ObjectType::Enemy:
 		this->enemies.remove(object->typeID);
+		break;
+	case ObjectType::Potion:
+		this->items.remove(object->typeID);
 		break;
 	}
 
@@ -194,6 +199,10 @@ SmartVector<Trap*> ObjectManager::getTraps() {
 	return this->traps;
 }
 
+SmartVector<Projectile*> ObjectManager::getProjectiles() {
+	return this->projectiles;
+}
+
 /*	Object Movement	*/
 bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 	if (object == nullptr) {
@@ -233,21 +242,16 @@ std::vector<glm::ivec2> ObjectManager::objectGridCells(Object* object) {
 
 /*	SharedGameState generation	*/
 
-std::vector<std::shared_ptr<SharedObject>> ObjectManager::toShared() {
-	std::vector<std::shared_ptr<SharedObject>> shared;
+std::vector<boost::optional<SharedObject>> ObjectManager::toShared() {
+	std::vector<boost::optional<SharedObject>> shared;
 
-	//	Fill shared SmartVector of SharedObjects
 	for (int i = 0; i < this->objects.size(); i++) {
 		Object* object = this->objects.get(i);
 
 		if (object == nullptr) {
-			//	Push empty object to SharedObject SmartVector
-			shared.push_back(nullptr);
-		}
-		else {
-			//	Create a SharedObject representation for this object and push it
-			//	to the SharedObject SmartVector
-			shared.push_back(std::make_shared<SharedObject>(object->toShared()));
+			shared.push_back({});
+		} else {
+			shared.push_back(object->toShared());
 		}
 	}
 

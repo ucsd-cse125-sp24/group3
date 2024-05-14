@@ -6,6 +6,9 @@
 #include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 
+/**
+ * A spike trap which lines the floor and deals damage to players that walk over them
+ */
 class FloorSpike : public Trap {
 public:
     enum class Orientation {
@@ -27,7 +30,7 @@ public:
 
     bool shouldReset(ServerGameState& state) override;
 
-    void doCollision(Object* other, ServerGameState* state) override;
+    void doCollision(Object* other, ServerGameState& state) override;
 
 private:
     std::chrono::time_point<std::chrono::system_clock> shoot_time;

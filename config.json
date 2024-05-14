@@ -3,7 +3,7 @@
       "timestep_length_ms": 30,
       "maze": {
         "directory": "maps",
-        "maze_file": "room.maze"
+        "maze_file": "tylers_hellhole.maze"
       }
     },
     "network": {
@@ -11,13 +11,14 @@
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "The Room",
+        "lobby_name": "Tyler's Hellhole",
         "lobby_broadcast": true,
         "max_players": 1
     },
     "client": {
         "default_name": "John Doe",
         "lobby_discovery": true,
-        "window_width": 1500
+        "window_width": 1500,
+        "draw_bboxes": false
     }
 }

@@ -27,9 +27,9 @@ bool FloorSpike::shouldReset(ServerGameState& state) {
     return false;
 }
 
-void FloorSpike::doCollision(Object* obj, ServerGameState* state) {
+void FloorSpike::doCollision(Object* obj, ServerGameState& state) {
     auto creature = dynamic_cast<Creature*>(obj);
     if (creature == nullptr) return;
 
-    creature->stats.health.adjustBase(-DAMAGE);
+    creature->stats.health.decrease(DAMAGE);
 }

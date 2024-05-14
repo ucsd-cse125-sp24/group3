@@ -6,7 +6,6 @@
 #include "glm/gtx/hash.hpp"
 
 #include "server/game/object.hpp"
-#include "server/game/item.hpp"
 #include "server/game/player.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/solidsurface.hpp"
@@ -15,6 +14,7 @@
 // forward declarations to use pointers
 class Trap; 
 class Projectile;
+class Item;
 
 #include "shared/utilities/smartvector.hpp"
 
@@ -159,6 +159,14 @@ public:
 	 */
 	SmartVector<Trap*> getTraps();
 
+	/**
+	 * @brief Get a list of all Projectiles in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Projectile pointers of all Projectile objects in the game
+	 * instance
+	 */
+	SmartVector<Projectile*> getProjectiles();
+
 	/*	Object Movement	*/
 	
 	/**
@@ -198,7 +206,7 @@ public:
 	 * @return Returns a std::vector<SharedObject> that corresponds to all
 	 * objects in the game instance.
 	 */
-	std::vector<std::shared_ptr<SharedObject>> toShared();
+	std::vector<boost::optional<SharedObject>> toShared();
 
 private:
 	/*

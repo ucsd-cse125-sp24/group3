@@ -1,11 +1,16 @@
 #include "server/game/servergamestate.hpp"
-#include "shared/game/sharedgamestate.hpp"
 #include "server/game/spiketrap.hpp"
-#include "server/game/arrowtrap.hpp"
+#include "server/game/fireballtrap.hpp"
 #include "server/game/floorspike.hpp"
 #include "server/game/fakewall.hpp"
+#include "server/game/projectile.hpp"
+#include "server/game/arrowtrap.hpp"
+#include "server/game/potion.hpp"
+#include "server/game/constants.hpp"
+#include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
+#include "shared/network/constants.hpp"
 
 #include <fstream>
 
@@ -42,25 +47,55 @@ ServerGameState::ServerGameState(GamePhase start_phase, const GameConfig& config
 ServerGameState::~ServerGameState() {}
 
 /*	SharedGameState generation	*/
-SharedGameState ServerGameState::generateSharedGameState() {
-	//	Create a new SharedGameState instance and populate it with this
-	//	ServerGameState's data
-	SharedGameState shared;
+std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_all) {
+	std::vector<SharedGameState> partial_updates;
+	auto all_objects = this->objects.toShared();
 
-	//	Initialize object vector
-	shared.objects = this->objects.toShared();
+	auto getUpdateTemplate = [this]() {
+		SharedGameState curr_update;
+		curr_update.timestep = this->timestep;
+		curr_update.timestep_length = this->timestep_length;
+		curr_update.lobby = this->lobby;
+		curr_update.phase = this->phase;
+		return curr_update;
+	};
 
-	//	Copy timestep data
-	shared.timestep = this->timestep;
-	shared.timestep_length = this->timestep_length;
+	if (send_all) {
+		for (int i = 0; i < all_objects.size(); i += OBJECTS_PER_UPDATE) {
+			SharedGameState curr_update = getUpdateTemplate();
 
-	//	Copy Lobby data
-	shared.lobby = this->lobby;
-	
-	//	Copy GamePhase
-	shared.phase = this->phase;
+			for (int j = 0; j < OBJECTS_PER_UPDATE && i + j < all_objects.size(); j++) {
+				EntityID curr_id = i + j;
+				curr_update.objects.insert({curr_id, all_objects.at(curr_id)});
+			}
 
-	return shared;
+			partial_updates.push_back(curr_update);
+		}
+	} else {
+		SharedGameState curr_update = getUpdateTemplate();
+
+		int num_in_curr_update = 0;
+		for (EntityID id : this->updated_entities) {
+			curr_update.objects.insert({id, all_objects.at(id)});
+			num_in_curr_update++;
+
+			if (num_in_curr_update >= OBJECTS_PER_UPDATE) {
+				partial_updates.push_back(curr_update);
+				curr_update = getUpdateTemplate();
+				num_in_curr_update = 0;
+			}
+		}
+
+		if (num_in_curr_update > 0) {
+			partial_updates.push_back(curr_update);
+		}
+
+		// wipe updated entities list
+		std::unordered_set<EntityID> empty;
+		std::swap(this->updated_entities, empty);
+	}
+
+	return partial_updates;
 }
 
 /*	Update methods	*/
@@ -79,14 +114,17 @@ void ServerGameState::update(const EventList& events) {
         switch (event.type) {
 		case EventType::ChangeFacing: {
             auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
-            Object* objChangeFace = this->objects.getObject(changeFacingEvent.entity_to_change_face);
-            objChangeFace->physics.shared.facing = changeFacingEvent.facing;
+            obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+            obj->physics.shared.facing = changeFacingEvent.facing;
+			this->updated_entities.insert({obj->globalID});
             break;
 		}
 	
 		case EventType::StartAction: {
 			auto startAction = boost::get<StartActionEvent>(event.data);
 			obj = this->objects.getObject(startAction.entity_to_act);
+			this->updated_entities.insert({obj->globalID});
+			
 			//switch case for action (currently using keys)
 			switch (startAction.action) {
 			case ActionType::MoveCam: {
@@ -111,6 +149,7 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StopAction: {
 			auto stopAction = boost::get<StopActionEvent>(event.data);
 			obj = this->objects.getObject(stopAction.entity_to_act);
+			this->updated_entities.insert({obj->globalID});
 			//switch case for action (currently using keys)
 			switch (stopAction.action) {
 			case ActionType::MoveCam: {
@@ -127,13 +166,53 @@ void ServerGameState::update(const EventList& events) {
 			break;
 		}
 	
-        case EventType::MoveRelative:
+		case EventType::MoveRelative:
 		{
 			//currently just sets the velocity to given 
-            auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-            Object* objMoveRel = this->objects.getObject(moveRelativeEvent.entity_to_move);
-            objMoveRel->physics.velocity += moveRelativeEvent.movement;
-            break;
+			auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
+			obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
+			obj->physics.velocity += moveRelativeEvent.movement;
+			this->updated_entities.insert(obj->globalID);
+			break;
+
+		}
+		case EventType::SelectItem:
+		{
+			auto selectItemEvent = boost::get<SelectItemEvent>(event.data);
+			player->sharedInventory.selected = selectItemEvent.itemNum;
+			this->updated_entities.insert(player->globalID);
+			break;
+		}
+		case EventType::UseItem:
+		{
+			auto useItemEvent = boost::get<UseItemEvent>(event.data);
+			int itemSelected = player->sharedInventory.selected;
+			this->updated_entities.insert(player->globalID);
+
+			if (player->inventory.find(itemSelected) != player->inventory.end()) {
+				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
+				item->useItem(player, *this);
+				player->inventory.erase(itemSelected);
+				player->sharedInventory.inventory.erase(itemSelected);
+				//TODO : should also remove item afterwards
+			}
+			break;
+		}
+		case EventType::DropItem:
+		{
+			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
+			int itemSelected = player->sharedInventory.selected;
+			this->updated_entities.insert(player->globalID);
+
+			if (player->inventory.find(itemSelected) != player->inventory.end()) {
+				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
+				item->iteminfo.held = false;
+				item->physics.collider = Collider::Box;
+				item->physics.shared.corner = (player->physics.shared.corner + (player->physics.shared.facing * 4.0f)) * glm::vec3(1.0f, 0.0f, 1.0f);
+				player->inventory.erase(itemSelected);
+				player->sharedInventory.inventory.erase(itemSelected);
+			}
+			break;
 		}
 
 		// default:
@@ -142,14 +221,20 @@ void ServerGameState::update(const EventList& events) {
     }
 
 	//	TODO: fill update() method with updating object movement
-	useItem();
+	doObjectTicks();
 	updateMovement();
+	updateItems();
 	updateTraps();
 	handleDeaths();
 	handleRespawns();
+	deleteEntities();
 	
 	//	Increment timestep
 	this->timestep++;
+}
+
+void ServerGameState::markForDeletion(EntityID id) {
+	this->entities_to_delete.insert(id);
 }
 
 void ServerGameState::updateMovement() {
@@ -159,12 +244,12 @@ void ServerGameState::updateMovement() {
 	//	positions and velocities if they are movable.
 
 	//	If objects move too fast, split their movement into NUM_INCREMENTAL_STEPS
-	const int NUM_INCREMENTAL_STEPS = 5;
+	const int NUM_INCREMENTAL_STEPS = 6;
 
 	//	This is the threshold that determines whether we need to use incremental
 	//	steps. If the magnitude of the movementStep vector is greater than this
 	//	value, then we'll split the movementStep into multiple incremental steps
-	const float SINGLE_MOVE_THRESHOLD = 0.20f;
+	const float SINGLE_MOVE_THRESHOLD = 0.33f;
 
 	//	This ratio is the reciprocal of NUM_INCREMENTAL_STEPS
 	const float INCREMENTAL_MOVE_RATIO = 1.0f / NUM_INCREMENTAL_STEPS;
@@ -296,8 +381,8 @@ void ServerGameState::updateMovement() {
 	//	collision detection is not performed!)
 	//	Iterate through set of collided objects
 	for (std::pair<Object*, Object*> objects : this->collidedObjects) {
-		objects.first->doCollision(objects.second, this);
-		objects.second->doCollision(objects.first, this);
+		objects.first->doCollision(objects.second, *this);
+		objects.second->doCollision(objects.first, *this);
 	}
 
 	//	Clear set of collided objects for this timestep
@@ -352,17 +437,48 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 	return false;
 }
 
-void ServerGameState::useItem() {
-	// Update whatever is necesssary for item
-	// This method may need to be broken down for different types
-	// of item types
-
-	SmartVector<Item*> items = this->objects.getItems();
+void ServerGameState::updateItems() {
+	auto items = this->objects.getItems();
 	for (int i = 0; i < items.size(); i++) {
-		const Item* item = items.get(i);
+		auto item = items.get(i);
+		if (item == nullptr) { continue; }
 
-		if (item == nullptr)
-			continue;
+		if (item->type == ObjectType::Potion) {
+			Potion* pot = dynamic_cast<Potion*>(item);
+			if (pot->iteminfo.used) {
+				if (pot->timeOut()) {
+					pot->revertEffect(*this);
+					this->updated_entities.insert(pot->globalID);
+				}
+			}
+		}
+
+	}
+}
+
+//void ServerGameState::useItem() {
+//	// Update whatever is necesssary for item
+//	// This method may need to be broken down for different types
+//	// of item types
+//
+//	SmartVector<Item*> items = this->objects.getItems();
+//	for (int i = 0; i < items.size(); i++) {
+//		const Item* item = items.get(i);
+//
+//		if (item == nullptr)
+//			continue;
+//	}
+//}
+
+void ServerGameState::doObjectTicks() {
+	auto objects = this->objects.getObjects();
+	for (int o = 0; o < objects.size(); o++) {
+		auto obj = objects.get(o);
+		if (obj == nullptr) continue;
+
+		if (obj->doTick(*this)) {
+			this->updated_entities.insert(obj->globalID);
+		}
 	}
 }
 
@@ -376,9 +492,11 @@ void ServerGameState::updateTraps() {
 		if (trap == nullptr) { continue; } // unsure if i need this?
 		if (trap->shouldTrigger(*this)) {
 			trap->trigger(*this);
+			this->updated_entities.insert(trap->globalID);
 		}
         if (trap->shouldReset(*this)) {
             trap->reset(*this);
+			this->updated_entities.insert(trap->globalID);
         }
 	}
 }
@@ -398,6 +516,7 @@ void ServerGameState::handleDeaths() {
 		if (player == nullptr) continue;
 
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
+			this->updated_entities.insert(player->globalID);
 			player->info.is_alive = false;
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
 		}
@@ -412,12 +531,23 @@ void ServerGameState::handleRespawns() {
 
 		if (!player->info.is_alive) {
 			if (getMsSinceEpoch() >= player->info.respawn_time) {
+				this->updated_entities.insert(player->globalID);
 				player->physics.shared.corner = this->getGrid().getRandomSpawnPoint();
 				player->info.is_alive = true;
-				player->stats.health.adjustBase(player->stats.health.max());
+				player->stats.health.increase(player->stats.health.max());
 			}
 		}
 	}
+}
+
+void ServerGameState::deleteEntities() {
+	for (EntityID id : this->entities_to_delete) {
+		this->objects.removeObject(id);
+		this->updated_entities.insert(id);
+	}
+
+	std::unordered_set<EntityID> empty;
+	std::swap(this->entities_to_delete, empty);
 }
 
 unsigned int ServerGameState::getTimestep() const {
@@ -573,7 +703,7 @@ void ServerGameState::loadMaze() {
 			GridCell* cell = this->grid.getCell(col, row);
 
 			switch (cell->type) {
-				case CellType::ArrowTrap: {
+				case CellType::FireballTrap: {
 					glm::vec3 dimensions(
 						Grid::grid_cell_width / 2,
 						0.5f,
@@ -584,7 +714,37 @@ void ServerGameState::loadMaze() {
 						1.0f,
 						cell->y * Grid::grid_cell_width
 					);
-					this->objects.createObject(new ArrowTrap(corner, dimensions));
+					this->objects.createObject(new FireballTrap(corner, dimensions));
+					break;
+				}
+				case CellType::HealthPotion: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+							0,
+							cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Potion(corner, dimensions, PotionType::Health));
+					break;
+				}
+				case CellType::NauseaPotion: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x* Grid::grid_cell_width + 1,
+						0,
+						cell->y* Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Potion(corner, dimensions, PotionType::Nausea));
+					break;
+				}
+				case CellType::InvisibilityPotion: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x* Grid::grid_cell_width + 1,
+						0,
+						cell->y* Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Potion(corner, dimensions, PotionType::Invisibility));
 					break;
 				}
 				case CellType::SpikeTrap: {
@@ -649,6 +809,36 @@ void ServerGameState::loadMaze() {
 					}
 
 					this->objects.createObject(new FloorSpike(corner, orientation, Grid::grid_cell_width));
+					break;
+				}
+
+				case CellType::ArrowTrapDown:
+				case CellType::ArrowTrapLeft:
+				case CellType::ArrowTrapRight:
+				case CellType::ArrowTrapUp: {
+					ArrowTrap::Direction dir;
+					if (cell->type == CellType::ArrowTrapDown) {
+						dir = ArrowTrap::Direction::DOWN;
+					} else if (cell->type == CellType::ArrowTrapUp) {
+						dir = ArrowTrap::Direction::UP;
+					} else if (cell->type == CellType::ArrowTrapLeft) {
+						dir = ArrowTrap::Direction::LEFT;
+					} else {
+						dir = ArrowTrap::Direction::RIGHT;
+					}
+
+					glm::vec3 dimensions(
+						Grid::grid_cell_width,
+						MAZE_CEILING_HEIGHT,
+						Grid::grid_cell_width
+					);
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width,
+						0.0f, 
+						cell->y * Grid::grid_cell_width
+					);
+
+					this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
 					break;
 				}
 			}

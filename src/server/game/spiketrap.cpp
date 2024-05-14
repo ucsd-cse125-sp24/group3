@@ -50,7 +50,7 @@ void SpikeTrap::trigger(ServerGameState& state) {
     this->reset_dimensions = this->physics.shared.dimensions;
 
     this->physics.movable = true;
-    this->physics.velocity.y = -8.0f * GRAVITY;
+    this->physics.velocity.y = -50.0f * GRAVITY;
 
     this->dropped_time = std::chrono::system_clock::now();
 }
@@ -69,13 +69,13 @@ void SpikeTrap::reset(ServerGameState& state) {
     }
 }
 
-void SpikeTrap::doCollision(Object* other, ServerGameState* state) {
+void SpikeTrap::doCollision(Object* other, ServerGameState& state) {
     auto creature = dynamic_cast<Creature*>(other);
     if (creature == nullptr) return; // not a creature, so don't really care
 
     // if it is falling
     if (this->physics.velocity.y < 0 && this->physics.shared.corner.y != 0) {
-        creature->stats.health.adjustBase(-DAMAGE);
+        creature->stats.health.decrease(DAMAGE);
     }
 }
 

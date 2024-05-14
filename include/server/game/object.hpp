@@ -33,12 +33,13 @@ struct Physics {
 	 * set by the setModel function!
 	 * NOTE: velocity defaults to 0
 	 * NOTE: velocityMultitplier defaults to 1
+	 * NOTE: Dizziness defaults to 1
 	 */
 	Physics(bool movable, Collider collider,
 		glm::vec3 corner, glm::vec3 facing,
 		glm::vec3 dimensions = glm::vec3(1.0f)):
 		shared{.corner=corner, .facing=facing, .dimensions=dimensions},
-		movable(movable), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)),
+		movable(movable), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)), nauseous(1.0f),
 		collider(collider)
 	{}
 
@@ -63,6 +64,11 @@ struct Physics {
 	 * @brief 3-D vector that denotes this object's velocity multiplier.
 	 */
 	glm::vec3 velocityMultiplier;
+
+	/**
+	 * @brief Factor for potion of nausea
+	 */
+	float nauseous;
 
 	/**
 	 * @brief This object's collider type.
@@ -144,7 +150,21 @@ public:
 	 * NOTE: default implementation does nothing
 	 * only override behaviors will matter
      */
-	virtual void doCollision(Object* other, ServerGameState* state) {};
+	virtual void doCollision(Object* other, ServerGameState& state) {};
+
+	/**
+	 * @brief code to run for this object on every tick
+	 * 
+	 * NOTE: by default does nothing, but certain objects can override
+	 * this to do specific effects
+	 * 
+	 * IMPORTANT: make sure in your derived versions that you return true if the entity
+	 * was updated, otherwise the server won't know to send down the updated gamestate
+	 * for that object to the client!
+	 * 
+	 * @returns True if the entity was updated, false otherwise
+	 */
+	virtual bool doTick(ServerGameState& state) { return false; }
 
 	/*	Debugger Methods	*/
 

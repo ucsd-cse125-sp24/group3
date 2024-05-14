@@ -6,11 +6,18 @@ enum class CellType {
 	Spawn,
 	Enemy,
 	SpikeTrap,
-	ArrowTrap,
+	FireballTrap,
 	FloorSpikeHorizontal,
 	FloorSpikeVertical,
 	FloorSpikeFull,
 	FakeWall,
+	ArrowTrapUp,
+	ArrowTrapDown,
+	ArrowTrapLeft,
+	ArrowTrapRight,
+	HealthPotion,
+	NauseaPotion,
+	InvisibilityPotion,
 	Unknown
 };
 

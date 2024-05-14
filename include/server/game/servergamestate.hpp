@@ -6,9 +6,9 @@
 #include "shared/utilities/smartvector.hpp"
 #include "shared/utilities/custom_hash.hpp"
 #include "server/game/object.hpp"
-#include "server/game/objectmanager.hpp"
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"
+#include "server/game/objectmanager.hpp"
 
 #include <string>
 #include <vector>
@@ -64,6 +64,11 @@ public:
 	 */
 	void update(const EventList& events);
 
+	/**
+	 * @brief tell the gamestate to delete this entity at the end of the tick
+	 */
+	void markForDeletion(EntityID id);
+
 	//	TODO: Add specific update methods (E.g., updateMovement() to update
 	//	object movement)
 
@@ -84,14 +89,17 @@ public:
 	bool hasObjectCollided(Object* object, glm::vec3 newCornerPosition);
 
 	//	TODO: Add implementations of items
+	void updateItems();
 
-	void useItem();
+	void doObjectTicks();
 
 	void updateTraps();
 
 	void handleDeaths();
 
 	void handleRespawns();
+
+	void deleteEntities();
 
 	/*	SharedGameState generation	*/
 
@@ -100,10 +108,16 @@ public:
 	/**
 	 * @brief Generate a SharedGameState object from this ServerGameState
 	 * instance.
-	 * @return ShareGameState instance that represents this ServerGameState
-	 * instance.
+	 * @param send_all True if you should send a 100% update to the client, false
+	 * if you should just send the updated objects
+	 * 
+	 * NOTE: if send_all is false and you generate an update based on the diffs, this
+	 * function will clear the updated_entities unordered_set for you
+	 * 
+	 * @return vector of partial ShareGameState instances that represent different pieces
+	 * of the SharedGameState instance
 	 */
-	SharedGameState generateSharedGameState();
+	std::vector<SharedGameState> generateSharedGameState(bool send_all);
 
 	/*	Other getters and setters	*/
 
@@ -169,6 +183,17 @@ public:
 	std::string to_string();
 
 private:
+	/**
+	 * list of entities to delete at the end of the tick
+     */
+	std::unordered_set<EntityID> entities_to_delete;
+
+	/**
+	 * list of entities that have been changed, so we only have to include
+	 * these in partial updates to the clients 
+	 */
+	std::unordered_set<EntityID> updated_entities;
+
 	/**
 	 *  Timestep length in milliseconds.
 	 */

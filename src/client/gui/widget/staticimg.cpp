@@ -66,6 +66,7 @@ void StaticImg::render() {
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    glDisable(GL_CULL_FACE);
     StaticImg::shader->use();
 
     // glm::mat4 projection = GUI_PROJECTION_MATRIX();
@@ -83,6 +84,8 @@ void StaticImg::render() {
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
+
+    glEnable(GL_CULL_FACE);
 }
 
 }
