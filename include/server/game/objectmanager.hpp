@@ -171,7 +171,7 @@ public:
 	 * @return Returns a std::vector<SharedObject> that corresponds to all
 	 * objects in the game instance.
 	 */
-	std::vector<std::shared_ptr<SharedObject>> toShared();
+	std::vector<boost::optional<SharedObject>> toShared();
 
 private:
 	/*

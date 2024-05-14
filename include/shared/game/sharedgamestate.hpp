@@ -54,7 +54,7 @@ struct Lobby {
  * timestep. It is intended only for use by the client(s).
  */
 struct SharedGameState {
-	std::vector<std::shared_ptr<SharedObject>> objects;
+	std::unordered_map<EntityID, boost::optional<SharedObject>> objects;
 
 	std::chrono::milliseconds timestep_length;
 
@@ -65,7 +65,7 @@ struct SharedGameState {
 	GamePhase phase;
 
 	SharedGameState():
-		objects(std::vector<std::shared_ptr<SharedObject>>())
+		objects(std::unordered_map<EntityID, boost::optional<SharedObject>>())
 	{
 		this->phase = GamePhase::TITLE_SCREEN;
 		this->timestep = FIRST_TIMESTEP;
@@ -74,7 +74,7 @@ struct SharedGameState {
 	}
 
 	SharedGameState(GamePhase start_phase, const GameConfig& config):
-		objects(std::vector<std::shared_ptr<SharedObject>>())
+		objects(std::unordered_map<EntityID, boost::optional<SharedObject>>())
 	{
 		this->phase = start_phase;
 		this->timestep = FIRST_TIMESTEP;
@@ -86,4 +86,11 @@ struct SharedGameState {
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
 		ar & phase & lobby & objects;
 	}
+
+	/**
+	 * Updates this SharedGameState with the changes from the incoming SharedGameState
+	 * 
+	 * @param update New Partial gamestate update from the server
+	 */
+	void update(const SharedGameState& update);
 };
