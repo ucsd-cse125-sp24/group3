@@ -264,6 +264,9 @@ void ServerGameState::updateMovement() {
 		if (object == nullptr || !(object->physics.movable))
 			continue;
 
+		//	Object is movable - for now, add to updated entities set
+		this->updated_entities.insert(object->globalID);
+
 		//	Object is movable - compute total movement step
 		glm::vec3 totalMovementStep = 
 			object->physics.velocity * object->physics.velocityMultiplier;
@@ -383,6 +386,10 @@ void ServerGameState::updateMovement() {
 	for (std::pair<Object*, Object*> objects : this->collidedObjects) {
 		objects.first->doCollision(objects.second, *this);
 		objects.second->doCollision(objects.first, *this);
+
+		//	Add both collided objects to updated entities set
+		this->updated_entities.insert(objects.first->globalID);
+		this->updated_entities.insert(objects.second->globalID);
 	}
 
 	//	Clear set of collided objects for this timestep
