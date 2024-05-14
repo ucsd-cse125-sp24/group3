@@ -289,7 +289,6 @@ void ServerGameState::updateMovement() {
 			object->physics.velocity.y = 0.0f;
 		}
 	}
-
 }
 
 //void ServerGameState::updateMovement() {
@@ -767,6 +766,17 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 			//	Detect whether a collision has occurred
 			if (detectCollision(object->physics, otherObj->physics))
 			{
+				//	Handle collision response between the two objects
+				object->doCollision(otherObj, this);
+				otherObj->doCollision(object, this);
+
+				//	Exception - if the other object is a floor spike trap,
+				//	perform collision handling but do not return true as the
+				//	trap doesn't affect the movement of the object it hits
+				if (otherObj->type == ObjectType::FloorSpike) {
+					continue;
+				}
+
 				return true;
 			}
 		}
