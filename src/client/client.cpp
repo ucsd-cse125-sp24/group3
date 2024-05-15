@@ -261,7 +261,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
 }
 
 void Client::processServerInput(boost::asio::io_context& context) {
-    context.run_for(30ms);
+    context.run_for(5ms);
 
     // probably want to put rendering logic inside of client, so that this main function
     // mimics the server one where all of the important logic is done inside of a run command

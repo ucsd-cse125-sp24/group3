@@ -12,20 +12,20 @@
 using namespace std::chrono_literals;
 
 int main(int argc, char** argv) {
-    MazeGenerator generator;
+    // MazeGenerator generator;
 
-    Grid grid = generator.generate();
-    grid.writeToFile();
+    // Grid grid = generator.generate();
+    // grid.writeToFile();
 
-    // auto config = GameConfig::parse(argc, argv);
-    // boost::asio::io_context context;
-    // Server server(context, config);
+    auto config = GameConfig::parse(argc, argv);
+    boost::asio::io_context context;
+    Server server(context, config);
 
-    // while (true) {
-    //     // Do one tick of updates
-    //     auto wait_time = server.doTick();
+    while (true) {
+        // Do one tick of updates
+        auto wait_time = server.doTick();
 
-    //     // Wait until next tick
-    //     context.run_for(wait_time);
-    // }
+        // Wait until next tick
+        context.run_for(wait_time);
+    }
 }
