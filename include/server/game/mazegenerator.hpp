@@ -10,8 +10,11 @@
 #include <optional>
 #include <boost/filesystem.hpp>
 #include "server/game/grid.hpp"
+#include "shared/utilities/config.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/hash.hpp"
+
+#define REQUIRED_NUM_ROOMS 50
 
 enum class RoomType {
     EMPTY, // testing
@@ -21,7 +24,8 @@ enum class RoomType {
     HARD,
     LOOT,
     DIVERSE,
-    EXIT
+    EXIT,
+    CUSTOM // fully custom maze
 };
 
 #define ALL_TYPES { \
@@ -33,6 +37,7 @@ enum class RoomType {
     RoomType::LOOT, \
     RoomType::DIVERSE, \
     RoomType::EXIT, \
+    RoomType::CUSTOM \
 }
 
 enum RoomEntry {
@@ -115,9 +120,9 @@ struct ivec2_comparator {
 
 class MazeGenerator {
 public:
-    MazeGenerator();
+    MazeGenerator(GameConfig config);
 
-    Grid generate();
+    std::optional<Grid> generate();
 
 private:
     RoomType _getRoomType(boost::filesystem::path path);
@@ -149,7 +154,7 @@ private:
 
     std::map<glm::ivec2, int, ivec2_comparator> maze;
 
-    void _loadRoom(boost::filesystem::path path);
+    void _loadRoom(boost::filesystem::path path, bool procedural);
     std::unordered_map<RoomClass, std::shared_ptr<Room>, RoomClassHash> rooms_by_class;
     std::unordered_map<RoomType, std::vector<std::shared_ptr<Room>>> rooms_by_type;
     std::unordered_map<int , std::shared_ptr<Room>> rooms_by_id;

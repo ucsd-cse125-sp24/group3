@@ -15,9 +15,10 @@
 #include "server/game/grid.hpp"
 #include "server/game/gridcell.hpp"
 #include "shared/utilities/rng.hpp"
+#include "shared/utilities/config.hpp"
 
 
-MazeGenerator::MazeGenerator() {
+MazeGenerator::MazeGenerator(GameConfig config) {
     this->_next_room_id = 0;
 
     boost::filesystem::path rooms_dir = getRepoRoot() / "maps" / "rooms";
@@ -30,24 +31,45 @@ MazeGenerator::MazeGenerator() {
         this->rooms_by_type.insert({type, std::vector<std::shared_ptr<Room>>()});
     }
 
+    // has to happen after the for loop loading in the type vectors
+    if (!config.game.maze.procedural) {
+        auto path = getRepoRoot() / config.game.maze.directory / config.game.maze.maze_file;
+        this->_loadRoom(path, false);
+        return;
+    }
+
     for (const auto & entry : boost::filesystem::directory_iterator(dir_10x10)) {
-        this->_loadRoom(entry.path());
+        this->_loadRoom(entry.path(), true);
     }
     for (const auto & entry : boost::filesystem::directory_iterator(dir_20x20)) {
-        this->_loadRoom(entry.path());
+        this->_loadRoom(entry.path(), true);
     }
     for (const auto & entry : boost::filesystem::directory_iterator(dir_40x40)) {
-        this->_loadRoom(entry.path());
+        this->_loadRoom(entry.path(), true);
     }
 
 }
 
 
-Grid MazeGenerator::generate() {
+std::optional<Grid> MazeGenerator::generate() {
+    if (this->rooms_by_id.size() == 1) {
+        // not procedural because we only generated one potential room, so just return that as the entire maze
+        return this->rooms_by_id.at(0)->grid;
+    }
+
+    // clear generated code in case this is a second, third attempt
+    this->maze.clear();
+    std::queue<std::pair<glm::ivec2, RoomEntry>> empty;
+    std::swap(this->frontier, empty);
+    
     _placeRoom(_pullRoomByType(RoomType::SPAWN), glm::ivec2(0, 0));
 
     int num_rooms_placed = 1;
-    while (!this->frontier.empty() && num_rooms_placed < 30) {
+    while (num_rooms_placed < REQUIRED_NUM_ROOMS) {
+        if (this->frontier.empty()) {
+            return {};
+        }
+
         const auto& [coord, required_entryway] = this->frontier.front();
         this->frontier.pop();
 
@@ -155,7 +177,7 @@ Grid MazeGenerator::generate() {
 }
 
 
-void MazeGenerator::_loadRoom(boost::filesystem::path path) {
+void MazeGenerator::_loadRoom(boost::filesystem::path path, bool procedural) {
     std::cout << "Loading room " << path << "\n";
 
 	std::ifstream file;
@@ -198,9 +220,11 @@ void MazeGenerator::_loadRoom(boost::filesystem::path path) {
 	}
 
     RoomSize size = this->_parseRoomSize(rows, columns);
-    if (size == RoomSize::INVALID) {
-        std::cerr << "FATAL: invalid room size " << rows << "x" << columns << "\n";
-        std::exit(1);
+    if (procedural) {
+        if (size == RoomSize::INVALID) {
+            std::cerr << "FATAL: invalid room size " << rows << "x" << columns << "\n";
+            std::exit(1);
+        }
     }
 	//	Initialize Grid with the specified rows and columns
 	Grid grid(rows, columns);
@@ -235,7 +259,11 @@ void MazeGenerator::_loadRoom(boost::filesystem::path path) {
     rclass.entries = this->_identifyEntryways(grid);
     rclass.type = this->_getRoomType(path);
     rclass.size = size;
-    this->_validateRoom(grid, rclass);
+
+
+    if (procedural) {
+        this->_validateRoom(grid, rclass);
+    }
 
     int id = this->_next_room_id;
     switch (size) {
@@ -249,6 +277,7 @@ void MazeGenerator::_loadRoom(boost::filesystem::path path) {
             this->_next_room_id += 16;
             break;
     };
+
     auto room = std::make_shared<Room>(std::move(grid), rclass, id);
     this->rooms_by_type.at(rclass.type).push_back(room);
     this->rooms_by_id.insert({id, room});
@@ -274,6 +303,8 @@ RoomType MazeGenerator::_getRoomType(boost::filesystem::path path) {
         return RoomType::DIVERSE;
     } else if (extension == ".exit") {
         return RoomType::EXIT;
+    } else if (extension == ".maze") { // not procedural
+        return RoomType::CUSTOM;
     }
 
     std::cerr << "FATAL: unknown file extension on room \""<< extension <<"\"\n";
