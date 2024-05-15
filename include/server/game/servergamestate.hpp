@@ -4,6 +4,7 @@
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/smartvector.hpp"
+#include "shared/utilities/custom_hash.hpp"
 #include "server/game/object.hpp"
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"
@@ -73,6 +74,21 @@ public:
 
 	void updateMovement();
 
+	/**
+	 * @brief Detects whether a collision occurs with other objects when the
+	 * given object moves to the given position.
+	 * @param object Object to perform collision detection for
+	 * @param newCornerPosition Corner position object moves to at which 
+	 * collision detection is performed
+	 * @note This method moves the object to the given position - i.e., it
+	 * updates the object's gridCellPositions vector and the ObjectManager's
+	 * cellToObjects unordered_map.
+	 * @return true if the object overlaps (collides) with any other object that
+	 * has a collider at the given position, and false otherwise.
+	 */
+	bool hasObjectCollided(Object* object, glm::vec3 newCornerPosition);
+
+	//	TODO: Add implementations of items
 	void updateItems();
 
 	void doObjectTicks();
@@ -92,10 +108,16 @@ public:
 	/**
 	 * @brief Generate a SharedGameState object from this ServerGameState
 	 * instance.
-	 * @return ShareGameState instance that represents this ServerGameState
-	 * instance.
+	 * @param send_all True if you should send a 100% update to the client, false
+	 * if you should just send the updated objects
+	 * 
+	 * NOTE: if send_all is false and you generate an update based on the diffs, this
+	 * function will clear the updated_entities unordered_set for you
+	 * 
+	 * @return vector of partial ShareGameState instances that represent different pieces
+	 * of the SharedGameState instance
 	 */
-	SharedGameState generateSharedGameState();
+	std::vector<SharedGameState> generateSharedGameState(bool send_all);
 
 	/*	Other getters and setters	*/
 
@@ -167,6 +189,12 @@ private:
 	std::unordered_set<EntityID> entities_to_delete;
 
 	/**
+	 * list of entities that have been changed, so we only have to include
+	 * these in partial updates to the clients 
+	 */
+	std::unordered_set<EntityID> updated_entities;
+
+	/**
 	 *  Timestep length in milliseconds.
 	 */
 	std::chrono::milliseconds timestep_length;
@@ -201,4 +229,12 @@ private:
 	 * @brief 2-D Grid of GridCells (filled after loadMaze() is called).
 	 */
 	Grid grid;
+
+	/**
+	 * @brief Set of pairs of pointers to Objects that have collided in the
+	 * current timestep.
+	 * Maintained by hasObjectCollided() (which adds object pairs to it upon
+	 * collision detection) and updateMovement() (which clears it)
+	 */
+	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
 };

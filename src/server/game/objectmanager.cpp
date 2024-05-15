@@ -62,6 +62,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 			std::exit(1);
 	}
 
+	//	Move object to its given position
+	moveObject(object, object->physics.shared.corner);
+
 	return object->typeID;
 }
 
@@ -104,6 +107,20 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Potion:
 		this->items.remove(object->typeID);
 		break;
+	}
+
+	//	Remove object from cellToObjects hashmap
+	for (glm::vec2 cellPosition : object->gridCellPositions) {
+		std::vector<Object*>& objectsInCell =
+			this->cellToObjects[cellPosition];
+
+		//	Remove object from Object * vector of objects in this cell
+		for (int i = 0; i < objectsInCell.size(); i++) {
+			if (objectsInCell.at(i)->globalID == object->globalID) {
+				objectsInCell.erase(objectsInCell.begin() + i);
+				break;
+			}
+		}
 	}
 
 	//	Delete object
@@ -191,23 +208,55 @@ SmartVector<Projectile*> ObjectManager::getProjectiles() {
 	return this->projectiles;
 }
 
+/*	Object Movement	*/
+bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
+	if (object == nullptr) {
+		return false;
+	}
+
+	//	Remove the object from the cellToObjects hashmap
+	for (glm::vec2 cellPosition : object->gridCellPositions) {
+		std::vector<Object*>& objectsInCell =
+			this->cellToObjects[cellPosition];
+
+		//	Remove object from Object * vector of objects in this cell
+		for (int i = 0; i < objectsInCell.size(); i++) {
+			if (objectsInCell.at(i)->globalID == object->globalID) {
+				objectsInCell.erase(objectsInCell.begin() + i);
+				break;
+			}
+		}
+	}
+
+	//	Update object's corner position
+	object->physics.shared.corner = newCornerPosition;
+
+	//	Get the object's new occupied GridCell position vector
+	object->gridCellPositions = objectGridCells(object);
+
+	//	Add object to cellToObjects hashmap
+	for (glm::vec2 cellPosition : object->gridCellPositions) {
+		this->cellToObjects[cellPosition].push_back(object);
+	}
+}
+
+std::vector<glm::ivec2> ObjectManager::objectGridCells(Object* object) {
+	return Grid::getCellsFromPositionRange(object->physics.shared.corner,
+		object->physics.shared.corner + object->physics.shared.dimensions);
+}
+
 /*	SharedGameState generation	*/
 
-std::vector<std::shared_ptr<SharedObject>> ObjectManager::toShared() {
-	std::vector<std::shared_ptr<SharedObject>> shared;
+std::vector<boost::optional<SharedObject>> ObjectManager::toShared() {
+	std::vector<boost::optional<SharedObject>> shared;
 
-	//	Fill shared SmartVector of SharedObjects
 	for (int i = 0; i < this->objects.size(); i++) {
 		Object* object = this->objects.get(i);
 
 		if (object == nullptr) {
-			//	Push empty object to SharedObject SmartVector
-			shared.push_back(nullptr);
-		}
-		else {
-			//	Create a SharedObject representation for this object and push it
-			//	to the SharedObject SmartVector
-			shared.push_back(std::make_shared<SharedObject>(object->toShared()));
+			shared.push_back({});
+		} else {
+			shared.push_back(object->toShared());
 		}
 	}
 

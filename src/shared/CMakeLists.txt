@@ -3,6 +3,7 @@ set(LIB_NAME game_shared_lib)
 set(FILES
     game/event.cpp
     game/sharedobject.cpp
+    game/sharedgamestate.cpp
 
     network/session.cpp
 

@@ -1,5 +1,4 @@
 #include "server/game/servergamestate.hpp"
-#include "shared/game/sharedgamestate.hpp"
 #include "server/game/spiketrap.hpp"
 #include "server/game/fireballtrap.hpp"
 #include "server/game/floorspike.hpp"
@@ -7,9 +6,11 @@
 #include "server/game/projectile.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/potion.hpp"
-#include "shared/utilities/root_path.hpp"
 #include "server/game/constants.hpp"
+#include "shared/game/sharedgamestate.hpp"
+#include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
+#include "shared/network/constants.hpp"
 
 #include <fstream>
 
@@ -46,25 +47,55 @@ ServerGameState::ServerGameState(GamePhase start_phase, const GameConfig& config
 ServerGameState::~ServerGameState() {}
 
 /*	SharedGameState generation	*/
-SharedGameState ServerGameState::generateSharedGameState() {
-	//	Create a new SharedGameState instance and populate it with this
-	//	ServerGameState's data
-	SharedGameState shared;
+std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_all) {
+	std::vector<SharedGameState> partial_updates;
+	auto all_objects = this->objects.toShared();
 
-	//	Initialize object vector
-	shared.objects = this->objects.toShared();
+	auto getUpdateTemplate = [this]() {
+		SharedGameState curr_update;
+		curr_update.timestep = this->timestep;
+		curr_update.timestep_length = this->timestep_length;
+		curr_update.lobby = this->lobby;
+		curr_update.phase = this->phase;
+		return curr_update;
+	};
 
-	//	Copy timestep data
-	shared.timestep = this->timestep;
-	shared.timestep_length = this->timestep_length;
+	if (send_all) {
+		for (int i = 0; i < all_objects.size(); i += OBJECTS_PER_UPDATE) {
+			SharedGameState curr_update = getUpdateTemplate();
 
-	//	Copy Lobby data
-	shared.lobby = this->lobby;
-	
-	//	Copy GamePhase
-	shared.phase = this->phase;
+			for (int j = 0; j < OBJECTS_PER_UPDATE && i + j < all_objects.size(); j++) {
+				EntityID curr_id = i + j;
+				curr_update.objects.insert({curr_id, all_objects.at(curr_id)});
+			}
 
-	return shared;
+			partial_updates.push_back(curr_update);
+		}
+	} else {
+		SharedGameState curr_update = getUpdateTemplate();
+
+		int num_in_curr_update = 0;
+		for (EntityID id : this->updated_entities) {
+			curr_update.objects.insert({id, all_objects.at(id)});
+			num_in_curr_update++;
+
+			if (num_in_curr_update >= OBJECTS_PER_UPDATE) {
+				partial_updates.push_back(curr_update);
+				curr_update = getUpdateTemplate();
+				num_in_curr_update = 0;
+			}
+		}
+
+		if (num_in_curr_update > 0) {
+			partial_updates.push_back(curr_update);
+		}
+
+		// wipe updated entities list
+		std::unordered_set<EntityID> empty;
+		std::swap(this->updated_entities, empty);
+	}
+
+	return partial_updates;
 }
 
 /*	Update methods	*/
@@ -83,14 +114,17 @@ void ServerGameState::update(const EventList& events) {
         switch (event.type) {
 		case EventType::ChangeFacing: {
             auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
-            Object* objChangeFace = this->objects.getObject(changeFacingEvent.entity_to_change_face);
-            objChangeFace->physics.shared.facing = changeFacingEvent.facing;
+            obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+            obj->physics.shared.facing = changeFacingEvent.facing;
+			this->updated_entities.insert({obj->globalID});
             break;
 		}
 	
 		case EventType::StartAction: {
 			auto startAction = boost::get<StartActionEvent>(event.data);
 			obj = this->objects.getObject(startAction.entity_to_act);
+			this->updated_entities.insert({obj->globalID});
+			
 			//switch case for action (currently using keys)
 			switch (startAction.action) {
 			case ActionType::MoveCam: {
@@ -115,6 +149,7 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StopAction: {
 			auto stopAction = boost::get<StopActionEvent>(event.data);
 			obj = this->objects.getObject(stopAction.entity_to_act);
+			this->updated_entities.insert({obj->globalID});
 			//switch case for action (currently using keys)
 			switch (stopAction.action) {
 			case ActionType::MoveCam: {
@@ -135,8 +170,9 @@ void ServerGameState::update(const EventList& events) {
 		{
 			//currently just sets the velocity to given 
 			auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
-			Object* objMoveRel = this->objects.getObject(moveRelativeEvent.entity_to_move);
-			objMoveRel->physics.velocity += moveRelativeEvent.movement;
+			obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
+			obj->physics.velocity += moveRelativeEvent.movement;
+			this->updated_entities.insert(obj->globalID);
 			break;
 
 		}
@@ -144,12 +180,15 @@ void ServerGameState::update(const EventList& events) {
 		{
 			auto selectItemEvent = boost::get<SelectItemEvent>(event.data);
 			player->sharedInventory.selected = selectItemEvent.itemNum;
+			this->updated_entities.insert(player->globalID);
 			break;
 		}
 		case EventType::UseItem:
 		{
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
 			int itemSelected = player->sharedInventory.selected;
+			this->updated_entities.insert(player->globalID);
+
 			if (player->inventory.find(itemSelected) != player->inventory.end()) {
 				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
 				item->useItem(player, *this);
@@ -165,6 +204,8 @@ void ServerGameState::update(const EventList& events) {
 		{
 			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
 			int itemSelected = player->sharedInventory.selected;
+			this->updated_entities.insert(player->globalID);
+
 			if (player->inventory.find(itemSelected) != player->inventory.end()) {
 				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
 				item->dropItem(player, *this, 4.0f);
@@ -198,129 +239,217 @@ void ServerGameState::markForDeletion(EntityID id) {
 }
 
 void ServerGameState::updateMovement() {
-	//	Update all movable objects' movement
+	//	Update all movable objects' positions
 
 	//	Iterate through all objects in the ServerGameState and update their
 	//	positions and velocities if they are movable.
 
-	// If objects are moving too fast, we split their movement into NUM_INCREMENTAL_STEPS smaller steps
+	//	If objects move too fast, split their movement into NUM_INCREMENTAL_STEPS
 	const int NUM_INCREMENTAL_STEPS = 6;
-	// This is the threshold that determines if we need to do incremental steps for the movement
-	// if the magnitude of movementStep is greater than this value, then we do incremental steps for the movement
+
+	//	This is the threshold that determines whether we need to use incremental
+	//	steps. If the magnitude of the movementStep vector is greater than this
+	//	value, then we'll split the movementStep into multiple incremental steps
 	const float SINGLE_MOVE_THRESHOLD = 0.33f;
 
-	// Don't set this directly, it is determined by NUM_INCREMENTAL_STEPS, and is just the reciprical
+	//	This ratio is the reciprocal of NUM_INCREMENTAL_STEPS
 	const float INCREMENTAL_MOVE_RATIO = 1.0f / NUM_INCREMENTAL_STEPS;
 
+	//	Iterate through all game objects
 	SmartVector<Object*> gameObjects = this->objects.getObjects();
 	for (int i = 0; i < gameObjects.size(); i++) {
+		//	Get iterating game object
 		Object* object = gameObjects.get(i);
 
-		if (object == nullptr)
+		//	If the object is a nullptr or isn't movable, skip
+		if (object == nullptr || !(object->physics.movable))
 			continue;
-		
-		bool collided = false; // cppcheck-suppress variableScope
-		bool collidedX = false; // cppcheck-suppress variableScope
-		bool collidedZ = false; // cppcheck-suppress variableScope
 
-		if (object->physics.movable) {
-			// Check for collision at position to move, if so, dont change position
-			// O(n^2) naive implementation of collision detection
-			glm::vec3 totalMovementStep = object->physics.velocity * object->physics.velocityMultiplier;
-			totalMovementStep.x *= object->physics.nauseous;
-			totalMovementStep.z *= object->physics.nauseous;
+		//	Object is movable - for now, add to updated entities set
+		this->updated_entities.insert(object->globalID);
 
-			glm::vec3 movementStep;
-			int numSteps = 0;
-			if (glm::length(totalMovementStep) > SINGLE_MOVE_THRESHOLD) {
-				movementStep = INCREMENTAL_MOVE_RATIO * totalMovementStep;
-			} else {
-				movementStep = totalMovementStep;
-				numSteps = NUM_INCREMENTAL_STEPS - 1;
+		//	Object is movable - compute total movement step
+		glm::vec3 totalMovementStep = 
+			object->physics.velocity * object->physics.velocityMultiplier;
+		totalMovementStep.x *= object->physics.nauseous;
+		totalMovementStep.z *= object->physics.nauseous;
+
+		//	If the object doesn't have a collider, update its movement without
+		//	collision detection
+		if (object->physics.collider == Collider::None) {
+			this->objects.moveObject(object, object->physics.shared.corner + totalMovementStep);
+			continue;
+		}
+
+		//	Object does have a collider - determine whether incremental steps
+		//	are necessary (if object moves too fast)
+		glm::vec3 movementStep;
+		int numSteps = 0;
+		if (glm::length(totalMovementStep) > SINGLE_MOVE_THRESHOLD) {
+			//	Object moves too quickly in one timestep - separate movement
+			//	step into multiple sub-steps
+			movementStep = INCREMENTAL_MOVE_RATIO * totalMovementStep;
+		}
+		else {
+			//	Object moves sufficiently slow to compute collision detection 
+			//	using a single movement step
+			movementStep = totalMovementStep;
+			numSteps = NUM_INCREMENTAL_STEPS - 1;
+		}
+
+		bool collided = false;
+		bool collidedX = false;
+		bool collidedZ = false;
+
+		//	Object's current position (before current movementStep)
+		glm::vec3 currentPosition = object->physics.shared.corner;
+
+		//	Perform collision detection + movement update for each incremental
+		//	step (or this loop only iterates once if incremental steps are not
+		//	used)
+		while (numSteps < NUM_INCREMENTAL_STEPS) {
+			numSteps++;
+
+			//	Move object to new position and check whether a collision has
+			//	occurred
+			collided = this->hasObjectCollided(object, 
+				currentPosition + movementStep);
+
+			//	If a collision has occurred, repeat collision checking for
+			//	movement if object's position is only updated in the x or z
+			//	axes.
+			if (collided) {
+				//	Test for collision when object only moves by movementStep's
+				//	x component
+				if (!collidedX) {
+					collidedX = this->hasObjectCollided(object,
+						glm::vec3(
+							currentPosition.x + movementStep.x,
+							currentPosition.y,
+							currentPosition.z
+						));
+				}
+				
+				//	Test for collision when object only moves by movementStep's
+				//	z component
+				if (!collidedZ) {
+					collidedZ = this->hasObjectCollided(object,
+						glm::vec3(
+							currentPosition.x,
+							currentPosition.y,
+							currentPosition.z + movementStep.z
+						));
+				}
 			}
 
-			while (numSteps < NUM_INCREMENTAL_STEPS) {
-				numSteps++;
-				// Run collision detection movement if it has a collider
-				if (object->physics.collider != Collider::None) {
-					object->physics.shared.corner += movementStep;
+			//	Update object's movement
 
-					// TODO : for possible addition for smooth collision detection, but higher computation
-					// 1) when moving collider, seperate the movement into 4 steps ex:(object->physics.velocity * object->physics.acceleration) / 4
-					//    Then, take the most steps possible (mario 64 handles it like this)
-					// 2) Using raycasting
+			//	Horizontal movement
+			if (collidedX) {
+				movementStep.x = 0;
+			}
+			if (collidedZ) {
+				movementStep.z = 0;
+			}
 
-					for (int j = 0; j < gameObjects.size(); j++) {
-						if (i == j) { continue; }
-						Object* otherObj = gameObjects.get(j);
-						if (otherObj == nullptr) continue;
+			this->objects.moveObject(object, currentPosition + movementStep);
 
-						if (otherObj->physics.collider == Collider::None) { continue; }
+			if (collidedX && collidedZ) {
+				//	Object doesn't move at all - can skip any additional
+				//	steps
+				break;
+			}
 
-						if (detectCollision(object->physics, otherObj->physics)) {
-							
-							if (otherObj->type == ObjectType::FloorSpike) {
-								object->doCollision(otherObj, *this);
-								otherObj->doCollision(object, *this);
-								continue;
-							}
-							if (otherObj->type == ObjectType::Potion || otherObj->type == ObjectType::Spell) {
-								otherObj->doCollision(object, *this);
-								continue;
-							}
-							
+			//	Update current position vector
+			currentPosition = object->physics.shared.corner;
+		}
 
-							collided = true;
+		//	Vertical movement
+		//	Clamp object to floor if corner's y position is lower than the floor
+		if (object->physics.shared.corner.y < 0) {
+			object->physics.shared.corner.y = 0;
+		}
 
-							// Check x-axis collision
-							object->physics.shared.corner.z -= movementStep.z;
-							if (detectCollision(object->physics, otherObj->physics)) {
-								collidedX = true;
-							}
+		//	Update object's gravity velocity if the object is in the air or
+		//	has just landed
+		if (object->physics.shared.corner.y > 0) {
+			object->physics.velocity.y -= GRAVITY;
+		}
+		else {
+			object->physics.velocity.y = 0.0f;
+		}
+	}
 
-							// Check z-axis collision
-							object->physics.shared.corner.z += movementStep.z;
-							object->physics.shared.corner.x -= movementStep.x;
-							if (detectCollision(object->physics, otherObj->physics)) {
-								collidedZ = true;
-							}
-							object->physics.shared.corner.x += movementStep.x;
+	//	Handle collision resolution effects
+	//	NOTE - if collision resolution can change an object's position, behavior
+	//	is undefined! (e.g., an object can move into another object but
+	//	collision detection is not performed!)
+	//	Iterate through set of collided objects
+	for (std::pair<Object*, Object*> objects : this->collidedObjects) {
+		objects.first->doCollision(objects.second, *this);
+		objects.second->doCollision(objects.first, *this);
 
-							object->doCollision(otherObj, *this);
-							otherObj->doCollision(object, *this);
-						}
-					}
+		//	Add both collided objects to updated entities set
+		this->updated_entities.insert(objects.first->globalID);
+		this->updated_entities.insert(objects.second->globalID);
+	}
 
-					if (collidedX) {
-						object->physics.shared.corner.x -= movementStep.x;
-					}
+	//	Clear set of collided objects for this timestep
+	this->collidedObjects.clear();
+}
 
-					if (collidedZ) {
-						object->physics.shared.corner.z -= movementStep.z;
-					}
+bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosition) {
+	//	Move object to the given corner position then test whether a collision 
+	//	occurs at that position
+	this->objects.moveObject(object, newCornerPosition);
+
+	//	Check whether a collision has occurred in object's new corner position
+	//	Iterate through the object's occupied grid cells
+	for (glm::ivec2 cellPos : object->gridCellPositions) {
+		//	Get vector of pointers of all objects that occupy the iterating
+		//	GridCell position
+		std::vector<Object*>& objectsInCell =
+			this->objects.cellToObjects.at(cellPos);
+
+		//	Iterate through all objects in this GridCell and check whether the
+		//	current object collides with any of them
+		for (Object* otherObj : objectsInCell) {
+			//	Skip other object if it's the current object or if the object
+			//	doesn't have a collider
+			if (object->globalID == otherObj->globalID
+				|| otherObj->physics.collider == Collider::None) {
+				continue;
+			}
+
+			//	Detect whether a collision has occurred
+			if (detectCollision(object->physics, otherObj->physics))
+			{
+				//	Add object pair to set of collided objects
+				//	Note: object pair is added in increasing order of their
+				//	global IDs to avoid inserting the same pair twice in a
+				//	different order (e.g. {object, otherObj} and 
+				//	{otherObj, object} shouldn't be treated as two separate
+				//	object collision pairs)
+				if (object->globalID < otherObj->globalID) {
+					this->collidedObjects.insert({ object, otherObj });
 				}
 				else {
-					object->physics.shared.corner += movementStep;
+					this->collidedObjects.insert({ otherObj, object });
 				}
 
-				if (object->physics.shared.corner.y <= 0) {
-					object->physics.shared.corner.y = 0;
+				//	Exception - if the other object is a floor spike trap,
+				//	perform collision handling but do not return true as the
+				//	trap doesn't affect the movement of the object it hits
+				if (otherObj->type == ObjectType::FloorSpike) {
+					continue;
 				}
 
-				if (collidedX && collidedZ) {
-					break; // don't need to do the further movement steps until we reach totalmovement step
-				}
-			}
-
-			// update gravity factor
-			if ((object->physics.shared.corner).y > 0) {
-				object->physics.velocity.y -= GRAVITY;
-			}
-			else {
-				object->physics.velocity.y = 0.0f;
+				return true;
 			}
 		}
 	}
+
+	return false;
 }
 
 void ServerGameState::updateItems() {
@@ -334,12 +463,27 @@ void ServerGameState::updateItems() {
 			if (pot->iteminfo.used) {
 				if (pot->timeOut()) {
 					pot->revertEffect(*this);
+					this->updated_entities.insert(pot->globalID);
 				}
 			}
 		}
-		
+
 	}
 }
+
+//void ServerGameState::useItem() {
+//	// Update whatever is necesssary for item
+//	// This method may need to be broken down for different types
+//	// of item types
+//
+//	SmartVector<Item*> items = this->objects.getItems();
+//	for (int i = 0; i < items.size(); i++) {
+//		const Item* item = items.get(i);
+//
+//		if (item == nullptr)
+//			continue;
+//	}
+//}
 
 void ServerGameState::doObjectTicks() {
 	auto objects = this->objects.getObjects();
@@ -347,7 +491,9 @@ void ServerGameState::doObjectTicks() {
 		auto obj = objects.get(o);
 		if (obj == nullptr) continue;
 
-		obj->doTick(*this);
+		if (obj->doTick(*this)) {
+			this->updated_entities.insert(obj->globalID);
+		}
 	}
 }
 
@@ -361,9 +507,11 @@ void ServerGameState::updateTraps() {
 		if (trap == nullptr) { continue; } // unsure if i need this?
 		if (trap->shouldTrigger(*this)) {
 			trap->trigger(*this);
+			this->updated_entities.insert(trap->globalID);
 		}
         if (trap->shouldReset(*this)) {
             trap->reset(*this);
+			this->updated_entities.insert(trap->globalID);
         }
 	}
 }
@@ -398,6 +546,7 @@ void ServerGameState::handleDeaths() {
 				if (i == 3){ player->physics.shared.facing *= -1.0f; }
 			}
 
+			this->updated_entities.insert(player->globalID);
 			player->info.is_alive = false;
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
 		}
@@ -412,6 +561,7 @@ void ServerGameState::handleRespawns() {
 
 		if (!player->info.is_alive) {
 			if (getMsSinceEpoch() >= player->info.respawn_time) {
+				this->updated_entities.insert(player->globalID);
 				player->physics.collider = Collider::Box;
 				player->physics.shared.corner = this->getGrid().getRandomSpawnPoint();
 				player->info.is_alive = true;
@@ -424,6 +574,7 @@ void ServerGameState::handleRespawns() {
 void ServerGameState::deleteEntities() {
 	for (EntityID id : this->entities_to_delete) {
 		this->objects.removeObject(id);
+		this->updated_entities.insert(id);
 	}
 
 	std::unordered_set<EntityID> empty;
@@ -566,14 +717,14 @@ void ServerGameState::loadMaze() {
 	// Create Floor
 	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Floor, 
 		glm::vec3(0.0f, -0.1f, 0.0f),
-		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(), 0.1,
-			this->grid.getRows() * this->grid.getGridCellWidth())
+		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
+			this->grid.getRows() * Grid::grid_cell_width)
 	));
 	// Create Ceiling
 	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Ceiling, 
 		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),
-		glm::vec3(this->grid.getColumns() * this->grid.getGridCellWidth(), 0.1,
-			this->grid.getRows() * this->grid.getGridCellWidth())
+		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
+			this->grid.getRows() * Grid::grid_cell_width)
 	));
 
 	//	Step 6:	For each GridCell, add an object (if not empty) at the 
@@ -585,14 +736,14 @@ void ServerGameState::loadMaze() {
 			switch (cell->type) {
 				case CellType::FireballTrap: {
 					glm::vec3 dimensions(
-						this->grid.getGridCellWidth() / 2,
+						Grid::grid_cell_width / 2,
 						0.5f,
-						this->grid.getGridCellWidth() / 2
+						Grid::grid_cell_width / 2
 					);
 					glm::vec3 corner(
-						cell->x * this->grid.getGridCellWidth(),
+						cell->x * Grid::grid_cell_width,
 						1.0f,
-						cell->y * this->grid.getGridCellWidth()
+						cell->y * Grid::grid_cell_width
 					);
 					this->objects.createObject(new FireballTrap(corner, dimensions));
 					break;
@@ -600,9 +751,10 @@ void ServerGameState::loadMaze() {
 				case CellType::FireSpell: {
 					glm::vec3 dimensions(1.0f);
 
-					glm::vec3 corner(cell->x * this->grid.getGridCellWidth() + 1,
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
 						0,
-						cell->y * this->grid.getGridCellWidth() + 1);
+						cell->y * Grid::grid_cell_width + 1);
 
 					this->objects.createObject(new Spell(corner, dimensions, SpellType::Fireball));
 					break;
@@ -610,9 +762,10 @@ void ServerGameState::loadMaze() {
 				case CellType::HealSpell: {
 					glm::vec3 dimensions(1.0f);
 
-					glm::vec3 corner(cell->x * this->grid.getGridCellWidth() + 1,
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
 						0,
-						cell->y * this->grid.getGridCellWidth() + 1);
+						cell->y * Grid::grid_cell_width + 1);
 
 					this->objects.createObject(new Spell(corner, dimensions, SpellType::HealOrb));
 					break;
@@ -620,9 +773,9 @@ void ServerGameState::loadMaze() {
 				case CellType::HealthPotion: {
 					glm::vec3 dimensions(1.0f);
 
-					glm::vec3 corner(cell->x * this->grid.getGridCellWidth() + 1,
+					glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
 							0,
-							cell->y * this->grid.getGridCellWidth() + 1);
+							cell->y * Grid::grid_cell_width + 1);
 
 					this->objects.createObject(new Potion(corner, dimensions, PotionType::Health));
 					break;
@@ -630,9 +783,9 @@ void ServerGameState::loadMaze() {
 				case CellType::NauseaPotion: {
 					glm::vec3 dimensions(1.0f);
 
-					glm::vec3 corner(cell->x* this->grid.getGridCellWidth() + 1,
+					glm::vec3 corner(cell->x* Grid::grid_cell_width + 1,
 						0,
-						cell->y* this->grid.getGridCellWidth() + 1);
+						cell->y* Grid::grid_cell_width + 1);
 
 					this->objects.createObject(new Potion(corner, dimensions, PotionType::Nausea));
 					break;
@@ -640,9 +793,9 @@ void ServerGameState::loadMaze() {
 				case CellType::InvisibilityPotion: {
 					glm::vec3 dimensions(1.0f);
 
-					glm::vec3 corner(cell->x* this->grid.getGridCellWidth() + 1,
+					glm::vec3 corner(cell->x* Grid::grid_cell_width + 1,
 						0,
-						cell->y* this->grid.getGridCellWidth() + 1);
+						cell->y* Grid::grid_cell_width + 1);
 
 					this->objects.createObject(new Potion(corner, dimensions, PotionType::Invisibility));
 					break;
@@ -650,14 +803,14 @@ void ServerGameState::loadMaze() {
 				case CellType::SpikeTrap: {
                     const float HEIGHT_SHOWING = 0.5;
 					glm::vec3 dimensions(
-						this->grid.getGridCellWidth(),
+						Grid::grid_cell_width,
 						MAZE_CEILING_HEIGHT,
-						this->grid.getGridCellWidth()
+						Grid::grid_cell_width
 					);
 					glm::vec3 corner(
-						cell->x * this->grid.getGridCellWidth(),
+						cell->x * Grid::grid_cell_width,
 						MAZE_CEILING_HEIGHT - HEIGHT_SHOWING, 
-						cell->y * this->grid.getGridCellWidth()
+						cell->y * Grid::grid_cell_width
 					);
 
 					this->objects.createObject(new SpikeTrap(corner, dimensions));
@@ -671,14 +824,14 @@ void ServerGameState::loadMaze() {
 				case CellType::Wall:
 				case CellType::FakeWall: {
 					glm::vec3 dimensions(
-						this->grid.getGridCellWidth(),
+						Grid::grid_cell_width,
 						MAZE_CEILING_HEIGHT,
-						this->grid.getGridCellWidth()
+						Grid::grid_cell_width
 					);
 					glm::vec3 corner(
-						cell->x * this->grid.getGridCellWidth(),
+						cell->x * Grid::grid_cell_width,
 						0.0f, 
-						cell->y * this->grid.getGridCellWidth()
+						cell->y * Grid::grid_cell_width
 					);
 
 					if (cell->type == CellType::FakeWall) {
@@ -692,9 +845,9 @@ void ServerGameState::loadMaze() {
 				case CellType::FloorSpikeHorizontal:
 				case CellType::FloorSpikeVertical: {
 					glm::vec3 corner(
-						cell->x * this->grid.getGridCellWidth(),
+						cell->x * Grid::grid_cell_width,
 						0.0f, 
-						cell->y * this->grid.getGridCellWidth()
+						cell->y * Grid::grid_cell_width
 					);
 
 					FloorSpike::Orientation orientation;
@@ -702,13 +855,13 @@ void ServerGameState::loadMaze() {
 						orientation = FloorSpike::Orientation::Full;
 					} else if (cell->type == CellType::FloorSpikeHorizontal) {
 						orientation = FloorSpike::Orientation::Horizontal;
-						corner.z += this->grid.getGridCellWidth() * 0.25f;
+						corner.z += Grid::grid_cell_width * 0.25f;
 					} else {
 						orientation = FloorSpike::Orientation::Vertical;
-						corner.x += this->grid.getGridCellWidth() * 0.25f;
+						corner.x += Grid::grid_cell_width * 0.25f;
 					}
 
-					this->objects.createObject(new FloorSpike(corner, orientation, this->grid.getGridCellWidth()));
+					this->objects.createObject(new FloorSpike(corner, orientation, Grid::grid_cell_width));
 					break;
 				}
 
@@ -728,14 +881,14 @@ void ServerGameState::loadMaze() {
 					}
 
 					glm::vec3 dimensions(
-						this->grid.getGridCellWidth(),
+						Grid::grid_cell_width,
 						MAZE_CEILING_HEIGHT,
-						this->grid.getGridCellWidth()
+						Grid::grid_cell_width
 					);
 					glm::vec3 corner(
-						cell->x * this->grid.getGridCellWidth(),
+						cell->x * Grid::grid_cell_width,
 						0.0f, 
-						cell->y * this->grid.getGridCellWidth()
+						cell->y * Grid::grid_cell_width
 					);
 
 					this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
