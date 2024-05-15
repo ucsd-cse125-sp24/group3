@@ -1,9 +1,11 @@
 #pragma once
 
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
 #include <vector>
+#include <queue>
 #include <memory>
 #include <optional>
 #include <boost/filesystem.hpp>
@@ -21,6 +23,17 @@ enum class RoomType {
     DIVERSE,
     EXIT
 };
+
+#define ALL_TYPES { \
+    RoomType::EMPTY, \
+    RoomType::SPAWN, \
+    RoomType::EASY, \
+    RoomType::MEDIUM, \
+    RoomType::HARD, \
+    RoomType::LOOT, \
+    RoomType::DIVERSE, \
+    RoomType::EXIT, \
+}
 
 enum RoomEntry {
     T = 0b0001,
@@ -86,10 +99,16 @@ struct Room {
     int id;
 };
 
-#define NUM_ROOMS 10 // 3x3 rooms
-#define GRID_CELLS_PER_ROOM 10 // each room is 10x10 (or some multiple, but the unit level is 10)
+struct ivec2_comparator {
+    bool operator()(const glm::ivec2& lhs, const glm::ivec2& rhs) const {
+        if (lhs.x > rhs.x) {
+            return false;
+        }
+        return (lhs.y < rhs.y);
+    }
+};
 
-#define UNUSED_TILE -1
+#define GRID_CELLS_PER_ROOM 10 // each room is 10x10 (or some multiple, but the unit level is 10)
 
 class MazeGenerator {
 public:
@@ -110,16 +129,19 @@ private:
 
     std::vector<glm::ivec2> _getAdjRoomCoords(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
 
-    bool _hasOpenConnection(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
+    // bool _hasOpenConnection(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
+
+    std::queue<glm::ivec2> frontier;
     void _placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
 
-    std::array<std::array<int, NUM_ROOMS>, NUM_ROOMS> maze;
+    bool _isOpenWorldCoord(glm::ivec2 coord);
+
+    std::map<glm::ivec2, int, ivec2_comparator> maze;
 
     void _loadRoom(boost::filesystem::path path);
     std::unordered_map<RoomClass, std::shared_ptr<Room>, RoomClassHash> rooms_by_class;
-    std::unordered_map<RoomType, std::shared_ptr<Room>> rooms_by_type;
+    std::unordered_map<RoomType, std::vector<std::shared_ptr<Room>>> rooms_by_type;
     std::unordered_map<int , std::shared_ptr<Room>> rooms_by_id;
-    std::unordered_map<RoomSize, std::shared_ptr<Room>> rooms_by_size;
 
     int _next_room_id;
 };

@@ -6,6 +6,7 @@
 #include <bitset>
 #include <memory>
 #include <unordered_set>
+#include <limits>
 
 #include <boost/graph/adjacency_matrix.hpp>
 #include <boost/filesystem.hpp>
@@ -25,6 +26,10 @@ MazeGenerator::MazeGenerator() {
     boost::filesystem::path dir_20x20 = rooms_dir / "20x20";
     boost::filesystem::path dir_40x40 = rooms_dir / "40x40";
 
+    for (auto type : ALL_TYPES) {
+        this->rooms_by_type.insert({type, std::vector<std::shared_ptr<Room>>()});
+    }
+
     for (const auto & entry : boost::filesystem::directory_iterator(dir_10x10)) {
         this->_loadRoom(entry.path());
     }
@@ -34,15 +39,12 @@ MazeGenerator::MazeGenerator() {
     for (const auto & entry : boost::filesystem::directory_iterator(dir_40x40)) {
         this->_loadRoom(entry.path());
     }
+
 }
 
 
 Grid MazeGenerator::generate() {
-    for (auto& i : this->maze) {
-        for (auto& j : i) {
-            j = UNUSED_TILE; // mark every room coordinate as unused
-        }
-    }
+    std::cout << "Start\n";
 
     _placeRoom(_pullRoomByType(RoomType::SPAWN), glm::ivec2(0, 0));
 
@@ -50,60 +52,70 @@ Grid MazeGenerator::generate() {
     // haven't implemented larger exit rooms yet
     assert(exit_room->rclass.size == RoomSize::_10x10);
 
-    _placeRoom(exit_room, glm::ivec2(NUM_ROOMS - 1, NUM_ROOMS - 1));
+    _placeRoom(exit_room, glm::ivec2(3, 3));
 
-    // while (_hasOpenConnection(curr_room, curr_origin_coord)) {
-    //     auto new_room = this->_pullRoomByType(RoomType::EMPTY);
+    int num_rooms_placed = 2;
 
-    //     auto new_origin_coord = _tryToConnect(new_room, curr_room, curr_origin_coord);
+    // while (!this->frontier.empty()) {
+    //     auto coord = this->frontier.front();
+    //     this->frontier.pop();
 
-    //     boost::add_edge(curr_room->id, new_room->id, graph);
-
-    //     if (new_origin_coord.has_value()) {
-    //         frontier.push_back({new_room, new_origin_coord.value()});
+    //     if (!_isOpenWorldCoord(coord)) {
+    //         continue; // something took its place in the meantime
     //     }
+
+    //     auto room = _pullRoomByType(RoomType::EASY);
     // }
 
+    int min_x = std::numeric_limits<int>::max();
+    int min_y = std::numeric_limits<int>::max();
+    int max_x = std::numeric_limits<int>::min();
+    int max_y = std::numeric_limits<int>::min();
+
+    for (const auto& [coord, room_id] : this->maze) {
+        min_x = std::min(coord.x, min_x);
+        min_y = std::min(coord.y, min_y);
+        max_x = std::max(coord.x, max_x);
+        max_y = std::max(coord.y, max_y);
+    }
+
+    int num_rows = max_y - min_y + 1;
+    int num_cols = max_x - min_x + 1;
+
+    // Convert internal this->maze into final Grid
     std::unordered_set<glm::ivec2> skip;
+    Grid output(num_rows * GRID_CELLS_PER_ROOM, num_cols * GRID_CELLS_PER_ROOM);
+    // room_coord guaranteed to be top left coord of room because if ivec2_comparator
+    for (const auto& [room_coord, room_id] : this->maze) {
+        auto& room = this->rooms_by_id.at(room_id);
+        std::cout << room_id << "\n";
 
-    Grid output(NUM_ROOMS * GRID_CELLS_PER_ROOM, NUM_ROOMS * GRID_CELLS_PER_ROOM);
+        if (skip.contains(room_coord)) {
+            continue;
+        }
 
-    for (int room_row = 0; room_row < NUM_ROOMS; room_row++) {
-        for (int room_col = 0; room_col < NUM_ROOMS; room_col++) {
-            int room_id = this->maze[room_row][room_col];
+        // skip this room in the future since we've already put it in its entirety in output
+        for (const auto& coord : _getRoomCoordsTakenBy(room->rclass.size, room_coord)) {
+            skip.insert(coord);
+        }
 
-            if (room_id == UNUSED_TILE) {
-                for (int grid_row = 0; grid_row < GRID_CELLS_PER_ROOM; grid_row++) {
-                    for (int grid_col = 0; grid_col < GRID_CELLS_PER_ROOM; grid_col++) {
-                        int world_row = room_row * GRID_CELLS_PER_ROOM + grid_row;
-                        int world_col = room_col * GRID_CELLS_PER_ROOM + grid_col;
+        for (int grid_row = 0; grid_row < room->grid.getRows(); grid_row++) {
+            for (int grid_col = 0; grid_col < room->grid.getColumns(); grid_col++) {
+                CellType type = room->grid.getCell(grid_col, grid_row)->type;
 
-                        output.addCell(world_col, world_row, CellType::Empty);
-                    }
-                }
-                continue;
+                int world_row = (room_coord.y - min_y) * GRID_CELLS_PER_ROOM + grid_row;
+                int world_col = (room_coord.x - min_x) * GRID_CELLS_PER_ROOM + grid_col;
+
+                output.addCell(world_col, world_row, type);
             }
+        }
+    }
 
-            auto& room = this->rooms_by_id.at(room_id);
-
-            if (skip.contains(glm::ivec2(room_col, room_row))) {
-                continue;
-            }
-
-            // skip this room in the future since we've already put it in its entirety in output
-            for (const auto& coord : _getRoomCoordsTakenBy(room->rclass.size, glm::ivec2(room_col, room_row))) {
-                skip.insert(coord);
-            }
-
-            for (int grid_row = 0; grid_row < room->grid.getRows(); grid_row++) {
-                for (int grid_col = 0; grid_col < room->grid.getColumns(); grid_col++) {
-                    CellType type = room->grid.getCell(grid_col, grid_row)->type;
-
-                    int world_row = room_row * GRID_CELLS_PER_ROOM + grid_row;
-                    int world_col = room_col * GRID_CELLS_PER_ROOM + grid_col;
-
-                    output.addCell(world_col, world_row, type);
-                }
+    // fill in empty spaces for printing to text file
+    for (int row = 0; row < output.getRows(); row++) {
+        for (int col = 0; col < output.getColumns(); col++) {
+            if (output.getCell(col, row) == nullptr) {
+                output.addCell(col, row, CellType::Empty);
             }
         }
     }
@@ -209,10 +221,9 @@ void MazeGenerator::_loadRoom(boost::filesystem::path path) {
             break;
     };
     auto room = std::make_shared<Room>(std::move(grid), rclass, id);
-    this->rooms_by_type.insert({rclass.type, room});
+    this->rooms_by_type.at(rclass.type).push_back(room);
     this->rooms_by_id.insert({id, room});
     this->rooms_by_class.insert({rclass, room});
-    this->rooms_by_size.insert({size, room});
 
     std::cout << "\tLoaded\n";
 }
@@ -384,11 +395,9 @@ void MazeGenerator::_validateRoom(Grid& grid, const RoomClass& rclass) {
 }
 
 std::shared_ptr<Room> MazeGenerator::_pullRoomByType(RoomType type) {
-    int random_index = randomInt(0, this->rooms_by_type.size() - 1);
+    int random_index = randomInt(0, this->rooms_by_type.at(type).size() - 1);
 
-    auto it = this->rooms_by_type.begin();
-    std::advance(it, random_index);
-    return it->second;
+    return this->rooms_by_type.at(type).at(random_index);
 }
 
 std::shared_ptr<Room> MazeGenerator::_pullRoomByClass(const RoomClass& rclass) {
@@ -426,14 +435,14 @@ std::vector<glm::ivec2> MazeGenerator::_getRoomCoordsTakenBy(RoomSize size, glm:
     return coords;
 }
 
-bool MazeGenerator::_hasOpenConnection(std::shared_ptr<Room> room, glm::ivec2 origin_coord) {
-    for (const auto& coord : this->_getAdjRoomCoords(room, origin_coord)) {
-        if (this->maze[coord.y][coord.x] == UNUSED_TILE) {
-            return true;
-        }
-    }
-    return false;
-}
+// bool MazeGenerator::_hasOpenConnection(std::shared_ptr<Room> room, glm::ivec2 origin_coord) {
+//     for (const auto& coord : this->_getAdjRoomCoords(room, origin_coord)) {
+//         if (this->maze[coord.y][coord.x] == UNUSED_TILE) {
+//             return true;
+//         }
+//     }
+//     return false;
+// }
 
 std::vector<glm::ivec2> MazeGenerator::_getAdjRoomCoords(std::shared_ptr<Room> room, glm::ivec2 origin_coord) {
     std::vector<glm::ivec2> adj_coords;
@@ -499,8 +508,54 @@ void MazeGenerator::_placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coo
     auto coords = _getRoomCoordsTakenBy(room->rclass.size, origin_coord);
 
     for (auto& coord : coords) {
-        assert(this->maze[coord.y][coord.x] == UNUSED_TILE);
+        assert(!this->maze.contains(coord));
 
-        this->maze[coord.y][coord.x] = room->id;
+        this->maze.insert({coord, room->id});
     }
+
+    // add open rooms slots to frontier
+    if (room->rclass.entries & RoomEntry::T) {
+        if (room->rclass.size == RoomSize::_10x10) {
+            glm::ivec2 adj_coord(origin_coord.x, origin_coord.y - 1);
+            if (_isOpenWorldCoord(adj_coord)) {
+                this->frontier.push(adj_coord);
+            }
+        } else {
+            assert(false);
+        }
+    }
+    if (room->rclass.entries & RoomEntry::B) {
+        if (room->rclass.size == RoomSize::_10x10) {
+            glm::ivec2 adj_coord(origin_coord.x, origin_coord.y + 1);
+            if (_isOpenWorldCoord(adj_coord)) {
+                this->frontier.push(adj_coord);
+            }
+        } else {
+            assert(false);
+        }
+    }
+    if (room->rclass.entries & RoomEntry::L) {
+        if (room->rclass.size == RoomSize::_10x10) {
+            glm::ivec2 adj_coord(origin_coord.x - 1, origin_coord.y);
+            if (_isOpenWorldCoord(adj_coord)) {
+                this->frontier.push(adj_coord);
+            }
+        } else {
+            assert(false);
+        }
+    }
+    if (room->rclass.entries & RoomEntry::R) {
+        if (room->rclass.size == RoomSize::_10x10) {
+            glm::ivec2 adj_coord(origin_coord.x + 1, origin_coord.y);
+            if (_isOpenWorldCoord(adj_coord)) {
+                this->frontier.push(adj_coord);
+            }
+        } else {
+            assert(false);
+        }
+    }
+}
+
+bool MazeGenerator::_isOpenWorldCoord(glm::ivec2 coord) {
+    return (!this->maze.contains(coord));
 }
