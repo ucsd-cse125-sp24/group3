@@ -44,28 +44,30 @@ MazeGenerator::MazeGenerator() {
 
 
 Grid MazeGenerator::generate() {
-    std::cout << "Start\n";
-
     _placeRoom(_pullRoomByType(RoomType::SPAWN), glm::ivec2(0, 0));
 
-    auto exit_room = _pullRoomByType(RoomType::EXIT);
-    // haven't implemented larger exit rooms yet
-    assert(exit_room->rclass.size == RoomSize::_10x10);
+    int num_rooms_placed = 1;
+    while (!this->frontier.empty() && num_rooms_placed < 30) {
+        const auto& [coord, required_entryway] = this->frontier.front();
+        this->frontier.pop();
 
-    _placeRoom(exit_room, glm::ivec2(3, 3));
+        if (!_isOpenWorldCoord(coord)) {
+            continue; // something took its place in the meantime
+        }
 
-    int num_rooms_placed = 2;
+        while (true) {
+            auto room = _pullRoomByType(RoomType::EASY);
 
-    // while (!this->frontier.empty()) {
-    //     auto coord = this->frontier.front();
-    //     this->frontier.pop();
+            if ( (room->rclass.entries & required_entryway) == 0) {
+                continue; // can't connect, so pull again
+            }
 
-    //     if (!_isOpenWorldCoord(coord)) {
-    //         continue; // something took its place in the meantime
-    //     }
+            _placeRoom(room, coord);
+            break;
+        }
 
-    //     auto room = _pullRoomByType(RoomType::EASY);
-    // }
+        num_rooms_placed++;
+    }
 
     int min_x = std::numeric_limits<int>::max();
     int min_y = std::numeric_limits<int>::max();
@@ -88,7 +90,6 @@ Grid MazeGenerator::generate() {
     // room_coord guaranteed to be top left coord of room because if ivec2_comparator
     for (const auto& [room_coord, room_id] : this->maze) {
         auto& room = this->rooms_by_id.at(room_id);
-        std::cout << room_id << "\n";
 
         if (skip.contains(room_coord)) {
             continue;
@@ -115,7 +116,11 @@ Grid MazeGenerator::generate() {
     for (int row = 0; row < output.getRows(); row++) {
         for (int col = 0; col < output.getColumns(); col++) {
             if (output.getCell(col, row) == nullptr) {
-                output.addCell(col, row, CellType::Empty);
+                output.addCell(col, row, CellType::Wall);
+            }
+
+            if (row == 0 || row == output.getRows() - 1 || col == 0 || col == output.getColumns()) {
+                output.getCell(col, row)->type = CellType::Wall;
             }
         }
     }
@@ -171,8 +176,6 @@ void MazeGenerator::_loadRoom(boost::filesystem::path path) {
         std::cerr << "FATAL: invalid room size " << rows << "x" << columns << "\n";
         std::exit(1);
     }
-    std::cout << "\t" << rows << "x" << columns << '\n';
-
 	//	Initialize Grid with the specified rows and columns
 	Grid grid(rows, columns);
 
@@ -224,8 +227,6 @@ void MazeGenerator::_loadRoom(boost::filesystem::path path) {
     this->rooms_by_type.at(rclass.type).push_back(room);
     this->rooms_by_id.insert({id, room});
     this->rooms_by_class.insert({rclass, room});
-
-    std::cout << "\tLoaded\n";
 }
 
 RoomType MazeGenerator::_getRoomType(boost::filesystem::path path) {
@@ -518,7 +519,8 @@ void MazeGenerator::_placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coo
         if (room->rclass.size == RoomSize::_10x10) {
             glm::ivec2 adj_coord(origin_coord.x, origin_coord.y - 1);
             if (_isOpenWorldCoord(adj_coord)) {
-                this->frontier.push(adj_coord);
+                // ensure it has a bottom entry
+                this->frontier.push({adj_coord, RoomEntry::B});
             }
         } else {
             assert(false);
@@ -528,7 +530,8 @@ void MazeGenerator::_placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coo
         if (room->rclass.size == RoomSize::_10x10) {
             glm::ivec2 adj_coord(origin_coord.x, origin_coord.y + 1);
             if (_isOpenWorldCoord(adj_coord)) {
-                this->frontier.push(adj_coord);
+                // ensure it has a top entry
+                this->frontier.push({adj_coord, RoomEntry::T});
             }
         } else {
             assert(false);
@@ -538,7 +541,8 @@ void MazeGenerator::_placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coo
         if (room->rclass.size == RoomSize::_10x10) {
             glm::ivec2 adj_coord(origin_coord.x - 1, origin_coord.y);
             if (_isOpenWorldCoord(adj_coord)) {
-                this->frontier.push(adj_coord);
+                // ensure it has a Right entry
+                this->frontier.push({adj_coord, RoomEntry::R});
             }
         } else {
             assert(false);
@@ -548,7 +552,8 @@ void MazeGenerator::_placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coo
         if (room->rclass.size == RoomSize::_10x10) {
             glm::ivec2 adj_coord(origin_coord.x + 1, origin_coord.y);
             if (_isOpenWorldCoord(adj_coord)) {
-                this->frontier.push(adj_coord);
+                // ensure it has a Left entry
+                this->frontier.push({adj_coord, RoomEntry::L});
             }
         } else {
             assert(false);

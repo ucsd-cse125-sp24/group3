@@ -101,6 +101,9 @@ struct Room {
 
 struct ivec2_comparator {
     bool operator()(const glm::ivec2& lhs, const glm::ivec2& rhs) const {
+        if (lhs.x < rhs.x) {
+            return true;
+        }
         if (lhs.x > rhs.x) {
             return false;
         }
@@ -131,7 +134,9 @@ private:
 
     // bool _hasOpenConnection(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
 
-    std::queue<glm::ivec2> frontier;
+    // frontier -> (coord, U) => add a room at coord, and make sure it has an UP entrance
+    // (connecting from the prior room's bottom)
+    std::queue<std::pair<glm::ivec2, RoomEntry>> frontier;
     void _placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
 
     bool _isOpenWorldCoord(glm::ivec2 coord);
