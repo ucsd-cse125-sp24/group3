@@ -62,12 +62,89 @@ Grid MazeGenerator::generate() {
                 continue; // can't connect, so pull again
             }
 
-            _placeRoom(room, coord);
+            std::vector<glm::vec2> possible_origin_coords;
+            // coord is the adjacent coord to the room that is already in the maze
+            // required_entryway is the entrywawy that this new room is required to have
+            // so required_entryway of BOTTOM means we are connecting to the TOP of a previously
+            // inserted room.
+            // TODO: refactor into helper function shadow realm
+            if (room->rclass.size == RoomSize::_10x10) {
+                possible_origin_coords.push_back(coord);
+            } else if (room->rclass.size == RoomSize::_20x20) {
+                switch (required_entryway) {
+                    case RoomEntry::T:
+                        possible_origin_coords.push_back(coord);
+                        possible_origin_coords.push_back(coord + glm::ivec2(-1, 0));
+                        break;
+                    case RoomEntry::B:
+                        possible_origin_coords.push_back(coord + glm::ivec2(0,  -1));
+                        possible_origin_coords.push_back(coord + glm::ivec2(-1, -1));
+                        break;
+                    case RoomEntry::L:
+                        possible_origin_coords.push_back(coord);
+                        possible_origin_coords.push_back(coord + glm::ivec2(0, -1));
+                        break;
+                    case RoomEntry::R:
+                        possible_origin_coords.push_back(coord + glm::ivec2(-1, 0));
+                        possible_origin_coords.push_back(coord + glm::ivec2(-1, -1));
+                        break;
+                }
+            } else if (room->rclass.size == RoomSize::_40x40) {
+                switch (required_entryway) {
+                    case RoomEntry::T:
+                        possible_origin_coords.push_back(coord);
+                        possible_origin_coords.push_back(coord + glm::ivec2(-1, 0));
+                        possible_origin_coords.push_back(coord + glm::ivec2(-2, 0));
+                        possible_origin_coords.push_back(coord + glm::ivec2(-3, 0));
+                        break;
+                    case RoomEntry::B:
+                        possible_origin_coords.push_back(coord + glm::ivec2(0, -3));
+                        possible_origin_coords.push_back(coord + glm::ivec2(-1, -3));
+                        possible_origin_coords.push_back(coord + glm::ivec2(-2, -3));
+                        possible_origin_coords.push_back(coord + glm::ivec2(-3, -3));
+                        break;
+                    case RoomEntry::L:
+                        possible_origin_coords.push_back(coord);
+                        possible_origin_coords.push_back(coord + glm::ivec2(0, -1));
+                        possible_origin_coords.push_back(coord + glm::ivec2(0, -2));
+                        possible_origin_coords.push_back(coord + glm::ivec2(0, -3));
+                        break;
+                    case RoomEntry::R:
+                        possible_origin_coords.push_back(coord + glm::ivec2(-3, 0));
+                        possible_origin_coords.push_back(coord + glm::ivec2(-3, -1));
+                        possible_origin_coords.push_back(coord + glm::ivec2(-3, -2));
+                        possible_origin_coords.push_back(coord + glm::ivec2(-3, -3));
+                        break;
+                }
+            }
+
+            std::optional<glm::ivec2> origin_coord;
+            for (auto curr_origin_coord : possible_origin_coords) {
+                bool okay = true;
+                for (auto room_coord : _getRoomCoordsTakenBy(room->rclass.size, curr_origin_coord)) {
+                    if (!_isOpenWorldCoord(room_coord)) {
+                        okay = false;
+                        break;
+                    }
+                }
+                if (okay) {
+                    origin_coord = curr_origin_coord;
+                    break;
+                }
+            }
+
+            if (!origin_coord.has_value()) {
+                continue;
+            }
+
+            _placeRoom(room, origin_coord.value());
             break;
         }
 
         num_rooms_placed++;
     }
+
+    std::cout << "Done: created " << num_rooms_placed << " rooms.\n";
 
     int min_x = std::numeric_limits<int>::max();
     int min_y = std::numeric_limits<int>::max();
@@ -119,7 +196,7 @@ Grid MazeGenerator::generate() {
                 output.addCell(col, row, CellType::Wall);
             }
 
-            if (row == 0 || row == output.getRows() - 1 || col == 0 || col == output.getColumns()) {
+            if (row == 0 || row == output.getRows() - 1 || col == 0 || col == output.getColumns() - 1) {
                 output.getCell(col, row)->type = CellType::Wall;
             }
         }
@@ -445,59 +522,59 @@ std::vector<glm::ivec2> MazeGenerator::_getRoomCoordsTakenBy(RoomSize size, glm:
 //     return false;
 // }
 
-std::vector<glm::ivec2> MazeGenerator::_getAdjRoomCoords(std::shared_ptr<Room> room, glm::ivec2 origin_coord) {
-    std::vector<glm::ivec2> adj_coords;
+std::vector<std::pair<glm::ivec2, RoomEntry>> MazeGenerator::_getAdjRoomCoords(std::shared_ptr<Room> room, glm::ivec2 origin_coord) {
+    std::vector<std::pair<glm::ivec2, RoomEntry>> adj_coords;
     auto coords = this->_getRoomCoordsTakenBy(room->rclass.size, origin_coord);
 
-    if (room->rclass.entries & RoomEntry::T != 0) {
-        adj_coords.push_back(origin_coord + glm::ivec2(0, 1));
+    if ((room->rclass.entries & RoomEntry::T) != 0) {
+        adj_coords.push_back({origin_coord + glm::ivec2(0, -1), RoomEntry::B}); // need bottom entry for whatever would be placed here
         if (room->rclass.size == RoomSize::_20x20) {
-            adj_coords.push_back(origin_coord + glm::ivec2(1, 1));
+            adj_coords.push_back({origin_coord + glm::ivec2(1, 1), RoomEntry::B});
         } else if (room->rclass.size == RoomSize::_40x40) {
-            adj_coords.push_back(origin_coord + glm::ivec2(1, 1));
+            adj_coords.push_back({origin_coord + glm::ivec2(1, 1), RoomEntry::B});
 
-            adj_coords.push_back(origin_coord + glm::ivec2(2, 1));
-            adj_coords.push_back(origin_coord + glm::ivec2(3, 1));
+            adj_coords.push_back({origin_coord + glm::ivec2(2, 1), RoomEntry::B});
+            adj_coords.push_back({origin_coord + glm::ivec2(3, 1), RoomEntry::B});
         }
     }
 
-    if (room->rclass.entries & RoomEntry::L != 0) {
-        adj_coords.push_back(origin_coord + glm::ivec2(-1, 0));
+    if ((room->rclass.entries & RoomEntry::L) != 0) {
+        adj_coords.push_back({origin_coord + glm::ivec2(-1, 0), RoomEntry::R});
         if (room->rclass.size == RoomSize::_20x20) {
-            adj_coords.push_back(origin_coord + glm::ivec2(-1, 1));
+            adj_coords.push_back({origin_coord + glm::ivec2(-1, 1), RoomEntry::R});
         } else if (room->rclass.size == RoomSize::_40x40) {
-            adj_coords.push_back(origin_coord + glm::ivec2(-1, 1));
+            adj_coords.push_back({origin_coord + glm::ivec2(-1, 1), RoomEntry::R});
 
-            adj_coords.push_back(origin_coord + glm::ivec2(-1, 2));
-            adj_coords.push_back(origin_coord + glm::ivec2(-1, 3));
+            adj_coords.push_back({origin_coord + glm::ivec2(-1, 2), RoomEntry::R});
+            adj_coords.push_back({origin_coord + glm::ivec2(-1, 3), RoomEntry::R});
         }
     }
 
-    if (room->rclass.entries & RoomEntry::B != 0) {
+    if ((room->rclass.entries & RoomEntry::B) != 0) {
         if (room->rclass.size == RoomSize::_10x10) {
-            adj_coords.push_back(origin_coord + glm::ivec2(0, 1));
+            adj_coords.push_back({origin_coord + glm::ivec2(0, 1), RoomEntry::T});
         } else if (room->rclass.size == RoomSize::_20x20) {
-            adj_coords.push_back(origin_coord + glm::ivec2(0, 2));
-            adj_coords.push_back(origin_coord + glm::ivec2(1, 2));
+            adj_coords.push_back({origin_coord + glm::ivec2(0, 2), RoomEntry::T});
+            adj_coords.push_back({origin_coord + glm::ivec2(1, 2), RoomEntry::T});
         } else if (room->rclass.size == RoomSize::_40x40) {
-            adj_coords.push_back(origin_coord + glm::ivec2(0, 4));
-            adj_coords.push_back(origin_coord + glm::ivec2(1, 4));
-            adj_coords.push_back(origin_coord + glm::ivec2(2, 4));
-            adj_coords.push_back(origin_coord + glm::ivec2(3, 4));
+            adj_coords.push_back({origin_coord + glm::ivec2(0, 4), RoomEntry::T});
+            adj_coords.push_back({origin_coord + glm::ivec2(1, 4), RoomEntry::T});
+            adj_coords.push_back({origin_coord + glm::ivec2(2, 4), RoomEntry::T});
+            adj_coords.push_back({origin_coord + glm::ivec2(3, 4), RoomEntry::T});
         }
     }
 
-    if (room->rclass.entries & RoomEntry::R != 0) {
+    if ((room->rclass.entries & RoomEntry::R) != 0) {
         if (room->rclass.size == RoomSize::_10x10) {
-            adj_coords.push_back(origin_coord + glm::ivec2(1, 0));
+            adj_coords.push_back({origin_coord + glm::ivec2(1, 0), RoomEntry::L});
         } else if (room->rclass.size == RoomSize::_20x20) {
-            adj_coords.push_back(origin_coord + glm::ivec2(2, 0));
-            adj_coords.push_back(origin_coord + glm::ivec2(2, 1));
+            adj_coords.push_back({origin_coord + glm::ivec2(2, 0), RoomEntry::L});
+            adj_coords.push_back({origin_coord + glm::ivec2(2, 1), RoomEntry::L});
         } else if (room->rclass.size == RoomSize::_40x40) {
-            adj_coords.push_back(origin_coord + glm::ivec2(4, 0));
-            adj_coords.push_back(origin_coord + glm::ivec2(4, 1));
-            adj_coords.push_back(origin_coord + glm::ivec2(4, 2));
-            adj_coords.push_back(origin_coord + glm::ivec2(4, 3));
+            adj_coords.push_back({origin_coord + glm::ivec2(4, 0), RoomEntry::L});
+            adj_coords.push_back({origin_coord + glm::ivec2(4, 1), RoomEntry::L});
+            adj_coords.push_back({origin_coord + glm::ivec2(4, 2), RoomEntry::L});
+            adj_coords.push_back({origin_coord + glm::ivec2(4, 3), RoomEntry::L});
         }
     }
 
@@ -514,49 +591,11 @@ void MazeGenerator::_placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coo
         this->maze.insert({coord, room->id});
     }
 
-    // add open rooms slots to frontier
-    if (room->rclass.entries & RoomEntry::T) {
-        if (room->rclass.size == RoomSize::_10x10) {
-            glm::ivec2 adj_coord(origin_coord.x, origin_coord.y - 1);
-            if (_isOpenWorldCoord(adj_coord)) {
-                // ensure it has a bottom entry
-                this->frontier.push({adj_coord, RoomEntry::B});
-            }
-        } else {
-            assert(false);
-        }
-    }
-    if (room->rclass.entries & RoomEntry::B) {
-        if (room->rclass.size == RoomSize::_10x10) {
-            glm::ivec2 adj_coord(origin_coord.x, origin_coord.y + 1);
-            if (_isOpenWorldCoord(adj_coord)) {
-                // ensure it has a top entry
-                this->frontier.push({adj_coord, RoomEntry::T});
-            }
-        } else {
-            assert(false);
-        }
-    }
-    if (room->rclass.entries & RoomEntry::L) {
-        if (room->rclass.size == RoomSize::_10x10) {
-            glm::ivec2 adj_coord(origin_coord.x - 1, origin_coord.y);
-            if (_isOpenWorldCoord(adj_coord)) {
-                // ensure it has a Right entry
-                this->frontier.push({adj_coord, RoomEntry::R});
-            }
-        } else {
-            assert(false);
-        }
-    }
-    if (room->rclass.entries & RoomEntry::R) {
-        if (room->rclass.size == RoomSize::_10x10) {
-            glm::ivec2 adj_coord(origin_coord.x + 1, origin_coord.y);
-            if (_isOpenWorldCoord(adj_coord)) {
-                // ensure it has a Left entry
-                this->frontier.push({adj_coord, RoomEntry::L});
-            }
-        } else {
-            assert(false);
+
+    for (const auto& [adj_coord, required_entry]: _getAdjRoomCoords(room, origin_coord)) {
+        if (_isOpenWorldCoord(adj_coord)) {
+            // ensure it has a bottom entry
+            this->frontier.push({adj_coord, required_entry});
         }
     }
 }

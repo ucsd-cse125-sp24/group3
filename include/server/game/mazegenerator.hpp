@@ -130,7 +130,11 @@ private:
     std::shared_ptr<Room> _pullRoomByType(RoomType type);
     std::shared_ptr<Room> _pullRoomByClass(const RoomClass& type);
 
-    std::vector<glm::ivec2> _getAdjRoomCoords(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
+    /**
+     * @returns TODO:
+     * roomentry = roomentry that the room placed at ivec2 would need
+     */
+    std::vector<std::pair<glm::ivec2, RoomEntry>> _getAdjRoomCoords(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
 
     // bool _hasOpenConnection(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
 

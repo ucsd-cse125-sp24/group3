@@ -89,7 +89,7 @@ glm::vec3 Grid::gridCellCenterPosition(GridCell* cell) {
 }
 
 void Grid::writeToFile() {
-	boost::filesystem::path path = getRepoRoot() / "maps" / "generated" / "test.maze";	
+	boost::filesystem::path path = getRepoRoot() / "maps" / "generated" / "test2.maze";	
 
 	std::ofstream of;
 	of.open(path.string());
@@ -101,7 +101,9 @@ void Grid::writeToFile() {
 			CellType type = this->getCell(x, y)->type;
 			of << cellTypeToChar(type);
 		}
-		of << '\n';
+		if (x != this->columns - 1) {
+			of << '\n';
+		}
 	}
 
 	of.close();

@@ -12,10 +12,11 @@
 using namespace std::chrono_literals;
 
 int main(int argc, char** argv) {
-    // MazeGenerator generator;
+    MazeGenerator generator;
 
-    // Grid grid = generator.generate();
-    // grid.writeToFile();
+    Grid grid = generator.generate();
+    grid.writeToFile();
+    std::exit(0);
 
     auto config = GameConfig::parse(argc, argv);
     boost::asio::io_context context;
