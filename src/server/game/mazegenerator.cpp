@@ -490,6 +490,7 @@ std::vector<glm::ivec2> MazeGenerator::_getRoomCoordsTakenBy(RoomSize size, glm:
             coords.push_back(top_left + glm::ivec2(2, 0));
             coords.push_back(top_left + glm::ivec2(3, 0));
             coords.push_back(top_left + glm::ivec2(2, 1));
+            coords.push_back(top_left + glm::ivec2(3, 1));
             coords.push_back(top_left + glm::ivec2(0, 2));
             coords.push_back(top_left + glm::ivec2(1, 2));
             coords.push_back(top_left + glm::ivec2(2, 2));
