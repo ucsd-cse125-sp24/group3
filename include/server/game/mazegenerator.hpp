@@ -145,6 +145,8 @@ private:
 
     bool _isOpenWorldCoord(glm::ivec2 coord);
 
+    std::vector<glm::ivec2> _getPossibleOriginCoords(std::shared_ptr<Room> room, RoomEntry required_entry, glm::ivec2 connect_coord);
+
     std::map<glm::ivec2, int, ivec2_comparator> maze;
 
     void _loadRoom(boost::filesystem::path path);

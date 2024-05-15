@@ -62,64 +62,13 @@ Grid MazeGenerator::generate() {
                 continue; // can't connect, so pull again
             }
 
-            std::vector<glm::vec2> possible_origin_coords;
             // coord is the adjacent coord to the room that is already in the maze
             // required_entryway is the entrywawy that this new room is required to have
             // so required_entryway of BOTTOM means we are connecting to the TOP of a previously
             // inserted room.
-            // TODO: refactor into helper function shadow realm
-            if (room->rclass.size == RoomSize::_10x10) {
-                possible_origin_coords.push_back(coord);
-            } else if (room->rclass.size == RoomSize::_20x20) {
-                switch (required_entryway) {
-                    case RoomEntry::T:
-                        possible_origin_coords.push_back(coord);
-                        possible_origin_coords.push_back(coord + glm::ivec2(-1, 0));
-                        break;
-                    case RoomEntry::B:
-                        possible_origin_coords.push_back(coord + glm::ivec2(0,  -1));
-                        possible_origin_coords.push_back(coord + glm::ivec2(-1, -1));
-                        break;
-                    case RoomEntry::L:
-                        possible_origin_coords.push_back(coord);
-                        possible_origin_coords.push_back(coord + glm::ivec2(0, -1));
-                        break;
-                    case RoomEntry::R:
-                        possible_origin_coords.push_back(coord + glm::ivec2(-1, 0));
-                        possible_origin_coords.push_back(coord + glm::ivec2(-1, -1));
-                        break;
-                }
-            } else if (room->rclass.size == RoomSize::_40x40) {
-                switch (required_entryway) {
-                    case RoomEntry::T:
-                        possible_origin_coords.push_back(coord);
-                        possible_origin_coords.push_back(coord + glm::ivec2(-1, 0));
-                        possible_origin_coords.push_back(coord + glm::ivec2(-2, 0));
-                        possible_origin_coords.push_back(coord + glm::ivec2(-3, 0));
-                        break;
-                    case RoomEntry::B:
-                        possible_origin_coords.push_back(coord + glm::ivec2(0, -3));
-                        possible_origin_coords.push_back(coord + glm::ivec2(-1, -3));
-                        possible_origin_coords.push_back(coord + glm::ivec2(-2, -3));
-                        possible_origin_coords.push_back(coord + glm::ivec2(-3, -3));
-                        break;
-                    case RoomEntry::L:
-                        possible_origin_coords.push_back(coord);
-                        possible_origin_coords.push_back(coord + glm::ivec2(0, -1));
-                        possible_origin_coords.push_back(coord + glm::ivec2(0, -2));
-                        possible_origin_coords.push_back(coord + glm::ivec2(0, -3));
-                        break;
-                    case RoomEntry::R:
-                        possible_origin_coords.push_back(coord + glm::ivec2(-3, 0));
-                        possible_origin_coords.push_back(coord + glm::ivec2(-3, -1));
-                        possible_origin_coords.push_back(coord + glm::ivec2(-3, -2));
-                        possible_origin_coords.push_back(coord + glm::ivec2(-3, -3));
-                        break;
-                }
-            }
 
             std::optional<glm::ivec2> origin_coord;
-            for (auto curr_origin_coord : possible_origin_coords) {
+            for (auto curr_origin_coord : _getPossibleOriginCoords(room, required_entryway, coord)) {
                 bool okay = true;
                 for (auto room_coord : _getRoomCoordsTakenBy(room->rclass.size, curr_origin_coord)) {
                     if (!_isOpenWorldCoord(room_coord)) {
@@ -603,4 +552,60 @@ void MazeGenerator::_placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coo
 
 bool MazeGenerator::_isOpenWorldCoord(glm::ivec2 coord) {
     return (!this->maze.contains(coord));
+}
+
+std::vector<glm::ivec2> MazeGenerator::_getPossibleOriginCoords(std::shared_ptr<Room> room, RoomEntry required_entryway, glm::ivec2 coord) {
+    std::vector<glm::ivec2> possible_origin_coords;
+
+    if (room->rclass.size == RoomSize::_10x10) {
+        possible_origin_coords.push_back(coord);
+    } else if (room->rclass.size == RoomSize::_20x20) {
+        switch (required_entryway) {
+            case RoomEntry::T:
+                possible_origin_coords.push_back(coord);
+                possible_origin_coords.push_back(coord + glm::ivec2(-1, 0));
+                break;
+            case RoomEntry::B:
+                possible_origin_coords.push_back(coord + glm::ivec2(0,  -1));
+                possible_origin_coords.push_back(coord + glm::ivec2(-1, -1));
+                break;
+            case RoomEntry::L:
+                possible_origin_coords.push_back(coord);
+                possible_origin_coords.push_back(coord + glm::ivec2(0, -1));
+                break;
+            case RoomEntry::R:
+                possible_origin_coords.push_back(coord + glm::ivec2(-1, 0));
+                possible_origin_coords.push_back(coord + glm::ivec2(-1, -1));
+                break;
+        }
+    } else if (room->rclass.size == RoomSize::_40x40) {
+        switch (required_entryway) {
+            case RoomEntry::T:
+                possible_origin_coords.push_back(coord);
+                possible_origin_coords.push_back(coord + glm::ivec2(-1, 0));
+                possible_origin_coords.push_back(coord + glm::ivec2(-2, 0));
+                possible_origin_coords.push_back(coord + glm::ivec2(-3, 0));
+                break;
+            case RoomEntry::B:
+                possible_origin_coords.push_back(coord + glm::ivec2(0, -3));
+                possible_origin_coords.push_back(coord + glm::ivec2(-1, -3));
+                possible_origin_coords.push_back(coord + glm::ivec2(-2, -3));
+                possible_origin_coords.push_back(coord + glm::ivec2(-3, -3));
+                break;
+            case RoomEntry::L:
+                possible_origin_coords.push_back(coord);
+                possible_origin_coords.push_back(coord + glm::ivec2(0, -1));
+                possible_origin_coords.push_back(coord + glm::ivec2(0, -2));
+                possible_origin_coords.push_back(coord + glm::ivec2(0, -3));
+                break;
+            case RoomEntry::R:
+                possible_origin_coords.push_back(coord + glm::ivec2(-3, 0));
+                possible_origin_coords.push_back(coord + glm::ivec2(-3, -1));
+                possible_origin_coords.push_back(coord + glm::ivec2(-3, -2));
+                possible_origin_coords.push_back(coord + glm::ivec2(-3, -3));
+                break;
+        }
+    }
+
+    return possible_origin_coords;
 }
