@@ -1,10 +1,15 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include <vector>
+#include <memory>
+#include <optional>
 #include <boost/filesystem.hpp>
 #include "server/game/grid.hpp"
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/hash.hpp"
 
 enum class RoomType {
     EMPTY, // testing
@@ -68,6 +73,15 @@ struct RoomClassHash {
     }
 };
 
+struct Room {
+    Room(Grid&& grid, const RoomClass& rclass, int id):
+        grid(grid), rclass(rclass), id(id) {}
+
+    Grid grid;
+    RoomClass rclass;
+    int id;
+};
+
 class MazeGenerator {
 public:
     MazeGenerator();
@@ -80,7 +94,23 @@ private:
     uint8_t _identifyEntryways(Grid& grid);
     void _validateRoom(Grid& grid, const RoomClass& rclass);
 
-    void _loadRoom(boost::filesystem::path path);
+    std::vector<glm::ivec2> _getRoomCoordsTakenBy(RoomSize size, glm::ivec2 top_left);
 
-    std::unordered_map<RoomClass, Grid, RoomClassHash> rooms;
+    std::shared_ptr<Room> _pullRoomByType(RoomType type);
+    std::shared_ptr<Room> _pullRoomByClass(const RoomClass& type);
+
+    std::vector<glm::ivec2> _getAdjRoomCoords(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
+
+    bool _hasOpenConnection(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
+    std::optional<glm::ivec2> _tryToConnect(std::shared_ptr<Room> new_room, std::shared_ptr<Room> old_room, glm::ivec2 old_origin);
+
+    std::unordered_set<glm::ivec2> room_coords_taken;
+
+    void _loadRoom(boost::filesystem::path path);
+    std::unordered_map<RoomType, std::shared_ptr<Room>> rooms_by_type;
+    std::unordered_map<RoomClass, std::shared_ptr<Room>, RoomClassHash> rooms_by_class;
+    std::unordered_map<int , std::shared_ptr<Room>, RoomClassHash> rooms_by_id;
+    std::unordered_map<RoomSize, std::shared_ptr<Room>> rooms_by_size;
+
+    int _next_room_id;
 };

@@ -6,4 +6,4 @@ build/
 docs/*
 !docs/.gitkeep
 
-maps/rooms/generated/**
+maps/generated/**

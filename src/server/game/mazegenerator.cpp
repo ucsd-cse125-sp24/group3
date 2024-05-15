@@ -4,14 +4,21 @@
 #include <iostream>
 #include <fstream>
 #include <bitset>
+#include <memory>
+#include <unordered_set>
 
+#include <boost/graph/adjacency_matrix.hpp>
 #include <boost/filesystem.hpp>
 
 #include "shared/utilities/root_path.hpp"
 #include "server/game/grid.hpp"
 #include "server/game/gridcell.hpp"
+#include "shared/utilities/rng.hpp"
+
 
 MazeGenerator::MazeGenerator() {
+    this->_next_room_id = 0;
+
     boost::filesystem::path rooms_dir = getRepoRoot() / "maps" / "rooms";
 
     boost::filesystem::path dir_10x10 = rooms_dir / "10x10";
@@ -31,6 +38,32 @@ MazeGenerator::MazeGenerator() {
 
 
 Grid MazeGenerator::generate() {
+    typedef boost::adjacency_matrix<boost::undirectedS> Graph;
+    Graph graph(_next_room_id);
+
+    auto spawn_room = _pullRoomByType(RoomType::SPAWN);
+
+    glm::ivec2 spawn_room_coord(0, 0);
+    for (const auto& coord : _getRoomCoordsTakenBy(spawn_room->rclass.size, spawn_room_coord)) {
+        this->room_coords_taken.insert(coord);
+    }
+
+    std::shared_ptr<Room> curr_room = spawn_room;
+    glm::ivec2 curr_origin_coord = spawn_room_coord;
+
+    std::vector<std::pair<std::shared_ptr<Room>, glm::ivec2>> frontier;
+
+    while (_hasOpenConnection(curr_room, curr_origin_coord)) {
+        auto new_room = this->_pullRoomByType(RoomType::EMPTY);
+
+        auto new_origin_coord = _tryToConnect(new_room, curr_room, curr_origin_coord);
+
+        boost::add_edge(curr_room->id, new_room->id, graph);
+
+        if (new_origin_coord.has_value()) {
+            frontier.push_back({new_room, new_origin_coord.value()});
+        }
+    }
 
 }
 
@@ -111,16 +144,33 @@ void MazeGenerator::_loadRoom(boost::filesystem::path path) {
 		}
 	}
 
+	file.close();
+
     RoomClass rclass;
     rclass.entries = this->_identifyEntryways(grid);
     rclass.type = this->_getRoomType(path);
     rclass.size = size;
-
     this->_validateRoom(grid, rclass);
 
-    std::cout << "\tLoaded\n";
+    int id = this->_next_room_id;
+    switch (size) {
+        case RoomSize::_10x10:
+            this->_next_room_id++;
+            break;
+        case RoomSize::_20x20: // take up 4 id slots
+            this->_next_room_id += 4;
+            break;
+        case RoomSize::_40x40: // take up 16 id slots
+            this->_next_room_id += 16;
+            break;
+    };
+    auto room = std::make_shared<Room>(std::move(grid), rclass, id);
+    this->rooms_by_type.insert({rclass.type, room});
+    this->rooms_by_id.insert({id, room});
+    this->rooms_by_class.insert({rclass, room});
+    this->rooms_by_size.insert({size, room});
 
-	file.close();
+    std::cout << "\tLoaded\n";
 }
 
 RoomType MazeGenerator::_getRoomType(boost::filesystem::path path) {
@@ -277,7 +327,8 @@ void MazeGenerator::_validateRoom(Grid& grid, const RoomClass& rclass) {
         if (num_entries != num_expected_entries) {
             std::cerr << "FATAL: expected " << num_expected_entries
                 << " empty spaces on the " << label << " but found " << num_entries << "\n"
-                << "If it looks correct to you, verify that you have them in the right coordinates\n";
+                << "If it looks correct to you, verify that you have them in the right coordinates.\n"
+                << "If you do, I might have messed up in mazegenerator.hpp. @Tyler on Discord\n";
             std::exit(1);
         }
     }
@@ -286,4 +337,126 @@ void MazeGenerator::_validateRoom(Grid& grid, const RoomClass& rclass) {
         std::cerr << "FATAL: room has no entrypoints? (Make sure they are in the correct positions)\n";
         std::exit(1);
     }
+}
+
+std::shared_ptr<Room> MazeGenerator::_pullRoomByType(RoomType type) {
+    if (type != RoomType::EMPTY) {
+        std::cerr << "only empty for testing\n";
+        std::exit(1);
+    }
+
+    int random_index = randomInt(0, this->rooms_by_type.size() - 1);
+
+    auto it = this->rooms_by_type.begin();
+    std::advance(it, random_index);
+    return it->second;
+}
+
+std::shared_ptr<Room> MazeGenerator::_pullRoomByClass(const RoomClass& rclass) {
+
+}
+
+std::vector<glm::ivec2> MazeGenerator::_getRoomCoordsTakenBy(RoomSize size, glm::ivec2 top_left) {
+    std::vector<glm::ivec2> coords;
+
+    switch (size) {
+        case RoomSize::_40x40:
+            coords.push_back(top_left + glm::ivec2(2, 0));
+            coords.push_back(top_left + glm::ivec2(3, 0));
+            coords.push_back(top_left + glm::ivec2(2, 1));
+            coords.push_back(top_left + glm::ivec2(0, 2));
+            coords.push_back(top_left + glm::ivec2(1, 2));
+            coords.push_back(top_left + glm::ivec2(2, 2));
+            coords.push_back(top_left + glm::ivec2(3, 2));
+            coords.push_back(top_left + glm::ivec2(0, 3));
+            coords.push_back(top_left + glm::ivec2(1, 3));
+            coords.push_back(top_left + glm::ivec2(2, 3));
+            coords.push_back(top_left + glm::ivec2(3, 3));
+        case RoomSize::_20x20:
+            coords.push_back(top_left + glm::ivec2(1, 0));
+            coords.push_back(top_left + glm::ivec2(1, 1));
+            coords.push_back(top_left + glm::ivec2(0, 1));
+        case RoomSize::_10x10:
+            coords.push_back(top_left);
+            break;
+        default:
+            std::cerr << "FATAL: MazeGenerator::_getRoomCoordsTakenBy WTF?? @Tyler on Discord\n";
+            std::exit(1);
+    }
+
+    return coords;
+}
+
+bool MazeGenerator::_hasOpenConnection(std::shared_ptr<Room> room, glm::ivec2 origin_coord) {
+    for (const auto& coord : this->_getAdjRoomCoords(room, origin_coord)) {
+        if (!this->room_coords_taken.contains(coord)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::vector<glm::ivec2> MazeGenerator::_getAdjRoomCoords(std::shared_ptr<Room> room, glm::ivec2 origin_coord) {
+    std::vector<glm::ivec2> adj_coords;
+    auto coords = this->_getRoomCoordsTakenBy(room->rclass.size, origin_coord);
+
+    if (room->rclass.entries & RoomEntry::T != 0) {
+        adj_coords.push_back(origin_coord + glm::ivec2(0, 1));
+        if (room->rclass.size == RoomSize::_20x20) {
+            adj_coords.push_back(origin_coord + glm::ivec2(1, 1));
+        } else if (room->rclass.size == RoomSize::_40x40) {
+            adj_coords.push_back(origin_coord + glm::ivec2(1, 1));
+
+            adj_coords.push_back(origin_coord + glm::ivec2(2, 1));
+            adj_coords.push_back(origin_coord + glm::ivec2(3, 1));
+        }
+    }
+
+    if (room->rclass.entries & RoomEntry::L != 0) {
+        adj_coords.push_back(origin_coord + glm::ivec2(-1, 0));
+        if (room->rclass.size == RoomSize::_20x20) {
+            adj_coords.push_back(origin_coord + glm::ivec2(-1, 1));
+        } else if (room->rclass.size == RoomSize::_40x40) {
+            adj_coords.push_back(origin_coord + glm::ivec2(-1, 1));
+
+            adj_coords.push_back(origin_coord + glm::ivec2(-1, 2));
+            adj_coords.push_back(origin_coord + glm::ivec2(-1, 3));
+        }
+    }
+
+    if (room->rclass.entries & RoomEntry::B != 0) {
+        if (room->rclass.size == RoomSize::_10x10) {
+            adj_coords.push_back(origin_coord + glm::ivec2(0, 1));
+        } else if (room->rclass.size == RoomSize::_20x20) {
+            adj_coords.push_back(origin_coord + glm::ivec2(0, 2));
+            adj_coords.push_back(origin_coord + glm::ivec2(1, 2));
+        } else if (room->rclass.size == RoomSize::_40x40) {
+            adj_coords.push_back(origin_coord + glm::ivec2(0, 4));
+            adj_coords.push_back(origin_coord + glm::ivec2(1, 4));
+            adj_coords.push_back(origin_coord + glm::ivec2(2, 4));
+            adj_coords.push_back(origin_coord + glm::ivec2(3, 4));
+        }
+    }
+
+    if (room->rclass.entries & RoomEntry::R != 0) {
+        if (room->rclass.size == RoomSize::_10x10) {
+            adj_coords.push_back(origin_coord + glm::ivec2(1, 0));
+        } else if (room->rclass.size == RoomSize::_20x20) {
+            adj_coords.push_back(origin_coord + glm::ivec2(2, 0));
+            adj_coords.push_back(origin_coord + glm::ivec2(2, 1));
+        } else if (room->rclass.size == RoomSize::_40x40) {
+            adj_coords.push_back(origin_coord + glm::ivec2(4, 0));
+            adj_coords.push_back(origin_coord + glm::ivec2(4, 1));
+            adj_coords.push_back(origin_coord + glm::ivec2(4, 2));
+            adj_coords.push_back(origin_coord + glm::ivec2(4, 3));
+        }
+    }
+
+    return adj_coords;
+
+}
+
+std::optional<glm::ivec2> _tryToConnect(std::shared_ptr<Room> new_room, std::shared_ptr<Room> old_room, glm::ivec2 old_origin) {
+
+    // todo: tries to connect old_room to new_room and if possible returns new origin coord
 }
