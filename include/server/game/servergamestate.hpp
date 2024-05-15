@@ -4,6 +4,7 @@
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/smartvector.hpp"
+#include "shared/utilities/custom_hash.hpp"
 #include "server/game/object.hpp"
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"
@@ -73,6 +74,21 @@ public:
 
 	void updateMovement();
 
+	/**
+	 * @brief Detects whether a collision occurs with other objects when the
+	 * given object moves to the given position.
+	 * @param object Object to perform collision detection for
+	 * @param newCornerPosition Corner position object moves to at which 
+	 * collision detection is performed
+	 * @note This method moves the object to the given position - i.e., it
+	 * updates the object's gridCellPositions vector and the ObjectManager's
+	 * cellToObjects unordered_map.
+	 * @return true if the object overlaps (collides) with any other object that
+	 * has a collider at the given position, and false otherwise.
+	 */
+	bool hasObjectCollided(Object* object, glm::vec3 newCornerPosition);
+
+	//	TODO: Add implementations of items
 	void updateItems();
 
 	void doObjectTicks();
@@ -213,4 +229,12 @@ private:
 	 * @brief 2-D Grid of GridCells (filled after loadMaze() is called).
 	 */
 	Grid grid;
+
+	/**
+	 * @brief Set of pairs of pointers to Objects that have collided in the
+	 * current timestep.
+	 * Maintained by hasObjectCollided() (which adds object pairs to it upon
+	 * collision detection) and updateMovement() (which clears it)
+	 */
+	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
 };
