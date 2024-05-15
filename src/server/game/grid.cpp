@@ -150,7 +150,5 @@ std::vector<glm::ivec2> Grid::getCellsFromPositionRange(glm::vec3 p1, glm::vec3 
 		}
 	}
 
-	//std::cout << "cellPositions length: " << cellPositions.size() << std::endl;
-
 	return cellPositions;
 }

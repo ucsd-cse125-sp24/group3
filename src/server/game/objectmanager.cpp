@@ -29,6 +29,13 @@ SpecificID ObjectManager::createObject(Object* object) {
 	EntityID globalID = this->objects.push(object);
 	object->globalID = globalID;
 
+	object->gridCellPositions = this->objectGridCells(object);
+	for (auto pos : object->gridCellPositions) {
+		if (!this->cellToObjects.contains(pos)) {
+			this->cellToObjects.insert({pos, std::vector<Object*>()});
+		}
+	}
+
 	switch (object->type) {
 		case ObjectType::Projectile:
 			object->typeID = this->projectiles.push(dynamic_cast<Projectile*>(object));
@@ -209,10 +216,10 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 		return false;
 	}
 
+
 	//	Remove the object from the cellToObjects hashmap
-	for (glm::vec2 cellPosition : object->gridCellPositions) {
-		std::vector<Object*>& objectsInCell =
-			this->cellToObjects[cellPosition];
+	for (auto cellPosition : object->gridCellPositions) {
+		std::vector<Object*>& objectsInCell = this->cellToObjects.at(cellPosition);
 
 		//	Remove object from Object * vector of objects in this cell
 		for (int i = 0; i < objectsInCell.size(); i++) {
@@ -223,16 +230,36 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 		}
 	}
 
+
 	//	Update object's corner position
 	object->physics.shared.corner = newCornerPosition;
+
+	// std::cout << "before: \n";
+	// std::cout << object->gridCellPositions.size() << "\n";
+	// std::cout << "now\n";
 
 	//	Get the object's new occupied GridCell position vector
 	object->gridCellPositions = objectGridCells(object);
 
-	//	Add object to cellToObjects hashmap
-	for (glm::vec2 cellPosition : object->gridCellPositions) {
-		this->cellToObjects[cellPosition].push_back(object);
+	// std::cout << "before: \n";
+	// std::cout << object->gridCellPositions.size() << "\n";
+	// std::cout << "now\n";
+
+	// for (int i = 0; i < object->gridCellPositions.size(); i++) {
+	// 	std::cout << "object->gridCellPositions[i]=" << object->gridCellPositions[i].x << ", " << object->gridCellPositions[i].y << "\n";
+	// }
+
+	for (int i = 0; i < object->gridCellPositions.size(); i++) {
+		std::cout << "object->gridCellPositions["<< i << "]=" << object->gridCellPositions[i].x << ", " << object->gridCellPositions[i].y << "\n";
+		std::cout << object->gridCellPositions.size() << "\n";
+		this->cellToObjects.at(object->gridCellPositions[i]).push_back(object);
 	}
+
+	//	Add object to cellToObjects hashmap
+	// for (auto cellPosition : object->gridCellPositions) {
+	// 	// std::cout << object->gridCellPositions.size() << "|";
+	// 	this->cellToObjects.at(cellPosition).push_back(object);
+	// }
 }
 
 std::vector<glm::ivec2> ObjectManager::objectGridCells(Object* object) {

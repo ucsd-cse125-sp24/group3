@@ -702,6 +702,7 @@ void ServerGameState::loadMaze() {
 		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
 			this->grid.getRows() * Grid::grid_cell_width)
 	));
+
 	// Create Ceiling
 	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Ceiling, 
 		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),
@@ -713,6 +714,7 @@ void ServerGameState::loadMaze() {
 	//	GridCell's position.
 	for (int row = 0; row < this->grid.getRows(); row++) {
 		for (int col = 0; col < this->grid.getColumns(); col++) {
+
 			GridCell* cell = this->grid.getCell(col, row);
 
 			switch (cell->type) {
