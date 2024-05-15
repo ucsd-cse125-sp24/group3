@@ -1,5 +1,8 @@
 #include "server/game/grid.hpp"
 #include "shared/utilities/rng.hpp"
+#include "shared/utilities/root_path.hpp"
+#include <boost/filesystem.hpp>
+#include <fstream>
 
 /*	Constructors and Destructors	*/
 Grid::Grid(int rows, int columns) : rows(rows), columns(columns) {
@@ -94,4 +97,23 @@ glm::vec3 Grid::gridCellCenterPosition(GridCell* cell) {
 	return glm::vec3((0.5 + cell->x) * grid_cell_width,
 			0,
 			(0.5 + cell->y) * grid_cell_width);
+}
+
+void Grid::writeToFile() {
+	boost::filesystem::path path = getRepoRoot() / "maps" / "generated" / "test.maze";	
+
+	std::ofstream of;
+	of.open(path.string());
+
+	assert(of.is_open());
+
+	for (int x = 0; x < this->columns; x++) {
+		for (int y = 0; y < this->rows; y++) {
+			CellType type = this->getCell(x, y)->type;
+			of << cellTypeToChar(type);
+		}
+		of << '\n';
+	}
+
+	of.close();
 }

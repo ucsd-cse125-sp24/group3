@@ -43,3 +43,44 @@ CellType charToCellType(char c) {
 		return CellType::Unknown;
 	}
 }
+
+char cellTypeToChar(CellType type) {
+	switch (type) {
+	case CellType::Empty:
+		return '.';
+	case CellType::Wall:
+		return '#';
+	case CellType::Spawn:
+		return '@';
+	case CellType::Enemy:
+		return 'E';
+	case CellType::SpikeTrap:
+		return 'X';
+	case CellType::FireballTrap:
+		return '&';
+	case CellType::FloorSpikeFull:
+		return '+';
+	case CellType::FloorSpikeVertical:
+		return '|';
+	case CellType::FloorSpikeHorizontal:
+		return '-';
+	case CellType::FakeWall:
+		return 'F';
+	case CellType::ArrowTrapUp:
+		return '^';
+	case CellType::ArrowTrapDown:
+		return 'v';
+	case CellType::ArrowTrapRight:
+		return '>';
+	case CellType::ArrowTrapLeft:
+		return '<';
+	case CellType::HealthPotion:
+		return 'h';
+	case CellType::NauseaPotion:
+		return 'n';
+	case CellType::InvisibilityPotion:
+		return 'i';
+	default:
+		return '?';
+	}
+}

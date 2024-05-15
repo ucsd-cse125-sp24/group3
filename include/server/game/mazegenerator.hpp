@@ -61,6 +61,10 @@ struct RoomClass {
     RoomType type;
     RoomSize size;
     uint8_t entries;
+
+    bool operator==(const RoomClass& other) const {
+        return this->type == other.type && this->size == other.size && this->entries == other.entries;
+    }
 };
 
 struct RoomClassHash { 
@@ -82,7 +86,8 @@ struct Room {
     int id;
 };
 
-#define MAZE_ROOM_SIZE 120
+#define NUM_ROOMS 10 // 3x3 rooms
+#define GRID_CELLS_PER_ROOM 10 // each room is 10x10 (or some multiple, but the unit level is 10)
 
 #define UNUSED_TILE -1
 
@@ -108,12 +113,12 @@ private:
     bool _hasOpenConnection(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
     void _placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
 
-    std::array<std::array<int, MAZE_ROOM_SIZE>, MAZE_ROOM_SIZE> maze;
+    std::array<std::array<int, NUM_ROOMS>, NUM_ROOMS> maze;
 
     void _loadRoom(boost::filesystem::path path);
-    std::unordered_map<RoomType, std::shared_ptr<Room>> rooms_by_type;
     std::unordered_map<RoomClass, std::shared_ptr<Room>, RoomClassHash> rooms_by_class;
-    std::unordered_map<int , std::shared_ptr<Room>, RoomClassHash> rooms_by_id;
+    std::unordered_map<RoomType, std::shared_ptr<Room>> rooms_by_type;
+    std::unordered_map<int , std::shared_ptr<Room>> rooms_by_id;
     std::unordered_map<RoomSize, std::shared_ptr<Room>> rooms_by_size;
 
     int _next_room_id;

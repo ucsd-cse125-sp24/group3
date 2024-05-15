@@ -30,6 +30,11 @@ enum class CellType {
  */
 CellType charToCellType(char c);
 
+/**
+ * TODO: write this
+ */
+char cellTypeToChar(CellType type);
+
 class GridCell {
 public:
 	/**

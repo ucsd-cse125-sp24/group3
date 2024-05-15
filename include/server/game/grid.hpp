@@ -104,6 +104,8 @@ public:
 	 */
 	glm::vec3 gridCellCenterPosition(GridCell * cell);
 
+	void writeToFile();
+
 private:
 
 	/**

@@ -50,7 +50,7 @@ Grid MazeGenerator::generate() {
     // haven't implemented larger exit rooms yet
     assert(exit_room->rclass.size == RoomSize::_10x10);
 
-    _placeRoom(exit_room, glm::ivec2(MAZE_ROOM_SIZE - 1, MAZE_ROOM_SIZE - 1));
+    _placeRoom(exit_room, glm::ivec2(NUM_ROOMS - 1, NUM_ROOMS - 1));
 
     // while (_hasOpenConnection(curr_room, curr_origin_coord)) {
     //     auto new_room = this->_pullRoomByType(RoomType::EMPTY);
@@ -64,6 +64,51 @@ Grid MazeGenerator::generate() {
     //     }
     // }
 
+    std::unordered_set<glm::ivec2> skip;
+
+    Grid output(NUM_ROOMS * GRID_CELLS_PER_ROOM, NUM_ROOMS * GRID_CELLS_PER_ROOM);
+
+    for (int room_row = 0; room_row < NUM_ROOMS; room_row++) {
+        for (int room_col = 0; room_col < NUM_ROOMS; room_col++) {
+            int room_id = this->maze[room_row][room_col];
+
+            if (room_id == UNUSED_TILE) {
+                for (int grid_row = 0; grid_row < GRID_CELLS_PER_ROOM; grid_row++) {
+                    for (int grid_col = 0; grid_col < GRID_CELLS_PER_ROOM; grid_col++) {
+                        int world_row = room_row * GRID_CELLS_PER_ROOM + grid_row;
+                        int world_col = room_col * GRID_CELLS_PER_ROOM + grid_col;
+
+                        output.addCell(world_col, world_row, CellType::Empty);
+                    }
+                }
+                continue;
+            }
+
+            auto& room = this->rooms_by_id.at(room_id);
+
+            if (skip.contains(glm::ivec2(room_col, room_row))) {
+                continue;
+            }
+
+            // skip this room in the future since we've already put it in its entirety in output
+            for (const auto& coord : _getRoomCoordsTakenBy(room->rclass.size, glm::ivec2(room_col, room_row))) {
+                skip.insert(coord);
+            }
+
+            for (int grid_row = 0; grid_row < room->grid.getRows(); grid_row++) {
+                for (int grid_col = 0; grid_col < room->grid.getColumns(); grid_col++) {
+                    CellType type = room->grid.getCell(grid_col, grid_row)->type;
+
+                    int world_row = room_row * GRID_CELLS_PER_ROOM + grid_row;
+                    int world_col = room_col * GRID_CELLS_PER_ROOM + grid_col;
+
+                    output.addCell(world_col, world_row, type);
+                }
+            }
+        }
+    }
+
+    return output;
 }
 
 
@@ -339,11 +384,6 @@ void MazeGenerator::_validateRoom(Grid& grid, const RoomClass& rclass) {
 }
 
 std::shared_ptr<Room> MazeGenerator::_pullRoomByType(RoomType type) {
-    if (type != RoomType::EMPTY) {
-        std::cerr << "only empty for testing\n";
-        std::exit(1);
-    }
-
     int random_index = randomInt(0, this->rooms_by_type.size() - 1);
 
     auto it = this->rooms_by_type.begin();
