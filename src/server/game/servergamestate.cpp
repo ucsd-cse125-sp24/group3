@@ -425,11 +425,17 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 			if (detectCollision(object->physics, otherObj->physics))
 			{
 				//	Add object pair to set of collided objects
-				this->collidedObjects.insert({ object, otherObj });
-
-				//	Handle collision response between the two objects
-				/*object->doCollision(otherObj, this);
-				otherObj->doCollision(object, this);*/
+				//	Note: object pair is added in increasing order of their
+				//	global IDs to avoid inserting the same pair twice in a
+				//	different order (e.g. {object, otherObj} and 
+				//	{otherObj, object} shouldn't be treated as two separate
+				//	object collision pairs)
+				if (object->globalID < otherObj->globalID) {
+					this->collidedObjects.insert({ object, otherObj });
+				}
+				else {
+					this->collidedObjects.insert({ otherObj, object });
+				}
 
 				//	Exception - if the other object is a floor spike trap,
 				//	perform collision handling but do not return true as the

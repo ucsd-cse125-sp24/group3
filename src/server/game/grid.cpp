@@ -100,7 +100,7 @@ glm::ivec2 Grid::getGridCellFromPosition(glm::vec3 position) {
 	//
 	//	Therefore, given a 3-D game world position (x_w, y_w, z_w), we can
 	//	determine the coordinates of the GridCell containing it via
-	//	x = floor(x_w / grid_cell_width) and y = floor(y_w / grid_cell_width)
+	//	x = floor(x_w / grid_cell_width) and y = floor(z_w / grid_cell_width)
 
 	return glm::ivec2(glm::floor(position.x / grid_cell_width),
 		glm::floor(position.z / grid_cell_width));
