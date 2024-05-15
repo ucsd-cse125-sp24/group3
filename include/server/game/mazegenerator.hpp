@@ -82,6 +82,10 @@ struct Room {
     int id;
 };
 
+#define MAZE_ROOM_SIZE 120
+
+#define UNUSED_TILE -1
+
 class MazeGenerator {
 public:
     MazeGenerator();
@@ -102,9 +106,9 @@ private:
     std::vector<glm::ivec2> _getAdjRoomCoords(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
 
     bool _hasOpenConnection(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
-    std::optional<glm::ivec2> _tryToConnect(std::shared_ptr<Room> new_room, std::shared_ptr<Room> old_room, glm::ivec2 old_origin);
+    void _placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coord);
 
-    std::unordered_set<glm::ivec2> room_coords_taken;
+    std::array<std::array<int, MAZE_ROOM_SIZE>, MAZE_ROOM_SIZE> maze;
 
     void _loadRoom(boost::filesystem::path path);
     std::unordered_map<RoomType, std::shared_ptr<Room>> rooms_by_type;

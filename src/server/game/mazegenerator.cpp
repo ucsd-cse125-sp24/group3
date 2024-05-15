@@ -38,32 +38,31 @@ MazeGenerator::MazeGenerator() {
 
 
 Grid MazeGenerator::generate() {
-    typedef boost::adjacency_matrix<boost::undirectedS> Graph;
-    Graph graph(_next_room_id);
-
-    auto spawn_room = _pullRoomByType(RoomType::SPAWN);
-
-    glm::ivec2 spawn_room_coord(0, 0);
-    for (const auto& coord : _getRoomCoordsTakenBy(spawn_room->rclass.size, spawn_room_coord)) {
-        this->room_coords_taken.insert(coord);
-    }
-
-    std::shared_ptr<Room> curr_room = spawn_room;
-    glm::ivec2 curr_origin_coord = spawn_room_coord;
-
-    std::vector<std::pair<std::shared_ptr<Room>, glm::ivec2>> frontier;
-
-    while (_hasOpenConnection(curr_room, curr_origin_coord)) {
-        auto new_room = this->_pullRoomByType(RoomType::EMPTY);
-
-        auto new_origin_coord = _tryToConnect(new_room, curr_room, curr_origin_coord);
-
-        boost::add_edge(curr_room->id, new_room->id, graph);
-
-        if (new_origin_coord.has_value()) {
-            frontier.push_back({new_room, new_origin_coord.value()});
+    for (auto& i : this->maze) {
+        for (auto& j : i) {
+            j = UNUSED_TILE; // mark every room coordinate as unused
         }
     }
+
+    _placeRoom(_pullRoomByType(RoomType::SPAWN), glm::ivec2(0, 0));
+
+    auto exit_room = _pullRoomByType(RoomType::EXIT);
+    // haven't implemented larger exit rooms yet
+    assert(exit_room->rclass.size == RoomSize::_10x10);
+
+    _placeRoom(exit_room, glm::ivec2(MAZE_ROOM_SIZE - 1, MAZE_ROOM_SIZE - 1));
+
+    // while (_hasOpenConnection(curr_room, curr_origin_coord)) {
+    //     auto new_room = this->_pullRoomByType(RoomType::EMPTY);
+
+    //     auto new_origin_coord = _tryToConnect(new_room, curr_room, curr_origin_coord);
+
+    //     boost::add_edge(curr_room->id, new_room->id, graph);
+
+    //     if (new_origin_coord.has_value()) {
+    //         frontier.push_back({new_room, new_origin_coord.value()});
+    //     }
+    // }
 
 }
 
@@ -389,7 +388,7 @@ std::vector<glm::ivec2> MazeGenerator::_getRoomCoordsTakenBy(RoomSize size, glm:
 
 bool MazeGenerator::_hasOpenConnection(std::shared_ptr<Room> room, glm::ivec2 origin_coord) {
     for (const auto& coord : this->_getAdjRoomCoords(room, origin_coord)) {
-        if (!this->room_coords_taken.contains(coord)) {
+        if (this->maze[coord.y][coord.x] == UNUSED_TILE) {
             return true;
         }
     }
@@ -456,7 +455,12 @@ std::vector<glm::ivec2> MazeGenerator::_getAdjRoomCoords(std::shared_ptr<Room> r
 
 }
 
-std::optional<glm::ivec2> _tryToConnect(std::shared_ptr<Room> new_room, std::shared_ptr<Room> old_room, glm::ivec2 old_origin) {
+void MazeGenerator::_placeRoom(std::shared_ptr<Room> room, glm::ivec2 origin_coord) {
+    auto coords = _getRoomCoordsTakenBy(room->rclass.size, origin_coord);
 
-    // todo: tries to connect old_room to new_room and if possible returns new origin coord
+    for (auto& coord : coords) {
+        assert(this->maze[coord.y][coord.x] == UNUSED_TILE);
+
+        this->maze[coord.y][coord.x] = room->id;
+    }
 }
