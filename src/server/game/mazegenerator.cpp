@@ -136,6 +136,8 @@ std::optional<Grid> MazeGenerator::generate() {
     int num_rows = max_y - min_y + 1;
     int num_cols = max_x - min_x + 1;
 
+    std::unordered_set<glm::ivec2> world_coords_in_maze;
+
     // Convert internal this->maze into final Grid
     std::unordered_set<glm::ivec2> skip;
     Grid output(num_rows * GRID_CELLS_PER_ROOM, num_cols * GRID_CELLS_PER_ROOM);
@@ -159,6 +161,8 @@ std::optional<Grid> MazeGenerator::generate() {
                 int world_row = (room_coord.y - min_y) * GRID_CELLS_PER_ROOM + grid_row;
                 int world_col = (room_coord.x - min_x) * GRID_CELLS_PER_ROOM + grid_col;
 
+                world_coords_in_maze.insert(glm::ivec2(world_col, world_row));
+
                 output.addCell(world_col, world_row, type);
             }
         }
@@ -180,6 +184,11 @@ std::optional<Grid> MazeGenerator::generate() {
     std::vector<glm::ivec2> walls_to_wipe;
     for (int row = 0; row < output.getRows(); row++) {
         for (int col = 0; col < output.getColumns(); col++) {
+
+            // check if within a room we created. if it is, then ignore
+            if (world_coords_in_maze.contains(glm::ivec2(col, row))) {
+                continue;
+            }
 
             int num_neighbor_walls = 0;            
 
