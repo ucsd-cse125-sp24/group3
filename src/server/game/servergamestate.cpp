@@ -233,9 +233,50 @@ void ServerGameState::update(const EventList& events) {
 				
 
 				2.) collision check with every GridCell in world (find first collision)
+				
 
 				3.) spawn trap at that GridCell using some helped spawn function
 			*/
+
+			Grid& currGrid = this->getGrid();
+
+			float cellWidth = currGrid.grid_cell_width;
+
+			if (trapPlacementEvent.world_pos.z < glm::floor(trapPlacementEvent.world_pos.z) + 0.5) {
+				trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z) - DM_Z_DISCOUNT;
+			} else {
+				trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z + DM_Z_DISCOUNT);
+			}
+
+			if (trapPlacementEvent.world_pos.x < glm::floor(trapPlacementEvent.world_pos.x) + 0.5) {
+				trapPlacementEvent.world_pos.x = glm::floor(trapPlacementEvent.world_pos.x) - DM_Z_DISCOUNT;
+			}
+			else {
+				trapPlacementEvent.world_pos.x = glm::floor(trapPlacementEvent.world_pos.x + DM_Z_DISCOUNT);
+			}
+
+			std::cout << "trap placement world pos: " << glm::to_string(trapPlacementEvent.world_pos) << std::endl;
+
+			glm::ivec2 gridCellPos = currGrid.getGridCellFromPosition(trapPlacementEvent.world_pos);
+
+			std::cout << "grid cell pos: " << glm::to_string(gridCellPos) << std::endl; 
+
+			GridCell* cell = currGrid.getCell(gridCellPos.x, gridCellPos.y);
+
+			switch (cell->type) {
+			case CellType::Wall:
+				std::cout << "the grid cell type clicked: " << "WALL" << std::endl;
+				break;
+			case CellType::Empty:
+				std::cout << "the grid cell type clicked: " << "FLOOR" << std::endl;
+				break;
+			case CellType::Spawn:
+				std::cout << "the grid cell type clicked: " << "SPAWN?!??!?!!?" << std::endl;
+				break;
+			default:
+				std::cout << "the grid cell type clicked: " << "bro wtf did you click" << std::endl;
+				break;
+			};
 		}
 
 		// default:
