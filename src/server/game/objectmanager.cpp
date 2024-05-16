@@ -62,9 +62,6 @@ SpecificID ObjectManager::createObject(Object* object) {
 			std::exit(1);
 	}
 
-	//	Move object to its given position
-	moveObject(object, object->physics.shared.corner);
-
 	return object->typeID;
 }
 
@@ -106,20 +103,6 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Potion:
 		this->items.remove(object->typeID);
 		break;
-	}
-
-	//	Remove object from cellToObjects hashmap
-	for (glm::vec2 cellPosition : object->gridCellPositions) {
-		std::vector<Object*>& objectsInCell =
-			this->cellToObjects[cellPosition];
-
-		//	Remove object from Object * vector of objects in this cell
-		for (int i = 0; i < objectsInCell.size(); i++) {
-			if (objectsInCell.at(i)->globalID == object->globalID) {
-				objectsInCell.erase(objectsInCell.begin() + i);
-				break;
-			}
-		}
 	}
 
 	//	Delete object
@@ -209,43 +192,6 @@ SmartVector<Trap*> ObjectManager::getTraps() {
 
 SmartVector<Projectile*> ObjectManager::getProjectiles() {
 	return this->projectiles;
-}
-
-/*	Object Movement	*/
-bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
-	if (object == nullptr) {
-		return false;
-	}
-
-	//	Remove the object from the cellToObjects hashmap
-	for (glm::vec2 cellPosition : object->gridCellPositions) {
-		std::vector<Object*>& objectsInCell =
-			this->cellToObjects[cellPosition];
-
-		//	Remove object from Object * vector of objects in this cell
-		for (int i = 0; i < objectsInCell.size(); i++) {
-			if (objectsInCell.at(i)->globalID == object->globalID) {
-				objectsInCell.erase(objectsInCell.begin() + i);
-				break;
-			}
-		}
-	}
-
-	//	Update object's corner position
-	object->physics.shared.corner = newCornerPosition;
-
-	//	Get the object's new occupied GridCell position vector
-	object->gridCellPositions = objectGridCells(object);
-
-	//	Add object to cellToObjects hashmap
-	for (glm::vec2 cellPosition : object->gridCellPositions) {
-		this->cellToObjects[cellPosition].push_back(object);
-	}
-}
-
-std::vector<glm::ivec2> ObjectManager::objectGridCells(Object* object) {
-	return Grid::getCellsFromPositionRange(object->physics.shared.corner,
-		object->physics.shared.corner + object->physics.shared.dimensions);
 }
 
 /*	SharedGameState generation	*/

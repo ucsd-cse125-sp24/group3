@@ -2,15 +2,12 @@
 
 #include <memory>
 
-#define	GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/hash.hpp"
-
 #include "server/game/object.hpp"
 #include "server/game/player.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/solidsurface.hpp"
 #include "server/game/torchlight.hpp"
-//#include "server/game/grid.hpp"
+#include "shared/utilities/smartvector.hpp"
 
 // forward declarations to use pointers
 class Trap; 
@@ -173,37 +170,6 @@ public:
 	 * instance
 	 */
 	SmartVector<Projectile*> getProjectiles();
-
-	/*	Object Movement	*/
-	
-	/**
-	 * @brief Attempts to move the given Object to the given corner position,
-	 * updating its GridCell position vector and the cellToObjects hashmap.
-	 * @param object Pointer to the Object to move.
-	 * @param newCornerPosition The new corner position the Object to which the
-	 * Object will be moved.
-	 * @note This function does NOT perform collision detection!
-	 * @return true if sccessfully moved the object to the new corner position
-	 * and false if the object pointer is nullptr.
-	 */
-	bool moveObject(Object* object, glm::vec3 newCornerPosition);
-
-	/**
-	 * @brief Given an object, his function will return a vector of positions of
-	 * GridCells that are currently occupied by this object.
-	 * @param object Pointer to the Object whose occupied GridCell position
-	 * vector will be calculated.
-	 * @return A vector of positions of GridCells currently occupied by this
-	 * object. If the object pointer is nullptr, an empty vector will be
-	 * returned.
-	 */
-	std::vector<glm::ivec2> objectGridCells(Object* object);
-
-	/**
-	 * @brief Hashmap that maps GridCell (x, y) positions to a vector of Objects
-	 * that occupy / overlap that GridCell.
-	 */
-	std::unordered_map<glm::ivec2, std::vector<Object*>> cellToObjects;
 
 	/*	SharedGameState generation	*/
 	

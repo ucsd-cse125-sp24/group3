@@ -52,6 +52,19 @@ public:
 	/*	Getters and Setters	*/
 
 	/**
+	 * @brief Sets the GridCell width for all grid cells in meters.
+	 * This method asserts that new_width > 0.
+	 * @param new_width New GridCell width value (in meters).
+	 */
+	void setGridCellWidth(float new_width);
+
+	/**
+	 * @brief Retrieves the current GridCell width in this grid.
+	 * @return Current GridCell width.
+	 */
+	float getGridCellWidth() const;
+
+	/**
 	 * @brief Returns the number of rows in this Grid.
 	 * @return Integer number of rows in this Grid.
 	 */
@@ -91,38 +104,6 @@ public:
 	 */
 	glm::vec3 gridCellCenterPosition(GridCell * cell);
 
-	/*	Static members	*/
-
-	/**
-	 * @brief The width, in meters, of each GridCell in this grid.
-	 */
-	static float const grid_cell_width;
-
-	/**
-	 * @brief Returns the position of the GridCell that would contain the given
-	 * position.
-	 * @param position 3-D Game world position 
-	 * @return 2-D Grid position of the GridCell that would contain the given
-	 * position.
-	 * @note It's possible that there may be no GridCell in a particularly used
-	 * Grid that has the returned coordinates (meaning the input position is out
-	 * of bounds of a given maze).
-	 */
-	static glm::ivec2 getGridCellFromPosition(glm::vec3 position);
-
-	/**
-	 * @brief Returns a vector of positions of GridCells that contain the
-	 * rectangle that extends from p1 to p2 
-	 * (assumes p1.x <= p2.x and p1.z <= p2.z)
-	 * @param p1 3-D game world point from which rectangle extands
-	 * @param p2 3-D game world point to which rectangle extends
-	 * @return vector of positions of GridCells that contain the rectangle that
-	 * extends from p1 to p2. If p1.x > p2.x or p1.z > p2.z, returns an empty
-	 * vector.
-	 */
-	static std::vector<glm::ivec2> getCellsFromPositionRange(glm::vec3 p1,
-		glm::vec3 p2);
-
 private:
 
 	/**
@@ -134,6 +115,11 @@ private:
 	 * @brief Number of columns in the 2-D GridCell vector.
 	 */
 	int columns;
+
+	/**
+	 * @brief The width, in meters, of each GridCell in this grid.
+	 */
+	float grid_cell_width;
 
 	/**
 	 * @brief 2-D vector of GridCells that is generated after reading an input
