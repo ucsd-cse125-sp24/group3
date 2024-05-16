@@ -20,6 +20,7 @@ Player::Player(glm::vec3 corner, glm::vec3 facing):
 {
     this->info.is_alive = true;
     this->info.respawn_time = NULL;
+    this->info.render = true;
 }
 
 Player::~Player() {

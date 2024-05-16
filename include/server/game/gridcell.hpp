@@ -18,6 +18,7 @@ enum class CellType {
 	HealthPotion,
 	NauseaPotion,
 	InvisibilityPotion,
+	InvincibilityPotion,
 	FireSpell,
 	HealSpell,
 	Unknown

@@ -10,7 +10,8 @@
 enum class PotionType {
 	Health,
     Nausea,
-    Invisibility //currently not implemented / open for any other types
+    Invisibility,
+    Invincibility
 };
 
 class Potion : public Item {

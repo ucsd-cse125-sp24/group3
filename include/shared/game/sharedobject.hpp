@@ -140,9 +140,10 @@ struct SharedTrapInfo {
 struct SharedPlayerInfo {
 	bool is_alive;
 	time_t respawn_time; // unix timestamp in ms when the player will be respawned
+	bool render; // for invis potion
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & is_alive & respawn_time;
+		ar & is_alive & respawn_time & render;
 	}
 };
 

@@ -24,12 +24,17 @@ Potion::Potion(glm::vec3 corner, glm::vec3 dimensions, PotionType type):
     case PotionType::Nausea:
         this->duration = NAUSEA_DURATION;
         this->effectScalar = NAUSEA_SCALAR;
-        this->modelType = ModelType::NauseaPotion;
+        this->modelType = ModelType::UnknownPotion;
         break;
     case PotionType::Invisibility:
         this->duration = INVIS_DURATION;
-        this->effectScalar = INVIS_OPACITY;
+        this->effectScalar = 0;
         this->modelType = ModelType::InvisibilityPotion;
+        break;
+    case PotionType::Invincibility:
+        this->duration = INVINCIBLITY_DUR;
+        this->effectScalar = INVINCIBLITY_SCALAR;
+        this->modelType = ModelType::UnknownPotion;
         break;
     }
 }
@@ -50,7 +55,11 @@ void Potion::useItem(Object* other, ServerGameState& state) {
         break;
     }
     case PotionType::Invisibility: {
-
+        player->info.render = false;
+        break;
+    }
+    case PotionType::Invincibility: {
+        player->stats.health.addMod(this->effectScalar);
         break;
     }
     }
@@ -71,9 +80,14 @@ void Potion::revertEffect(ServerGameState& state) {
         break;
     }
     case PotionType::Invisibility: {
-
+        this->usedPlayer->info.render = true;
         break;
     }
+    case PotionType::Invincibility: {
+        this->usedPlayer->stats.health.subMod(this->effectScalar);
+        this->usedPlayer->stats.health.increase(this->effectScalar);
+        break;
+    }                          
     }
 
     state.markForDeletion(this->globalID);

@@ -805,6 +805,16 @@ void ServerGameState::loadMaze() {
 					this->objects.createObject(new Potion(corner, dimensions, PotionType::Invisibility));
 					break;
 				}
+				case CellType::InvincibilityPotion: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Potion(corner, dimensions, PotionType::Invincibility));
+					break;
+				}
 				case CellType::SpikeTrap: {
                     const float HEIGHT_SHOWING = 0.5;
 					glm::vec3 dimensions(

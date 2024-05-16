@@ -8,8 +8,8 @@ enum class ModelType {
 	Player,
 	WarrenBear,
 	HealthPotion,
-	NauseaPotion,
 	InvisibilityPotion,
+	UnknownPotion,
 	FireSpell,
 	HealSpell,
 	Frame

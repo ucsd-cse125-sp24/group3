@@ -380,7 +380,7 @@ void GUI::_sharedGameHUD() {
             itemString = "Health Potion";
             break;
         }
-        case ModelType::NauseaPotion: {
+        case ModelType::UnknownPotion: {
             itemString = "??? Potion";
             break;
         }
@@ -405,7 +405,7 @@ void GUI::_sharedGameHUD() {
         font::Size::SMALL,
         font::Color::BLACK,
         fonts,
-        font::getRelativePixels(40)
+        font::getRelativePixels(70)
     );
     this->addWidget(std::move(item_txt));
 
@@ -420,29 +420,29 @@ void GUI::_sharedGameHUD() {
         if (self->inventoryInfo->inventory.contains(i)) {
             switch (self->inventoryInfo->inventory.at(i)) {
             case ModelType::HealthPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion)));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion), 2));
                 break;
             }
-            case ModelType::NauseaPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::NauseaPotion)));
+            case ModelType::UnknownPotion: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::UnknownPotion), 2));
                 break;
             }
             case ModelType::InvisibilityPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion)));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion), 2));
                 break;
             }
             case ModelType::FireSpell: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FireSpell)));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FireSpell), 2));
                 break;
             }
             case ModelType::HealSpell: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell)));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell), 2));
                 break;
             }
             }
         }
         else {
-            itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame)));
+            itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
         }
     }
 
@@ -457,10 +457,10 @@ void GUI::_sharedGameHUD() {
 
     for (int i = 1; i <= inventory_size; i++) {
         if (selected == i) {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame)));
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame), 2));
         }
         else {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame)));
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
         }
     }
 
@@ -481,7 +481,7 @@ void GUI::_layoutGameHUD() {
         font::Size::MEDIUM,
         font::Color::RED,
         fonts,
-        font::getRelativePixels(70)
+        font::getRelativePixels(90)
     );
     this->addWidget(std::move(health_txt));
 }

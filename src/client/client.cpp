@@ -308,6 +308,8 @@ void Client::draw() {
                     }
                     break;
                 }
+
+                if (!sharedObject->playerInfo->render) { break; } // dont render while invisible
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
 
                 auto player_pos = sharedObject->physics.corner;
@@ -430,7 +432,7 @@ void Client::draw() {
                     glm::vec3 color;
                     if (sharedObject->modelType == ModelType::HealthPotion) {
                         color = glm::vec3(1.0f, 0.0f, 0.0f);
-                    } else if (sharedObject->modelType == ModelType::NauseaPotion) {
+                    } else if (sharedObject->modelType == ModelType::UnknownPotion) {
                         color = glm::vec3(1.0f, 0.5f, 0.0f);
                     } else if (sharedObject->modelType == ModelType::InvisibilityPotion) {
                         color = glm::vec3(0.2f, 0.2f, 0.2f);
