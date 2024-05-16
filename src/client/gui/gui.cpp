@@ -409,24 +409,6 @@ void GUI::_sharedGameHUD() {
     );
     this->addWidget(std::move(item_txt));
 
-    // Flexbox for the item frames
-    auto frameflex = widget::Flexbox::make(
-        glm::vec2(0.0f, 0.0f),          //position relative to screen
-        glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
-        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
-    );
-
-    for (int i = 1; i <= inventory_size; i++) {
-        if (selected == i) {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame)));
-        }
-        else {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame)));
-        }
-    }
-
-    this->addWidget(std::move(frameflex));
-
     // Flexbox for the items 
     // Loading itemframe again if no item
     auto itemflex = widget::Flexbox::make(
@@ -465,6 +447,24 @@ void GUI::_sharedGameHUD() {
     }
 
     this->addWidget(std::move(itemflex));
+
+    // Flexbox for the item frames
+    auto frameflex = widget::Flexbox::make(
+        glm::vec2(0.0f, 0.0f),          //position relative to screen
+        glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
+    );
+
+    for (int i = 1; i <= inventory_size; i++) {
+        if (selected == i) {
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame)));
+        }
+        else {
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame)));
+        }
+    }
+
+    this->addWidget(std::move(frameflex));
 }
 
 void GUI::_layoutGameHUD() {

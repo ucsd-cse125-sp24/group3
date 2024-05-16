@@ -19,7 +19,7 @@ void Item::dropItem(Object* other, ServerGameState& state, float dropDistance) {
 
 	this->iteminfo.held = false;
 	this->physics.collider = Collider::Box;
-	this->physics.shared.corner = (player->physics.shared.corner + (player->physics.shared.facing * dropDistance)) * glm::vec3(1.0f, 0.0f, 1.0f);
+	state.objects.moveObject(this, (player->physics.shared.corner + (player->physics.shared.facing * dropDistance)) * glm::vec3(1.0f, 0.0f, 1.0f));
 }
 
 void Item::doCollision(Object* other, ServerGameState& state) {

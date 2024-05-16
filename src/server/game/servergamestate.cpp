@@ -187,7 +187,6 @@ void ServerGameState::update(const EventList& events) {
 		{
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
 			int itemSelected = player->sharedInventory.selected;
-			this->updated_entities.insert(player->globalID);
 
 			if (player->inventory.find(itemSelected) != player->inventory.end()) {
 				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
@@ -197,6 +196,9 @@ void ServerGameState::update(const EventList& events) {
 					player->inventory.erase(itemSelected);
 					player->sharedInventory.inventory.erase(itemSelected);
 				}
+
+				this->updated_entities.insert(player->globalID);
+				this->updated_entities.insert(item->globalID);
 			}
 			break;
 		}
@@ -204,14 +206,16 @@ void ServerGameState::update(const EventList& events) {
 		{
 			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
 			int itemSelected = player->sharedInventory.selected;
-			this->updated_entities.insert(player->globalID);
 
 			if (player->inventory.find(itemSelected) != player->inventory.end()) {
 				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
-				item->dropItem(player, *this, 4.0f);
-
+				item->dropItem(player, *this, 3.0f);
+				
 				player->inventory.erase(itemSelected);
 				player->sharedInventory.inventory.erase(itemSelected);
+
+				this->updated_entities.insert(player->globalID);
+				this->updated_entities.insert(item->globalID);
 			}
 			break;
 		}
@@ -440,7 +444,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				//	Exception - if the other object is a floor spike trap,
 				//	perform collision handling but do not return true as the
 				//	trap doesn't affect the movement of the object it hits
-				if (otherObj->type == ObjectType::FloorSpike) {
+				if (otherObj->type == ObjectType::FloorSpike || otherObj->type == ObjectType::Potion || otherObj->type == ObjectType::Spell) {
 					continue;
 				}
 
@@ -539,11 +543,12 @@ void ServerGameState::handleDeaths() {
 					item->dropItem(player, *this, 2.0f);
 					player->inventory.erase(i);
 					player->sharedInventory.inventory.erase(i);
+					this->updated_entities.insert(item->globalID);
 				}
 				// hardcode "random" drops
 				if (i == 1){ player->physics.shared.facing *= -1.0f; }
-				if (i == 2){ player->physics.shared.facing *= 0.5f; }
-				if (i == 3){ player->physics.shared.facing *= -1.0f; }
+				if (i == 2){ player->physics.shared.facing = glm::vec3(0.5f, 0, 0.7f); }
+				if (i == 3){ player->physics.shared.facing = glm::vec3(-0.3f, 0, 0.1f); }
 			}
 
 			this->updated_entities.insert(player->globalID);
