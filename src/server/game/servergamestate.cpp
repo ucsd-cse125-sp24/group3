@@ -34,7 +34,8 @@ ServerGameState::ServerGameState(GameConfig config) {
     auto grid = generator.generate();
     if (!grid.has_value()) {
 		// failed so try again
-        grid = generator.generate();
+		generator = MazeGenerator(config);
+		grid = generator.generate();
         attempts++;
     }
 

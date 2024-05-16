@@ -64,7 +64,10 @@ std::optional<Grid> MazeGenerator::generate() {
     std::queue<std::pair<glm::ivec2, RoomEntry>> empty;
     std::swap(this->frontier, empty);
     
-    _placeRoom(_pullRoomByType(RoomType::SPAWN), glm::ivec2(0, 0));
+    const glm::ivec2 SPAWN_COORD(0, 0);
+    const glm::vec2 SPAWN_COORD_F(static_cast<float>(SPAWN_COORD.x), static_cast<float>(SPAWN_COORD.y));
+
+    _placeRoom(_pullRoomByType(RoomType::SPAWN), SPAWN_COORD);
 
     _generatePolicy();
 
@@ -74,8 +77,31 @@ std::optional<Grid> MazeGenerator::generate() {
             return {};
         }
 
-        const auto& [coord, required_entryway] = this->frontier.front();
+        auto& [coord, required_entryway] = this->frontier.front();
         this->frontier.pop();
+
+        if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 1) {
+            // optimize the placing of the exit to make it as far away from the entrance as possible
+            // essentially go through the frontier and throw out everything but the farthest away
+            // from the spawn
+            // std::cout << "Placing exit, starting point is " << coord.x << ", " << coord.y << "\n";
+            while (!this->frontier.empty()) {
+                const auto& [other_coord, other_req_entry] = this->frontier.front();
+                // std::cout << "Considering " << other_coord.x << ", " << other_coord.y << " from " << other_req_entry << "\n";
+                this->frontier.pop();
+
+                glm::vec2 coord_f(coord);
+                glm::vec2 other_coord_f(other_coord);
+
+                if (glm::distance(SPAWN_COORD_F, coord_f) < glm::distance(SPAWN_COORD_F, other_coord_f)) {
+                    // std::cout << "taking other\n";
+                    coord = other_coord;
+                    required_entryway = other_req_entry;
+                }
+            }
+
+            // coord is now the farthest coord from the spawnpoint
+        }
 
         if (!_isOpenWorldCoord(coord)) {
             continue; // something took its place in the meantime
@@ -121,6 +147,9 @@ std::optional<Grid> MazeGenerator::generate() {
 
     std::cout << "Done: created " << _num_rooms_placed << " rooms.\n";
 
+    // everything beyond this point is converting the maze into the correct format
+    // we've already make all of the decisions about where they will go
+
     int min_x = std::numeric_limits<int>::max();
     int min_y = std::numeric_limits<int>::max();
     int max_x = std::numeric_limits<int>::min();
@@ -140,6 +169,9 @@ std::optional<Grid> MazeGenerator::generate() {
 
     // Convert internal this->maze into final Grid
     std::unordered_set<glm::ivec2> skip;
+
+    std::cout << "Generated maze is " << num_rows * GRID_CELLS_PER_ROOM << "x" << num_cols * GRID_CELLS_PER_ROOM << "\n";
+
     Grid output(num_rows * GRID_CELLS_PER_ROOM, num_cols * GRID_CELLS_PER_ROOM);
     // room_coord guaranteed to be top left coord of room because if ivec2_comparator
     for (const auto& [room_coord, room_id] : this->maze) {
@@ -181,11 +213,15 @@ std::optional<Grid> MazeGenerator::generate() {
         }
     }
 
+    // remove unnecessary walls
     std::vector<glm::ivec2> walls_to_wipe;
     for (int row = 0; row < output.getRows(); row++) {
         for (int col = 0; col < output.getColumns(); col++) {
 
             // check if within a room we created. if it is, then ignore
+            // this prevents cavities from being inside of the maze that
+            // make it hard for the DM to tell what is a part of the maze
+            // and what is not
             if (world_coords_in_maze.contains(glm::ivec2(col, row))) {
                 continue;
             }
