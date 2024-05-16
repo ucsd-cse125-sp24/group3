@@ -19,4 +19,7 @@ public:
 	SharedSolidSurface shared{};
 
 	virtual SharedObject toShared() override;
+
+private:
+	bool dm_highlight;
 };

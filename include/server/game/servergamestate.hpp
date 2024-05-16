@@ -15,9 +15,21 @@
 #include <chrono>
 #include <unordered_map>
 #include <queue>
+#include <boost/container_hash/hash.hpp>
 
 /// Represents a list of events from a certain client with a specified ID
 using EventList = std::vector<std::pair<EntityID, Event>>;
+
+struct IntPairHash {
+	size_t operator()(const std::pair<int, int>& pair) const {
+		std::size_t c = 0;
+
+		boost::hash_combine(c, pair.first);
+		boost::hash_combine(c, pair.second);
+
+		return c;
+	}
+};
 
 /**
  * @brief The ServerGameState class contains all abstract game state data and
@@ -239,4 +251,7 @@ private:
 	 * collision detection) and updateMovement() (which clears it)
 	 */
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
+
+
+	std::unordered_map< std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
 };

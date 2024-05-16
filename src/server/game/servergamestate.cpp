@@ -778,11 +778,20 @@ void ServerGameState::loadMaze() {
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
 
 	// Create Floor
-	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Floor, 
-		glm::vec3(0.0f, -0.1f, 0.0f),
-		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
-			this->grid.getRows() * Grid::grid_cell_width)
-	));
+	for (int c = 0; c < this->grid.getColumns(); c++) {
+		for (int r = 0; r < this->grid.getRows(); r++) {
+			SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
+				glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width),
+				glm::vec3(Grid::grid_cell_width, 0.1,
+					Grid::grid_cell_width)
+			);
+
+			this->objects.createObject(floor);
+
+			solidSurfaceInGridCells.insert(std::make_pair<std::pair<int,int>,std::vector<SolidSurface*>>(std::make_pair(c, r), { floor }));
+		}
+	}
+
 	// Create Ceiling
 	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Ceiling, 
 		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),

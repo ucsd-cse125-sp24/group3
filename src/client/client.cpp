@@ -398,6 +398,13 @@ void Client::draw() {
 
                 if (this->session->getInfo().is_dungeon_master) {
                     if (sharedObject->solidSurface->surfaceType != SurfaceType::Ceiling) {
+                        //if (sharedObject->solidSurface.) { // if highlighted
+                        //    this->cube_model->overrideSolidColor(glm::vec3(1.0f,0.0f,0.0f));
+                        //}
+                        //else {
+                        //    this->cube_model->overrideSolidColor({});
+                        //}
+
                         auto lightPos = glm::vec3(-2.0f, 10.0f, 0.0f);
                         this->cube_model->setDimensions(sharedObject->physics.dimensions);
                         this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());

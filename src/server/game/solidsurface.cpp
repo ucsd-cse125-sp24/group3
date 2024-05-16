@@ -3,12 +3,13 @@
 /*	Constructors and Destructors	*/
 SolidSurface::SolidSurface(
 	bool movable, Collider collider, SurfaceType type,
-	glm::vec3 corner, glm::vec3 dimensions):
+	glm::vec3 corner, glm::vec3 dimensions) :
 	Object(ObjectType::SolidSurface, Physics(movable, 
 		collider, corner, glm::vec3(0.0f), dimensions),
 		ModelType::Cube)
 {
 	this->shared.surfaceType = type;
+	this->dm_highlight = false;
 }
 
 SolidSurface::~SolidSurface() {}

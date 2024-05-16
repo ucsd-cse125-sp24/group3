@@ -91,6 +91,9 @@ class Mesh : public Renderable {
             glm::vec3 camPos, 
             glm::vec3 lightPos,
             bool fill) override;
+
+
+    std::optional<glm::vec3> solidColor;
  private:
      std::vector<Vertex>       vertices;
      std::vector<unsigned int> indices;
@@ -216,6 +219,9 @@ class Model : public Renderable {
      * in that dimension
      */
     void setDimensions(const glm::vec3& dimensions);
+
+    void overrideSolidColor(std::optional<glm::vec3> color);
+
  private:
     std::vector<Mesh> meshes;
     Bbox bbox;

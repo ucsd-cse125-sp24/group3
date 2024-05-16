@@ -89,8 +89,14 @@ void Mesh::draw(
     auto model = this->getModelMat();
     shader->setMat4("model", model);
 
+    if (this->solidColor.has_value()) {
+        shader->setVec3("material.diffuse", this->solidColor.value());
+    }
+    else {
+        shader->setVec3("material.diffuse", this->material.diffuse);
+    }
+
     // fragment shader uniforms
-    shader->setVec3("material.diffuse", this->material.diffuse);
     shader->setVec3("material.ambient", this->material.ambient);
     shader->setVec3("material.specular", this->material.specular);
     shader->setFloat("material.shininess", this->material.shininess);
@@ -348,6 +354,11 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, const aiTextur
     return textures;
 }
 
+void Model::overrideSolidColor(std::optional<glm::vec3> color) {
+    for (auto mesh : this->meshes) {
+        mesh.solidColor = color;
+    }
+}
 
 Texture::Texture(const std::string& filepath, const aiTextureType& type) {
     switch (type) {
