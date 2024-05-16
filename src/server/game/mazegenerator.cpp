@@ -71,6 +71,8 @@ std::optional<Grid> MazeGenerator::generate() {
 
     _generatePolicy();
 
+    glm::vec2 exit_coord_f;
+
     _num_rooms_placed = 1;
     while (_num_rooms_placed < REQUIRED_NUM_ROOMS) {
         if (this->frontier.empty()) {
@@ -80,27 +82,53 @@ std::optional<Grid> MazeGenerator::generate() {
         auto& [coord, required_entryway] = this->frontier.front();
         this->frontier.pop();
 
-        if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 1) {
-            // optimize the placing of the exit to make it as far away from the entrance as possible
+        if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 2) {
+            // optimize the placing of the exit and orb to make the exit as far away from the entrance as possible
             // essentially go through the frontier and throw out everything but the farthest away
             // from the spawn
-            // std::cout << "Placing exit, starting point is " << coord.x << ", " << coord.y << "\n";
-            while (!this->frontier.empty()) {
+            int size = this->frontier.size();
+            int count = 0;
+            while (count < size) {
+                count++;
                 const auto& [other_coord, other_req_entry] = this->frontier.front();
-                // std::cout << "Considering " << other_coord.x << ", " << other_coord.y << " from " << other_req_entry << "\n";
                 this->frontier.pop();
 
                 glm::vec2 coord_f(coord);
                 glm::vec2 other_coord_f(other_coord);
 
                 if (glm::distance(SPAWN_COORD_F, coord_f) < glm::distance(SPAWN_COORD_F, other_coord_f)) {
-                    // std::cout << "taking other\n";
+                    this->frontier.push({coord, required_entryway});
                     coord = other_coord;
                     required_entryway = other_req_entry;
+                } else {
+                    this->frontier.push({other_coord, required_entryway});
                 }
             }
-
+            exit_coord_f = coord;
             // coord is now the farthest coord from the spawnpoint
+            // and pullRoomFrom Policy will now place the exit
+        }
+
+        if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 1) {
+            // go through frontier, and get coord and required entry to be as far from exit_coord as possible
+            int size = this->frontier.size();
+            int count = 0;
+            while (count < size) {
+                count++;
+                const auto& [other_coord, other_req_entry] = this->frontier.front();
+                this->frontier.pop();
+
+                glm::vec2 coord_f(coord);
+                glm::vec2 other_coord_f(other_coord);
+
+                if (glm::distance(exit_coord_f, coord_f) < glm::distance(exit_coord_f, other_coord_f)) {
+                    this->frontier.push({coord, required_entryway});
+                    coord = other_coord;
+                    required_entryway = other_req_entry;
+                } else {
+                    this->frontier.push({other_coord, required_entryway});
+                }
+            }
         }
 
         if (!_isOpenWorldCoord(coord)) {
@@ -391,6 +419,8 @@ RoomType MazeGenerator::_getRoomType(boost::filesystem::path path) {
         return RoomType::EXIT;
     } else if (extension == ".maze") { // not procedural
         return RoomType::CUSTOM;
+    } else if (extension == ".orb") {
+        return RoomType::ORB;
     }
 
     std::cerr << "FATAL: unknown file extension on room \""<< extension <<"\"\n";
@@ -539,8 +569,10 @@ void MazeGenerator::_validateRoom(Grid& grid, const RoomClass& rclass) {
 }
 
 std::shared_ptr<Room> MazeGenerator::_pullRoomByPolicy() {
-    if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 1) {
+    if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 2) {
         return _pullRoomByType(RoomType::EXIT);
+    } else if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 1) {
+        return _pullRoomByType(RoomType::ORB);
     }
 
     RoomType type = _policy.front();

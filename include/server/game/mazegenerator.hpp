@@ -24,6 +24,7 @@ enum class RoomType {
     HARD,
     LOOT,
     EXIT,
+    ORB,
     CUSTOM // fully custom maze
 };
 
@@ -35,6 +36,7 @@ enum class RoomType {
     RoomType::HARD, \
     RoomType::LOOT, \
     RoomType::EXIT, \
+    RoomType::ORB, \
     RoomType::CUSTOM \
 }
 
