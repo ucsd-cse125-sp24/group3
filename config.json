@@ -3,7 +3,7 @@
       "timestep_length_ms": 30,
       "maze": {
         "directory": "maps",
-        "procedural": false,
+        "procedural": true,
         "maze_file": "test/teleporter.maze"
       }
     },

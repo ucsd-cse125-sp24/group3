@@ -156,6 +156,10 @@ void Server::_doAccept() {
                     ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value() }));
             } else {
                 std::cerr << "Error accepting tcp connection: " << ec << std::endl;
+
+                if (ec == boost::asio::error::already_open) {
+                    
+                }
             }
 
             this->_doAccept();
