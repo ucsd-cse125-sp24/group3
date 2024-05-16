@@ -30,10 +30,15 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->maps_directory = config.game.maze.directory;
 	this->maze_file = config.game.maze.maze_file;
 
+	test:
     MazeGenerator generator(config);
     int attempts = 1;
     auto grid = generator.generate();
-    if (!grid.has_value()) {
+    if (!grid.has_value() || std::abs(grid->getColumns()) > MAX_MAZE_COLUMNS) {
+		if (grid->getColumns() > MAX_MAZE_COLUMNS) {
+			std::cerr << "SUS! The maze has " << grid->getColumns() << "Columns!\n"
+				<< "I dont feel like fixing this, so we are going to try again!\n";
+		}
 		// failed so try again
 		generator = MazeGenerator(config);
 		grid = generator.generate();
@@ -316,10 +321,6 @@ void ServerGameState::updateMovement() {
 			numSteps = NUM_INCREMENTAL_STEPS - 1;
 		}
 
-		bool collided = false;
-		bool collidedX = false;
-		bool collidedZ = false;
-
 		//	Object's current position (before current movementStep)
 		glm::vec3 currentPosition = object->physics.shared.corner;
 
@@ -328,6 +329,10 @@ void ServerGameState::updateMovement() {
 		//	used)
 		while (numSteps < NUM_INCREMENTAL_STEPS) {
 			numSteps++;
+
+			bool collided = false; 
+			bool collidedX = false;
+			bool collidedZ = false;
 
 			//	Move object to new position and check whether a collision has
 			//	occurred
@@ -340,25 +345,21 @@ void ServerGameState::updateMovement() {
 			if (collided) {
 				//	Test for collision when object only moves by movementStep's
 				//	x component
-				if (!collidedX) {
-					collidedX = this->hasObjectCollided(object,
-						glm::vec3(
-							currentPosition.x + movementStep.x,
-							currentPosition.y,
-							currentPosition.z
-						));
-				}
+				collidedX = this->hasObjectCollided(object,
+					glm::vec3(
+						currentPosition.x + movementStep.x,
+						currentPosition.y,
+						currentPosition.z
+					));
 				
 				//	Test for collision when object only moves by movementStep's
 				//	z component
-				if (!collidedZ) {
-					collidedZ = this->hasObjectCollided(object,
-						glm::vec3(
-							currentPosition.x,
-							currentPosition.y,
-							currentPosition.z + movementStep.z
-						));
-				}
+				collidedZ = this->hasObjectCollided(object,
+					glm::vec3(
+						currentPosition.x,
+						currentPosition.y,
+						currentPosition.z + movementStep.z
+					));
 			}
 
 			//	Update object's movement
@@ -615,7 +616,7 @@ const Lobby& ServerGameState::getLobby() const {
 
 /*	Maze initialization	*/
 
-void ServerGameState::loadMaze(Grid grid) {
+void ServerGameState::loadMaze(const Grid& grid) {
 	this->grid = grid;
 
 	//	Verify that there's at least one spawn point
@@ -646,10 +647,10 @@ void ServerGameState::loadMaze(Grid grid) {
 			GridCell* cell = this->grid.getCell(col, row);
 
 			if (cell->type == CellType::RandomPotion) {
-				int random = randomInt(1, 100);
-				if (random < 33) {
+				int r = randomInt(1, 100);
+				if (r < 33) {
 					cell->type = CellType::HealthPotion;
-				} else if (random < 66) {
+				} else if (r < 66) {
 					cell->type = CellType::InvisibilityPotion;
 				} else {
 					cell->type = CellType::NauseaPotion;

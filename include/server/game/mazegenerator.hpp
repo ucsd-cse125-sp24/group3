@@ -120,7 +120,7 @@ struct ivec2_comparator {
 
 class MazeGenerator {
 public:
-    MazeGenerator(GameConfig config);
+    explicit MazeGenerator(GameConfig config);
 
     std::optional<Grid> generate();
 

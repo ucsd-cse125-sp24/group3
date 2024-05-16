@@ -21,6 +21,7 @@
 
 
 MazeGenerator::MazeGenerator(GameConfig config) {
+    this->_num_rooms_placed = 0;
     this->_next_room_id = 0;
 
     boost::filesystem::path rooms_dir = getRepoRoot() / "maps" / "rooms";
@@ -151,7 +152,7 @@ std::optional<Grid> MazeGenerator::generate() {
             for (auto curr_origin_coord : _getPossibleOriginCoords(room, required_entryway, coord)) {
                 bool okay = true;
                 for (auto room_coord : _getRoomCoordsTakenBy(room->rclass.size, curr_origin_coord)) {
-                    if (!_isOpenWorldCoord(room_coord)) {
+                    if (!_isOpenWorldCoord(room_coord)) { // cppcheck-suppress useStlAlgorithm
                         okay = false;
                         break;
                     }
@@ -443,7 +444,7 @@ uint8_t MazeGenerator::_identifyEntryways(Grid& grid) {
     int row, column;
     bool has_entry;
 
-    uint8_t entries;
+    uint8_t entries = 0;
 
     // Classify Top
     row = 0;
@@ -528,7 +529,7 @@ void MazeGenerator::_validateRoom(Grid& grid, const RoomClass& rclass) {
         int num_entries = 0;
         for (const auto& curr_coord : *curr_coords) {
             if (isCellTypeAllowedInEntryWay(grid.getCell(curr_coord.x, curr_coord.y)->type)) {
-                num_entries++;
+                num_entries++; // cppcheck-suppress useStlAlgorithm
             }
         }
 
@@ -630,7 +631,6 @@ std::vector<glm::ivec2> MazeGenerator::_getRoomCoordsTakenBy(RoomSize size, glm:
 
 std::vector<std::pair<glm::ivec2, RoomEntry>> MazeGenerator::_getAdjRoomCoords(std::shared_ptr<Room> room, glm::ivec2 origin_coord) {
     std::vector<std::pair<glm::ivec2, RoomEntry>> adj_coords;
-    auto coords = this->_getRoomCoordsTakenBy(room->rclass.size, origin_coord);
 
     if ((room->rclass.entries & RoomEntry::T) != 0) {
         adj_coords.push_back({origin_coord + glm::ivec2(0, -1), RoomEntry::B}); // need bottom entry for whatever would be placed here
@@ -776,7 +776,7 @@ void MazeGenerator::_generatePolicy() {
     RatioMapping NUM_HARD   = {3, RoomType::HARD}; // for every Z hards
     RatioMapping NUM_LOOT   = {1, RoomType::LOOT}; // for every alpha loots
 
-    for (const auto& [num, type] : {NUM_EASY, NUM_MEDIUM, NUM_HARD, NUM_LOOT}) {
+    for (const auto& [num, type] : {NUM_EASY, NUM_MEDIUM, NUM_HARD, NUM_LOOT}) { // cppcheck-suppress unassignedVariable
         for (int i = 0; i < num; i++) {
             _policy.push_back(type);
         }

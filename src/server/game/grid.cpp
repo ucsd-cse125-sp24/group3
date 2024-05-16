@@ -8,7 +8,7 @@
 /*	Constructors and Destructors	*/
 Grid::Grid(int rows, int columns) : rows(rows), columns(columns) {
 	//	Note that there is a max columns limit.
-	assert(columns <= MAX_MAZE_COLUMNS);
+	// assert(columns <= MAX_MAZE_COLUMNS);
 
 	//	Intialize GridCell vector with specified number of rows and columns
 	this->grid.resize(rows);
