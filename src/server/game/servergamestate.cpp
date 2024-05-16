@@ -659,6 +659,10 @@ void ServerGameState::loadMaze(Grid grid) {
 			}
 
 			switch (cell->type) {
+				case CellType::Orb: {
+					std::cout << "CURRENTLY THERE IS NO ORB OBJECT, SKIPPING\n";
+					break;
+				}
 				case CellType::FireballTrap: {
 					glm::vec3 dimensions(
 						Grid::grid_cell_width / 2,

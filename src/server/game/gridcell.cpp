@@ -42,8 +42,10 @@ CellType charToCellType(char c) {
 		return CellType::InvisibilityPotion;
 	case 'p':
 		return CellType::RandomPotion;
-	case '*':
+	case 's':
 		return CellType::RandomSpell;
+	case '*':
+		return CellType::Orb;
 	default:
 		std::cerr << "Unknown cell type: " << c << "\n";
 		return CellType::Unknown;
@@ -89,6 +91,8 @@ char cellTypeToChar(CellType type) {
 	case CellType::RandomPotion:
 		return 'p';
 	case CellType::RandomSpell:
+		return 's';
+	case CellType::Orb:
 		return '*';
 	default:
 		return '?';

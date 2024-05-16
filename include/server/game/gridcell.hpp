@@ -20,6 +20,7 @@ enum class CellType {
 	InvisibilityPotion,
 	RandomPotion,
 	RandomSpell,
+	Orb,
 	Unknown
 };
 
