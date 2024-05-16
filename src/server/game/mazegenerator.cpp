@@ -177,6 +177,45 @@ std::optional<Grid> MazeGenerator::generate() {
         }
     }
 
+    std::vector<glm::ivec2> walls_to_wipe;
+    for (int row = 0; row < output.getRows(); row++) {
+        for (int col = 0; col < output.getColumns(); col++) {
+
+            int num_neighbor_walls = 0;            
+
+            for (int offset_row = -1; offset_row <= 1; offset_row++) {
+                for (int offset_col = -1; offset_col <= 1; offset_col++) {
+                    if (offset_row == 0 && offset_col == 0) continue;
+
+                    int n_row = row + offset_row;
+                    int n_col = col + offset_col;
+
+                    bool is_wall;
+                    if (n_row < 0 || n_row >= output.getRows() || n_col < 0 || n_col >= output.getColumns()) {
+                        is_wall = true; // outside, but for the purposes of the algorithm still consider wall
+                    } else {
+                        is_wall = (output.getCell(n_col, n_row)->type == CellType::Wall);
+                    }
+
+                    if (is_wall) {
+                        num_neighbor_walls++;
+                    }
+                }
+            }
+
+            if (num_neighbor_walls == 8) {
+                // can safely remove this wall
+                walls_to_wipe.push_back(glm::ivec2(col, row));
+            }
+        }
+    }
+
+    for (const auto& coord : walls_to_wipe) {
+        output.getCell(coord.x, coord.y)->type = CellType::Empty;
+    }
+
+    // go back through and mark 
+
     return output;
 }
 
