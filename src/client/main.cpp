@@ -93,9 +93,9 @@ int main(int argc, char* argv[])
 
     AudioManager* clientAudioManager = client->getAudioManager();
 
-    clientAudioManager->playAudio(SoundType::Background);
+    // clientAudioManager->playAudio(SoundType::Background);
 
-    clientAudioManager->loop(SoundType::Background);
+    // clientAudioManager->loop(SoundType::Background);
 
     // Loop while GLFW window should stay open.
     while (!glfwWindowShouldClose(window)) {

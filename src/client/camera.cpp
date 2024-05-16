@@ -29,6 +29,15 @@ glm::vec3 Camera::getPos() {
     return cameraPos;
 }
 
+
+glm::mat4 Camera::getView() {
+    return view;
+}
+
+glm::mat4 Camera::getProjection() {
+    return projection;
+}
+
 void Camera::update(float xpos, float ypos) {
     if (firstMouse)
     {
@@ -65,10 +74,10 @@ void Camera::update(float xpos, float ypos) {
     cameraRight = glm::normalize(glm::cross(cameraFront, worldUp));
     cameraUp = glm::normalize(glm::cross(cameraRight, cameraFront));
 
-    glm::mat4 projection = glm::perspective(glm::radians(FOV), aspect, nearClip, farClip);
-    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    this->projection = glm::perspective(glm::radians(FOV), aspect, nearClip, farClip);
+    this->view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-    viewProjMat = projection * view;
+    viewProjMat = this->projection * this->view;
 }
 
 glm::vec3 Camera::move(bool is_x_axis, float dir) {
@@ -103,14 +112,25 @@ void DungeonMasterCamera::update(float xpos, float ypos) {
         lastY = ypos;
         firstMouse = false;
     }
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
 
     float xoffset = xpos - lastX;
     lastX = xpos;
     lastY = ypos; // cppcheck-suppress redundantAssignment
 
-    xoffset *= sensitivity;
+    xoffset *= sensitivity;    
+    yoffset *= sensitivity;
+
 
     yaw += xoffset;
+    pitch += yoffset;
+
+    // limit how much player can see
+    // make sure that when pitch is out of bounds, screen doesn't get flipped
+    if (pitch > 70.0f)
+        pitch = 70.0f;
+    if (pitch < -70.0f)
+        pitch = -70.0f;
 
     glm::vec3 front;
     front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
@@ -122,8 +142,8 @@ void DungeonMasterCamera::update(float xpos, float ypos) {
     cameraRight = glm::normalize(glm::cross(cameraFront, worldUp));
     cameraUp = glm::normalize(glm::cross(cameraRight, cameraFront));
 
-    glm::mat4 projection = glm::perspective(glm::radians(FOV), aspect, nearClip, farClip);
-    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    this->projection = glm::perspective(glm::radians(FOV), aspect, nearClip, farClip);
+    this->view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
-    viewProjMat = projection * view;
+    viewProjMat = this->projection * this->view;
 }

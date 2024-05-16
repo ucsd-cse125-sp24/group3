@@ -148,7 +148,13 @@ void GUI::layoutFrame(GUIState state) {
             this->_layoutLobbyBrowser();
             break;
         case GUIState::GAME_HUD:
-            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            if (client->session != nullptr && client->session->getInfo().is_dungeon_master.value()) {
+                glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            }
+            else {
+                glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            }
+
             this->_sharedGameHUD();
             this->_layoutGameHUD();
             break;

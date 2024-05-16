@@ -1,25 +1,6 @@
 #pragma once
 
-enum class CellType {
-	Empty,
-	Wall,
-	Spawn,
-	Enemy,
-	SpikeTrap,
-	FireballTrap,
-	FloorSpikeHorizontal,
-	FloorSpikeVertical,
-	FloorSpikeFull,
-	FakeWall,
-	ArrowTrapUp,
-	ArrowTrapDown,
-	ArrowTrapLeft,
-	ArrowTrapRight,
-	HealthPotion,
-	NauseaPotion,
-	InvisibilityPotion,
-	Unknown
-};
+#include "shared/game/celltype.hpp"
 
 /**
  * @brief Returns CellType given a character (maps character representation to

@@ -7,6 +7,7 @@
 #include "shared/utilities/serialize.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/game/celltype.hpp"
 
 
 /****************************************************
@@ -37,6 +38,7 @@ enum class EventType {
     SelectItem,
     UseItem,
     DropItem,
+    TrapPlacement
 };
 
 enum class ActionType {
@@ -116,6 +118,22 @@ struct StartActionEvent {
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar& entity_to_act& movement& action;
+    }
+};
+
+/**
+ * Event for action to start for generic key pressed / Can be updated to action type enum later
+ */
+struct TrapPlacementEvent {
+    TrapPlacementEvent() {}
+    TrapPlacementEvent(EntityID entity_to_act, glm::vec3 world_pos, CellType cell) : entity_to_act(entity_to_act), world_pos(world_pos), cell(cell) { }
+
+    EntityID entity_to_act;
+    CellType cell;
+    glm::vec3 world_pos;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& entity_to_act & cell & world_pos;
     }
 };
 
@@ -246,7 +264,8 @@ using EventData = boost::variant<
     SpawnEntityEvent,
     SelectItemEvent,
     UseItemEvent,
-    DropItemEvent
+    DropItemEvent,
+    TrapPlacementEvent
 >;
 
 /**

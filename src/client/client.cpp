@@ -28,6 +28,7 @@
 #include "client/audiomanager.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
+#include "shared/game/celltype.hpp"
 
 
 using namespace boost::asio::ip;
@@ -254,6 +255,20 @@ void Client::idleCallback(boost::asio::io_context& context) {
             this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Zoom)));
         }
 
+        if (this->session->getInfo().is_dungeon_master.value() && is_left_mouse_down) {
+            GLfloat winZ;
+            glReadPixels(mouse_xpos, window_height - mouse_ypos, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
+            glm::vec3 win(mouse_xpos, window_height - mouse_ypos, winZ);
+
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+            glm::vec4 vport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+            glm::vec3 worldPosition = glm::unProject(win, glm::mat4(1.0f), this->cam->getProjection() * this->cam->getView(), vport);
+
+            this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, worldPosition, CellType::ArrowTrapUp)));
+        }
+
         // If movement 0, send stopevent
         if ((sentCamMovement != cam_movement) && cam_movement == glm::vec3(0.0f)) {
             this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement, ActionType::MoveCam)));
@@ -310,6 +325,8 @@ void Client::draw() {
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
+
+                    std::cout << glm::to_string(pos) << std::endl;
 
                     // reset back to game mode if this is the first frame in which you are respawned
                     if (this->gui_state == GUIState::DEAD_SCREEN && sharedObject->playerInfo->is_alive) {

@@ -223,6 +223,20 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
+		case EventType::TrapPlacement: {
+			auto trapPlacementEvent = boost::get<TrapPlacementEvent>(event.data);
+
+			std::cout << glm::to_string(trapPlacementEvent.world_pos) << std::endl;
+
+			/**
+				1.) get the world pos - DONE (DM cam -> trap placement pos) 
+				
+
+				2.) collision check with every GridCell in world (find first collision)
+
+				3.) spawn trap at that GridCell using some helped spawn function
+			*/
+		}
 
 		// default:
 		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
