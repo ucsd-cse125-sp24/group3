@@ -30,7 +30,6 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->maps_directory = config.game.maze.directory;
 	this->maze_file = config.game.maze.maze_file;
 
-	test:
     MazeGenerator generator(config);
     int attempts = 1;
     auto grid = generator.generate();
