@@ -23,7 +23,6 @@ enum class RoomType {
     MEDIUM,
     HARD,
     LOOT,
-    DIVERSE,
     EXIT,
     CUSTOM // fully custom maze
 };
@@ -35,7 +34,6 @@ enum class RoomType {
     RoomType::MEDIUM, \
     RoomType::HARD, \
     RoomType::LOOT, \
-    RoomType::DIVERSE, \
     RoomType::EXIT, \
     RoomType::CUSTOM \
 }
@@ -132,8 +130,8 @@ private:
 
     std::vector<glm::ivec2> _getRoomCoordsTakenBy(RoomSize size, glm::ivec2 top_left);
 
+    std::shared_ptr<Room> _pullRoomByPolicy();
     std::shared_ptr<Room> _pullRoomByType(RoomType type);
-    std::shared_ptr<Room> _pullRoomByClass(const RoomClass& type);
 
     /**
      * @returns TODO:
@@ -160,4 +158,9 @@ private:
     std::unordered_map<int , std::shared_ptr<Room>> rooms_by_id;
 
     int _next_room_id;
+
+    void _generatePolicy();
+
+    int _num_rooms_placed;
+    std::deque<RoomType> _policy;
 };

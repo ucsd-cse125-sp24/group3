@@ -7,6 +7,8 @@
 #include <memory>
 #include <unordered_set>
 #include <limits>
+#include <random>
+#include <algorithm>
 
 #include <boost/graph/adjacency_matrix.hpp>
 #include <boost/filesystem.hpp>
@@ -64,8 +66,10 @@ std::optional<Grid> MazeGenerator::generate() {
     
     _placeRoom(_pullRoomByType(RoomType::SPAWN), glm::ivec2(0, 0));
 
-    int num_rooms_placed = 1;
-    while (num_rooms_placed < REQUIRED_NUM_ROOMS) {
+    _generatePolicy();
+
+    _num_rooms_placed = 1;
+    while (_num_rooms_placed < REQUIRED_NUM_ROOMS) {
         if (this->frontier.empty()) {
             return {};
         }
@@ -78,7 +82,7 @@ std::optional<Grid> MazeGenerator::generate() {
         }
 
         while (true) {
-            auto room = _pullRoomByType(RoomType::EASY);
+            auto room = _pullRoomByPolicy();
 
             if ( (room->rclass.entries & required_entryway) == 0) {
                 continue; // can't connect, so pull again
@@ -112,10 +116,10 @@ std::optional<Grid> MazeGenerator::generate() {
             break;
         }
 
-        num_rooms_placed++;
+        _num_rooms_placed++;
     }
 
-    std::cout << "Done: created " << num_rooms_placed << " rooms.\n";
+    std::cout << "Done: created " << _num_rooms_placed << " rooms.\n";
 
     int min_x = std::numeric_limits<int>::max();
     int min_y = std::numeric_limits<int>::max();
@@ -299,8 +303,6 @@ RoomType MazeGenerator::_getRoomType(boost::filesystem::path path) {
         return RoomType::HARD;
     } else if (extension == ".loot") {
         return RoomType::LOOT;
-    } else if (extension == ".diverse") {
-        return RoomType::DIVERSE;
     } else if (extension == ".exit") {
         return RoomType::EXIT;
     } else if (extension == ".maze") { // not procedural
@@ -452,14 +454,21 @@ void MazeGenerator::_validateRoom(Grid& grid, const RoomClass& rclass) {
     }
 }
 
+std::shared_ptr<Room> MazeGenerator::_pullRoomByPolicy() {
+    if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 1) {
+        return _pullRoomByType(RoomType::EXIT);
+    }
+
+    RoomType type = _policy.front();
+    _policy.pop_front();
+    _policy.push_back(type);
+    return _pullRoomByType(type);
+}
+
 std::shared_ptr<Room> MazeGenerator::_pullRoomByType(RoomType type) {
     int random_index = randomInt(0, this->rooms_by_type.at(type).size() - 1);
 
     return this->rooms_by_type.at(type).at(random_index);
-}
-
-std::shared_ptr<Room> MazeGenerator::_pullRoomByClass(const RoomClass& rclass) {
-
 }
 
 std::vector<glm::ivec2> MazeGenerator::_getRoomCoordsTakenBy(RoomSize size, glm::ivec2 top_left) {
@@ -639,4 +648,26 @@ std::vector<glm::ivec2> MazeGenerator::_getPossibleOriginCoords(std::shared_ptr<
     }
 
     return possible_origin_coords;
+}
+
+void MazeGenerator::_generatePolicy() {
+    // the important thing here is the ratios
+
+    using RatioMapping = const std::pair<int, RoomType>;
+
+
+    RatioMapping NUM_EASY   = {7, RoomType::EASY}; // X easy
+    RatioMapping NUM_MEDIUM = {5, RoomType::MEDIUM}; // for every Y mediums
+    RatioMapping NUM_HARD   = {3, RoomType::HARD}; // for every Z hards
+    RatioMapping NUM_LOOT   = {1, RoomType::LOOT}; // for every alpha loots
+
+    for (const auto& [num, type] : {NUM_EASY, NUM_MEDIUM, NUM_HARD, NUM_LOOT}) {
+        for (int i = 0; i < num; i++) {
+            _policy.push_back(type);
+        }
+    }
+
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(_policy.begin(), _policy.end(), g);
 }
