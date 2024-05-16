@@ -21,6 +21,7 @@ enum class CellType {
 	RandomPotion,
 	RandomSpell,
 	Orb,
+	OutsideTheMaze,
 	Unknown
 };
 

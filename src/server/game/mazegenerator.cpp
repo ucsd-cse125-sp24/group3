@@ -285,7 +285,7 @@ std::optional<Grid> MazeGenerator::generate() {
     }
 
     for (const auto& coord : walls_to_wipe) {
-        output.getCell(coord.x, coord.y)->type = CellType::Empty;
+        output.getCell(coord.x, coord.y)->type = CellType::OutsideTheMaze;
     }
 
     // go back through and mark 

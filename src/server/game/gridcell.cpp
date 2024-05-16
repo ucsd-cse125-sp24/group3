@@ -46,6 +46,8 @@ CellType charToCellType(char c) {
 		return CellType::RandomSpell;
 	case '*':
 		return CellType::Orb;
+	case ' ':
+		return CellType::OutsideTheMaze;
 	default:
 		std::cerr << "Unknown cell type: " << c << "\n";
 		return CellType::Unknown;
@@ -94,6 +96,8 @@ char cellTypeToChar(CellType type) {
 		return 's';
 	case CellType::Orb:
 		return '*';
+	case CellType::OutsideTheMaze:
+		return ' ';
 	default:
 		return '?';
 	}
