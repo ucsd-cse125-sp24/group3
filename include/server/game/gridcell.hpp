@@ -18,6 +18,8 @@ enum class CellType {
 	HealthPotion,
 	NauseaPotion,
 	InvisibilityPotion,
+	RandomPotion,
+	RandomSpell,
 	Unknown
 };
 

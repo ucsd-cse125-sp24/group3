@@ -1,4 +1,5 @@
 #include "server/game/gridcell.hpp"
+#include <iostream>
 
 /*	Constructors and Destructors	*/
 GridCell::GridCell(int x, int y, CellType type) : x(x), y(y), type(type) {}
@@ -39,7 +40,12 @@ CellType charToCellType(char c) {
 		return CellType::NauseaPotion;
 	case 'i':
 		return CellType::InvisibilityPotion;
+	case 'p':
+		return CellType::RandomPotion;
+	case '*':
+		return CellType::RandomSpell;
 	default:
+		std::cerr << "Unknown cell type: " << c << "\n";
 		return CellType::Unknown;
 	}
 }
@@ -80,6 +86,10 @@ char cellTypeToChar(CellType type) {
 		return 'n';
 	case CellType::InvisibilityPotion:
 		return 'i';
+	case CellType::RandomPotion:
+		return 'p';
+	case CellType::RandomSpell:
+		return '*';
 	default:
 		return '?';
 	}

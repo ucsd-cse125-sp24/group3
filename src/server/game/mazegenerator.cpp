@@ -739,7 +739,6 @@ void MazeGenerator::_generatePolicy() {
 
     using RatioMapping = const std::pair<int, RoomType>;
 
-
     RatioMapping NUM_EASY   = {7, RoomType::EASY}; // X easy
     RatioMapping NUM_MEDIUM = {5, RoomType::MEDIUM}; // for every Y mediums
     RatioMapping NUM_HARD   = {3, RoomType::HARD}; // for every Z hards

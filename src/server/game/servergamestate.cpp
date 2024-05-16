@@ -11,6 +11,7 @@
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 #include "shared/network/constants.hpp"
+#include "shared/utilities/rng.hpp"
 #include "server/game/mazegenerator.hpp"
 
 #include <fstream>
@@ -643,6 +644,19 @@ void ServerGameState::loadMaze(Grid grid) {
 		for (int col = 0; col < this->grid.getColumns(); col++) {
 
 			GridCell* cell = this->grid.getCell(col, row);
+
+			if (cell->type == CellType::RandomPotion) {
+				int random = randomInt(1, 100);
+				if (random < 33) {
+					cell->type = CellType::HealthPotion;
+				} else if (random < 66) {
+					cell->type = CellType::InvisibilityPotion;
+				} else {
+					cell->type = CellType::NauseaPotion;
+				}
+			} else if (cell->type == CellType::RandomSpell) {
+				cell->type = CellType::HealthPotion; // TODO: replace with random spell;
+			}
 
 			switch (cell->type) {
 				case CellType::FireballTrap: {
