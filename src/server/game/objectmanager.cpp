@@ -45,6 +45,7 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::SpikeTrap:
 		case ObjectType::FloorSpike:
 		case ObjectType::ArrowTrap:
+		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
 			break;
 		case ObjectType::Potion:

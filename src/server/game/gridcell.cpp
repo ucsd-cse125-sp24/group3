@@ -48,6 +48,8 @@ CellType charToCellType(char c) {
 		return CellType::Orb;
 	case ' ':
 		return CellType::OutsideTheMaze;
+	case 'T':
+		return CellType::TeleporterTrap;
 	default:
 		std::cerr << "Unknown cell type: " << c << "\n";
 		return CellType::Unknown;
@@ -98,6 +100,8 @@ char cellTypeToChar(CellType type) {
 		return '*';
 	case CellType::OutsideTheMaze:
 		return ' ';
+	case CellType::TeleporterTrap:
+		return 'T';
 	default:
 		return '?';
 	}

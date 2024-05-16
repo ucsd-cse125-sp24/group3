@@ -3,6 +3,7 @@
 #include "server/game/fireballtrap.hpp"
 #include "server/game/floorspike.hpp"
 #include "server/game/fakewall.hpp"
+#include "server/game/teleportertrap.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/potion.hpp"
@@ -799,6 +800,17 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					);
 
 					this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
+					break;
+				}
+
+				case CellType::TeleporterTrap: {
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width,
+						0.0f,
+						cell->y * Grid::grid_cell_width
+					);
+
+					this->objects.createObject(new TeleporterTrap(corner));
 					break;
 				}
 			}

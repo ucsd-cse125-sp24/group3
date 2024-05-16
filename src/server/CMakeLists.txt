@@ -24,6 +24,7 @@ set(FILES
     game/fakewall.cpp
     game/potion.cpp
     game/mazegenerator.cpp
+    game/teleportertrap.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})
