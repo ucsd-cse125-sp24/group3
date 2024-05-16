@@ -35,7 +35,8 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
     if (this->info.triggered) {
         return false;
     }
-    return true;
+
+    return (randomInt(1, 2) == 1);
 }
 
 void ArrowTrap::trigger(ServerGameState& state) {

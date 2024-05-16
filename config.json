@@ -3,8 +3,8 @@
       "timestep_length_ms": 30,
       "maze": {
         "directory": "maps",
-        "procedural": true,
-        "maze_file": "test/teleporter.maze"
+        "procedural": false,
+        "maze_file": "test/arrow_wall.maze"
       }
     },
     "network": {
