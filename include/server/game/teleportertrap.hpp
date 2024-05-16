@@ -14,7 +14,7 @@ public:
     /**
      * @param corner Corner position of the teleporter trap
      */
-    TeleporterTrap(glm::vec3 corner);
+    explicit TeleporterTrap(glm::vec3 corner);
 
     bool shouldTrigger(ServerGameState& state) override;
     void trigger(ServerGameState& state) override;
