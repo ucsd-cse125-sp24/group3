@@ -94,14 +94,12 @@ void Grid::writeToFile(std::string path) {
 
 	assert(of.is_open());
 
-	for (int x = 0; x < this->columns; x++) {
-		for (int y = 0; y < this->rows; y++) {
+	for (int y = 0; y < this->rows; y++) {
+		for (int x = 0; x < this->columns; x++) {
 			CellType type = this->getCell(x, y)->type;
 			of << cellTypeToChar(type);
 		}
-		if (x != this->columns - 1) {
-			of << '\n';
-		}
+		of << '\n';
 	}
 
 	of.close();

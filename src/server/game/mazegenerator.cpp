@@ -336,7 +336,7 @@ uint8_t MazeGenerator::_identifyEntryways(Grid& grid) {
     has_entry = false;
 
     for (column = 0; column < grid.getColumns(); column++) {
-        if (grid.getCell(column, row)->type == CellType::Empty) {
+        if (isCellTypeAllowedInEntryWay(grid.getCell(column, row)->type)) {
             has_entry = true;
             break;
         }
@@ -351,7 +351,7 @@ uint8_t MazeGenerator::_identifyEntryways(Grid& grid) {
     has_entry = false;
 
     for (row = 0; row < grid.getRows(); row++) {
-        if (grid.getCell(column, row)->type == CellType::Empty) {
+        if (isCellTypeAllowedInEntryWay(grid.getCell(column, row)->type)) {
             has_entry = true;
             break;
         }
@@ -366,7 +366,7 @@ uint8_t MazeGenerator::_identifyEntryways(Grid& grid) {
     has_entry = false;
 
     for (row = 0; row < grid.getRows(); row++) {
-        if (grid.getCell(column, row)->type == CellType::Empty) {
+        if (isCellTypeAllowedInEntryWay(grid.getCell(column, row)->type)) {
             has_entry = true;
             break;
         }
@@ -381,7 +381,7 @@ uint8_t MazeGenerator::_identifyEntryways(Grid& grid) {
     has_entry = false;
 
     for (column = 0; column < grid.getColumns(); column++) {
-        if (grid.getCell(column, row)->type == CellType::Empty) {
+        if (isCellTypeAllowedInEntryWay(grid.getCell(column, row)->type)) {
             has_entry = true;
             break;
         }
@@ -413,7 +413,7 @@ void MazeGenerator::_validateRoom(Grid& grid, const RoomClass& rclass) {
 
         int num_entries = 0;
         for (const auto& curr_coord : *curr_coords) {
-            if (grid.getCell(curr_coord.x, curr_coord.y)->type == CellType::Empty) {
+            if (isCellTypeAllowedInEntryWay(grid.getCell(curr_coord.x, curr_coord.y)->type)) {
                 num_entries++;
             }
         }

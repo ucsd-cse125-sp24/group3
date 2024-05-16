@@ -35,6 +35,8 @@ CellType charToCellType(char c);
  */
 char cellTypeToChar(CellType type);
 
+bool isCellTypeAllowedInEntryWay(CellType type);
+
 class GridCell {
 public:
 	/**

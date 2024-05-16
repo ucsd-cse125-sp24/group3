@@ -14,7 +14,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/hash.hpp"
 
-#define REQUIRED_NUM_ROOMS 50
+#define REQUIRED_NUM_ROOMS 30
 
 enum class RoomType {
     EMPTY, // testing

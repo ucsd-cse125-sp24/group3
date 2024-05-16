@@ -84,3 +84,7 @@ char cellTypeToChar(CellType type) {
 		return '?';
 	}
 }
+
+bool isCellTypeAllowedInEntryWay(CellType type) {
+	return (type == CellType::Empty || type == CellType::FakeWall);
+}
