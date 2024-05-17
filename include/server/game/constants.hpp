@@ -17,7 +17,7 @@
 #define	MAX_PLAYERS				4
 
 /*	Maze Constants */
-#define	MAX_MAZE_COLUMNS		1024
+#define	MAX_MAZE_COLUMNS		10000
 #define	MAZE_CEILING_HEIGHT		10	// Maze ceiling height in meters
 
 /*	GridCell Constants	*/

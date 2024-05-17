@@ -134,7 +134,6 @@ std::chrono::milliseconds Server::doTick() {
     auto stop = std::chrono::high_resolution_clock::now();
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(
         this->state.getTimestepLength() - (stop - start));
-    assert(wait.count() > 0);
     return wait;
 }
 
@@ -156,6 +155,10 @@ void Server::_doAccept() {
                     ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value() }));
             } else {
                 std::cerr << "Error accepting tcp connection: " << ec << std::endl;
+
+                if (ec == boost::asio::error::already_open) {
+                    
+                }
             }
 
             this->_doAccept();

@@ -152,19 +152,6 @@ public:
      */
 	virtual void doCollision(Object* other, ServerGameState& state) {};
 
-	/**
-	 * @brief code to run for this object on every tick
-	 * 
-	 * NOTE: by default does nothing, but certain objects can override
-	 * this to do specific effects
-	 * 
-	 * IMPORTANT: make sure in your derived versions that you return true if the entity
-	 * was updated, otherwise the server won't know to send down the updated gamestate
-	 * for that object to the client!
-	 * 
-	 * @returns True if the entity was updated, false otherwise
-	 */
-	virtual bool doTick(ServerGameState& state) { return false; }
 
 	/*	Debugger Methods	*/
 

@@ -25,6 +25,7 @@ enum class ObjectType {
 	FloorSpike,
 	FakeWall,
 	ArrowTrap,
+	TeleporterTrap,
 	Spell,
 	Orb,
 	Item

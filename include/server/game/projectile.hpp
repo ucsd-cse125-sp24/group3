@@ -65,7 +65,12 @@ public:
 
     void doCollision(Object* other, ServerGameState& state) override;
 
-    bool doTick(ServerGameState& state) override;
+	/**
+     * @brief handle homing trajectory updates
+	 * 
+	 * @returns True if the entity was updated, false otherwise
+	 */
+    bool doTick(ServerGameState& state);
 
 private:
     Options opt;

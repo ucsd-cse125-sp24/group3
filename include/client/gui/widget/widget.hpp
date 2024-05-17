@@ -56,6 +56,7 @@ public:
      * coordinate frame)
      */
     explicit Widget(Type type, glm::vec2 origin);
+    virtual ~Widget() = default;
     /**
      * @brief Overrides the current origin position with the newly specified one.
      * 

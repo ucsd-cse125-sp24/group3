@@ -23,6 +23,8 @@ set(FILES
     game/floorspike.cpp
     game/fakewall.cpp
     game/potion.cpp
+    game/mazegenerator.cpp
+    game/teleportertrap.cpp
     game/spell.cpp
     game/orb.cpp
 )
