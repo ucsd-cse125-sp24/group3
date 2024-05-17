@@ -4,12 +4,19 @@
 Orb::Orb(glm::vec3 corner, glm::vec3 dimensions) : Item(ObjectType::Orb, true, corner, ModelType::Cube, dimensions) {}
 
 void Orb::doCollision(Object* other, ServerGameState& state) {
-	//	Play can pick up the orb
+	//	Player can pick up the orb
 	Item::doCollision(other, state);
 
-	//	If the phase is MatchPhase::MazeExploration, update the match phase to
+	
+	//	If the other object is a Player and
+	//	if the phase is MatchPhase::MazeExploration, update the match phase to
 	//	MatchPhase::RelayRace
-	if (state.getMatchPhase() == MatchPhase::MazeExploration) {
+	if (other->type == ObjectType::Player
+		&& state.getMatchPhase() == MatchPhase::MazeExploration) {
+		Player* player = state.objects.getPlayer(other->typeID);
+
+		player->sharedInventory.hasOrb = true;
+
 		state.setMatchPhase(MatchPhase::RelayRace);
 
 		//	If anything else needs to be set when phase changes, can do it here

@@ -35,7 +35,8 @@ enum class GUIState {
     LOBBY,
     GAME_HUD,
     GAME_ESC_MENU,
-    DEAD_SCREEN
+    DEAD_SCREEN,
+    RESULTS_SCREEN
 };
 
 #define GUI_PROJECTION_MATRIX() glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT);
@@ -364,6 +365,13 @@ private:
      * @brief Displays the screen which appears when the player fucking DIES
      */
     void _layoutDeadScreen();
+
+    /**
+     * @brief Displays the screen which appears when either player group wins
+     * the game.
+     */
+    void _layoutResultsScreen();
+
     /// =============================================================================
 };
 

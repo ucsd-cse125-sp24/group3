@@ -66,7 +66,7 @@ SpecificID ObjectManager::createObject(Object* object) {
 			object->typeID = this->exits.push(dynamic_cast<Exit*>(object));
 			break;
 		case ObjectType::Orb:
-			object->typeID = this->orbs.push(dynamic_cast<Orb*>(object));
+			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
 			break;
         default:
 			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << 
@@ -221,10 +221,6 @@ SmartVector<Projectile*> ObjectManager::getProjectiles() {
 
 SmartVector<Exit*> ObjectManager::getExits() {
 	return this->exits;
-}
-
-SmartVector<Orb*> ObjectManager::getOrbs() {
-	return this->orbs;
 }
 
 /*	Object Movement	*/

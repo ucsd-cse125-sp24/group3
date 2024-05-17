@@ -281,6 +281,10 @@ void ServerGameState::update(const EventList& events) {
 			this->phase = GamePhase::RESULTS;
 		}
 	}
+
+	//	DEBUG
+	//std::cout << "playerVictory: " << this->playerVictory << std::endl;
+	//	DEBUG
 }
 
 void ServerGameState::markForDeletion(EntityID id) {

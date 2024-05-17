@@ -2,6 +2,7 @@
 #include "shared/game/sharedobject.hpp"
 #include "shared/game/stat.hpp"
 #include "server/game/constants.hpp"
+#include "server/game/item.hpp"
 #include <iostream>
 
 SharedObject Player::toShared() {
@@ -24,9 +25,4 @@ Player::Player(glm::vec3 corner, glm::vec3 facing):
 
 Player::~Player() {
 
-}
-
-bool Player::hasOrb() {
-    //  TODO fill this function
-    return false;
 }

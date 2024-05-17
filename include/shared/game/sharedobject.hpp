@@ -59,8 +59,13 @@ struct SharedInventory {
 	int inventory_size;
 	std::unordered_map<int, ModelType> inventory;
 
+	/**
+	 * @brief Denotes whether this player is carrying the Orb in their inventory
+	 */
+	bool hasOrb;
+
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& selected& inventory_size& inventory;
+		ar& selected& inventory_size& inventory & hasOrb;
 	}
 }; 
 

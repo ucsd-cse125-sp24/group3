@@ -200,6 +200,11 @@ void Client::displayCallback() {
     } else if (this->gameState.phase == GamePhase::GAME) {
         this->draw();
     }
+    else if (this->gameState.phase == GamePhase::RESULTS) {
+        if (this->gui_state == GUIState::GAME_HUD)
+            this->gui_state = GUIState::RESULTS_SCREEN;
+        this->draw();
+    }
 
     this->gui.layoutFrame(this->gui_state);
     this->gui.handleInputs(mouse_xpos, mouse_ypos, is_left_mouse_down);
@@ -208,6 +213,10 @@ void Client::displayCallback() {
     /* Poll for and process events */
     glfwPollEvents();
     glfwSwapBuffers(window);
+
+    //  DEBUG
+    //std::cout << "playerVictory: " << this->gameState.playerVictory << std::endl;
+    //  DEBUG
 }
 
 // Handle any updates 
@@ -526,8 +535,17 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             if (this->gameState.phase == GamePhase::GAME) {
                 if (this->gui_state == GUIState::GAME_ESC_MENU) {
                     this->gui_state = GUIState::GAME_HUD;
-                } else if (this->gui_state == GUIState::GAME_HUD) {
+                }
+                else if (this->gui_state == GUIState::GAME_HUD) {
                     this->gui_state = GUIState::GAME_ESC_MENU;
+                }
+            }
+            else if (this->gameState.phase == GamePhase::RESULTS) {
+                if (this->gui_state == GUIState::RESULTS_SCREEN) {
+                    this->gui_state = GUIState::GAME_ESC_MENU;
+                }
+                else if (this->gui_state == GUIState::GAME_ESC_MENU) {
+                    this->gui_state = GUIState::RESULTS_SCREEN;
                 }
             }
             this->gui.setCaptureKeystrokes(false);

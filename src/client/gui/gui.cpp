@@ -160,6 +160,10 @@ void GUI::layoutFrame(GUIState state) {
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             this->_layoutDeadScreen();
             break;
+        case GUIState::RESULTS_SCREEN:
+            //  TODO: fill results screen logic here
+            this->_layoutResultsScreen();
+            break;
         case GUIState::NONE:
             break;
     }
@@ -488,6 +492,38 @@ void GUI::_layoutDeadScreen() {
         font::Color::BLACK,
         fonts,
         FRAC_WINDOW_HEIGHT(1, 3)
+    ));
+}
+
+void GUI::_layoutResultsScreen() {
+    auto self_eid = client->session->getInfo().client_eid;
+    if (!self_eid.has_value()) {
+        return;
+    }
+
+    auto self = client->gameState.objects.at(*self_eid);
+
+    //  Add widget based on whether the player won or lost
+    bool won;
+    if (self->type == ObjectType::Player) {
+        won = client->gameState.playerVictory;
+    }
+    else {
+        won = !(client->gameState.playerVictory);
+    }
+
+    //std::cout << "playerVictory: " << client->gameState.playerVictory << std::endl;
+    //std::cout << "won: " << won << std::endl;
+
+    std::string result_string = won ? "Victory" : "Defeat";
+
+    this->addWidget(widget::CenterText::make(
+        result_string,
+        font::Font::MENU,
+        font::Size::LARGE,
+        won ? font::Color::BLUE : font::Color::RED,
+        fonts,
+        FRAC_WINDOW_HEIGHT(1, 2)
     ));
 }
 

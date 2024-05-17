@@ -21,7 +21,7 @@ void Exit::doCollision(Object* other, ServerGameState& state) {
 		//	Get Player object
 		Player* player = state.objects.getPlayer(other->typeID);
 
-		if (player->hasOrb()) {
+		if (player->sharedInventory.hasOrb) {
 			state.setPlayerVictory(true);
 			state.setPhase(GamePhase::RESULTS);
 		}
