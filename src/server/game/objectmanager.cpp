@@ -241,6 +241,7 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 		this->cellToObjects.at(object->gridCellPositions[i]).push_back(object);
 	}
 
+    return true;
 }
 
 std::vector<glm::ivec2> ObjectManager::objectGridCells(Object* object) {
