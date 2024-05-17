@@ -4,6 +4,7 @@
 #include "server/game/fireballtrap.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/potion.hpp"
+#include "server/game/exit.hpp"
 
 #include <memory>
 
@@ -59,6 +60,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 			break;
         case ObjectType::Enemy:
 			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
+			break;
+		case ObjectType::Exit:
+			object->typeID = this->exits.push(dynamic_cast<Exit*>(object));
 			break;
         default:
 			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << 
@@ -209,6 +213,10 @@ SmartVector<Trap*> ObjectManager::getTraps() {
 
 SmartVector<Projectile*> ObjectManager::getProjectiles() {
 	return this->projectiles;
+}
+
+SmartVector<Exit*> ObjectManager::getExits() {
+	return this->exits;
 }
 
 /*	Object Movement	*/

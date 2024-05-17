@@ -20,6 +20,14 @@ public:
 	Player(glm::vec3 corner, glm::vec3 facing);
 	~Player();
 
+	/**
+	 * @brief This method returns true iff this Player has the Orb in their
+	 * inventory
+	 * @return true if this Player has the Orb in their inventory and false
+	 * otherwise
+	 */
+	bool hasOrb();
+
 	virtual SharedObject toShared() override;
 
 private:

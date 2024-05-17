@@ -146,6 +146,25 @@ public:
 	void setPhase(GamePhase phase);
 
 	/**
+	 * @brief Returns the match phase that this ServerGameState instance is
+	 * currently in.
+	 * @return The current MatchPhase of this ServerGameState instance.
+	 */
+	MatchPhase getMatchPhase() const;
+
+	/**
+	 * @brief Sets this ServerGameState's match phase to the given match phase.
+	 * @param phase New MatchPhase for this ServerGameState instance.
+	 */
+	void setMatchPhase(MatchPhase phase);
+
+	/**
+	 * @brief Sets the playerVictory boolean
+	 * @param playerVictory boolean value to set the playerVictory value to
+	 */
+	void setPlayerVictory(bool playerVictory);
+
+	/**
 	 * Reassign id to the specified name in the mapping. This is okay to call if the
 	 * player is already in the mapping, as nothing will happen. If a player's name
 	 * has changed, then this will update their name as well.
@@ -214,6 +233,25 @@ private:
 	 * @brief The current phase of this game instance.
 	 */
 	GamePhase phase;
+
+	/**
+	 * @brief The current match phase of this game instance - at the start of
+	 * the game, this is MatchPhase::MazeExploration
+	 */
+	MatchPhase matchPhase;
+
+	/**
+	 * @brief Amount of time, in milliseconds, left until the end of the match
+	 * This value only becomes relevant when matchPhase is set to
+	 * MatchPhase::RelayRace
+	 */
+	std::chrono::milliseconds time_left;
+
+	/**
+	 * @brief Player victory is by default false - only becomes true if a Player
+	 * collides with an open exit while holding the Orb
+	 */
+	bool playerVictory;
 
 	/**
 	 * @brief Name of maze file that the server should load.

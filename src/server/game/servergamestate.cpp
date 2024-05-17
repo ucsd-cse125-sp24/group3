@@ -8,6 +8,7 @@
 #include "server/game/arrowtrap.hpp"
 #include "server/game/potion.hpp"
 #include "server/game/constants.hpp"
+#include "server/game/exit.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -30,6 +31,14 @@ ServerGameState::ServerGameState(GameConfig config) {
 
 	this->maps_directory = config.game.maze.directory;
 	this->maze_file = config.game.maze.maze_file;
+
+	//	Initialize game instance match phase data
+	//	Match begins in MazeExploration phase (no timer)
+	this->matchPhase = MatchPhase::MazeExploration;
+	this->time_left = TIME_LIMIT;
+	//	Player victory is by default false (need to collide with an open exit
+	//	while holding the Orb to win, whereas DM wins on time limit expiration)
+	this->playerVictory = false;
 
     MazeGenerator generator(config);
     int attempts = 1;
@@ -82,6 +91,9 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 		curr_update.timestep_length = this->timestep_length;
 		curr_update.lobby = this->lobby;
 		curr_update.phase = this->phase;
+		curr_update.matchPhase = this->matchPhase;
+		curr_update.time_left = this->time_left;
+		curr_update.playerVictory = this->playerVictory;
 		return curr_update;
 	};
 
@@ -135,21 +147,21 @@ void ServerGameState::update(const EventList& events) {
 		}
 
 		Object* obj;
-	
-        switch (event.type) {
+
+		switch (event.type) {
 		case EventType::ChangeFacing: {
-            auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
-            obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
-            obj->physics.shared.facing = changeFacingEvent.facing;
-			this->updated_entities.insert({obj->globalID});
-            break;
+			auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
+			obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+			obj->physics.shared.facing = changeFacingEvent.facing;
+			this->updated_entities.insert({ obj->globalID });
+			break;
 		}
-	
+
 		case EventType::StartAction: {
 			auto startAction = boost::get<StartActionEvent>(event.data);
 			obj = this->objects.getObject(startAction.entity_to_act);
-			this->updated_entities.insert({obj->globalID});
-			
+			this->updated_entities.insert({ obj->globalID });
+
 			//switch case for action (currently using keys)
 			switch (startAction.action) {
 			case ActionType::MoveCam: {
@@ -174,7 +186,7 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StopAction: {
 			auto stopAction = boost::get<StopActionEvent>(event.data);
 			obj = this->objects.getObject(stopAction.entity_to_act);
-			this->updated_entities.insert({obj->globalID});
+			this->updated_entities.insert({ obj->globalID });
 			//switch case for action (currently using keys)
 			switch (stopAction.action) {
 			case ActionType::MoveCam: {
@@ -190,7 +202,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
-	
+
 		case EventType::MoveRelative:
 		{
 			//currently just sets the velocity to given 
@@ -242,8 +254,8 @@ void ServerGameState::update(const EventList& events) {
 
 		// default:
 		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
-        }
-    }
+		}
+	}
 
 	//	TODO: fill update() method with updating object movement
 	doProjectileTicks();
@@ -253,9 +265,20 @@ void ServerGameState::update(const EventList& events) {
 	handleDeaths();
 	handleRespawns();
 	deleteEntities();
-	
+
 	//	Increment timestep
 	this->timestep++;
+
+	//	Countdown timer if the Orb has been picked up by a Player and the match
+	//	phase is now RelayRace
+	if (this->matchPhase == MatchPhase::RelayRace) {
+		this->time_left -= timestep_length;
+
+		if (this->time_left <= std::chrono::milliseconds(0)) {
+			//	Dungeon Master won on time limit expiration
+			this->phase = GamePhase::RESULTS;
+		}
+	}
 }
 
 void ServerGameState::markForDeletion(EntityID id) {
@@ -602,6 +625,18 @@ void ServerGameState::setPhase(GamePhase phase) {
 	this->phase = phase;
 }
 
+MatchPhase ServerGameState::getMatchPhase() const {
+	return this->matchPhase;
+}
+
+void ServerGameState::setMatchPhase(MatchPhase phase) {
+	this->matchPhase = phase;
+}
+
+void ServerGameState::setPlayerVictory(bool playerVictory) {
+	this->playerVictory = playerVictory;
+}
+
 void ServerGameState::addPlayerToLobby(EntityID id, const std::string& name) {
 	this->lobby.players[id] = name;
 }
@@ -811,6 +846,22 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					);
 
 					this->objects.createObject(new TeleporterTrap(corner));
+					break;
+				}
+				case CellType::Exit: {
+					glm::vec3 corner(
+						cell->x* Grid::grid_cell_width,
+						0.0f,
+						cell->y* Grid::grid_cell_width
+					);
+
+					glm::vec3 dimensions(
+						Grid::grid_cell_width,
+						MAZE_CEILING_HEIGHT,
+						Grid::grid_cell_width
+					);
+
+					this->objects.createObject(new Exit(false, corner, dimensions));
 					break;
 				}
 			}

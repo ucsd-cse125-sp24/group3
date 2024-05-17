@@ -17,7 +17,13 @@
 enum class GamePhase {
 	TITLE_SCREEN,
 	LOBBY,
-	GAME
+	GAME,
+	RESULTS
+};
+
+enum class MatchPhase {
+	MazeExploration,
+	RelayRace
 };
 
 /**
@@ -63,6 +69,12 @@ struct SharedGameState {
 	Lobby lobby;
 
 	GamePhase phase;
+
+	MatchPhase matchPhase;
+
+	std::chrono::milliseconds time_left;
+
+	bool playerVictory;
 
 	SharedGameState():
 		objects(std::unordered_map<EntityID, boost::optional<SharedObject>>())

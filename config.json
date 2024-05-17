@@ -4,7 +4,7 @@
       "maze": {
         "directory": "maps",
         "procedural": false,
-        "maze_file": "test/maze2.maze"
+        "maze_file": "test/maze6.maze"
       }
     },
     "network": {
@@ -12,12 +12,12 @@
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "Tyler's Hellhole",
+        "lobby_name": "The Orb of Orbos",
         "lobby_broadcast": true,
         "max_players": 1
     },
     "client": {
-        "default_name": "John Doe",
+        "default_name": "Conan O'Brien",
         "lobby_discovery": true,
         "window_width": 1500,
         "draw_bboxes": false

@@ -27,6 +27,7 @@ enum class ObjectType {
 	TeleporterTrap,
 	Spell,
 	Item,
+	Exit
 };
 
 /**
@@ -147,6 +148,13 @@ struct SharedPlayerInfo {
 	}
 };
 
+struct SharedExit {
+	/**
+	 * @brief Whether the given exit is open or closed
+	 */
+	bool open;
+};
+
 /**
  * @brief Representation of the Object class used by ServerGameState, containing
  * exactly the subset of Object data required by the client.
@@ -164,6 +172,7 @@ public:
 	boost::optional<SharedTrapInfo> trapInfo;
 	boost::optional<SharedPlayerInfo> playerInfo;
 	boost::optional<SharedInventory> inventoryInfo;
+	boost::optional<SharedExit> exit;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}

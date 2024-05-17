@@ -120,6 +120,12 @@ std::chrono::milliseconds Server::doTick() {
             updateGameState(allClientEvents);
             break;
         }
+        case GamePhase::RESULTS: {
+            //  Do nothing - in this phase, the client(s) just display the
+            //  end-of-match data to the players
+            break;
+        }
+
         default:
             std::cerr << "Invalid GamePhase on server:" << static_cast<int>(this->state.getPhase()) << std::endl;
             std::exit(1);

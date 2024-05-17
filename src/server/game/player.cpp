@@ -25,3 +25,8 @@ Player::Player(glm::vec3 corner, glm::vec3 facing):
 Player::~Player() {
 
 }
+
+bool Player::hasOrb() {
+    //  TODO fill this function
+    return false;
+}
