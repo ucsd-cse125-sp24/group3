@@ -6,10 +6,7 @@
 #include <glm/glm.hpp>
 
 #include "client/shader.hpp"
-
-struct Light {
-    glm::vec3 pos;
-};
+#include "shared/game/sharedobject.hpp"
 
 class Renderable {
  public:
@@ -24,7 +21,7 @@ class Renderable {
     virtual void draw(std::shared_ptr<Shader> shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            std::vector<Light> lightSources,
+            std::vector<SharedObject> lightSources,
             bool fill) = 0;
 
     /**

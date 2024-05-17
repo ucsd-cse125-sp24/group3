@@ -23,6 +23,7 @@ uniform vec3 lightPos;
 uniform vec3 lightColor;
 
 struct PointLight {    
+    bool enabled;
     vec3 position;
     
     float constant;
@@ -37,7 +38,7 @@ struct PointLight {
     float intensity;
 };
 
-#define NR_POINT_LIGHTS 1
+#define NR_POINT_LIGHTS 100
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 out vec4 fragColor;
@@ -70,7 +71,11 @@ void main() {
     vec3 viewDir = normalize(viewPos - fragPos);
 
     vec3 result = vec3(0.0, 0.0, 0.0);
-    for(int i = 0; i < NR_POINT_LIGHTS; i++)
+    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
+        if (!pointLights[i].enabled) {
+            continue;
+        }
         result += CalcPointLight(pointLights[i], norm, fragPos, viewDir);
+    }
     fragColor = vec4(result, 1.0);
 }

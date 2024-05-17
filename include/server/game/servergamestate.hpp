@@ -213,4 +213,22 @@ private:
 	 * @brief 2-D Grid of GridCells (filled after loadMaze() is called).
 	 */
 	Grid grid;
+
+    /**
+     * @brief helper function to spawn a wall at a specified cell
+     * @param cell is a single cell of the maze's grid where a wall
+     * should be placed
+     */
+    void spawnWall(GridCell* cell);
+
+    /**
+     * @brief helper function to spawn a wall with a torch at a specified 
+     * cell
+     * @param cell is a single cell of the maze's grid where a wall + torch
+     * should be placed
+     * @param cellType determines which direction the torch should face. 
+     * This means that only TorchUp, TorchDown, TorchRight, and TorchLeft
+     * are acceptable values of cellType 
+     */
+    void spawnTorch(GridCell *cell);
 };

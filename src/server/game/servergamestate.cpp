@@ -1,4 +1,5 @@
 #include "server/game/servergamestate.hpp"
+#include "server/game/gridcell.hpp"
 #include "server/game/torchlight.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "server/game/spiketrap.hpp"
@@ -693,24 +694,17 @@ void ServerGameState::loadMaze() {
 				}
 				case CellType::Wall:
 				case CellType::FakeWall: {
-					glm::vec3 dimensions(
-						this->grid.getGridCellWidth(),
-						MAZE_CEILING_HEIGHT,
-						this->grid.getGridCellWidth()
-					);
-					glm::vec3 corner(
-						cell->x * this->grid.getGridCellWidth(),
-						0.0f, 
-						cell->y * this->grid.getGridCellWidth()
-					);
-
-					if (cell->type == CellType::FakeWall) {
-						this->objects.createObject(new FakeWall(corner, dimensions));
-					} else if (cell->type == CellType::Wall) {
-						this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
-					}
+                    this->spawnWall(cell);
 					break;
 				}
+                case CellType::TorchUp:
+                case CellType::TorchDown:
+                case CellType::TorchRight:
+                case CellType::TorchLeft: {
+                    this->spawnWall(cell);
+                    this->spawnTorch(cell);
+                    break;
+                }
 				case CellType::FloorSpikeFull:
 				case CellType::FloorSpikeHorizontal:
 				case CellType::FloorSpikeVertical: {
@@ -767,6 +761,63 @@ void ServerGameState::loadMaze() {
 			}
 		}
 	}
+}
+
+void ServerGameState::spawnWall(GridCell* cell) {
+    glm::vec3 dimensions(
+        this->grid.getGridCellWidth(),
+        MAZE_CEILING_HEIGHT,
+        this->grid.getGridCellWidth()
+    );
+    glm::vec3 corner(
+        cell->x * this->grid.getGridCellWidth(),
+        0.0f, 
+        cell->y * this->grid.getGridCellWidth()
+    );
+
+    if (cell->type == CellType::FakeWall) {
+        this->objects.createObject(new FakeWall(corner, dimensions));
+    } else if (cell->type == CellType::Wall) {
+        this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
+    }
+}
+
+void ServerGameState::spawnTorch(GridCell *cell) {
+    glm::vec3 dimensions(
+        this->grid.getGridCellWidth(),
+        MAZE_CEILING_HEIGHT,
+        this->grid.getGridCellWidth()
+    );
+    glm::vec3 corner(
+        cell->x * this->grid.getGridCellWidth(),
+        MAZE_CEILING_HEIGHT / 2.0f,
+        cell->y * this->grid.getGridCellWidth()
+    );
+
+    switch (cell->type) {
+        case CellType::TorchDown: {
+            corner.x += this->grid.getGridCellWidth() / 2.0f; 
+            corner.y += this->grid.getGridCellWidth(); 
+            break;
+        }
+        case CellType::TorchUp: {
+            corner.x += this->grid.getGridCellWidth() / 2.0f; 
+            break;
+        }
+        case CellType::TorchLeft: {
+            corner.y += this->grid.getGridCellWidth() / 2.0f; 
+            break;
+        }
+        case CellType::TorchRight: {
+            corner.x += this->grid.getGridCellWidth(); 
+            corner.y += this->grid.getGridCellWidth() / 2.0f;
+            break;
+        }
+        default: {
+            std::cout << "Invalid Torch cell type when spawning torch\n";
+        }
+    }
+    this->objects.createObject(new Torchlight(corner));
 }
 
 Grid& ServerGameState::getGrid() {

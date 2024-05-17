@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <algorithm>
 #include <glm/glm.hpp>
 
 #include "shared/utilities/serialize_macro.hpp"
@@ -147,6 +148,24 @@ struct SharedPlayerInfo {
 	}
 };
 
+struct SharedPointLightInfo {
+    float intensity;
+    // lighting properties of that the light source
+    // emits
+    glm::vec3 ambient_color;
+    glm::vec3 diffuse_color;
+    glm::vec3 specular_color; // shiny effects
+    // these two affect the dropoff of the light intensity
+    // as distance increases
+    float attenuation_linear;
+    float attenuation_quadratic;
+
+	DEF_SERIALIZE(Archive& ar, const int version) {
+		ar & intensity & ambient_color & diffuse_color & specular_color &
+            attenuation_linear & attenuation_quadratic;
+	}
+};
+
 /**
  * @brief Representation of the Object class used by ServerGameState, containing
  * exactly the subset of Object data required by the client.
@@ -164,12 +183,15 @@ public:
 	boost::optional<SharedTrapInfo> trapInfo;
 	boost::optional<SharedPlayerInfo> playerInfo;
 	boost::optional<SharedInventory> inventoryInfo;
+    boost::optional<SharedPointLightInfo> pointLightInfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & pointLightInfo;
 	}
 private:
 };
+
+void sortObjectsByPos(std::vector<SharedObject>& objects, glm::vec3 refPos);

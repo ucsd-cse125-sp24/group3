@@ -39,6 +39,14 @@ CellType charToCellType(char c) {
 		return CellType::NauseaPotion;
 	case 'i':
 		return CellType::InvisibilityPotion;
+    case '[':
+        return CellType::TorchDown;
+    case ']':
+        return CellType::TorchUp;
+    case '{':
+        return CellType::TorchLeft;
+    case '}':
+        return CellType::TorchRight;
 	default:
 		return CellType::Unknown;
 	}

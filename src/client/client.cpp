@@ -1,5 +1,6 @@
 #include "client/client.hpp"
 #include <iostream>
+#include <algorithm>
 #include <memory>
 
 #include <GLFW/glfw3.h>
@@ -29,6 +30,15 @@
 #include "client/audiomanager.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
+#include "shared/utilities/timer.hpp"
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/ext/matrix_clip_space.hpp"
+#include "glm/fwd.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 
 using namespace boost::asio::ip;
@@ -59,6 +69,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
 
     Client::window_width = config.client.window_width;
     Client::window_height = static_cast<int>((config.client.window_width * 2.0f) / 3.0f);
+
+    shouldUpdateClosestLights = true;
     
     if (config.client.lobby_discovery)  {
         lobby_finder.startSearching();
@@ -286,20 +298,48 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
-    std::vector<Light> lightSources;
-    for (auto& [id, sharedObject] : this->gameState.objects) {
-        if (!sharedObject.has_value()) {
-            continue;
+    // Check if it's time for us to update the list of closest light sources.
+    // We don't want to do this on every draw call since it's expensive to sort
+    // all the light sources by how close they are to the player.
+    if (this->shouldUpdateClosestLights) {
+
+        std::cout << "vector after" << std::endl;
+        for (auto x : this->lightSources) {
+            std::cout << "\t" << glm::to_string(x.physics.corner) << "\n";
         }
-        if (sharedObject->type == ObjectType::Torchlight) {
-            lightSources.push_back(Light {
-                sharedObject->physics.getCenterPosition()
-            });
+        std::cout << "updating light sources" << std::endl;
+
+        // clear previously cached lightSources
+        this->lightSources.clear();
+
+        // put all valid point lights in the list
+        for (auto& [id, sharedObject] : this->gameState.objects) {
+            if (!sharedObject.has_value()) {
+                continue;
+            }
+            if (sharedObject->type == ObjectType::Torchlight &&
+                    sharedObject->pointLightInfo.has_value()) {
+                this->lightSources.push_back(sharedObject.value());
+            }
         }
-    }
-    // tmp: single point light testing
-    auto light_pos = glm::vec3(4.0f, 4.0f, 15.0f);
-    lightSources.push_back(Light{light_pos});
+
+        // sort the light sources as the closest to the camera's position 
+        sortObjectsByPos(this->lightSources, this->cam->getPos());
+
+        // don't run this branch on the next draw call
+        this->shouldUpdateClosestLights = false;
+        auto shouldUpdateClosestLights = [this] () {
+            this->shouldUpdateClosestLights = true;
+        };
+        // set a timer to set a flag at some point in the future
+        // and find the closest light sources
+        setTimer(5s, shouldUpdateClosestLights);
+
+        std::cout << "vector before" << std::endl;
+        for (auto x : this->lightSources) {
+            std::cout << "\t" << glm::to_string(x.physics.corner) << "\n";
+        }
+    }     
 
     for (auto& [id, sharedObject] : this->gameState.objects) {
 
@@ -311,17 +351,6 @@ void Client::draw() {
             case ObjectType::Player: {
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
-                    // std::cout << glm::to_string(sharedObject->physics.getCenterPosition()) << std::endl;
-                    auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 1.0f, 1.0f));
-                    cube->scaleAbsolute(glm::vec3(1.0f));
-                    cube->translateAbsolute(light_pos);
-                    cube->draw(this->cube_shader,
-                        this->cam->getViewProj(),
-                        this->cam->getPos(),
-                        lightSources, 
-                        true);
-
-
                     //  TODO: Update the player eye level to an acceptable level
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
@@ -410,8 +439,6 @@ void Client::draw() {
                 break;
             }
             case ObjectType::Torchlight: {
-                // std::cout << "rendering torch" << std::endl;
-                auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
                 this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->torchlight_model->draw(
                     this->light_source_shader,
