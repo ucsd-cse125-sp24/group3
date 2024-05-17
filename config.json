@@ -1,6 +1,5 @@
 {
     "game": {
-      "timestep_length_ms": 30,
       "maze": {
         "directory": "maps",
         "procedural": false,

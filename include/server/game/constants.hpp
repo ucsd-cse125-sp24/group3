@@ -11,10 +11,6 @@
 #define MAX_TRAPS 10
 #define MAX_SPELLS 4
 
-/*	Constants	*/
-#define	FIRST_TIMESTEP			0
-#define TIMESTEP_LEN			std::chrono::milliseconds(30)
-#define	MAX_PLAYERS				4
 
 /*	Maze Constants */
 #define	MAX_MAZE_COLUMNS		10000
@@ -43,11 +39,6 @@
 #define	GRAVITY					0.03f
 #define	PLAYER_SPEED 			1.5f
 #define JUMP_SPEED				0.5f
-
-/*	Game phase information	*/
-//	Time limit initially set to 5 minutes
-//#define	TIME_LIMIT				std::chrono::milliseconds(5 * 60 * 1000)
-#define TIME_LIMIT				std::chrono::milliseconds(10000)
 
 /* Default model sizes */
 #define BEAR_DIMENSIONS         glm::vec3(14.163582, 17.914591, 10.655818)

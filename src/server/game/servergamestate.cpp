@@ -27,7 +27,6 @@ ServerGameState::ServerGameState() : ServerGameState(getDefaultConfig()) {}
 ServerGameState::ServerGameState(GameConfig config) {
 	this->phase = GamePhase::LOBBY;
 	this->timestep = FIRST_TIMESTEP;
-	this->timestep_length = config.game.timestep_length_ms;
 	this->lobby.max_players = config.server.max_players;
 	this->lobby.name = config.server.lobby_name;
 
@@ -37,7 +36,7 @@ ServerGameState::ServerGameState(GameConfig config) {
 	//	Initialize game instance match phase data
 	//	Match begins in MazeExploration phase (no timer)
 	this->matchPhase = MatchPhase::MazeExploration;
-	this->time_left = TIME_LIMIT;
+	this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
 	//	Player victory is by default false (need to collide with an open exit
 	//	while holding the Orb to win, whereas DM wins on time limit expiration)
 	this->playerVictory = false;
@@ -90,11 +89,10 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 	auto getUpdateTemplate = [this]() {
 		SharedGameState curr_update;
 		curr_update.timestep = this->timestep;
-		curr_update.timestep_length = this->timestep_length;
 		curr_update.lobby = this->lobby;
 		curr_update.phase = this->phase;
 		curr_update.matchPhase = this->matchPhase;
-		curr_update.time_left = this->time_left;
+		curr_update.timesteps_left = this->timesteps_left;
 		curr_update.playerVictory = this->playerVictory;
 		return curr_update;
 	};
@@ -274,9 +272,9 @@ void ServerGameState::update(const EventList& events) {
 	//	Countdown timer if the Orb has been picked up by a Player and the match
 	//	phase is now RelayRace
 	if (this->matchPhase == MatchPhase::RelayRace) {
-		this->time_left -= timestep_length;
+		this->timesteps_left--;
 
-		if (this->time_left <= std::chrono::milliseconds(0)) {
+		if (this->timesteps_left <= 0) {
 			//	Dungeon Master won on time limit expiration
 			this->phase = GamePhase::RESULTS;
 		}
@@ -619,10 +617,6 @@ unsigned int ServerGameState::getTimestep() const {
 	return this->timestep;
 }
 
-std::chrono::milliseconds ServerGameState::getTimestepLength() const {
-	return this->timestep_length;
-}
-
 GamePhase ServerGameState::getPhase() const {
 	return this->phase;
 }
@@ -891,7 +885,7 @@ Grid& ServerGameState::getGrid() {
 std::string ServerGameState::to_string() {
 	std::string representation = "{";
 	representation += "\n\ttimestep:\t\t" + std::to_string(this->timestep);
-	representation += "\n\ttimestep len:\t\t" + std::to_string(this->timestep_length.count());
+	representation += "\n\ttimestep len:\t\t" + std::to_string(TIMESTEP_LEN.count());
 	representation += "\n\tobjects: [\n";
 
 	SmartVector<Object*> gameObjects = this->objects.getObjects();

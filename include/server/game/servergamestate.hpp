@@ -128,12 +128,6 @@ public:
 	unsigned int getTimestep() const;
 
 	/**
-	 * @brief Returns the timestep length of this ServerGameState instance.
-	 * @return Timestep length (in milliseconds)
-	 */
-	std::chrono::milliseconds getTimestepLength() const;
-
-	/**
 	 * @brief Returns the phase that this ServerGameState instance is currently
 	 * in.
 	 * @return The current GamePhase of this ServerGameState instance. 
@@ -214,11 +208,6 @@ private:
 	std::unordered_set<EntityID> updated_entities;
 
 	/**
-	 *  Timestep length in milliseconds.
-	 */
-	std::chrono::milliseconds timestep_length;
-
-	/**
 	 *  Current timestep (starts at 0)
 	 */
 	unsigned int timestep;
@@ -241,11 +230,11 @@ private:
 	MatchPhase matchPhase;
 
 	/**
-	 * @brief Amount of time, in milliseconds, left until the end of the match
+	 * @brief Amount of time, in timesteps, left until the end of the match
 	 * This value only becomes relevant when matchPhase is set to
 	 * MatchPhase::RelayRace
 	 */
-	std::chrono::milliseconds time_left;
+	unsigned int timesteps_left;
 
 	/**
 	 * @brief Player victory is by default false - only becomes true if a Player

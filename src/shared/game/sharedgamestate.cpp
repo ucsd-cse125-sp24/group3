@@ -5,7 +5,9 @@ void SharedGameState::update(const SharedGameState& other) {
     this->lobby = other.lobby;
     this->phase = other.phase;
     this->timestep = other.timestep;
-    this->timestep_length = other.timestep_length;
+    this->matchPhase = other.matchPhase;
+    this->timesteps_left = other.timesteps_left;
+    this->playerVictory = other.playerVictory;
 
     // Update our own objects hash map based on new updates
     for (const auto& [id, updated_obj] : other.objects) { // cppcheck-suppress unassignedVariable
