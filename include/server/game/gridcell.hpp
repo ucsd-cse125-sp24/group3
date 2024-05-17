@@ -18,6 +18,11 @@ enum class CellType {
 	HealthPotion,
 	NauseaPotion,
 	InvisibilityPotion,
+	RandomPotion,
+	RandomSpell,
+	Orb,
+	OutsideTheMaze,
+	TeleporterTrap,
 	Unknown
 };
 
@@ -29,6 +34,13 @@ enum class CellType {
  * the character doesn't map to a known CellType.
  */
 CellType charToCellType(char c);
+
+/**
+ * TODO: write this
+ */
+char cellTypeToChar(CellType type);
+
+bool isCellTypeAllowedInEntryWay(CellType type);
 
 class GridCell {
 public:
