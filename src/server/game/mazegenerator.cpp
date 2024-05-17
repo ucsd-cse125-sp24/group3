@@ -80,7 +80,7 @@ std::optional<Grid> MazeGenerator::generate() {
             return {};
         }
 
-        auto& [coord, required_entryway] = this->frontier.front();
+        auto [coord, required_entryway] = this->frontier.front();
         this->frontier.pop();
 
         if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 2) {
@@ -91,7 +91,7 @@ std::optional<Grid> MazeGenerator::generate() {
             int count = 0;
             while (count < size) {
                 count++;
-                const auto& [other_coord, other_req_entry] = this->frontier.front();
+                auto [other_coord, other_req_entry] = this->frontier.front();
                 this->frontier.pop();
 
                 glm::vec2 coord_f(coord);
@@ -116,7 +116,7 @@ std::optional<Grid> MazeGenerator::generate() {
             int count = 0;
             while (count < size) {
                 count++;
-                const auto& [other_coord, other_req_entry] = this->frontier.front();
+                auto [other_coord, other_req_entry] = this->frontier.front();
                 this->frontier.pop();
 
                 glm::vec2 coord_f(coord);

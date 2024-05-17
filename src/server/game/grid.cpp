@@ -99,7 +99,9 @@ void Grid::writeToFile(std::string path) {
 			CellType type = this->getCell(x, y)->type;
 			of << cellTypeToChar(type);
 		}
-		of << '\n';
+        if (y!=rows-1) {
+            of << '\n';
+        }
 	}
 
 	of.close();
