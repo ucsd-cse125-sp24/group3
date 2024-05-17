@@ -110,6 +110,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Potion:
 		this->items.remove(object->typeID);
 		break;
+	default:
+		std::cerr << "WARN: Cannot delete object! Did you forget to add a switch statement to \n"
+			<< "ObjectManager::removeObject? Continuing, but there may be deallocated memory still accessible!";
 	}
 
 	//	Remove object from cellToObjects hashmap

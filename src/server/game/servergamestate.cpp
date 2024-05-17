@@ -264,6 +264,11 @@ void ServerGameState::markForDeletion(EntityID id) {
 	this->entities_to_delete.insert(id);
 }
 
+
+void ServerGameState::markAsUpdated(EntityID id) {
+	this->updated_entities.insert(id);
+}
+
 void ServerGameState::updateMovement() {
 	//	Update all movable objects' positions
 
@@ -463,7 +468,8 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				//	Exception - if the other object is a floor spike trap,
 				//	perform collision handling but do not return true as the
 				//	trap doesn't affect the movement of the object it hits
-				if (otherObj->type == ObjectType::FloorSpike) {
+				if (otherObj->type == ObjectType::FloorSpike || 
+					otherObj->type == ObjectType::Slime) {
 					continue;
 				}
 
@@ -570,6 +576,19 @@ void ServerGameState::handleDeaths() {
 			this->updated_entities.insert(player->globalID);
 			player->info.is_alive = false;
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
+		}
+	}
+
+	auto enemies = this->objects.getEnemies();
+	for (int e = 0; e < enemies.size(); e++) {
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		if (enemy->stats.health.current() <= 0) {
+			this->updated_entities.insert(enemy->globalID);
+			if (enemy->doDeath(*this)) {
+				this->entities_to_delete.insert(enemy->globalID);
+			}
 		}
 	}
 }

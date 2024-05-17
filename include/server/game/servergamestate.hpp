@@ -69,6 +69,11 @@ public:
 	 */
 	void markForDeletion(EntityID id);
 
+	/**
+	 * @brief mark an entity as updated
+	 */
+	void markAsUpdated(EntityID id);
+
 	//	TODO: Add specific update methods (E.g., updateMovement() to update
 	//	object movement)
 
