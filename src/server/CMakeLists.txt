@@ -26,6 +26,7 @@ set(FILES
     game/mazegenerator.cpp
     game/teleportertrap.cpp
     game/exit.cpp
+    game/orb.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

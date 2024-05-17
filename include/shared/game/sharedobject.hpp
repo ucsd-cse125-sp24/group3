@@ -27,7 +27,8 @@ enum class ObjectType {
 	TeleporterTrap,
 	Spell,
 	Item,
-	Exit
+	Exit,
+	Orb
 };
 
 /**

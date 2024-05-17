@@ -9,6 +9,8 @@
 #include "server/game/potion.hpp"
 #include "server/game/constants.hpp"
 #include "server/game/exit.hpp"
+#include "server/game/orb.hpp"
+
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -695,10 +697,6 @@ void ServerGameState::loadMaze(const Grid& grid) {
 			}
 
 			switch (cell->type) {
-				case CellType::Orb: {
-					std::cout << "CURRENTLY THERE IS NO ORB OBJECT, SKIPPING\n";
-					break;
-				}
 				case CellType::FireballTrap: {
 					glm::vec3 dimensions(
 						Grid::grid_cell_width / 2,
@@ -862,6 +860,17 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					);
 
 					this->objects.createObject(new Exit(false, corner, dimensions));
+					break;
+				}
+
+				case CellType::Orb: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x* Grid::grid_cell_width,
+						0,
+						cell->y* Grid::grid_cell_width);
+
+					this->objects.createObject(new Orb(corner, dimensions));
 					break;
 				}
 			}

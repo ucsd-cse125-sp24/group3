@@ -16,6 +16,7 @@ class Trap;
 class Projectile;
 class Item;
 class Exit;
+class Orb;
 
 #include "shared/utilities/smartvector.hpp"
 
@@ -176,6 +177,14 @@ public:
 	 */
 	SmartVector<Exit*> getExits();
 
+	/**
+	 * @brief Get a list of all Orbs in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Orb pointers of all Orb objects in the game
+	 * instance.
+	 */
+	SmartVector<Orb*> getOrbs();
+
 	/*	Object Movement	*/
 	
 	/**
@@ -302,4 +311,10 @@ private:
 	 * ObjectType::Exit.
 	 */
 	SmartVector<Exit*> exits;
+
+	/**
+	 * @brief SmartVector of Orb pointers to all objects whose ObjectType is
+	 * ObjectType::Orb.
+	 */
+	SmartVector<Orb*> orbs;
 };
