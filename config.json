@@ -3,8 +3,8 @@
       "timestep_length_ms": 30,
       "maze": {
         "directory": "maps",
-        "procedural": false,
-        "maze_file": "test/maze2.maze"
+        "procedural": true,
+        "maze_file": "tests/maze2.maze"
       }
     },
     "network": {
