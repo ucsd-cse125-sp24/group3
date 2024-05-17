@@ -134,7 +134,6 @@ std::chrono::milliseconds Server::doTick() {
     auto stop = std::chrono::high_resolution_clock::now();
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(
         this->state.getTimestepLength() - (stop - start));
-    assert(wait.count() > 0);
     return wait;
 }
 

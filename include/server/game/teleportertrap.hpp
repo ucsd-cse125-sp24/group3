@@ -7,7 +7,7 @@
 #include "server/game/servergamestate.hpp"
 
 /**
- * Spike trap which falls from the ceiling if a player walks underneath
+ * Teleporter trap which teleports a player onto a random tile when they run into it
  */
 class TeleporterTrap : public Trap {
 public:

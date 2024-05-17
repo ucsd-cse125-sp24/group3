@@ -4,7 +4,7 @@
       "maze": {
         "directory": "maps",
         "procedural": false,
-        "maze_file": "test/arrow_wall.maze"
+        "maze_file": "test/maze2.maze"
       }
     },
     "network": {
