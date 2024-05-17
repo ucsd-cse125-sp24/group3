@@ -91,6 +91,8 @@ public:
 	//	TODO: Add implementations of items
 	void updateItems();
 
+	void updateEnemies();
+
 	void doProjectileTicks();
 
 	void updateTraps();

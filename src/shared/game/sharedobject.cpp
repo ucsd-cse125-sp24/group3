@@ -8,8 +8,8 @@ std::string objectTypeString(ObjectType type) {
         return "SolidSurface";
     case ObjectType::Player:
         return "Player";
-    case ObjectType::Enemy:
-        return "Enemy";
+    case ObjectType::Slime:
+        return "Slime";
 	default:
 		return "Unknown";
 	}

@@ -1,6 +1,7 @@
 #include "server/game/servergamestate.hpp"
 #include "server/game/spiketrap.hpp"
 #include "server/game/fireballtrap.hpp"
+#include "server/game/slime.hpp"
 #include "server/game/floorspike.hpp"
 #include "server/game/fakewall.hpp"
 #include "server/game/teleportertrap.hpp"
@@ -248,6 +249,7 @@ void ServerGameState::update(const EventList& events) {
 	//	TODO: fill update() method with updating object movement
 	doProjectileTicks();
 	updateMovement();
+	updateEnemies();
 	updateItems();
 	updateTraps();
 	handleDeaths();
@@ -492,6 +494,19 @@ void ServerGameState::updateItems() {
 	}
 }
 
+void ServerGameState::updateEnemies() {
+	auto enemies = this->objects.getEnemies();
+
+	for (int e = 0; e < enemies.size(); e++){
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		if (enemy->doBehavior(*this)) {
+			this->updated_entities.insert(enemy->globalID);
+		}
+	}
+}
+
 //void ServerGameState::useItem() {
 //	// Update whatever is necesssary for item
 //	// This method may need to be broken down for different types
@@ -725,8 +740,11 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				case CellType::Enemy: {
-					this->objects.createObject(new Enemy(
-						this->grid.gridCellCenterPosition(cell), glm::vec3(0.0f)));
+					this->objects.createObject(new Slime(
+						this->grid.gridCellCenterPosition(cell),
+						glm::vec3(0.0f),
+						3
+					));
 					break;
 				}
 				case CellType::Wall:

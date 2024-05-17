@@ -10,9 +10,17 @@ public:
 	/**
 	 * @param Corner corner position of the enemy
 	 * @param facing what direction the enemy should spawn in facing
+	 * @param type Type of Enemy
+	 * @param model model to render
+	 * @param stats Starting stats
 	 */
-	Enemy(glm::vec3 corner, glm::vec3 facing);
+	Enemy(glm::vec3 corner, glm::vec3 facing, ObjectType type, ModelType model, SharedStats&& stats);
 	~Enemy();
+
+	/**
+	 * @return true if the enemy was mutated, false otherwise
+	 */
+	virtual bool doBehavior(ServerGameState& state) {};
 
 	virtual SharedObject toShared() override;
 private:

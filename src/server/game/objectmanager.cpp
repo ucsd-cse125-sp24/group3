@@ -57,7 +57,7 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
 			break;
-        case ObjectType::Enemy:
+        case ObjectType::Slime:
 			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
 			break;
         default:
@@ -104,7 +104,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Projectile:
 		this->projectiles.remove(object->typeID);
 		break;
-	case ObjectType::Enemy:
+	case ObjectType::Slime:
 		this->enemies.remove(object->typeID);
 		break;
 	case ObjectType::Potion:

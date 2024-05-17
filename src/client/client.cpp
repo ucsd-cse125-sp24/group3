@@ -323,20 +323,31 @@ void Client::draw() {
                 this->drawBbox(sharedObject);
                 break;
             }
-            case ObjectType::Enemy: {
-                // warren bear is an enemy because why not
-                auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
-                auto bear_pos = sharedObject->physics.corner;
+            // case ObjectType::Enemy: {
+            //     // warren bear is an enemy because why not
+            //     auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
+            //     auto bear_pos = sharedObject->physics.corner;
 
-                this->bear_model->setDimensions(sharedObject->physics.dimensions);
-                this->bear_model->translateAbsolute(bear_pos);
-                this->bear_model->draw(
-                    this->model_shader,
+            //     this->bear_model->setDimensions(sharedObject->physics.dimensions);
+            //     this->bear_model->translateAbsolute(bear_pos);
+            //     this->bear_model->draw(
+            //         this->model_shader,
+            //         this->cam->getViewProj(),
+            //         this->cam->getPos(),
+            //         lightPos,
+            //         true);
+            //     this->drawBbox(sharedObject);
+            //     break;
+            // }
+            case ObjectType::Slime: {
+                auto cube = std::make_unique<Cube>(glm::vec3(0.0, 1.0f, 0.0f));
+                cube->scaleAbsolute(sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightPos,
+                    glm::vec3(),
                     true);
-                this->drawBbox(sharedObject);
                 break;
             }
             case ObjectType::SolidSurface: {

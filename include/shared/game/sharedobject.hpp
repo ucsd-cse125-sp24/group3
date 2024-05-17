@@ -17,7 +17,6 @@ enum class ObjectType {
 	SolidSurface,
 	Potion,
 	Player,
-	Enemy,
 	SpikeTrap,
 	FireballTrap,
 	Projectile,
@@ -27,6 +26,7 @@ enum class ObjectType {
 	TeleporterTrap,
 	Spell,
 	Item,
+	Slime
 };
 
 /**
