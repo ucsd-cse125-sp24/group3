@@ -432,7 +432,7 @@ void Client::draw() {
                     glm::vec3 color;
                     if (sharedObject->modelType == ModelType::HealthPotion) {
                         color = glm::vec3(1.0f, 0.0f, 0.0f);
-                    } else if (sharedObject->modelType == ModelType::UnknownPotion) {
+                    } else if (sharedObject->modelType == ModelType::NauseaPotion || sharedObject->modelType == ModelType::InvincibilityPotion) {
                         color = glm::vec3(1.0f, 0.5f, 0.0f);
                     } else if (sharedObject->modelType == ModelType::InvisibilityPotion) {
                         color = glm::vec3(0.2f, 0.2f, 0.2f);

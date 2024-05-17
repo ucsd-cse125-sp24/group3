@@ -30,9 +30,9 @@ public:
      */
 	Item(ObjectType type, bool movable, glm::vec3 corner, ModelType model, glm::vec3 dimensions);
 
-    virtual void useItem(Object* other, ServerGameState& state);
+    virtual void useItem(Object* other, ServerGameState& state, int itemSelected);
 
-    void dropItem(Object* other, ServerGameState& state, float dropDistance);
+    void dropItem(Object* other, ServerGameState& state, int itemSelected, float dropDistance);
 
 	void doCollision(Object* other, ServerGameState& state) override;
 

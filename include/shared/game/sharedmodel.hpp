@@ -9,8 +9,10 @@ enum class ModelType {
 	WarrenBear,
 	HealthPotion,
 	InvisibilityPotion,
-	UnknownPotion,
+	NauseaPotion,
+	InvincibilityPotion,
 	FireSpell,
 	HealSpell,
-	Frame
+	Frame,
+	Orb,
 };

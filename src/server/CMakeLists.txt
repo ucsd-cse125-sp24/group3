@@ -24,6 +24,7 @@ set(FILES
     game/fakewall.cpp
     game/potion.cpp
     game/spell.cpp
+    game/orb.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

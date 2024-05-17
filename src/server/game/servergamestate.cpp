@@ -186,16 +186,11 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::UseItem:
 		{
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
-			int itemSelected = player->sharedInventory.selected;
+			int itemSelected = player->sharedInventory.selected - 1;
 
-			if (player->inventory.find(itemSelected) != player->inventory.end()) {
-				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
-				item->useItem(player, *this);
-
-				if(item->iteminfo.used){
-					player->inventory.erase(itemSelected);
-					player->sharedInventory.inventory.erase(itemSelected);
-				}
+			if (player->inventory[itemSelected] != -1) {
+				Item* item = this->objects.getItem(player->inventory[itemSelected]);
+				item->useItem(player, *this, itemSelected);
 
 				this->updated_entities.insert(player->globalID);
 				this->updated_entities.insert(item->globalID);
@@ -205,14 +200,11 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::DropItem:
 		{
 			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
-			int itemSelected = player->sharedInventory.selected;
+			int itemSelected = player->sharedInventory.selected - 1;
 
-			if (player->inventory.find(itemSelected) != player->inventory.end()) {
-				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
-				item->dropItem(player, *this, 3.0f);
-				
-				player->inventory.erase(itemSelected);
-				player->sharedInventory.inventory.erase(itemSelected);
+			if (player->inventory[itemSelected] != -1) {
+				Item* item = this->objects.getItem(player->inventory[itemSelected]);
+				item->dropItem(player, *this, itemSelected, 3.0f);
 
 				this->updated_entities.insert(player->globalID);
 				this->updated_entities.insert(item->globalID);
@@ -471,7 +463,6 @@ void ServerGameState::updateItems() {
 				}
 			}
 		}
-
 	}
 }
 
@@ -537,18 +528,26 @@ void ServerGameState::handleDeaths() {
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
 			//handle dropping items (sets collider to none so it doesn't pick up items when dead)
 			player->physics.collider = Collider::None;
-			for (int i = 1; i <= player->sharedInventory.inventory_size; i++) {
-				if (player->inventory.contains(i)) {
-            		Item* item = dynamic_cast<Item*>(this->objects.getItem(player->inventory.at(i)));
-					item->dropItem(player, *this, 2.0f);
-					player->inventory.erase(i);
-					player->sharedInventory.inventory.erase(i);
+			for (int i = 0; i < player->sharedInventory.inventory_size; i++) {
+				if (player->inventory[i] != -1) {
+            		auto item = dynamic_cast<Item*>(this->objects.getItem(player->inventory[i]));
+					item->dropItem(player, *this, i, 2.0f);
 					this->updated_entities.insert(item->globalID);
 				}
 				// hardcode "random" drops
 				if (i == 1){ player->physics.shared.facing *= -1.0f; }
 				if (i == 2){ player->physics.shared.facing = glm::vec3(0.5f, 0, 0.7f); }
 				if (i == 3){ player->physics.shared.facing = glm::vec3(-0.3f, 0, 0.1f); }
+			}
+
+			// remove pot effects when killed
+			for (auto kv : player->sharedInventory.usedItems) {
+				auto item = dynamic_cast<Item*>(this->objects.getItem(kv.first));
+				if (item->type == ObjectType::Potion) {
+					Potion* pot = dynamic_cast<Potion*>(item);
+					pot->revertEffect(*this);
+					this->updated_entities.insert(pot->globalID);
+				}
 			}
 
 			this->updated_entities.insert(player->globalID);

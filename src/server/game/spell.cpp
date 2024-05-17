@@ -23,7 +23,7 @@ Spell::Spell(glm::vec3 corner, glm::vec3 dimensions, SpellType spelltype):
     }
 }
 
-void Spell::useItem(Object* other, ServerGameState& state) {
+void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
     Player* player = dynamic_cast<Player*>(other);
 
     glm::vec3 spell_origin(
@@ -52,4 +52,6 @@ void Spell::useItem(Object* other, ServerGameState& state) {
 
         state.markForDeletion(this->globalID);
     }
+
+    Item::useItem(other, state, itemSelected);
 }

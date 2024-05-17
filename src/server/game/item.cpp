@@ -9,10 +9,18 @@ Item::Item(ObjectType type, bool movable, glm::vec3 corner, ModelType model, glm
 	iteminfo(SharedItemInfo{ .held = false, .used = false })
 {}
 
-void Item::useItem(Object* other, ServerGameState& state) {
+void Item::useItem(Object* other, ServerGameState& state, int itemSelected) {
+
+	auto player = dynamic_cast<Player*>(other);
+	if (player == nullptr) return; // only allow players to use items
+
+	if (this->iteminfo.used) {
+		player->inventory[itemSelected] = -1;
+		player->sharedInventory.inventory[itemSelected] = ModelType::Frame;
+	}
 }
 
-void Item::dropItem(Object* other, ServerGameState& state, float dropDistance) {
+void Item::dropItem(Object* other, ServerGameState& state, int itemSelected, float dropDistance) {
 
 	auto player = dynamic_cast<Player*>(other);
 	if (player == nullptr) return; // only allow players to drop items
@@ -20,6 +28,9 @@ void Item::dropItem(Object* other, ServerGameState& state, float dropDistance) {
 	this->iteminfo.held = false;
 	this->physics.collider = Collider::Box;
 	state.objects.moveObject(this, (player->physics.shared.corner + (player->physics.shared.facing * dropDistance)) * glm::vec3(1.0f, 0.0f, 1.0f));
+
+	player->inventory[itemSelected] = -1;
+	player->sharedInventory.inventory[itemSelected] = ModelType::Frame;
 }
 
 void Item::doCollision(Object* other, ServerGameState& state) {
@@ -27,17 +38,15 @@ void Item::doCollision(Object* other, ServerGameState& state) {
 	auto player = dynamic_cast<Player*>(other);
 	if (player == nullptr) return; // only allow players to pick up items
 
-	if (player->inventory.size() < player->sharedInventory.inventory_size) {
-		for (int i = 1; i <= player->sharedInventory.inventory_size; i++) {
-			if (!player->inventory.contains(i)) {
-				player->inventory[i] = this->typeID;
-				player->sharedInventory.inventory[i] = this->modelType;
-				break;
-			}
-		}
-		this->iteminfo.held = true;		
-		this->physics.collider = Collider::None;
+	for (int i = 0; i < player->inventory.size(); i++) {
+		if (player->inventory[i] != -1) { continue; }
+
+		player->inventory[i] = this->typeID;
+		player->sharedInventory.inventory[i] = this->modelType;
+		break;
 	}
+	this->iteminfo.held = true;
+	this->physics.collider = Collider::None;
 }
 
 /*	SharedGameState generation	*/
