@@ -20,7 +20,7 @@ public:
         Options(font::Font font, font::Size size, font::Color color):
             font(font), size(size), color(color) {}
 
-        font::Font font {font::Font::TEXT};
+        font::Font font {font::Font::REGULAR};
         font::Size size {font::Size::SMALL};
         font::Color color {font::Color::BLACK};
     };

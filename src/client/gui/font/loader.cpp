@@ -20,10 +20,10 @@ bool Loader::init() {
     // so this is supposed to prevent seg faults related to that
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    if (!this->_loadFont(Font::MENU)) {
+    if (!this->_loadFont(Font::LOADING)) {
         return false;
     }
-    if (!this->_loadFont(Font::TEXT)) {
+    if (!this->_loadFont(Font::REGULAR)) {
         return false;
     }
 

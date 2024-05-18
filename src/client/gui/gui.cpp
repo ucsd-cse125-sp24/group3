@@ -172,7 +172,7 @@ void GUI::layoutFrame(GUIState state) {
 void GUI::_layoutLoadingScreen() {
     this->addWidget(widget::CenterText::make(
         "made by",
-        font::Font::MENU,
+        font::Font::LOADING,
         font::Size::MEDIUM,
         font::Color::WHITE,
         fonts,
@@ -180,7 +180,7 @@ void GUI::_layoutLoadingScreen() {
     ));
     this->addWidget(widget::CenterText::make(
         "Torchlight Games",
-        font::Font::MENU,
+        font::Font::LOADING,
         font::Size::XLARGE,
         font::Color::TORCHLIGHT_GAMES,
         fonts,
@@ -188,7 +188,7 @@ void GUI::_layoutLoadingScreen() {
     ));
     this->addWidget(widget::CenterText::make(
         "Loading...",
-        font::Font::MENU,
+        font::Font::LOADING,
         font::Size::MEDIUM,
         font::Color::WHITE,
         fonts,
@@ -198,10 +198,10 @@ void GUI::_layoutLoadingScreen() {
 
 void GUI::_layoutTitleScreen() {
     this->addWidget(widget::CenterText::make(
-        "Arcana",
-        font::Font::MENU,
+        "Wrath of Zeus",
+        font::Font::REGULAR,
         font::Size::XLARGE,
-        font::Color::RED,
+        font::Color::TORCHLIGHT_GAMES,
         fonts,
         FRAC_WINDOW_HEIGHT(2, 3)
     ));
@@ -209,7 +209,7 @@ void GUI::_layoutTitleScreen() {
     auto start_text = widget::DynText::make(
         "(Start Game)",
         fonts,
-        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+        widget::DynText::Options(font::Font::REGULAR, font::Size::MEDIUM, font::Color::BLACK)
     );
     start_text->addOnHover([this](widget::Handle handle) {
         auto widget = this->borrowWidget<widget::DynText>(handle);
@@ -218,6 +218,7 @@ void GUI::_layoutTitleScreen() {
     start_text->addOnClick([this](widget::Handle handle) {
         client->gui_state = GUIState::LOBBY_BROWSER;
     });
+
     auto start_flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
@@ -231,7 +232,7 @@ void GUI::_layoutTitleScreen() {
 void GUI::_layoutLobbyBrowser() {
     this->addWidget(widget::CenterText::make(
         "Lobbies",
-        font::Font::MENU,
+        font::Font::REGULAR,
         font::Size::LARGE,
         font::Color::BLACK,
         this->fonts,
@@ -249,7 +250,7 @@ void GUI::_layoutLobbyBrowser() {
         ss << "(" << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken << ")";
 
         auto entry = widget::DynText::make(ss.str(), this->fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK));
+            widget::DynText::Options(font::Font::REGULAR, font::Size::MEDIUM, font::Color::BLACK));
         entry->addOnClick([ip, this](widget::Handle handle){
             std::cout << "Connecting to " << ip.address() << " ...\n";
             if (this->client->connectAndListen(ip.address().to_string())) {
@@ -268,7 +269,7 @@ void GUI::_layoutLobbyBrowser() {
         lobbies_flex->push(widget::DynText::make(
             "No lobbies found...",
             this->fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+            widget::DynText::Options(font::Font::REGULAR, font::Size::MEDIUM, font::Color::BLACK)
         ));
     }
 
@@ -284,7 +285,7 @@ void GUI::_layoutLobbyBrowser() {
         "Manual IP",
         this,
         fonts,
-        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+        widget::DynText::Options(font::Font::REGULAR, font::Size::MEDIUM, font::Color::BLACK)
     ));
     this->addWidget(std::move(input_flex));
 
@@ -295,11 +296,10 @@ void GUI::_layoutLobbyBrowser() {
     );
 
     std::stringstream ss;
-    ss << "(Connect to \"" << this->getCapturedKeyboardInput() << "\")";
     auto connect_btn = widget::DynText::make(
-        ss.str(),
+        "(Manual Connect)",
         fonts,
-        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+        widget::DynText::Options(font::Font::REGULAR, font::Size::MEDIUM, font::Color::BLACK)
     );
     connect_btn->addOnHover([this](widget::Handle handle) {
         auto btn = this->borrowWidget<widget::DynText>(handle);
@@ -319,7 +319,7 @@ void GUI::_layoutLobbyBrowser() {
 void GUI::_layoutLobby() {
     auto lobby_title = widget::CenterText::make(
         this->client->gameState.lobby.name,
-        font::Font::MENU,
+        font::Font::REGULAR,
         font::Size::LARGE,
         font::Color::BLACK,
         this->fonts,
@@ -330,7 +330,7 @@ void GUI::_layoutLobby() {
     ss << this->client->gameState.lobby.players.size() << " / " << this->client->gameState.lobby.max_players;
     auto player_count = widget::CenterText::make(
         ss.str(),
-        font::Font::MENU,
+        font::Font::REGULAR,
         font::Size::MEDIUM,
         font::Color::BLACK,
         this->fonts,
@@ -347,14 +347,14 @@ void GUI::_layoutLobby() {
         players_flex->push(widget::DynText::make(
             player_name,
             this->fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+            widget::DynText::Options(font::Font::REGULAR, font::Size::MEDIUM, font::Color::BLACK)
         ));
     }
     this->addWidget(std::move(players_flex));
 
     auto waiting_msg = widget::CenterText::make(
         "Waiting for players...",
-        font::Font::MENU,
+        font::Font::REGULAR,
         font::Size::MEDIUM,
         font::Color::GRAY,
         this->fonts,
@@ -406,8 +406,8 @@ void GUI::_sharedGameHUD() {
     // Text for item description
     auto item_txt = widget::CenterText::make(
         itemString,
-        font::Font::TEXT,
-        font::Size::SMALL,
+        font::Font::REGULAR,
+        font::Size::MEDIUM,
         font::Color::BLACK,
         fonts,
         font::getRelativePixels(70)
@@ -487,11 +487,11 @@ void GUI::_layoutGameHUD() {
 
     auto health_txt = widget::CenterText::make(
         std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
-        font::Font::MENU,
+        font::Font::REGULAR,
         font::Size::MEDIUM,
         font::Color::RED,
         fonts,
-        font::getRelativePixels(90)
+        font::getRelativePixels(120)
     );
     this->addWidget(std::move(health_txt));
 
@@ -521,7 +521,7 @@ void GUI::_layoutGameHUD() {
         durationFlex->push(widget::DynText::make(
             name + std::to_string((int)self->inventoryInfo->usedItems[id].second),
             fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::RED)));
+            widget::DynText::Options(font::Font::REGULAR, font::Size::MEDIUM, font::Color::RED)));
 
         ++it;
     }
@@ -532,7 +532,7 @@ void GUI::_layoutGameEscMenu() {
     auto exit_game_txt = widget::DynText::make(
         "(Exit Game)",
         fonts,
-        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+        widget::DynText::Options(font::Font::REGULAR, font::Size::MEDIUM, font::Color::BLACK)
     );
     exit_game_txt->addOnHover([this](widget::Handle handle) {
         auto widget = this->borrowWidget<widget::DynText>(handle);
@@ -561,8 +561,8 @@ void GUI::_layoutDeadScreen() {
     auto time_until_respawn = (self->playerInfo->respawn_time - getMsSinceEpoch()) / 1000;
 
     this->addWidget(widget::CenterText::make(
-        "You died...",
-        font::Font::MENU,
+        "You died",
+        font::Font::REGULAR,
         font::Size::LARGE,
         font::Color::RED,
         fonts,
@@ -570,7 +570,7 @@ void GUI::_layoutDeadScreen() {
     ));
     this->addWidget(widget::CenterText::make(
         "Respawning in " + std::to_string(time_until_respawn),
-        font::Font::TEXT,
+        font::Font::REGULAR,
         font::Size::MEDIUM,
         font::Color::BLACK,
         fonts,

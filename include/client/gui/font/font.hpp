@@ -16,8 +16,8 @@ namespace gui::font {
  * map to the same font.
  */
 enum class Font {
-    MENU,
-    TEXT
+    LOADING,
+    REGULAR
 };
 
 /**
