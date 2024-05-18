@@ -17,5 +17,7 @@ public:
 	void doCollision(Object* other, ServerGameState& state) override;
     void useItem(Object* other, ServerGameState& state, int itemSelected) override;
 
+    void dropItem(Object* other, ServerGameState& state, int itemSelected, float dropDistance) override;
+
 private:
 };

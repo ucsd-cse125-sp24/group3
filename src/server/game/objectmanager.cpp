@@ -124,6 +124,12 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Orb:
 		this->items.remove(object->typeID);
 		break;
+	case ObjectType::Exit:
+		this->exits.remove(object->typeID);
+		break;
+	case ObjectType::SolidSurface:
+		this->solid_surfaces.remove(object->typeID);
+		break;
 	}
 
 	//	Remove object from cellToObjects hashmap
