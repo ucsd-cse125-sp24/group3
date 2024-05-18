@@ -13,6 +13,7 @@ Orb::Orb(glm::vec3 corner, glm::vec3 dimensions):
     this->physics.movable = true;
 }
 
+// TODO: MAY NOT BE NEEDED AT ALL
 void Orb::useItem(Object* other, ServerGameState& state, int itemSelected) {
     auto player = dynamic_cast<Player*>(other);
 

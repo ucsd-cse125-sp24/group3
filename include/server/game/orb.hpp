@@ -7,8 +7,8 @@
 class Orb : public Item {
 public:
     /**
-     * @param corner     Corner position of the Potion
-     * @param dimensions Dimensions applied for the Potion
+     * @param corner     Corner position of the Orb
+     * @param dimensions Dimensions applied for the Orb
      */
     Orb(glm::vec3 corner, glm::vec3 dimensions);
 

@@ -523,7 +523,7 @@ void GUI::_layoutGameHUD() {
             fonts,
             widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::RED)));
 
-        it++;
+        ++it;
     }
     this->addWidget(std::move(durationFlex));
 }
