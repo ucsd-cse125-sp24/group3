@@ -9,9 +9,19 @@ namespace gui::widget {
 
 std::unique_ptr<Shader> StaticImg::shader = nullptr;
 
+StaticImg::StaticImg(glm::vec2 origin, gui::img::Img img, int size):
+    Widget(Type::StaticImg, origin), img(img)
+{
+    this->size = size;
+    this->width = img.width * size;
+    this->height = img.height * size;
+    this->texture_id = img.texture_id;
+}
+
 StaticImg::StaticImg(glm::vec2 origin, gui::img::Img img):
     Widget(Type::StaticImg, origin), img(img)
 {
+    this->size = 1.0f;
     this->width = img.width;
     this->height = img.height;
     this->texture_id = img.texture_id;
@@ -28,8 +38,8 @@ StaticImg::~StaticImg() {
 
 void StaticImg::render() {
     // ⚠ SUS SHIT ⚠
-    float width_percent = (2.0f / (WINDOW_WIDTH)) * (img.width);
-    float height_percent = (2.0f / (WINDOW_HEIGHT)) * (img.height);
+    float width_percent = (2.0f / (WINDOW_WIDTH)) * (img.width) * size;
+    float height_percent = (2.0f / (WINDOW_HEIGHT)) * (img.height) * size;
     glm::vec2 bottom_left = (2.0f * (origin / glm::vec2(WINDOW_WIDTH, WINDOW_HEIGHT))) - glm::vec2(1.0f, 1.0f);
 
     float vertices[] = {

@@ -7,6 +7,7 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/stat.hpp"
 #include "shared/game/sharedmodel.hpp"
+#include <chrono>
 
 /**
  * @brief An enum for the type of an object; the fields here should match all
@@ -26,7 +27,8 @@ enum class ObjectType {
 	ArrowTrap,
 	TeleporterTrap,
 	Spell,
-	Item,
+	Orb,
+	Item
 };
 
 /**
@@ -55,36 +57,28 @@ struct SharedInventory {
 	// need to share itemtype data...
 	int selected;
 	int inventory_size;
-	std::unordered_map<int, ModelType> inventory;
+	std::vector<ModelType> inventory;
+	std::unordered_map<SpecificID, std::pair<ModelType, double>> usedItems;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& selected& inventory_size& inventory;
+		ar& selected& inventory_size& inventory& usedItems;
 	}
 }; 
-
-/**
- * @brief An enum for the type of an item
- */
-enum class ItemType {
-	Weapon,
-	Spell,
-	Potion,
-	Blank
-};
 
 struct SharedItemInfo {
 	bool held; // for rendering
 	bool used; // for rendering
+	double remaining_time;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& used& held;
+		ar& used& held& remaining_time;
 	}
 };
 
 enum class SurfaceType {
 	Wall,
 	Floor,
-	Ceiling
+	Ceiling,
 };
 
 struct SharedSolidSurface {
@@ -141,9 +135,10 @@ struct SharedTrapInfo {
 struct SharedPlayerInfo {
 	bool is_alive;
 	time_t respawn_time; // unix timestamp in ms when the player will be respawned
+	bool render; // for invis potion
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & is_alive & respawn_time;
+		ar & is_alive & respawn_time & render;
 	}
 };
 

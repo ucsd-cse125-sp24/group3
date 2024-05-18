@@ -25,6 +25,8 @@ set(FILES
     game/potion.cpp
     game/mazegenerator.cpp
     game/teleportertrap.cpp
+    game/spell.cpp
+    game/orb.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})
