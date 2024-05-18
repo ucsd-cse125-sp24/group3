@@ -8,7 +8,7 @@
 
 using namespace std::chrono_literals;
 
-const std::chrono::seconds FireballTrap::TIME_UNTIL_RESET = 2s;
+const std::chrono::seconds FireballTrap::TIME_UNTIL_RESET = 4s;
 const int FireballTrap::SHOOT_DIST = 15;
 
 FireballTrap::FireballTrap(glm::vec3 corner, glm::vec3 dimensions):
@@ -50,7 +50,7 @@ bool FireballTrap::shouldTrigger(ServerGameState& state) {
     if (closest_dist <= SHOOT_DIST_UNITS && player_to_shoot_at != nullptr) {
         this->physics.shared.facing = glm::normalize(player_to_shoot_at->physics.shared.getCenterPosition() - this_pos);
         this->target = player_to_shoot_at->globalID;
-        return true;
+        return (randomInt(1, 5) == 1);
     }
 
     return false;

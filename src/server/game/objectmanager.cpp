@@ -4,6 +4,8 @@
 #include "server/game/fireballtrap.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/potion.hpp"
+#include "server/game/spell.hpp"
+#include "server/game/orb.hpp"
 
 #include <memory>
 
@@ -29,6 +31,13 @@ SpecificID ObjectManager::createObject(Object* object) {
 	EntityID globalID = this->objects.push(object);
 	object->globalID = globalID;
 
+	object->gridCellPositions = this->objectGridCells(object);
+	for (auto pos : object->gridCellPositions) {
+		if (!this->cellToObjects.contains(pos)) {
+			this->cellToObjects.insert({pos, std::vector<Object*>()});
+		}
+	}
+
 	switch (object->type) {
 		case ObjectType::Projectile:
 			object->typeID = this->projectiles.push(dynamic_cast<Projectile*>(object));
@@ -38,7 +47,14 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::SpikeTrap:
 		case ObjectType::FloorSpike:
 		case ObjectType::ArrowTrap:
+		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
+			break;
+		case ObjectType::Orb:
+			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
+			break;
+		case ObjectType::Spell:
+			object->typeID = this->items.push(dynamic_cast<Spell*>(object));
 			break;
 		case ObjectType::Potion:
 			object->typeID = this->items.push(dynamic_cast<Potion*>(object));
@@ -103,7 +119,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Enemy:
 		this->enemies.remove(object->typeID);
 		break;
+	case ObjectType::Spell:
 	case ObjectType::Potion:
+	case ObjectType::Orb:
 		this->items.remove(object->typeID);
 		break;
 	}
@@ -218,9 +236,8 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 	}
 
 	//	Remove the object from the cellToObjects hashmap
-	for (glm::vec2 cellPosition : object->gridCellPositions) {
-		std::vector<Object*>& objectsInCell =
-			this->cellToObjects[cellPosition];
+	for (auto cellPosition : object->gridCellPositions) {
+		std::vector<Object*>& objectsInCell = this->cellToObjects.at(cellPosition);
 
 		//	Remove object from Object * vector of objects in this cell
 		for (int i = 0; i < objectsInCell.size(); i++) {
@@ -231,16 +248,18 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 		}
 	}
 
+
 	//	Update object's corner position
 	object->physics.shared.corner = newCornerPosition;
 
 	//	Get the object's new occupied GridCell position vector
 	object->gridCellPositions = objectGridCells(object);
 
-	//	Add object to cellToObjects hashmap
-	for (glm::vec2 cellPosition : object->gridCellPositions) {
-		this->cellToObjects[cellPosition].push_back(object);
+	for (int i = 0; i < object->gridCellPositions.size(); i++) {
+		this->cellToObjects[object->gridCellPositions[i]].push_back(object);
 	}
+
+    return true;
 }
 
 std::vector<glm::ivec2> ObjectManager::objectGridCells(Object* object) {

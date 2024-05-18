@@ -103,7 +103,7 @@ public:
 	//	TODO: Add implementations of items
 	void updateItems();
 
-	void doObjectTicks();
+	void doProjectileTicks();
 
 	void updateTraps();
 
@@ -176,7 +176,7 @@ public:
 	 * @brief Reads from maze file and initializes this ServerGameState's
 	 * Grid instance, as well as creating all necessary environment objects.
 	 */
-	void loadMaze();
+	void loadMaze(const Grid& grid);
 
 	/*	Maze getters	*/
 

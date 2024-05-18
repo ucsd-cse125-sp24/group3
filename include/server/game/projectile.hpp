@@ -1,6 +1,7 @@
 #include "server/game/object.hpp"
 #include "server/game/constants.hpp"
 #include "server/game/arrowtrap.hpp"
+#include "server/game/spell.hpp"
 
 #include <optional>
 #include <deque>
@@ -26,12 +27,12 @@ public:
          * @param homing_strength value from 0-1, where the closer to 1 the more strong the homing is
          * @param target Target towards which the projectile homes, if it is homing
          */
-        Options(int damage, float h_mult, float v_mult,
+        Options(bool isSpell, int damage, float h_mult, float v_mult,
             bool homing, float homing_strength, 
             std::optional<EntityID> target
         ):
-            damage(damage), h_mult(h_mult), v_mult(v_mult),
-            homing(homing), homing_strength(homing_strength),
+            isSpell(isSpell), damage(damage), h_mult(h_mult), 
+            v_mult(v_mult), homing(homing), homing_strength(homing_strength),
             target(target)
         {
             if (homing && !target.has_value()) {
@@ -42,6 +43,7 @@ public:
             }
         }
 
+        bool isSpell;
         float h_mult;
         float v_mult;
         int damage;
@@ -63,7 +65,12 @@ public:
 
     void doCollision(Object* other, ServerGameState& state) override;
 
-    bool doTick(ServerGameState& state) override;
+	/**
+     * @brief handle homing trajectory updates
+	 * 
+	 * @returns True if the entity was updated, false otherwise
+	 */
+    bool doTick(ServerGameState& state);
 
 private:
     Options opt;
@@ -78,7 +85,7 @@ public:
 
     HomingFireball(glm::vec3 corner, glm::vec3 facing, std::optional<EntityID> target):
         Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube,
-            Options(DAMAGE, H_MULT, V_MULT, true, HOMING_STRENGTH, target))
+            Options(false, DAMAGE, H_MULT, V_MULT, true, HOMING_STRENGTH, target))
     {}
 };
 
@@ -95,7 +102,7 @@ public:
 
     Arrow(glm::vec3 corner, glm::vec3 facing, ArrowTrap::Direction dir):
         Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Cube,
-            Options(DAMAGE, H_MULT, V_MULT, false, 0.0f, {}))
+            Options(false, DAMAGE, H_MULT, V_MULT, false, 0.0f, {}))
     {
         // temp hack to get the correct direction until we load in a model and can rotate it
 
@@ -120,5 +127,22 @@ public:
         }
 
         this->physics.shared.dimensions = glm::vec3(arrow_x_dim, ARROW_HEIGHT, arrow_z_dim);
+    }
+};
+
+class SpellOrb : public Projectile {
+public:
+    inline static const int DAMAGE = 25;
+    inline static const float H_MULT = 0.4;
+    inline static const float V_MULT = 0.0;
+    inline static const float HOMING_STRENGTH = 0.1f;
+    
+    SpellType sType;
+
+    SpellOrb(glm::vec3 corner, glm::vec3 facing, SpellType type) :
+        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube,
+            Options(true, DAMAGE, H_MULT, V_MULT, false, 0.0f, {}))
+    {
+        this->sType = type;
     }
 };

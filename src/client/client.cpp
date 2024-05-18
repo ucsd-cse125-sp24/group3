@@ -284,7 +284,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
 }
 
 void Client::processServerInput(boost::asio::io_context& context) {
-    context.run_for(30ms);
+    context.run_for(5ms);
 
     // probably want to put rendering logic inside of client, so that this main function
     // mimics the server one where all of the important logic is done inside of a run command
@@ -339,6 +339,8 @@ void Client::draw() {
                     }
                     break;
                 }
+
+                if (!sharedObject->playerInfo->render) { break; } // dont render while invisible
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
 
                 auto player_pos = sharedObject->physics.getCenterPosition();
@@ -479,7 +481,7 @@ void Client::draw() {
                     true);
                 break;
             }
-            case ObjectType::Projectile: {
+            case ObjectType::Projectile: {  
                 // TODO use model
                 auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
@@ -502,9 +504,10 @@ void Client::draw() {
                     true);
                 break;
             }
-            case ObjectType::Potion: {
+            case ObjectType::Orb: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
+                    glm::vec3 color = glm::vec3(0.0f, 0.7f, 1.0f);
+                    auto cube = std::make_unique<Cube>(color);
                     cube->scaleAbsolute(sharedObject->physics.dimensions);
                     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
                     cube->draw(this->cube_shader,
@@ -513,6 +516,60 @@ void Client::draw() {
                         glm::vec3(),
                         true);
                 }
+                break;
+            }
+            case ObjectType::Potion: {
+                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+                    glm::vec3 color;
+                    if (sharedObject->modelType == ModelType::HealthPotion) {
+                        color = glm::vec3(1.0f, 0.0f, 0.0f);
+                    } else if (sharedObject->modelType == ModelType::NauseaPotion || sharedObject->modelType == ModelType::InvincibilityPotion) {
+                        color = glm::vec3(1.0f, 0.5f, 0.0f);
+                    } else if (sharedObject->modelType == ModelType::InvisibilityPotion) {
+                        color = glm::vec3(0.2f, 0.2f, 0.2f);
+                    }
+
+                    auto cube = std::make_unique<Cube>(color);
+                    cube->scaleAbsolute(sharedObject->physics.dimensions);
+                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    cube->draw(this->cube_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        glm::vec3(),
+                        true);
+                }
+                break;
+            }
+            case ObjectType::Spell: {
+                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+                    glm::vec3 color;
+                    if (sharedObject->modelType == ModelType::FireSpell) {
+                        color = glm::vec3(0.9f, 0.1f, 0.0f);
+                    }
+                    else if (sharedObject->modelType == ModelType::HealSpell) {
+                        color = glm::vec3(1.0f, 1.0f, 0.0f);
+                    }
+
+                    auto cube = std::make_unique<Cube>(color);
+                    cube->scaleAbsolute(sharedObject->physics.dimensions);
+                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    cube->draw(this->cube_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        glm::vec3(),
+                        true);
+                }
+                break;
+            }
+            case ObjectType::TeleporterTrap: {
+                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 1.0f));
+                cube->scaleAbsolute( sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    true);
                 break;
             }
             default:

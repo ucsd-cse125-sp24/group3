@@ -21,10 +21,16 @@ struct GameConfig {
             std::string directory;
 
             /**
+             * @brief whether or not to generate and use a procedurally generated maze
+             */
+            bool procedural;
+
+            /**
              * @brief Name of the maze file within the maze maps directory that
              * the server should load.
              */
             std::string maze_file;
+
         } maze;
     } game;
     /// @brief Shared config settings for the network

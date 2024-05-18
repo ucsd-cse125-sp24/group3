@@ -6,3 +6,6 @@ out/
 
 docs/*
 !docs/.gitkeep
+
+maps/generated/**
+!maps/generated/.gitkeep

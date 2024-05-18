@@ -3,14 +3,18 @@
 #include "server/game/fireballtrap.hpp"
 #include "server/game/floorspike.hpp"
 #include "server/game/fakewall.hpp"
+#include "server/game/teleportertrap.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/potion.hpp"
+#include "server/game/orb.hpp"
 #include "server/game/constants.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 #include "shared/network/constants.hpp"
+#include "shared/utilities/rng.hpp"
+#include "server/game/mazegenerator.hpp"
 
 #include <fstream>
 
@@ -29,10 +33,32 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->maps_directory = config.game.maze.directory;
 	this->maze_file = config.game.maze.maze_file;
 
+    MazeGenerator generator(config);
+    int attempts = 1;
+    auto grid = generator.generate();
+    if (!grid.has_value() || std::abs(grid->getColumns()) > MAX_MAZE_COLUMNS) {
+		if (grid->getColumns() > MAX_MAZE_COLUMNS) {
+			std::cerr << "SUS! The maze has " << grid->getColumns() << "Columns!\n"
+				<< "I dont feel like fixing this, so we are going to try again!\n";
+		}
+		// failed so try again
+		generator = MazeGenerator(config);
+		grid = generator.generate();
+        attempts++;
+    }
+
+	if (config.game.maze.procedural) {
+		std::cout << "Took " << attempts << " attempts to generate a full procedural maze\n";
+		std::string filename = std::to_string(getMsSinceEpoch()) + ".maze";
+		auto path = getRepoRoot() / config.game.maze.directory / "generated" / filename;
+		std::cout << "Saving procedural maze to " << path << std::endl;
+		grid->writeToFile(path.string());
+	}
+
 	//	Load maze (Note: This only happens in THIS constructor! All other
 	//	ServerGameState constructors MUST call this constructor to load the
 	//	maze environment from a file)
-	this->loadMaze();
+	this->loadMaze(*grid);
 }
 
 ServerGameState::ServerGameState(GamePhase start_phase) 
@@ -195,31 +221,28 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::UseItem:
 		{
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
-			int itemSelected = player->sharedInventory.selected;
-			this->updated_entities.insert(player->globalID);
+			int itemSelected = player->sharedInventory.selected - 1;
 
-			if (player->inventory.find(itemSelected) != player->inventory.end()) {
-				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
-				item->useItem(player, *this);
-				player->inventory.erase(itemSelected);
-				player->sharedInventory.inventory.erase(itemSelected);
-				//TODO : should also remove item afterwards
+			if (player->inventory[itemSelected] != -1) {
+				Item* item = this->objects.getItem(player->inventory[itemSelected]);
+				item->useItem(player, *this, itemSelected);
+
+				this->updated_entities.insert(player->globalID);
+				this->updated_entities.insert(item->globalID);
 			}
 			break;
 		}
 		case EventType::DropItem:
 		{
 			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
-			int itemSelected = player->sharedInventory.selected;
-			this->updated_entities.insert(player->globalID);
+			int itemSelected = player->sharedInventory.selected - 1;
 
-			if (player->inventory.find(itemSelected) != player->inventory.end()) {
-				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
-				item->iteminfo.held = false;
-				item->physics.collider = Collider::Box;
-				item->physics.shared.corner = (player->physics.shared.corner + (player->physics.shared.facing * 4.0f)) * glm::vec3(1.0f, 0.0f, 1.0f);
-				player->inventory.erase(itemSelected);
-				player->sharedInventory.inventory.erase(itemSelected);
+			if (player->inventory[itemSelected] != -1) {
+				Item* item = this->objects.getItem(player->inventory[itemSelected]);
+				item->dropItem(player, *this, itemSelected, 3.0f);
+
+				this->updated_entities.insert(player->globalID);
+				this->updated_entities.insert(item->globalID);
 			}
 			break;
 		}
@@ -303,7 +326,7 @@ void ServerGameState::update(const EventList& events) {
     }
 
 	//	TODO: fill update() method with updating object movement
-	doObjectTicks();
+	doProjectileTicks();
 	updateMovement();
 	updateItems();
 	updateTraps();
@@ -391,10 +414,6 @@ void ServerGameState::updateMovement() {
 			numSteps = NUM_INCREMENTAL_STEPS - 1;
 		}
 
-		bool collided = false;
-		bool collidedX = false;
-		bool collidedZ = false;
-
 		//	Object's current position (before current movementStep)
 		glm::vec3 currentPosition = object->physics.shared.corner;
 
@@ -403,6 +422,10 @@ void ServerGameState::updateMovement() {
 		//	used)
 		while (numSteps < NUM_INCREMENTAL_STEPS) {
 			numSteps++;
+
+			bool collided = false; 
+			bool collidedX = false;
+			bool collidedZ = false;
 
 			//	Move object to new position and check whether a collision has
 			//	occurred
@@ -415,25 +438,21 @@ void ServerGameState::updateMovement() {
 			if (collided) {
 				//	Test for collision when object only moves by movementStep's
 				//	x component
-				if (!collidedX) {
-					collidedX = this->hasObjectCollided(object,
-						glm::vec3(
-							currentPosition.x + movementStep.x,
-							currentPosition.y,
-							currentPosition.z
-						));
-				}
+				collidedX = this->hasObjectCollided(object,
+					glm::vec3(
+						currentPosition.x + movementStep.x,
+						currentPosition.y,
+						currentPosition.z
+					));
 				
 				//	Test for collision when object only moves by movementStep's
 				//	z component
-				if (!collidedZ) {
-					collidedZ = this->hasObjectCollided(object,
-						glm::vec3(
-							currentPosition.x,
-							currentPosition.y,
-							currentPosition.z + movementStep.z
-						));
-				}
+				collidedZ = this->hasObjectCollided(object,
+					glm::vec3(
+						currentPosition.x,
+						currentPosition.y,
+						currentPosition.z + movementStep.z
+					));
 			}
 
 			//	Update object's movement
@@ -446,7 +465,6 @@ void ServerGameState::updateMovement() {
 				movementStep.z = 0;
 			}
 
-			//	Move object to the specified movement step
 			this->objects.moveObject(object, currentPosition + movementStep);
 
 			if (collidedX && collidedZ) {
@@ -538,7 +556,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				//	Exception - if the other object is a floor spike trap,
 				//	perform collision handling but do not return true as the
 				//	trap doesn't affect the movement of the object it hits
-				if (otherObj->type == ObjectType::FloorSpike) {
+				if (otherObj->type == ObjectType::FloorSpike || otherObj->type == ObjectType::Potion || otherObj->type == ObjectType::Spell) {
 					continue;
 				}
 
@@ -556,6 +574,11 @@ void ServerGameState::updateItems() {
 		auto item = items.get(i);
 		if (item == nullptr) { continue; }
 
+		if (item->physics.movable && item->physics.shared.corner.y == 0) {
+			item->physics.velocity.x = 0;
+			item->physics.velocity.z = 0;
+		}
+
 		if (item->type == ObjectType::Potion) {
 			Potion* pot = dynamic_cast<Potion*>(item);
 			if (pot->iteminfo.used) {
@@ -565,7 +588,6 @@ void ServerGameState::updateItems() {
 				}
 			}
 		}
-
 	}
 }
 
@@ -583,14 +605,14 @@ void ServerGameState::updateItems() {
 //	}
 //}
 
-void ServerGameState::doObjectTicks() {
-	auto objects = this->objects.getObjects();
-	for (int o = 0; o < objects.size(); o++) {
-		auto obj = objects.get(o);
-		if (obj == nullptr) continue;
+void ServerGameState::doProjectileTicks() {
+	auto projectiles = this->objects.getProjectiles();
+	for (int p = 0; p < projectiles.size(); p++) {
+		auto projectile = projectiles.get(p);
+		if (projectile == nullptr) continue;
 
-		if (obj->doTick(*this)) {
-			this->updated_entities.insert(obj->globalID);
+		if (projectile->doTick(*this)) {
+			this->updated_entities.insert(projectile->globalID);
 		}
 	}
 }
@@ -629,6 +651,32 @@ void ServerGameState::handleDeaths() {
 		if (player == nullptr) continue;
 
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
+			//handle dropping items (sets collider to none so it doesn't pick up items when dead)
+			player->physics.collider = Collider::None;
+			for (int i = 0; i < player->sharedInventory.inventory_size; i++) {
+				if (player->inventory[i] != -1) {
+            		auto item = dynamic_cast<Item*>(this->objects.getItem(player->inventory[i]));
+					item->dropItem(player, *this, i, 2.0f);
+					this->updated_entities.insert(item->globalID);
+				}
+				// hardcode "random" drops
+				if (i == 1){ player->physics.shared.facing *= -1.0f; }
+				if (i == 2){ player->physics.shared.facing = glm::vec3(0.5f, 0, 0.7f); }
+				if (i == 3){ player->physics.shared.facing = glm::vec3(-0.3f, 0, 0.1f); }
+			}
+
+			// remove pot effects when killed
+			for (auto it = player->sharedInventory.usedItems.begin(); it != player->sharedInventory.usedItems.end(); ) {
+				auto item = dynamic_cast<Item*>(this->objects.getItem(it->first));
+				if (item->type == ObjectType::Potion) {
+					Potion* pot = dynamic_cast<Potion*>(item);
+					it = pot->revertEffect(*this);
+					this->updated_entities.insert(pot->globalID);
+				} else {
+					it++;
+				}
+			}
+
 			this->updated_entities.insert(player->globalID);
 			player->info.is_alive = false;
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
@@ -645,6 +693,7 @@ void ServerGameState::handleRespawns() {
 		if (!player->info.is_alive) {
 			if (getMsSinceEpoch() >= player->info.respawn_time) {
 				this->updated_entities.insert(player->globalID);
+				player->physics.collider = Collider::Box;
 				player->physics.shared.corner = this->getGrid().getRandomSpawnPoint();
 				player->info.is_alive = true;
 				player->stats.health.increase(player->stats.health.max());
@@ -693,101 +742,8 @@ const Lobby& ServerGameState::getLobby() const {
 
 /*	Maze initialization	*/
 
-void ServerGameState::loadMaze() {
-	//	Step 1:	Attempt to open maze file for reading.
-
-	//	Generate maze file path
-	auto maze_file_path = 
-		getRepoRoot() / this->maps_directory / this->maze_file;
-
-	std::ifstream file;
-
-	file.open(maze_file_path.string(), std::ifstream::in);
-
-	//	Check that maze file was successfully opened
-	assert(file.is_open());
-
-	//	Step 2:	Determine number of rows and columns in the maze.
-
-	int rows, columns;
-
-	//	Character buffer that stores a single line of the input maze file
-	//	(extra character for null terminator)
-	char buffer[MAX_MAZE_COLUMNS + 1];
-
-	//	Get number of columns
-
-	//	Read the first line and use its length to get the number of columns
-	file.getline(buffer, MAX_MAZE_COLUMNS + 1);
-
-	columns = file.gcount();
-
-	//	If end of file isn't reached, file.gcount() includes the newline
-	//	character at the end of the first line; remove it from the column
-	//	count.
-	if (!file.eof()) {
-		columns -= 1;
-	}
-
-	std::cout << "Number of columns: " << columns << std::endl;
-
-	//	Get number of rows
-
-	//	Rows is at least one due to the above getline() call
-	rows = 1;
-	while (!file.eof()) {
-		file.getline(buffer, MAX_MAZE_COLUMNS + 1);
-
-		//	Assert if number of columns read doesn't match the number of columns
-		//	in the first row
-		int numColumns = file.gcount();
-
-		//	If end-of-file not reached, the gcount() contains the newline
-		//	character at the end of the current row; remove it from the current
-		//	column count.
-		if (!file.eof())
-			numColumns -= 1;
-
-		std::cout << "row " << rows << ": Num columns: " << numColumns << std::endl;
-
-		assert(numColumns == columns);
-
-		rows++;
-	}
-
-	std::cout << "Number of rows: " << rows << std::endl;
-
-	//	Initialize Grid with the specified rows and columns
-	this->grid = Grid(rows, columns);
-
-	//	Step 3:	Fill Grid with GridCells corresponding to characters in the maze
-	//	file.
-
-	//	Reset file position
-	file.seekg(file.beg);
-
-	//	Populate Grid
-	for (int row = 0; row < this->grid.getRows(); row++) {
-		//	Read row from file
-		file.getline(buffer, this->grid.getColumns() + 1);
-
-		for (int col = 0; col < this->grid.getColumns(); col++) {
-			char c = buffer[col];
-
-			//	Identify CellType from character
-			CellType type = charToCellType(c);
-
-			//	Crash if CellType is unknown
-			assert(type != CellType::Unknown);
-
-			//	Create new GridCell
-			this->grid.addCell(col, row, type);
-		}
-	}
-
-	//	Step 4:	Close the maze file.
-
-	file.close();
+void ServerGameState::loadMaze(const Grid& grid) {
+	this->grid = grid;
 
 	//	Verify that there's at least one spawn point
 	size_t num_spawn_points = this->grid.getSpawnPoints().size();
@@ -812,7 +768,7 @@ void ServerGameState::loadMaze() {
 	}
 
 	// Create Ceiling
-	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Ceiling, 
+	this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Ceiling, 
 		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),
 		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
 			this->grid.getRows() * Grid::grid_cell_width)
@@ -822,9 +778,41 @@ void ServerGameState::loadMaze() {
 	//	GridCell's position.
 	for (int row = 0; row < this->grid.getRows(); row++) {
 		for (int col = 0; col < this->grid.getColumns(); col++) {
+
 			GridCell* cell = this->grid.getCell(col, row);
 
+			if (cell->type == CellType::RandomPotion) {
+				int r = randomInt(1, 100);
+				if (r < 25) {
+					cell->type = CellType::HealthPotion;
+				} else if (r < 50) {
+					cell->type = CellType::InvisibilityPotion;
+				} else if (r < 75) {
+					cell->type = CellType::InvincibilityPotion;
+				} else {
+					cell->type = CellType::NauseaPotion;
+				}
+			} else if (cell->type == CellType::RandomSpell) {
+				int r = randomInt(1, 2);
+				if (r == 1) {
+					cell->type = CellType::FireSpell;
+				} else {
+					cell->type = CellType::HealSpell;
+				}
+			}
+
 			switch (cell->type) {
+				case CellType::Orb: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Orb(corner, dimensions));
+					break;
+				}
 				case CellType::FireballTrap: {
 					glm::vec3 dimensions(
 						Grid::grid_cell_width / 2,
@@ -837,6 +825,28 @@ void ServerGameState::loadMaze() {
 						cell->y * Grid::grid_cell_width
 					);
 					this->objects.createObject(new FireballTrap(corner, dimensions));
+					break;
+				}
+				case CellType::FireSpell: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Spell(corner, dimensions, SpellType::Fireball));
+					break;
+				}
+				case CellType::HealSpell: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Spell(corner, dimensions, SpellType::HealOrb));
 					break;
 				}
 				case CellType::HealthPotion: {
@@ -867,6 +877,16 @@ void ServerGameState::loadMaze() {
 						cell->y* Grid::grid_cell_width + 1);
 
 					this->objects.createObject(new Potion(corner, dimensions, PotionType::Invisibility));
+					break;
+				}
+				case CellType::InvincibilityPotion: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Potion(corner, dimensions, PotionType::Invincibility));
 					break;
 				}
 				case CellType::SpikeTrap: {
@@ -963,6 +983,17 @@ void ServerGameState::loadMaze() {
 					);
 
 					this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
+					break;
+				}
+
+				case CellType::TeleporterTrap: {
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width,
+						0.0f,
+						cell->y * Grid::grid_cell_width
+					);
+
+					this->objects.createObject(new TeleporterTrap(corner));
 					break;
 				}
 			}

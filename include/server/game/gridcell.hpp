@@ -11,6 +11,13 @@
  */
 CellType charToCellType(char c);
 
+/**
+ * TODO: write this
+ */
+char cellTypeToChar(CellType type);
+
+bool isCellTypeAllowedInEntryWay(CellType type);
+
 class GridCell {
 public:
 	/**

@@ -18,5 +18,13 @@ enum class CellType {
 	HealthPotion,
 	NauseaPotion,
 	InvisibilityPotion,
+	InvincibilityPotion,
+	FireSpell,
+	HealSpell,
+	RandomPotion,
+	RandomSpell,
+	Orb,
+	OutsideTheMaze,
+	TeleporterTrap,
 	Unknown
 };
