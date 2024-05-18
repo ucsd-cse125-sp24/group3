@@ -60,24 +60,33 @@ Mesh::Mesh(
     glEnableVertexAttribArray(2);	
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, textureCoords)));
 
-    // // vertex tangent
-    // glEnableVertexAttribArray(3);
-    // glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
+    // vertex tangent
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tangent)));
     
-    // // vertex bitangent
-    // glEnableVertexAttribArray(4);
-    // glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, bitangent));
+    // vertex bitangent
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, bitangent)));
    
-    // // vertex bone ids
-    // glEnableVertexAttribArray(5);
-    // glVertexAttribIPointer(5, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, m_boneIDs));
+    // vertex bone ids
+    glEnableVertexAttribArray(5);
+    glVertexAttribIPointer(5, 4, GL_INT, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, m_boneIDs)));
 
-    // // vertex bone weights
-    // glEnableVertexAttribArray(6);
-    // glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_weights));
+    // vertex bone weights
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, m_weights)));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    // for (int i = 0; i < vertices.size(); i++) {
+    //     auto v = vertices[i];
+    //     for (int j = 0; j < 4; j++) {
+    //         if (v.m_boneIDs[j] >= 0) {
+    //             std::cout << "v[" << i << "]: " << v.m_boneIDs[j] << ", " << v.m_weights[j] << std::endl;
+    //         }
+    //     }
+    // }
 
     // std::cout << "Loaded mesh with " << vertices.size() << " vertices, and " << textures.size() << " textures" << std::endl;
     // std::cout << "\t diffuse " << glm::to_string(this->material.diffuse) << std::endl;
@@ -98,6 +107,7 @@ void Mesh::draw(
     // vertex shader uniforms
     shader->setMat4("viewProj", viewProj);
     auto model = this->getModelMat();
+    
     shader->setMat4("model", model);
 
     // fragment shader uniforms
@@ -292,6 +302,11 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
             texture
         });
     }
+
+    for (int i = 0; i < vertices.size(); i++) {
+        setDefaultVertexBoneData(vertices[i]);
+    }
+
     // process indices
     for(unsigned int i = 0; i < mesh->mNumFaces; i++) {
         aiFace face = mesh->mFaces[i];
@@ -332,6 +347,19 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         }
     }
 
+    extractBoneWeight(vertices, mesh, scene);
+
+    // std::cout << "vertex bone data" << std::endl;
+
+    // for (int i = 0; i < vertices.size(); i++) {
+    //     auto v = vertices[i];
+    //     for (int j = 0; j < 4; j++) {
+    //         if (v.m_boneIDs[j] >= 0) {
+    //             std::cout << "v[" << i << "]: " << v.m_boneIDs[j] << ", " << v.m_weights[j] << std::endl;
+    //         }
+    //     }
+    // }
+
     return Mesh(
         vertices,
         indices,
@@ -353,6 +381,7 @@ void Model::setDefaultVertexBoneData(Vertex& vertex) {
 }
 
 void Model::setVertexBoneData(Vertex& vertex, int boneID, float weight) {
+    // std::cout << "setting vertex bone data" << std::endl;
     for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
         if (vertex.m_boneIDs[i] < 0) {
             vertex.m_boneIDs[i] = boneID;
@@ -363,7 +392,7 @@ void Model::setVertexBoneData(Vertex& vertex, int boneID, float weight) {
 }
 
 void Model::extractBoneWeight(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene) {
-    auto& boneInfoMap = m_boneInfo;
+    auto& boneInfoMap = m_boneInfoMap;
     int& boneCount = m_boneCounter;
 
     for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)

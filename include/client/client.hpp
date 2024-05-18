@@ -19,6 +19,9 @@
 #include "client/gui/gui.hpp"
 #include "client/camera.hpp"
 #include "client/audiomanager.hpp"
+#include "client/animation.hpp"
+#include "client/animationmanager.hpp"
+#include "client/bone.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/game/sharedobject.hpp"
@@ -157,6 +160,7 @@ public:
     bool connectAndListen(std::string ip_addr);
 
     AudioManager* getAudioManager();
+    AnimationManager* getAnimManager() { return animManager; }
 
 private:
     /**
@@ -200,6 +204,7 @@ private:
     gui::GUIState gui_state;
 
     AudioManager* audioManager;
+    AnimationManager* animManager;
 
     /* Camera object representing player's current position & orientation */
     std::unique_ptr<Camera> cam;

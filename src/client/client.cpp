@@ -62,6 +62,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     if (config.client.lobby_discovery)  {
         lobby_finder.startSearching();
     }
+
+
 }
 
 AudioManager* Client::getAudioManager() {
@@ -150,9 +152,17 @@ bool Client::init() {
     auto cube_model_path = graphics_assets_dir / "cube.obj";
     this->cube_model = std::make_unique<Model>(cube_model_path.string());
 
-    auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
+    // auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
+    // this->bear_model = std::make_unique<Model>(bear_model_path.string());
+    // // this->bear_model->scaleAbsolute(0.25);
+
+    auto bear_model_path = graphics_assets_dir / "walk4.fbx";
+    auto bear_anim_path = graphics_assets_dir / "walk4.fbx";
+
     this->bear_model = std::make_unique<Model>(bear_model_path.string());
-    // this->bear_model->scaleAbsolute(0.25);
+    this->bear_model->scaleAbsolute(0.0025);
+    Animation* bear = new Animation(bear_anim_path.string(), bear_model.get());
+    animManager = new AnimationManager(bear);
 
     auto player_model_path = graphics_assets_dir / "Fire-testing.obj";
     this->player_model = std::make_unique<Model>(player_model_path.string());
@@ -289,6 +299,19 @@ void Client::draw() {
             continue;
         }
 
+        /* Update model animation */
+        animManager->updateAnimation(0.00125f);
+        auto transforms = animManager->getFinalBoneMatrices();
+        // std::cout << transforms.size() << std::endl;
+        this->model_shader->use();
+
+        for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
+            // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
+            model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+        }
+
+        this->model_shader->clear();
+        
         switch (sharedObject->type) {
             case ObjectType::Player: {
                 // don't render yourself
@@ -329,7 +352,9 @@ void Client::draw() {
                 auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
                 auto bear_pos = sharedObject->physics.corner;
 
-                this->bear_model->setDimensions(sharedObject->physics.dimensions);
+                // this->bear_model->setDimensions(sharedObject->physics.dimensions);
+                // this->bear_model->setDimensions(glm::vec3(5.0f, 5.0f, 5.0f));
+                // this->bear_model->scaleAbsolute(2.0f);
                 this->bear_model->translateAbsolute(bear_pos);
                 this->bear_model->draw(
                     this->model_shader,

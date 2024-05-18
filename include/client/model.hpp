@@ -16,6 +16,7 @@
 #include "client/renderable.hpp"
 #include "client/shader.hpp"
 #include "client/util.hpp"
+#include "client/bone.hpp"
 
 #define MAX_BONE_INFLUENCE 4
 
@@ -231,12 +232,17 @@ class Model : public Renderable {
      * in that dimension
      */
     void setDimensions(const glm::vec3& dimensions);
+
+	auto& getBoneInfoMap() { return m_boneInfoMap; }
+	int& getBoneCount() { return m_boneCounter; }
+	
+
  private:
     std::vector<Mesh> meshes;
     Bbox bbox;
     glm::vec3 dimensions;
     
-	std::map<std::string, BoneInfo> m_boneInfo;
+	std::map<std::string, BoneInfo> m_boneInfoMap;
 	int m_boneCounter = 0;
 
 

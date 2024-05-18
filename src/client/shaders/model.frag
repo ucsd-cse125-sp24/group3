@@ -42,6 +42,7 @@ void main() {
         
     vec3 result = ambient + diffuse + specular;
     fragColor = vec4(result, 1.0);
+
     // * vec4(texture(material.texture_diffuse1, TexCoords));
     // fragColor = vec4(0.0, 1.0, 1.0, 1.0);
 }

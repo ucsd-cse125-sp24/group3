@@ -25,6 +25,10 @@ set(FILES
     model.cpp
     lightsource.cpp
     renderable.cpp
+
+    animation.cpp
+    animationmanager.cpp
+    bone.cpp
 )
 
 # OpenGL

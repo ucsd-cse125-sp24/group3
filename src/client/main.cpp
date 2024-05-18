@@ -64,9 +64,6 @@ void set_opengl_settings(GLFWwindow* window) {
 
     // Sets initial background color.
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-
-    // Set cursor position to (0, 0)
-    glfwSetCursorPos(window, 0, 0);
 }
 
 int main(int argc, char* argv[])
