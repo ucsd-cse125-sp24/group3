@@ -20,12 +20,12 @@ public:
 	/**
 	 * @return true if the enemy was mutated, false otherwise
 	 */
-	virtual bool doBehavior(ServerGameState& state) {};
+	virtual bool doBehavior(ServerGameState& state) {return false;};
 
 	/**
 	 * @return true if the enemy should be deleted, false otherwise
 	 */
-	virtual bool doDeath(ServerGameState& state) {};
+	virtual bool doDeath(ServerGameState& state) {return true; };
 
 	virtual SharedObject toShared() override;
 private:

@@ -12,6 +12,9 @@ Slime::Slime(glm::vec3 corner, glm::vec3 facing, int size):
         Stat(0, 10, 3)
     ))
 {
+    this->jump_intervals = {3000ms, 2200ms, 2200ms};
+    this->jump_strengths = {0.3f, 0.3f, 0.8f};
+
     this->size = size;
     this->physics.velocityMultiplier.y = 0.3;
     this->physics.velocityMultiplier.x = 0.3;
@@ -19,25 +22,28 @@ Slime::Slime(glm::vec3 corner, glm::vec3 facing, int size):
     this->physics.shared.dimensions = glm::vec3(size, size, size);
     this->last_jump_time = std::chrono::system_clock::now();
 
-    for (auto& time : this->JUMP_INTERVALS) {
+    for (auto& time : this->jump_intervals) {
         time += std::chrono::milliseconds(randomInt(-200, 200));
     }
-    for (auto& str : this->JUMP_STRENGTHS) {
+    for (auto& str : this->jump_strengths) {
         str += 0.1f * randomInt(-1, 1);
     }
 
-    this->jump_index = JUMP_INTERVALS.size() - 1;
+    this->jump_index = jump_intervals.size() - 1;
 }
 
 bool Slime::doBehavior(ServerGameState& state) {
+    bool mutated = false;
+    
     if (this->physics.shared.corner.y == 0) {
         // when it lands again reset its lateral velocity
         this->physics.velocity.x = 0;
         this->physics.velocity.z = 0;
+        mutated = true;
     }
 
     auto now = std::chrono::system_clock::now();
-    if (now - this->last_jump_time > JUMP_INTERVALS.at(this->jump_index)) {
+    if (now - this->last_jump_time > this->jump_intervals.at(this->jump_index)) {
         this->increaseJumpIndex();
         this->physics.velocity.y += JUMP_SPEED * 1.75;
 
@@ -48,11 +54,14 @@ bool Slime::doBehavior(ServerGameState& state) {
             player->physics.shared.getCenterPosition() - this->physics.shared.getCenterPosition()
         );
 
-        this->physics.velocity.x = JUMP_STRENGTHS.at(this->jump_index) * this->physics.shared.facing.x;
-        this->physics.velocity.z = JUMP_STRENGTHS.at(this->jump_index) * this->physics.shared.facing.z;
+        this->physics.velocity.x = this->jump_strengths.at(this->jump_index) * this->physics.shared.facing.x;
+        this->physics.velocity.z = this->jump_strengths.at(this->jump_index) * this->physics.shared.facing.z;
 
         this->last_jump_time = now;
+        mutated = true;
     }
+
+    return mutated;
 }
 
 void Slime::doCollision(Object* other, ServerGameState& state) {
@@ -91,5 +100,5 @@ bool Slime::doDeath(ServerGameState& state) {
 }
 
 void Slime::increaseJumpIndex() {
-    this->jump_index = (this->jump_index + 1) % this->JUMP_INTERVALS.size();
+    this->jump_index = (this->jump_index + 1) % this->jump_intervals.size();
 }

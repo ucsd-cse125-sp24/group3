@@ -30,7 +30,7 @@
 #define	INVENTORY_SIZE			4
 
 /*	Spell Constants	*/
-#define	CAST_LIMIT				5
+#define	CAST_LIMIT				20
 
 /*	Potion Stats	*/
 #define	RESTORE_HEALTH			20

@@ -244,6 +244,7 @@ void ServerGameState::update(const EventList& events) {
         }
     }
 
+
 	//	TODO: fill update() method with updating object movement
 	doProjectileTicks();
 	updateMovement();
