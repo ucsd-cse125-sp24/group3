@@ -94,11 +94,11 @@ class Mesh : public Renderable {
 
 
     std::optional<glm::vec3> solidColor;
+    Material material;
  private:
      std::vector<Vertex>       vertices;
      std::vector<unsigned int> indices;
      std::vector<Texture>      textures;
-     Material material;
 
     //  render data opengl needs
     GLuint VAO, VBO, EBO;

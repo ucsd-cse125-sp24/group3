@@ -90,14 +90,15 @@ void Mesh::draw(
     shader->setMat4("model", model);
 
     if (this->solidColor.has_value()) {
-        shader->setVec3("material.diffuse", this->solidColor.value());
+        shader->setVec3("material.ambient", this->solidColor.value());
     }
     else {
-        shader->setVec3("material.diffuse", this->material.diffuse);
+        shader->setVec3("material.ambient", this->material.ambient);
     }
 
+
     // fragment shader uniforms
-    shader->setVec3("material.ambient", this->material.ambient);
+    shader->setVec3("material.diffuse", this->material.diffuse);
     shader->setVec3("material.specular", this->material.specular);
     shader->setFloat("material.shininess", this->material.shininess);
     shader->setVec3("viewPos", camPos);
@@ -355,7 +356,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, const aiTextur
 }
 
 void Model::overrideSolidColor(std::optional<glm::vec3> color) {
-    for (auto mesh : this->meshes) {
+    for (auto &mesh : this->meshes) {
         mesh.solidColor = color;
     }
 }

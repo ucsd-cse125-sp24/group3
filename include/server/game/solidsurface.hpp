@@ -20,6 +20,5 @@ public:
 
 	virtual SharedObject toShared() override;
 
-private:
-	bool dm_highlight;
+	void setDMHighlight(bool highlight);
 };

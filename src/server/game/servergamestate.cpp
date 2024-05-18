@@ -263,6 +263,13 @@ void ServerGameState::update(const EventList& events) {
 
 			GridCell* cell = currGrid.getCell(gridCellPos.x, gridCellPos.y);
 
+			std::vector<SolidSurface*> surfaces = solidSurfaceInGridCells[std::make_pair(cell->x, cell->y)];
+
+			for (SolidSurface* surface : surfaces) {
+				this->updated_entities.insert(surface->globalID);
+				surface->setDMHighlight(true);
+			}
+
 			switch (cell->type) {
 			case CellType::Wall:
 				std::cout << "the grid cell type clicked: " << "WALL" << std::endl;
@@ -780,6 +787,7 @@ void ServerGameState::loadMaze() {
 	// Create Floor
 	for (int c = 0; c < this->grid.getColumns(); c++) {
 		for (int r = 0; r < this->grid.getRows(); r++) {
+			//TODO: skip outside maze 
 			SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
 				glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width),
 				glm::vec3(Grid::grid_cell_width, 0.1,
@@ -887,7 +895,9 @@ void ServerGameState::loadMaze() {
 					if (cell->type == CellType::FakeWall) {
 						this->objects.createObject(new FakeWall(corner, dimensions));
 					} else if (cell->type == CellType::Wall) {
-						this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
+						SolidSurface* wall = new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions);
+						this->objects.createObject(wall);
+						solidSurfaceInGridCells.insert(std::make_pair<std::pair<int, int>, std::vector<SolidSurface*>>(std::make_pair(col, row), { wall }));
 					}
 					break;
 				}

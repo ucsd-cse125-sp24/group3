@@ -9,13 +9,17 @@ SolidSurface::SolidSurface(
 		ModelType::Cube)
 {
 	this->shared.surfaceType = type;
-	this->dm_highlight = false;
+	this->shared.dm_highlight = false;
 }
 
 SolidSurface::~SolidSurface() {}
 
 void SolidSurface::setSurfaceType(SurfaceType type) {
 	this->shared.surfaceType = type;
+}
+
+void SolidSurface::setDMHighlight(bool highlight) {
+	this->shared.dm_highlight = highlight;
 }
 
 /*	SharedGameState generation	*/
