@@ -126,14 +126,15 @@ struct StartActionEvent {
  */
 struct TrapPlacementEvent {
     TrapPlacementEvent() {}
-    TrapPlacementEvent(EntityID entity_to_act, glm::vec3 world_pos, CellType cell) : entity_to_act(entity_to_act), world_pos(world_pos), cell(cell) { }
+    TrapPlacementEvent(EntityID entity_to_act, glm::vec3 world_pos, CellType cell, bool hover) : entity_to_act(entity_to_act), world_pos(world_pos), cell(cell), hover(hover) { }
 
     EntityID entity_to_act;
     CellType cell;
     glm::vec3 world_pos;
+    bool hover;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& entity_to_act & cell & world_pos;
+        ar& entity_to_act & cell & world_pos & hover;
     }
 };
 

@@ -255,7 +255,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
             this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Zoom)));
         }
 
-        if (this->session->getInfo().is_dungeon_master.value() && is_left_mouse_down) {
+        if (this->session->getInfo().is_dungeon_master.value() && is_pressed_p && is_left_mouse_down) {
             GLfloat winZ;
             glReadPixels(mouse_xpos, window_height - mouse_ypos, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
             glm::vec3 win(mouse_xpos, window_height - mouse_ypos, winZ);
@@ -266,7 +266,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
             glm::vec3 worldPosition = glm::unProject(win, glm::mat4(1.0f), this->cam->getProjection() * this->cam->getView(), vport);
 
-            this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, worldPosition, CellType::ArrowTrapUp)));
+            this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, worldPosition, CellType::ArrowTrapUp, false)));
         }
 
         // If movement 0, send stopevent
@@ -713,6 +713,9 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_O: // zoom in
             is_held_o = true;
             break;
+        case GLFW_KEY_P: // to place or not to place
+            is_pressed_p = !is_pressed_p;
+            break;
         /* Send an event to start 'shift' movement (i.e. sprint) */
         case GLFW_KEY_LEFT_SHIFT:
             if (eid.has_value()) {
@@ -778,6 +781,22 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { // cppcheck-suppress constParameterPointer
     mouse_xpos = static_cast<float>(xposIn);
     mouse_ypos = static_cast<float>(yposIn);
+
+    if (is_pressed_p) {
+        auto eid = this->session->getInfo().client_eid.value();
+
+        GLfloat winZ;
+        glReadPixels(mouse_xpos, window_height - mouse_ypos, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
+        glm::vec3 win(mouse_xpos, window_height - mouse_ypos, winZ);
+
+        GLint viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        glm::vec4 vport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+        glm::vec3 worldPosition = glm::unProject(win, glm::mat4(1.0f), this->cam->getProjection() * this->cam->getView(), vport);
+
+        this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, worldPosition, CellType::ArrowTrapUp, true)));
+    }
 }
 
 void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {

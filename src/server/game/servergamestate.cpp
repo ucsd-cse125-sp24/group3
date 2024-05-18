@@ -249,18 +249,6 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::TrapPlacement: {
 			auto trapPlacementEvent = boost::get<TrapPlacementEvent>(event.data);
 
-			std::cout << glm::to_string(trapPlacementEvent.world_pos) << std::endl;
-
-			/**
-				1.) get the world pos - DONE (DM cam -> trap placement pos) 
-				
-
-				2.) collision check with every GridCell in world (find first collision)
-				
-
-				3.) spawn trap at that GridCell using some helped spawn function
-			*/
-
 			Grid& currGrid = this->getGrid();
 
 			float cellWidth = currGrid.grid_cell_width;
@@ -278,46 +266,51 @@ void ServerGameState::update(const EventList& events) {
 				trapPlacementEvent.world_pos.x = glm::floor(trapPlacementEvent.world_pos.x + DM_Z_DISCOUNT);
 			}
 
-			std::cout << "trap placement world pos: " << glm::to_string(trapPlacementEvent.world_pos) << std::endl;
-
 			glm::ivec2 gridCellPos = currGrid.getGridCellFromPosition(trapPlacementEvent.world_pos);
-
-			std::cout << "grid cell pos: " << glm::to_string(gridCellPos) << std::endl; 
 
 			GridCell* cell = currGrid.getCell(gridCellPos.x, gridCellPos.y);
 
 			std::vector<SolidSurface*> surfaces = solidSurfaceInGridCells[std::make_pair(cell->x, cell->y)];
 
-			for (SolidSurface* surface : surfaces) {
-				this->updated_entities.insert(surface->globalID);
-				surface->setDMHighlight(true);
+			if (trapPlacementEvent.hover) {
+				for (SolidSurface* surface : surfaces) {
+					this->updated_entities.insert(surface->globalID);
+					surface->setDMHighlight(true);
+				}
 			}
+			else {
+				// unhighlight if highlighted
+				for (SolidSurface* surface : surfaces) {
+					this->updated_entities.insert(surface->globalID);
+					surface->setDMHighlight(false);
+				}
 
-			glm::vec3 corner(
-				cell->x* Grid::grid_cell_width,
-				0.0f,
-				cell->y* Grid::grid_cell_width
-			);
+				glm::vec3 corner(
+					cell->x* Grid::grid_cell_width,
+					0.0f,
+					cell->y* Grid::grid_cell_width
+				);
 
-			FloorSpike* floorSpike = new FloorSpike(corner, FloorSpike::Orientation::Full, Grid::grid_cell_width);
+				FloorSpike* floorSpike = new FloorSpike(corner, FloorSpike::Orientation::Full, Grid::grid_cell_width);
 
-			this->objects.createObject(floorSpike);
-			this->updated_entities.insert(floorSpike->globalID);
+				this->objects.createObject(floorSpike);
+				this->updated_entities.insert(floorSpike->globalID);
 
-			switch (cell->type) {
-			case CellType::Wall:
-				std::cout << "the grid cell type clicked: " << "WALL" << std::endl;
-				break;
-			case CellType::Empty:
-				std::cout << "the grid cell type clicked: " << "FLOOR" << std::endl;
-				break;
-			case CellType::Spawn:
-				std::cout << "the grid cell type clicked: " << "SPAWN?!??!?!!?" << std::endl;
-				break;
-			default:
-				std::cout << "the grid cell type clicked: " << "bro wtf did you click" << std::endl;
-				break;
-			};
+				//switch (cell->type) {
+				//case CellType::Wall:
+				//	std::cout << "the grid cell type clicked: " << "WALL" << std::endl;
+				//	break;
+				//case CellType::Empty:
+				//	std::cout << "the grid cell type clicked: " << "FLOOR" << std::endl;
+				//	break;
+				//case CellType::Spawn:
+				//	std::cout << "the grid cell type clicked: " << "SPAWN?!??!?!!?" << std::endl;
+				//	break;
+				//default:
+				//	std::cout << "the grid cell type clicked: " << "bro wtf did you click" << std::endl;
+				//	break;
+				//};
+			}
 		}
 
 		// default:
