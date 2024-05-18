@@ -106,6 +106,8 @@ public:
 
 	void handleRespawns();
 
+	void tickStatuses();
+
 	void deleteEntities();
 
 	/*	SharedGameState generation	*/

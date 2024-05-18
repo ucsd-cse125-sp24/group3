@@ -53,7 +53,7 @@ struct SharedStats {
 
 struct SharedStatuses {
 public:
-	SharedStatuses();
+	SharedStatuses() = default;
 
 	/**
 	 * @param st Status to add

@@ -255,6 +255,7 @@ void ServerGameState::update(const EventList& events) {
 	handleDeaths();
 	handleRespawns();
 	deleteEntities();
+	tickStatuses();
 	
 	//	Increment timestep
 	this->timestep++;
@@ -304,6 +305,18 @@ void ServerGameState::updateMovement() {
 			object->physics.velocity * object->physics.velocityMultiplier;
 		totalMovementStep.x *= object->physics.nauseous;
 		totalMovementStep.z *= object->physics.nauseous;
+
+		auto creature = dynamic_cast<Creature*>(object);
+		if (creature != nullptr) {
+			if (creature->statuses.getStatusLength(Status::Slimed) > 0) {
+				std::cout << totalMovementStep.x << ", " << totalMovementStep.y << "\n";
+				totalMovementStep *= 0.5f;
+				std::cout << totalMovementStep.x << ", " << totalMovementStep.y << "\n";
+			}
+			if (creature->statuses.getStatusLength(Status::Frozen) > 0) {
+				totalMovementStep *= 0.0f;
+			}
+		}
 
 		//	If the object doesn't have a collider, update its movement without
 		//	collision detection
@@ -593,6 +606,7 @@ void ServerGameState::handleDeaths() {
 	}
 }
 
+
 void ServerGameState::handleRespawns() {
 	auto players = this->objects.getPlayers();
 	for (int p = 0; p < players.size(); p++) {
@@ -618,6 +632,23 @@ void ServerGameState::deleteEntities() {
 
 	std::unordered_set<EntityID> empty;
 	std::swap(this->entities_to_delete, empty);
+}
+
+void ServerGameState::tickStatuses() {
+	auto players = this->objects.getPlayers();
+	for (auto p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		player->statuses.tickStatus();
+	}
+	auto enemies = this->objects.getEnemies();
+	for (auto e = 0; e < players.size(); e++) {
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		enemy->statuses.tickStatus();
+	}
 }
 
 unsigned int ServerGameState::getTimestep() const {

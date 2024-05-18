@@ -36,10 +36,6 @@ bool Slime::doBehavior(ServerGameState& state) {
         this->physics.velocity.z = 0;
     }
 
-    if (randomInt(1, 5) == 1) {
-        this->stats.health.decrease(1);
-    }
-
     auto now = std::chrono::system_clock::now();
     if (now - this->last_jump_time > JUMP_INTERVALS.at(this->jump_index)) {
         this->increaseJumpIndex();
@@ -67,7 +63,10 @@ void Slime::doCollision(Object* other, ServerGameState& state) {
         creature->stats.health.decrease(1);
     }
 
-    creature->statuses.addStatus(Status::Slimed, 1);
+    if (creature->type != ObjectType::Slime) {
+        // have to apply 2 to make it not instantly get ticked away
+        creature->statuses.addStatus(Status::Slimed, 2);
+    }
 }
 
 bool Slime::doDeath(ServerGameState& state) {
