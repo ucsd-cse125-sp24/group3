@@ -29,7 +29,7 @@ public:
 
     void useItem(Object* other, ServerGameState& state, int itemSelected) override;
     bool timeOut();
-    void revertEffect(ServerGameState& state);
+    UsedItemsMap::iterator revertEffect(ServerGameState& state);
 
 private:
     std::chrono::time_point<std::chrono::system_clock> used_time;

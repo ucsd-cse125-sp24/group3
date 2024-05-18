@@ -568,12 +568,14 @@ void ServerGameState::handleDeaths() {
 			}
 
 			// remove pot effects when killed
-			for (auto kv : player->sharedInventory.usedItems) {
-				auto item = dynamic_cast<Item*>(this->objects.getItem(kv.first));
+			for (auto it = player->sharedInventory.usedItems.begin(); it != player->sharedInventory.usedItems.end(); ) {
+				auto item = dynamic_cast<Item*>(this->objects.getItem(it->first));
 				if (item->type == ObjectType::Potion) {
 					Potion* pot = dynamic_cast<Potion*>(item);
-					pot->revertEffect(*this);
+					it = pot->revertEffect(*this);
 					this->updated_entities.insert(pot->globalID);
+				} else {
+					it++;
 				}
 			}
 
