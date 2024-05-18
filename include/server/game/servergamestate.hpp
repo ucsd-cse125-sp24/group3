@@ -39,6 +39,11 @@ struct IntPairHash {
 class ServerGameState {
 public:
 	/**
+	 * @brief is the current player the dungeon master?
+	 */
+	bool is_dungeon_master;
+
+	/**
 	 * @brief ObjectManager instance that manages all objects in this game
 	 * instance at the current timestep.
 	 */
@@ -194,7 +199,7 @@ public:
 	 */
 	std::string to_string();
 
-	bool is_dungeon_master;
+	Trap* createTrap(CellType type, glm::vec3 corner);
 
 private:
 	/**
@@ -254,4 +259,6 @@ private:
 
 
 	std::unordered_map< std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
+
+	std::vector<SolidSurface*> previouslyHighlighted;
 };

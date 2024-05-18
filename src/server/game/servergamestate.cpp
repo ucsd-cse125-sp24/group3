@@ -125,6 +125,16 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 	return partial_updates;
 }
 
+Trap* ServerGameState::createTrap(CellType type, glm::vec3 corner) {
+	switch (type) {
+	case CellType::FloorSpikeFull:
+		return new FloorSpike(corner, FloorSpike::Orientation::Full, Grid::grid_cell_width);
+	default:
+		std::cout << "i have no idea what trap you want" << std::endl;
+
+	}
+}
+
 /*	Update methods	*/
 
 void ServerGameState::update(const EventList& events) {
@@ -270,7 +280,15 @@ void ServerGameState::update(const EventList& events) {
 
 			GridCell* cell = currGrid.getCell(gridCellPos.x, gridCellPos.y);
 
+			// unhighlight if highlighted
+			for (SolidSurface* surface : this->previouslyHighlighted) {
+				this->updated_entities.insert(surface->globalID);
+				surface->setDMHighlight(false);
+			}
+
 			std::vector<SolidSurface*> surfaces = solidSurfaceInGridCells[std::make_pair(cell->x, cell->y)];
+
+			this->previouslyHighlighted = surfaces;
 
 			if (trapPlacementEvent.hover) {
 				for (SolidSurface* surface : surfaces) {
@@ -278,38 +296,26 @@ void ServerGameState::update(const EventList& events) {
 					surface->setDMHighlight(true);
 				}
 			}
-			else {
-				// unhighlight if highlighted
-				for (SolidSurface* surface : surfaces) {
-					this->updated_entities.insert(surface->globalID);
-					surface->setDMHighlight(false);
-				}
-
+			else if(trapPlacementEvent.place) {
 				glm::vec3 corner(
 					cell->x* Grid::grid_cell_width,
 					0.0f,
 					cell->y* Grid::grid_cell_width
 				);
 
-				FloorSpike* floorSpike = new FloorSpike(corner, FloorSpike::Orientation::Full, Grid::grid_cell_width);
+				// force FLOOR placement for now
+				if (cell->type == CellType::Empty) {
+					glm::vec3 corner(
+						cell->x* Grid::grid_cell_width,
+						0.0f,
+						cell->y* Grid::grid_cell_width
+					);
 
-				this->objects.createObject(floorSpike);
-				this->updated_entities.insert(floorSpike->globalID);
+					Trap* trap = createTrap(trapPlacementEvent.cell, corner);
 
-				//switch (cell->type) {
-				//case CellType::Wall:
-				//	std::cout << "the grid cell type clicked: " << "WALL" << std::endl;
-				//	break;
-				//case CellType::Empty:
-				//	std::cout << "the grid cell type clicked: " << "FLOOR" << std::endl;
-				//	break;
-				//case CellType::Spawn:
-				//	std::cout << "the grid cell type clicked: " << "SPAWN?!??!?!!?" << std::endl;
-				//	break;
-				//default:
-				//	std::cout << "the grid cell type clicked: " << "bro wtf did you click" << std::endl;
-				//	break;
-				//};
+					this->objects.createObject(trap);
+					this->updated_entities.insert(trap->globalID);
+				}
 			}
 		}
 

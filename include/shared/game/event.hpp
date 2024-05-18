@@ -122,19 +122,19 @@ struct StartActionEvent {
 };
 
 /**
- * Event for action to start for generic key pressed / Can be updated to action type enum later
+ * Event for placing a trap
  */
 struct TrapPlacementEvent {
     TrapPlacementEvent() {}
-    TrapPlacementEvent(EntityID entity_to_act, glm::vec3 world_pos, CellType cell, bool hover) : entity_to_act(entity_to_act), world_pos(world_pos), cell(cell), hover(hover) { }
+    TrapPlacementEvent(EntityID entity_to_act, glm::vec3 world_pos, CellType cell, bool hover, bool place) : entity_to_act(entity_to_act), world_pos(world_pos), cell(cell), hover(hover), place(place) { }
 
     EntityID entity_to_act;
     CellType cell;
     glm::vec3 world_pos;
-    bool hover;
+    bool hover, place;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& entity_to_act & cell & world_pos & hover;
+        ar& entity_to_act & cell & world_pos & hover & place;
     }
 };
 

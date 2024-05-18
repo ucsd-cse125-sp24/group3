@@ -158,6 +158,8 @@ public:
 
     AudioManager* getAudioManager();
 
+    glm::vec3 getWorldPos();
+
 private:
     /**
      * @brief Processes all data received from the server and updates the SharedGameState.
