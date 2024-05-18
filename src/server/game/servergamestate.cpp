@@ -8,6 +8,7 @@
 #include "server/game/projectile.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/potion.hpp"
+#include "server/game/orb.hpp"
 #include "server/game/constants.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/root_path.hpp"
@@ -212,31 +213,28 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::UseItem:
 		{
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
-			int itemSelected = player->sharedInventory.selected;
-			this->updated_entities.insert(player->globalID);
+			int itemSelected = player->sharedInventory.selected - 1;
 
-			if (player->inventory.find(itemSelected) != player->inventory.end()) {
-				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
-				item->useItem(player, *this);
-				player->inventory.erase(itemSelected);
-				player->sharedInventory.inventory.erase(itemSelected);
-				//TODO : should also remove item afterwards
+			if (player->inventory[itemSelected] != -1) {
+				Item* item = this->objects.getItem(player->inventory[itemSelected]);
+				item->useItem(player, *this, itemSelected);
+
+				this->updated_entities.insert(player->globalID);
+				this->updated_entities.insert(item->globalID);
 			}
 			break;
 		}
 		case EventType::DropItem:
 		{
 			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
-			int itemSelected = player->sharedInventory.selected;
-			this->updated_entities.insert(player->globalID);
+			int itemSelected = player->sharedInventory.selected - 1;
 
-			if (player->inventory.find(itemSelected) != player->inventory.end()) {
-				Item* item = this->objects.getItem(player->inventory.at(itemSelected));
-				item->iteminfo.held = false;
-				item->physics.collider = Collider::Box;
-				item->physics.shared.corner = (player->physics.shared.corner + (player->physics.shared.facing * 4.0f)) * glm::vec3(1.0f, 0.0f, 1.0f);
-				player->inventory.erase(itemSelected);
-				player->sharedInventory.inventory.erase(itemSelected);
+			if (player->inventory[itemSelected] != -1) {
+				Item* item = this->objects.getItem(player->inventory[itemSelected]);
+				item->dropItem(player, *this, itemSelected, 3.0f);
+
+				this->updated_entities.insert(player->globalID);
+				this->updated_entities.insert(item->globalID);
 			}
 			break;
 		}
@@ -392,7 +390,6 @@ void ServerGameState::updateMovement() {
 				movementStep.z = 0;
 			}
 
-			//	Move object to the specified movement step
 			this->objects.moveObject(object, currentPosition + movementStep);
 
 			if (collidedX && collidedZ) {
@@ -482,6 +479,8 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				//	perform collision handling but do not return true as the
 				//	trap doesn't affect the movement of the object it hits
 				if (otherObj->type == ObjectType::FloorSpike || 
+					otherObj->type == ObjectType::Potion || 
+					otherObj->type == ObjectType::Spell ||
 					otherObj->type == ObjectType::Slime) {
 					continue;
 				}
@@ -500,6 +499,11 @@ void ServerGameState::updateItems() {
 		auto item = items.get(i);
 		if (item == nullptr) { continue; }
 
+		if (item->physics.movable && item->physics.shared.corner.y == 0) {
+			item->physics.velocity.x = 0;
+			item->physics.velocity.z = 0;
+		}
+
 		if (item->type == ObjectType::Potion) {
 			Potion* pot = dynamic_cast<Potion*>(item);
 			if (pot->iteminfo.used) {
@@ -509,7 +513,6 @@ void ServerGameState::updateItems() {
 				}
 			}
 		}
-
 	}
 }
 
@@ -586,6 +589,30 @@ void ServerGameState::handleDeaths() {
 		if (player == nullptr) continue;
 
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
+			//handle dropping items (sets collider to none so it doesn't pick up items when dead)
+			player->physics.collider = Collider::None;
+			for (int i = 0; i < player->sharedInventory.inventory_size; i++) {
+				if (player->inventory[i] != -1) {
+            		auto item = dynamic_cast<Item*>(this->objects.getItem(player->inventory[i]));
+					item->dropItem(player, *this, i, 2.0f);
+					this->updated_entities.insert(item->globalID);
+				}
+				// hardcode "random" drops
+				if (i == 1){ player->physics.shared.facing *= -1.0f; }
+				if (i == 2){ player->physics.shared.facing = glm::vec3(0.5f, 0, 0.7f); }
+				if (i == 3){ player->physics.shared.facing = glm::vec3(-0.3f, 0, 0.1f); }
+			}
+
+			// remove pot effects when killed
+			for (auto kv : player->sharedInventory.usedItems) {
+				auto item = dynamic_cast<Item*>(this->objects.getItem(kv.first));
+				if (item->type == ObjectType::Potion) {
+					Potion* pot = dynamic_cast<Potion*>(item);
+					pot->revertEffect(*this);
+					this->updated_entities.insert(pot->globalID);
+				}
+			}
+
 			this->updated_entities.insert(player->globalID);
 			player->info.is_alive = false;
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
@@ -616,6 +643,7 @@ void ServerGameState::handleRespawns() {
 		if (!player->info.is_alive) {
 			if (getMsSinceEpoch() >= player->info.respawn_time) {
 				this->updated_entities.insert(player->globalID);
+				player->physics.collider = Collider::Box;
 				player->physics.shared.corner = this->getGrid().getRandomSpawnPoint();
 				player->info.is_alive = true;
 				player->stats.health.increase(player->stats.health.max());
@@ -698,7 +726,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 	));
 
 	// Create Ceiling
-	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Ceiling, 
+	this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Ceiling, 
 		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),
 		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
 			this->grid.getRows() * Grid::grid_cell_width)
@@ -713,20 +741,34 @@ void ServerGameState::loadMaze(const Grid& grid) {
 
 			if (cell->type == CellType::RandomPotion) {
 				int r = randomInt(1, 100);
-				if (r < 33) {
+				if (r < 25) {
 					cell->type = CellType::HealthPotion;
-				} else if (r < 66) {
+				} else if (r < 50) {
 					cell->type = CellType::InvisibilityPotion;
+				} else if (r < 75) {
+					cell->type = CellType::InvincibilityPotion;
 				} else {
 					cell->type = CellType::NauseaPotion;
 				}
 			} else if (cell->type == CellType::RandomSpell) {
-				cell->type = CellType::HealthPotion; // TODO: replace with random spell;
+				int r = randomInt(1, 2);
+				if (r == 1) {
+					cell->type = CellType::FireSpell;
+				} else {
+					cell->type = CellType::HealSpell;
+				}
 			}
 
 			switch (cell->type) {
 				case CellType::Orb: {
-					std::cout << "CURRENTLY THERE IS NO ORB OBJECT, SKIPPING\n";
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Orb(corner, dimensions));
 					break;
 				}
 				case CellType::FireballTrap: {
@@ -741,6 +783,28 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						cell->y * Grid::grid_cell_width
 					);
 					this->objects.createObject(new FireballTrap(corner, dimensions));
+					break;
+				}
+				case CellType::FireSpell: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Spell(corner, dimensions, SpellType::Fireball));
+					break;
+				}
+				case CellType::HealSpell: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Spell(corner, dimensions, SpellType::HealOrb));
 					break;
 				}
 				case CellType::HealthPotion: {
@@ -771,6 +835,16 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						cell->y* Grid::grid_cell_width + 1);
 
 					this->objects.createObject(new Potion(corner, dimensions, PotionType::Invisibility));
+					break;
+				}
+				case CellType::InvincibilityPotion: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Potion(corner, dimensions, PotionType::Invincibility));
 					break;
 				}
 				case CellType::SpikeTrap: {

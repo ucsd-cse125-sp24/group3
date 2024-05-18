@@ -20,11 +20,15 @@ enum class ImgID {
     ItemFrame,
     SelectedFrame,
     HealthPotion,
-    NauseaPotion,
-    InvisPotion
+    UnknownPotion,
+    InvisPotion,
+    FireSpell,
+    HealSpell,
+    Orb
 };
 #define GET_ALL_IMG_IDS() \
-    {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::ItemFrame, ImgID::SelectedFrame, ImgID::HealthPotion, ImgID::NauseaPotion, ImgID::InvisPotion}
+    {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::ItemFrame, ImgID::SelectedFrame, ImgID::HealthPotion, \
+        ImgID::UnknownPotion, ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb}
 
 /**
  * Representation of a loaded image

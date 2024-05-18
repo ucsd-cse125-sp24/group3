@@ -4,6 +4,8 @@
 #include "server/game/fireballtrap.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/potion.hpp"
+#include "server/game/spell.hpp"
+#include "server/game/orb.hpp"
 
 #include <memory>
 
@@ -47,6 +49,12 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::ArrowTrap:
 		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
+			break;
+		case ObjectType::Orb:
+			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
+			break;
+		case ObjectType::Spell:
+			object->typeID = this->items.push(dynamic_cast<Spell*>(object));
 			break;
 		case ObjectType::Potion:
 			object->typeID = this->items.push(dynamic_cast<Potion*>(object));
@@ -107,7 +115,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Slime:
 		this->enemies.remove(object->typeID);
 		break;
+	case ObjectType::Spell:
 	case ObjectType::Potion:
+	case ObjectType::Orb:
 		this->items.remove(object->typeID);
 		break;
 	default:
@@ -241,7 +251,7 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 	object->gridCellPositions = objectGridCells(object);
 
 	for (int i = 0; i < object->gridCellPositions.size(); i++) {
-		this->cellToObjects.at(object->gridCellPositions[i]).push_back(object);
+		this->cellToObjects[object->gridCellPositions[i]].push_back(object);
 	}
 
     return true;

@@ -2,18 +2,30 @@
 
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
+#include "server/game/item.hpp"
 
+/*
+ *  Different types of spells
+ */
 enum class SpellType {
 	Fireball,
+    HealOrb,
 };
 
 class Spell : public Item {
 public:
-    Spell(glm::vec3 corner, glm::vec3 dimensions);
+
+    /**
+     * @param corner     Corner position of the Potion
+     * @param dimensions Dimensions applied for the Potion
+     * @param type       Type of Spell
+     */
+    Spell(glm::vec3 corner, glm::vec3 dimensions, SpellType type);
 
     SpellType spellType;
+    int castLimit; 
 
-    void setSpellType(SpellType type);
+    void useItem(Object* other, ServerGameState& state, int itemSelected) override;
 
 private:
 
