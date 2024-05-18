@@ -505,18 +505,6 @@ void Client::draw() {
                 break;
             }
             case ObjectType::Exit: {
-                /*auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
-                cube->scaleAbsolute(sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader,
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    glm::vec3(),
-                    true);*/
-
-                //  TODO: Fix Exit not being rendered correctly for some reason
-                //  (currently displays likely as a 1x1x1 cube? very small)
-
                 auto lightPos = glm::vec3(-2.0f, 10.0f, 0.0f);
                 this->cube_model->setDimensions(sharedObject->physics.dimensions);
                 this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());

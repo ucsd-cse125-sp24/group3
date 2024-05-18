@@ -2,8 +2,9 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
 
-Exit::Exit(bool open, glm::vec3 corner, glm::vec3 dimensions) : Object(ObjectType::Exit,
-	Physics(false, Collider::Box, corner, dimensions), ModelType::Cube)
+Exit::Exit(bool open, glm::vec3 corner, glm::vec3 dimensions) 
+	: Object(ObjectType::Exit,
+	Physics(false, Collider::Box, corner, glm::vec3(0.0f), dimensions), ModelType::Cube)
 {
 	this->shared.open = open;
 }
