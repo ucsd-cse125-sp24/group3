@@ -25,6 +25,9 @@
 /*	Inventory	*/
 #define	INVENTORY_SIZE			4
 
+/*	Spell Constants	*/
+#define	CAST_LIMIT				5
+
 /*	Potion Stats	*/
 #define	RESTORE_HEALTH			20
 #define HEALTH_DURATION			0
@@ -32,8 +35,10 @@
 #define	NAUSEA_SCALAR			-1.0f
 #define NAUSEA_DURATION			10
 
-#define INVIS_OPACITY			0.5
 #define INVIS_DURATION			15
+
+#define	INVINCIBLITY_SCALAR		100
+#define INVINCIBLITY_DUR		15
 
 /*	Game	*/
 #define	GRAVITY					0.03f

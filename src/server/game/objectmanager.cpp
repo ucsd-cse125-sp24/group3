@@ -6,6 +6,7 @@
 #include "server/game/potion.hpp"
 #include "server/game/exit.hpp"
 #include "server/game/orb.hpp"
+#include "server/game/spell.hpp"
 
 #include <memory>
 
@@ -49,6 +50,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::ArrowTrap:
 		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
+			break;
+		case ObjectType::Spell:
+			object->typeID = this->items.push(dynamic_cast<Spell*>(object));
 			break;
 		case ObjectType::Potion:
 			object->typeID = this->items.push(dynamic_cast<Potion*>(object));
@@ -115,7 +119,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Enemy:
 		this->enemies.remove(object->typeID);
 		break;
+	case ObjectType::Spell:
 	case ObjectType::Potion:
+	case ObjectType::Orb:
 		this->items.remove(object->typeID);
 		break;
 	}
@@ -250,9 +256,10 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 	object->gridCellPositions = objectGridCells(object);
 
 	for (int i = 0; i < object->gridCellPositions.size(); i++) {
-		this->cellToObjects.at(object->gridCellPositions[i]).push_back(object);
+		this->cellToObjects[object->gridCellPositions[i]].push_back(object);
 	}
 
+    return true;
 }
 
 std::vector<glm::ivec2> ObjectManager::objectGridCells(Object* object) {

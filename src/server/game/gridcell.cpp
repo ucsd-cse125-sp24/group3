@@ -40,6 +40,12 @@ CellType charToCellType(char c) {
 		return CellType::NauseaPotion;
 	case 'i':
 		return CellType::InvisibilityPotion;
+	case 'z':
+		return CellType::InvincibilityPotion;
+	case 'f':
+		return CellType::FireSpell;
+	case 'e':
+		return CellType::HealSpell;
 	case 'p':
 		return CellType::RandomPotion;
 	case 's':
@@ -50,7 +56,7 @@ CellType charToCellType(char c) {
 		return CellType::OutsideTheMaze;
 	case 'T':
 		return CellType::TeleporterTrap;
-	case 'e':
+	case 'o':
 		return CellType::Exit;
 	default:
 		std::cerr << "Unknown cell type: " << c << "\n";
@@ -93,7 +99,13 @@ char cellTypeToChar(CellType type) {
 	case CellType::NauseaPotion:
 		return 'n';
 	case CellType::InvisibilityPotion:
-		return 'i';
+		return 'i';	
+	case CellType::InvincibilityPotion:
+		return 'z';
+	case CellType::FireSpell:
+		return 'f';
+	case CellType::HealSpell:
+		return 'e';
 	case CellType::RandomPotion:
 		return 'p';
 	case CellType::RandomSpell:
@@ -105,7 +117,7 @@ char cellTypeToChar(CellType type) {
 	case CellType::TeleporterTrap:
 		return 'T';
 	case CellType::Exit:
-		return 'e';
+		return 'o';
 	default:
 		return '?';
 	}

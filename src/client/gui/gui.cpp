@@ -375,6 +375,48 @@ void GUI::_sharedGameHUD() {
 
     auto self = client->gameState.objects.at(*self_eid);
     auto inventory_size = self->inventoryInfo->inventory_size;
+    auto selected = self->inventoryInfo->selected - 1;
+
+    auto itemString = "";
+    if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
+        switch (self->inventoryInfo->inventory[selected]) {
+        case ModelType::HealthPotion: {
+            itemString = "Health Potion";
+            break;
+        }
+        case ModelType::NauseaPotion:
+        case ModelType::InvincibilityPotion: {
+            itemString = "??? Potion";
+            break;
+        }
+        case ModelType::InvisibilityPotion: {
+            itemString = "Invisibility Potion";
+            break;
+        }
+        case ModelType::FireSpell: {
+            itemString = "Fireball Wand";
+            break;
+        }
+        case ModelType::HealSpell: {
+            itemString = "Healing Wand";
+            break;
+        }
+        case ModelType::Orb: {
+            itemString = "Orb";
+            break;
+        }
+        }
+    }
+    // Text for item description
+    auto item_txt = widget::CenterText::make(
+        itemString,
+        font::Font::TEXT,
+        font::Size::SMALL,
+        font::Color::BLACK,
+        fonts,
+        font::getRelativePixels(70)
+    );
+    this->addWidget(std::move(item_txt));
 
     // Flexbox for the items 
     // Loading itemframe again if no item
@@ -383,25 +425,38 @@ void GUI::_sharedGameHUD() {
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
     );
-    for (int i = 1; i <= inventory_size; i++) {
-        if (self->inventoryInfo->inventory.contains(i)) {
-            switch (self->inventoryInfo->inventory.at(i)) {
+    for (int i = 0; i < inventory_size; i++) {
+        if (self->inventoryInfo->inventory[i] != ModelType::Frame) {
+            switch (self->inventoryInfo->inventory[i]) {
             case ModelType::HealthPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion)));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion), 2));
                 break;
             }
-            case ModelType::NauseaPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::NauseaPotion)));
+            case ModelType::NauseaPotion:
+            case ModelType::InvincibilityPotion: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::UnknownPotion), 2));
                 break;
             }
             case ModelType::InvisibilityPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion)));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion), 2));
+                break;
+            }
+            case ModelType::FireSpell: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FireSpell), 2));
+                break;
+            }
+            case ModelType::HealSpell: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell), 2));
+                break;
+            }
+            case ModelType::Orb: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                 break;
             }
             }
         }
         else {
-            itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame)));
+            itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
         }
     }
 
@@ -414,12 +469,12 @@ void GUI::_sharedGameHUD() {
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
     );
 
-    for (int i = 1; i <= inventory_size; i++) {
-        if (self->inventoryInfo->selected == i) {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame)));
+    for (int i = 0; i < inventory_size; i++) {
+        if (selected == i) {
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame), 2));
         }
         else {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame)));
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
         }
     }
 
@@ -440,9 +495,41 @@ void GUI::_layoutGameHUD() {
         font::Size::MEDIUM,
         font::Color::RED,
         fonts,
-        font::getRelativePixels(70)
+        font::getRelativePixels(90)
     );
     this->addWidget(std::move(health_txt));
+
+    // Flexbox for item durations
+    auto durationFlex = widget::Flexbox::make(
+        glm::vec2(10.0f, FRAC_WINDOW_HEIGHT(1, 2)),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+    );
+
+    std::unordered_map<SpecificID, std::pair<ModelType, double>>::iterator it = self->inventoryInfo->usedItems.begin();
+
+    while (it != self->inventoryInfo->usedItems.end()) {
+        auto id = it->first;
+        auto type = self->inventoryInfo->usedItems[id].first;
+        auto name = "";
+        if (type == ModelType::InvisibilityPotion) {
+            name = "Invisibility: ";
+        }
+        else if (type == ModelType::InvincibilityPotion) {
+            name = "INVINCIBILITY: ";
+        }
+        else if (type == ModelType::NauseaPotion) {
+            name = "Naseous: ";
+        }
+
+        durationFlex->push(widget::DynText::make(
+            name + std::to_string((int)self->inventoryInfo->usedItems[id].second),
+            fonts,
+            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::RED)));
+
+        ++it;
+    }
+    this->addWidget(std::move(durationFlex));
 }
 
 void GUI::_layoutGameEscMenu() {

@@ -28,53 +28,82 @@ Potion::Potion(glm::vec3 corner, glm::vec3 dimensions, PotionType type):
         break;
     case PotionType::Invisibility:
         this->duration = INVIS_DURATION;
-        this->effectScalar = INVIS_OPACITY;
+        this->effectScalar = 0;
         this->modelType = ModelType::InvisibilityPotion;
+        break;
+    case PotionType::Invincibility:
+        this->duration = INVINCIBLITY_DUR;
+        this->effectScalar = INVINCIBLITY_SCALAR;
+        this->modelType = ModelType::InvincibilityPotion;
         break;
     }
 }
 
-void Potion::useItem(Object* other, ServerGameState& state) {
-    Player* player = dynamic_cast<Player*>(other);
+void Potion::useItem(Object* other, ServerGameState& state, int itemSelected) {
+    auto player = dynamic_cast<Player*>(other);
     this->usedPlayer = player;
 
     this->used_time = std::chrono::system_clock::now();
+    auto now = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds{ this->used_time - now };
+    this->iteminfo.remaining_time = (double)this->duration - elapsed_seconds.count();
 
     switch (this->potType) {
     case PotionType::Health: {
         player->stats.health.increase(this->effectScalar);
-        //state.objects.removeObject(this->globalID);
         break;
     }
     case PotionType::Nausea: {
         player->physics.nauseous = this->effectScalar;
+        player->sharedInventory.usedItems.insert({ this->typeID, std::make_pair(ModelType::NauseaPotion, this->iteminfo.remaining_time) });
         break;
     }
     case PotionType::Invisibility: {
-
+        player->info.render = false;
+        player->sharedInventory.usedItems.insert({ this->typeID, std::make_pair(ModelType::InvisibilityPotion, this->iteminfo.remaining_time) });
+        break;
+    }
+    case PotionType::Invincibility: {
+        player->stats.health.addMod(this->effectScalar);
+        player->sharedInventory.usedItems.insert({ this->typeID, std::make_pair(ModelType::InvincibilityPotion, this->iteminfo.remaining_time) });
         break;
     }
     }
 
     this->iteminfo.used = true;
     this->iteminfo.held = false;
+
+    Item::useItem(other, state, itemSelected);
 }
 
 bool Potion::timeOut() {
     auto now = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds{ now - this->used_time };
+    this->iteminfo.remaining_time = (double)this->duration - elapsed_seconds.count();
+
+    this->usedPlayer->sharedInventory.usedItems[this->typeID].second = this->iteminfo.remaining_time;
     return (now - this->used_time) > std::chrono::seconds(this->duration);
 }
 
-void Potion::revertEffect(ServerGameState& state) {
+UsedItemsMap::iterator Potion::revertEffect(ServerGameState& state) {
     switch (this->potType) {
     case PotionType::Nausea: {
         this->usedPlayer->physics.nauseous = 1.0f;
         break;
     }
     case PotionType::Invisibility: {
-
+        this->usedPlayer->info.render = true;
         break;
     }
+    case PotionType::Invincibility: {
+        this->usedPlayer->stats.health.subMod(this->effectScalar);
+        this->usedPlayer->stats.health.increase(this->effectScalar);
+        break;
+    }                          
     }
-    //state.objects.removeObject(this->globalID);
+    state.markForDeletion(this->globalID);
+
+    auto it = this->usedPlayer->sharedInventory.usedItems.find(this->typeID);
+    it = this->usedPlayer->sharedInventory.usedItems.erase(it);
+    return it;
 }
