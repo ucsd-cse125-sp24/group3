@@ -7,6 +7,7 @@
 #include "server/game/projectile.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/potion.hpp"
+#include "server/game/orb.hpp"
 #include "server/game/constants.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/root_path.hpp"
@@ -681,7 +682,14 @@ void ServerGameState::loadMaze(const Grid& grid) {
 
 			switch (cell->type) {
 				case CellType::Orb: {
-					std::cout << "CURRENTLY THERE IS NO ORB OBJECT, SKIPPING\n";
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Orb(corner, dimensions));
 					break;
 				}
 				case CellType::FireballTrap: {

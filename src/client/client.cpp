@@ -427,6 +427,20 @@ void Client::draw() {
                     true);
                 break;
             }
+            case ObjectType::Orb: {
+                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+                    glm::vec3 color = glm::vec3(0.0f, 0.7f, 1.0f);
+                    auto cube = std::make_unique<Cube>(color);
+                    cube->scaleAbsolute(sharedObject->physics.dimensions);
+                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    cube->draw(this->cube_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        glm::vec3(),
+                        true);
+                }
+                break;
+            }
             case ObjectType::Potion: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
                     glm::vec3 color;
