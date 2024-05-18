@@ -476,6 +476,11 @@ void ServerGameState::updateItems() {
 		auto item = items.get(i);
 		if (item == nullptr) { continue; }
 
+		if (item->physics.movable && item->physics.shared.corner.y == 0) {
+			item->physics.velocity.x = 0;
+			item->physics.velocity.z = 0;
+		}
+
 		if (item->type == ObjectType::Potion) {
 			Potion* pot = dynamic_cast<Potion*>(item);
 			if (pot->iteminfo.used) {
@@ -654,7 +659,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 	));
 
 	// Create Ceiling
-	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Ceiling, 
+	this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Ceiling, 
 		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),
 		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
 			this->grid.getRows() * Grid::grid_cell_width)

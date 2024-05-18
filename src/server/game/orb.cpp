@@ -10,13 +10,14 @@ Orb::Orb(glm::vec3 corner, glm::vec3 dimensions):
     Item(ObjectType::Orb, false, corner, ModelType::Cube, dimensions)
 {
     this->modelType = ModelType::Orb;
+    this->physics.movable = true;
 }
 
 void Orb::useItem(Object* other, ServerGameState& state, int itemSelected) {
     auto player = dynamic_cast<Player*>(other);
 
-    this->iteminfo.used = true;
-    this->iteminfo.held = false;
+    Item::dropItem(other, state, itemSelected, 0.0f);
 
-    Item::useItem(other, state, itemSelected);
+    this->physics.velocity = 0.8f * glm::normalize(other->physics.shared.facing);
+    state.objects.moveObject(this, this->physics.shared.corner + glm::vec3(0.0f, 3.0f, 0.0f));
 }

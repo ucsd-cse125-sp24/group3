@@ -248,7 +248,7 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 	object->gridCellPositions = objectGridCells(object);
 
 	for (int i = 0; i < object->gridCellPositions.size(); i++) {
-		this->cellToObjects.at(object->gridCellPositions[i]).push_back(object);
+		this->cellToObjects[object->gridCellPositions[i]].push_back(object);
 	}
 
     return true;
