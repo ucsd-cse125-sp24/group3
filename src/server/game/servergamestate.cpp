@@ -270,6 +270,17 @@ void ServerGameState::update(const EventList& events) {
 				surface->setDMHighlight(true);
 			}
 
+			glm::vec3 corner(
+				cell->x* Grid::grid_cell_width,
+				0.0f,
+				cell->y* Grid::grid_cell_width
+			);
+
+			FloorSpike* floorSpike = new FloorSpike(corner, FloorSpike::Orientation::Full, Grid::grid_cell_width);
+
+			this->objects.createObject(floorSpike);
+			this->updated_entities.insert(floorSpike->globalID);
+
 			switch (cell->type) {
 			case CellType::Wall:
 				std::cout << "the grid cell type clicked: " << "WALL" << std::endl;
