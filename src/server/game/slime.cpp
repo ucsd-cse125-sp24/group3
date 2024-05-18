@@ -2,6 +2,7 @@
 #include "server/game/enemy.hpp"
 #include "server/game/servergamestate.hpp"
 #include "shared/utilities/rng.hpp"
+#include "shared/game/status.hpp"
 
 #include <chrono>
 
@@ -59,10 +60,14 @@ bool Slime::doBehavior(ServerGameState& state) {
 }
 
 void Slime::doCollision(Object* other, ServerGameState& state) {
-    Player* player = dynamic_cast<Player*>(other);
-    if (player == nullptr) return;
+    Creature* creature = dynamic_cast<Creature*>(other);
+    if (creature == nullptr) return;
 
-    player->stats.health.decrease(1);
+    if (creature->type == ObjectType::Player) {
+        creature->stats.health.decrease(1);
+    }
+
+    creature->statuses.addStatus(Status::Slimed, 1);
 }
 
 bool Slime::doDeath(ServerGameState& state) {

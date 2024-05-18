@@ -439,6 +439,22 @@ void GUI::_layoutGameHUD() {
         font::getRelativePixels(70)
     );
     this->addWidget(std::move(health_txt));
+
+    auto status_flex = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(20), font::getRelativePixels(20)),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
+    );
+
+    for (const std::string& status: self->statuses->getStatusStrings()) {
+        status_flex->push(widget::DynText::make(
+            status,
+            fonts,
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+        ));
+    }
+
+    this->addWidget(std::move(status_flex));
 }
 
 void GUI::_layoutGameEscMenu() {
