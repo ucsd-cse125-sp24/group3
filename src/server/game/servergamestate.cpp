@@ -669,10 +669,12 @@ void ServerGameState::loadMaze(const Grid& grid) {
 
 			if (cell->type == CellType::RandomPotion) {
 				int r = randomInt(1, 100);
-				if (r < 33) {
+				if (r < 25) {
 					cell->type = CellType::HealthPotion;
-				} else if (r < 66) {
+				} else if (r < 50) {
 					cell->type = CellType::InvisibilityPotion;
+				} else if (r < 75) {
+					cell->type = CellType::InvincibilityPotion;
 				} else {
 					cell->type = CellType::NauseaPotion;
 				}
