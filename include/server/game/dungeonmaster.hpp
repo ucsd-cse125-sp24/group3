@@ -12,6 +12,10 @@ public:
 	~DungeonMaster();
 
 	virtual SharedObject toShared() override;
-private:
 
+	int getPlacedTraps();
+
+	void setPlacedTraps(int placedTraps);
+private:
+	int placedTraps;
 };

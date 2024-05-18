@@ -53,3 +53,6 @@
 /* Default model sizes */
 #define BEAR_DIMENSIONS         glm::vec3(14.163582, 17.914591, 10.655818)
 #define FIRE_PLAYER_DIMENSIONS  glm::vec3(8.008834, 10.069769, 2.198592)
+
+/* DM Constants */
+#define MAX_TRAPS 10

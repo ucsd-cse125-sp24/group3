@@ -297,6 +297,15 @@ void ServerGameState::update(const EventList& events) {
 				}
 			}
 			else if(trapPlacementEvent.place) {
+				DungeonMaster* dm = this->objects.getDM();
+
+				int trapsPlaced = dm->getPlacedTraps();
+
+				if (trapsPlaced == MAX_TRAPS) {
+					std::cout << "CAN'T PLACE ANYMORE TRAPS!" << std::endl;
+					return;
+				}
+
 				glm::vec3 corner(
 					cell->x* Grid::grid_cell_width,
 					0.0f,
@@ -316,6 +325,8 @@ void ServerGameState::update(const EventList& events) {
 					this->objects.createObject(trap);
 					this->updated_entities.insert(trap->globalID);
 				}
+
+				dm->setPlacedTraps(trapsPlaced + 1);
 			}
 		}
 

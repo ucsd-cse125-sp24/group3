@@ -13,6 +13,15 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
     Stat(0, 10, 5)
 )) {
     this->physics.feels_gravity = false;
+    this->placedTraps = 0;
+}
+
+int DungeonMaster::getPlacedTraps() {
+    return this->placedTraps;
+}
+
+void DungeonMaster::setPlacedTraps(int traps) {
+    this->placedTraps = traps;
 }
 
 DungeonMaster::~DungeonMaster() {
