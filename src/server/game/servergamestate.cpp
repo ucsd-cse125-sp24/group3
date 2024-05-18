@@ -677,7 +677,12 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					cell->type = CellType::NauseaPotion;
 				}
 			} else if (cell->type == CellType::RandomSpell) {
-				cell->type = CellType::HealthPotion; // TODO: replace with random spell;
+				int r = randomInt(1, 2);
+				if (r == 1) {
+					cell->type = CellType::FireSpell;
+				} else {
+					cell->type = CellType::HealSpell;
+				}
 			}
 
 			switch (cell->type) {
