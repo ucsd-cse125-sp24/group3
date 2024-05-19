@@ -258,7 +258,7 @@ private:
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
 
 
-	std::unordered_map< std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
+	std::unordered_map<std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
 
 	std::vector<SolidSurface*> previouslyHighlighted;
 };

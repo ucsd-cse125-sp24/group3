@@ -776,28 +776,15 @@ void ServerGameState::loadMaze(const Grid& grid) {
 
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
 
-	// Create Floor
-	for (int c = 0; c < this->grid.getColumns(); c++) {
-		for (int r = 0; r < this->grid.getRows(); r++) {
-			//TODO: skip outside maze 
-			SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
-				glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width),
-				glm::vec3(Grid::grid_cell_width, 0.1,
-					Grid::grid_cell_width)
-			);
-
-			this->objects.createObject(floor);
-
-			solidSurfaceInGridCells.insert(std::make_pair<std::pair<int,int>,std::vector<SolidSurface*>>(std::make_pair(c, r), { floor }));
-		}
-	}
-
 	// Create Ceiling
 	this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Ceiling, 
 		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),
 		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
 			this->grid.getRows() * Grid::grid_cell_width)
 	));
+
+	// this is for floor highlighting
+	std::vector<std::vector<bool>> freeSpots(grid.getRows(), std::vector<bool>(grid.getColumns(), false));
 
 	//	Step 6:	For each GridCell, add an object (if not empty) at the 
 	//	GridCell's position.
@@ -953,6 +940,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					} else if (cell->type == CellType::Wall) {
 						SolidSurface* wall = new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions);
 						this->objects.createObject(wall);
+
 						solidSurfaceInGridCells.insert(std::make_pair<std::pair<int, int>, std::vector<SolidSurface*>>(std::make_pair(col, row), { wall }));
 					}
 					break;
@@ -1021,7 +1009,30 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					this->objects.createObject(new TeleporterTrap(corner));
 					break;
 				}
+				default: {
+					freeSpots[row][col] = true;
+				}
 			}
+		}
+	}
+
+
+	// Create Floor
+	for (int c = 0; c < this->grid.getColumns(); c++) {
+		for (int r = 0; r < this->grid.getRows(); r++) {
+			//TODO: skip outside maze 
+			glm::vec3 corner = glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width);
+
+			SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
+				corner,
+				glm::vec3(Grid::grid_cell_width, 0.1,
+					Grid::grid_cell_width)
+			);
+
+			this->objects.createObject(floor);
+
+			if(freeSpots[r][c])
+				solidSurfaceInGridCells.insert(std::make_pair<std::pair<int, int>, std::vector<SolidSurface*>>(std::make_pair(c, r), { floor }));
 		}
 	}
 }

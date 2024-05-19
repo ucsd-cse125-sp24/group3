@@ -789,8 +789,14 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 }
 
 void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { // cppcheck-suppress constParameterPointer
-    mouse_xpos = static_cast<float>(xposIn);
-    mouse_ypos = static_cast<float>(yposIn);
+    auto new_mouse_xpos = static_cast<float>(xposIn);
+    auto new_mouse_ypos = static_cast<float>(yposIn);
+
+    if (new_mouse_xpos == mouse_xpos && new_mouse_ypos == mouse_ypos)
+        return;
+
+    mouse_xpos = new_mouse_xpos;
+    mouse_ypos = new_mouse_ypos;
 
     if (is_pressed_p) {
         auto eid = this->session->getInfo().client_eid.value();
