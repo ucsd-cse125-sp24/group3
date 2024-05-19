@@ -377,10 +377,6 @@ void GUI::_sharedGameHUD() {
         return;
     }
 
-    if (is_dm.has_value() && is_dm.value()) {
-        return;
-    }
-
     auto self = client->gameState.objects.at(*self_eid);
     auto inventory_size = self->inventoryInfo->inventory_size;
     auto selected = self->inventoryInfo->selected - 1;

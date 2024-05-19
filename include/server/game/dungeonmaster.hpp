@@ -8,6 +8,10 @@
 
 class DungeonMaster : public Creature {
 public:
+	SharedInventory sharedInventory;
+
+	std::vector<SpecificID> inventory;
+
 	DungeonMaster(glm::vec3 corner, glm::vec3 facing);
 	~DungeonMaster();
 

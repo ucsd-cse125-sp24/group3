@@ -224,8 +224,23 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::SelectItem:
 		{
 			auto selectItemEvent = boost::get<SelectItemEvent>(event.data);
-			player->sharedInventory.selected = selectItemEvent.itemNum;
-			this->updated_entities.insert(player->globalID);
+
+			if (is_dungeon_master) {
+				DungeonMaster* dm = this->objects.getDM();
+
+				if (dm->sharedInventory.selected + selectItemEvent.itemNum == 0)
+					dm->sharedInventory.selected = TRAP_INVENTORY_SIZE;
+				else if (dm->sharedInventory.selected + selectItemEvent.itemNum == TRAP_INVENTORY_SIZE + 1)
+					dm->sharedInventory.selected = 1;
+				else
+					dm->sharedInventory.selected = dm->sharedInventory.selected + selectItemEvent.itemNum;
+
+				this->updated_entities.insert(dm->globalID);
+			}
+			else {
+				player->sharedInventory.selected = selectItemEvent.itemNum;
+				this->updated_entities.insert(player->globalID);
+			}
 			break;
 		}
 		case EventType::UseItem:

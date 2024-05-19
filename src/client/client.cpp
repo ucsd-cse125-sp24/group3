@@ -672,7 +672,20 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
                 }
             }
             break;
-
+        case GLFW_KEY_RIGHT:
+            if (eid.has_value()) {
+                if (is_dm.has_value() && is_dm.value()) {
+                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
+                }
+            }
+            break;
+        case GLFW_KEY_LEFT:
+            if (eid.has_value()) {
+                if (is_dm.has_value() && is_dm.value()) {
+                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), -1)));
+                }
+            }
+            break;
         /* For movement keys (WASD), activate flags and use it to generate
          * movement in idleCallback() instead of sending individual events
          */  
