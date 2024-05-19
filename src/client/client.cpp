@@ -472,6 +472,9 @@ void Client::draw() {
                     else if (sharedObject->modelType == ModelType::HealSpell) {
                         color = glm::vec3(1.0f, 1.0f, 0.0f);
                     }
+                    else {
+                        color = glm::vec3(0.8f, 0.7f, 0.6f);
+                    }
 
                     auto cube = std::make_unique<Cube>(color);
                     cube->scaleAbsolute(sharedObject->physics.dimensions);

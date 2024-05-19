@@ -402,6 +402,10 @@ void GUI::_sharedGameHUD() {
             itemString = "Healing Wand" + limittxt;
             break;
         }
+        case ModelType::TeleportSpell: {
+            itemString = "Teleport" + limittxt;
+            break;
+        }
         case ModelType::Orb: {
             itemString = "Orb";
             break;
@@ -448,6 +452,10 @@ void GUI::_sharedGameHUD() {
             }
             case ModelType::HealSpell: {
                 itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell), 2));
+                break;
+            }
+            case ModelType::TeleportSpell: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Scroll), 2));
                 break;
             }
             case ModelType::Orb: {

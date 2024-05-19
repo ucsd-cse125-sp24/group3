@@ -6,21 +6,29 @@
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
 #include "server/game/projectile.hpp"
+#include "shared/utilities/rng.hpp"
 
 Spell::Spell(glm::vec3 corner, glm::vec3 dimensions, SpellType spelltype):
     Item(ObjectType::Spell, false, corner, ModelType::Cube, dimensions)
 {
-    this->castLimit = CAST_LIMIT;
+    
     this->spellType = spelltype;
 
     switch (spelltype) {
     case SpellType::Fireball:
+        this->castLimit = FIRE_LIMIT;
         this->modelType = ModelType::FireSpell;
         break;
     case SpellType::HealOrb:
+        this->castLimit = HEAL_LIMIT;
         this->modelType = ModelType::HealSpell;
         break;
+    case SpellType::Teleport:
+        this->castLimit = TELEPORT_LIMIT;
+        this->modelType = ModelType::TeleportSpell;
+        break;
     }
+    
 }
 
 void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
@@ -42,6 +50,31 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
     case SpellType::HealOrb: {
         state.objects.createObject(new SpellOrb(spell_origin, player->physics.shared.facing, SpellType::HealOrb));
         break;
+    }
+    case SpellType::Teleport: {
+        auto players = state.objects.getPlayers();
+        auto rand_player = players.get(randomInt(0, players.size() - 1));
+
+        auto& grid = state.getGrid();
+        int r_col = 0;
+        int r_row = 0;
+        
+        while (true) {
+            auto randomTPx = randomInt(-15, 15);
+            auto randomTPy = randomInt(-15, 15);
+            r_col = rand_player->gridCellPositions[0].x + randomTPx;
+            r_row = rand_player->gridCellPositions[0].y + randomTPy;
+
+            if (!(r_col >= 0 && r_col < grid.getColumns() && r_row >= 0 && r_row < grid.getRows())) {
+                continue;
+            }
+
+            if (grid.getCell(r_col, r_row)->type == CellType::Empty) {
+                break;
+            }
+        }
+
+        state.objects.moveObject(player, glm::vec3(r_col * grid.grid_cell_width, 0.0f, r_row * grid.grid_cell_width));
     }
     }
 

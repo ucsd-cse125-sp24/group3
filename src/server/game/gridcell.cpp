@@ -46,6 +46,8 @@ CellType charToCellType(char c) {
 		return CellType::FireSpell;
 	case 'e':
 		return CellType::HealSpell;
+	case 't':
+		return CellType::TeleportSpell;
 	case 'p':
 		return CellType::RandomPotion;
 	case 's':
@@ -104,6 +106,8 @@ char cellTypeToChar(CellType type) {
 		return 'f';
 	case CellType::HealSpell:
 		return 'e';
+	case CellType::TeleportSpell:
+		return 't';
 	case CellType::RandomPotion:
 		return 'p';
 	case CellType::RandomSpell:

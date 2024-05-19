@@ -21,6 +21,7 @@ enum class CellType {
 	InvincibilityPotion,
 	FireSpell,
 	HealSpell,
+	TeleportSpell,
 	RandomPotion,
 	RandomSpell,
 	Orb,

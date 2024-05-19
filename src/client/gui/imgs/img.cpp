@@ -18,6 +18,7 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::FireSpell: return (img_root / "fire_wand.png").string();
         case ImgID::HealSpell: return (img_root / "heal_wand.png").string();
         case ImgID::Orb: return (img_root / "orb.png").string();
+        case ImgID::Scroll: return (img_root / "scroll.png").string();
     }
 }
 

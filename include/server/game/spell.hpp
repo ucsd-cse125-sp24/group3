@@ -10,6 +10,7 @@
 enum class SpellType {
 	Fireball,
     HealOrb,
+    Teleport,
 };
 
 class Spell : public Item {

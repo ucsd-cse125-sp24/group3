@@ -686,11 +686,13 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					cell->type = CellType::NauseaPotion;
 				}
 			} else if (cell->type == CellType::RandomSpell) {
-				int r = randomInt(1, 2);
+				int r = randomInt(1, 3);
 				if (r == 1) {
 					cell->type = CellType::FireSpell;
-				} else {
+				} else if (r == 2) {
 					cell->type = CellType::HealSpell;
+				} else {
+					cell->type = CellType::TeleportSpell;
 				}
 			}
 
@@ -718,6 +720,17 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						cell->y * Grid::grid_cell_width
 					);
 					this->objects.createObject(new FireballTrap(corner, dimensions));
+					break;
+				}
+				case CellType::TeleportSpell: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Spell(corner, dimensions, SpellType::Teleport));
 					break;
 				}
 				case CellType::FireSpell: {
