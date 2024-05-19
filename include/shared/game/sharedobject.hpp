@@ -59,11 +59,12 @@ struct SharedInventory {
 	// need to share itemtype data...
 	int selected;
 	int inventory_size;
-	std::vector<ModelType> inventory;
-	UsedItemsMap usedItems;
+	std::vector<ModelType> inventory;	// For GUI model
+	std::vector<int> usesRemaining;		// For GUI text description
+	UsedItemsMap usedItems;				// For GUI effect duration
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& selected& inventory_size& inventory& usedItems;
+		ar& selected& inventory_size& inventory& usesRemaining& usedItems;
 	}
 }; 
 

@@ -466,7 +466,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 			}
 		}
 	}
-
+	
 	return false;
 }
 

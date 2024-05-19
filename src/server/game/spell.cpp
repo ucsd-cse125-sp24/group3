@@ -46,6 +46,8 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
     }
 
     this->castLimit -= 1;
+    player->sharedInventory.usesRemaining[itemSelected] = this->castLimit;
+
     if (castLimit == 0) {
         this->iteminfo.used = true;
         this->iteminfo.held = false;
@@ -54,4 +56,21 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
     }
 
     Item::useItem(other, state, itemSelected);
+}
+
+void Spell::doCollision(Object* other, ServerGameState& state) {
+
+    auto player = dynamic_cast<Player*>(other);
+    if (player == nullptr) return;
+
+    for (int i = 0; i < player->inventory.size(); i++) {
+        if (player->inventory[i] != -1) { continue; }
+
+        player->inventory[i] = this->typeID;
+        player->sharedInventory.inventory[i] = this->modelType;
+        player->sharedInventory.usesRemaining[i] = this->castLimit;
+        break;
+    }
+    this->iteminfo.held = true;
+    this->physics.collider = Collider::None;
 }

@@ -26,6 +26,7 @@ public:
     int castLimit; 
 
     void useItem(Object* other, ServerGameState& state, int itemSelected) override;
+    void doCollision(Object* other, ServerGameState& state) override;
 
 private:
 

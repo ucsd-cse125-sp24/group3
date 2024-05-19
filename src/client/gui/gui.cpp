@@ -372,8 +372,13 @@ void GUI::_sharedGameHUD() {
     auto self = client->gameState.objects.at(*self_eid);
     auto inventory_size = self->inventoryInfo->inventory_size;
     auto selected = self->inventoryInfo->selected - 1;
+    auto limit = self->inventoryInfo->usesRemaining[selected];
+    std::string limittxt = "";
+    if (limit != 0) {
+        limittxt = " (" + std::to_string(limit) + ")";
+    }
 
-    auto itemString = "";
+    std::string itemString = "";
     if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
         switch (self->inventoryInfo->inventory[selected]) {
         case ModelType::HealthPotion: {
@@ -390,11 +395,11 @@ void GUI::_sharedGameHUD() {
             break;
         }
         case ModelType::FireSpell: {
-            itemString = "Fireball Wand";
+            itemString = "Fireball Wand" + limittxt;
             break;
         }
         case ModelType::HealSpell: {
-            itemString = "Healing Wand";
+            itemString = "Healing Wand" + limittxt;
             break;
         }
         case ModelType::Orb: {
