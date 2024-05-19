@@ -33,6 +33,7 @@
 #define	FIRE_LIMIT				5
 #define	HEAL_LIMIT				5
 #define	TELEPORT_LIMIT			1
+#define	TELEPORT_RANGE			15
 
 /*	Potion Stats	*/
 #define	RESTORE_HEALTH			20

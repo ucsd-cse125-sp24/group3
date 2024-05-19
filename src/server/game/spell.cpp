@@ -53,15 +53,21 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
     }
     case SpellType::Teleport: {
         auto players = state.objects.getPlayers();
-        auto rand_player = players.get(randomInt(0, players.size() - 1));
+        Player* rand_player;
+        while (true) {
+            rand_player = players.get(randomInt(0, players.size() - 1));
+            if (player->typeID != rand_player->typeID) {
+                break;
+            }
+        }
 
         auto& grid = state.getGrid();
         int r_col = 0;
         int r_row = 0;
         
         while (true) {
-            auto randomTPx = randomInt(-15, 15);
-            auto randomTPy = randomInt(-15, 15);
+            auto randomTPx = randomInt(-TELEPORT_RANGE, TELEPORT_RANGE);
+            auto randomTPy = randomInt(-TELEPORT_RANGE, TELEPORT_RANGE);
             r_col = rand_player->gridCellPositions[0].x + randomTPx;
             r_row = rand_player->gridCellPositions[0].y + randomTPy;
 
