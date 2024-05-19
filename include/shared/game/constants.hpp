@@ -7,5 +7,5 @@
 
 /*	Game phase information	*/
 //	Time limit initially set to 5 minutes
-//#define	TIME_LIMIT_MS				std::chrono::milliseconds(10000)
-#define	TIME_LIMIT_MS			std::chrono::milliseconds(5 * 60 * 1000)
+#define	TIME_LIMIT_MS				std::chrono::milliseconds(100000)
+//#define	TIME_LIMIT_MS			std::chrono::milliseconds(5 * 60 * 1000)

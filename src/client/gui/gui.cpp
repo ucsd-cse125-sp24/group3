@@ -519,7 +519,7 @@ void GUI::_layoutGameHUD() {
             name = "INVINCIBILITY: ";
         }
         else if (type == ModelType::NauseaPotion) {
-            name = "Naseous: ";
+            name = "Nauseous: ";
         }
 
         durationFlex->push(widget::DynText::make(
@@ -530,6 +530,87 @@ void GUI::_layoutGameHUD() {
         ++it;
     }
     this->addWidget(std::move(durationFlex));
+
+    //  Display orb state here?
+
+    //  Orb state breakdown:
+    //  if match phase is MatchPhase::MazeExploration
+    //      --> orb hasn't been found yet
+    //  if match phase is MatchPhase::RelayRace
+    //      --> orb has been found at least once!
+    //          if the orb is currently being carried, print which player name
+    //              is carrying it
+    //          otherwise, "the orb is lost"
+    std::string orbStateString;
+    if (client->gameState.matchPhase == MatchPhase::MazeExploration) {
+        orbStateString = "The Orb is hidden somewhere in the Labyrinth...";
+    }
+    else {
+        bool orbIsCarried = false;
+        for (auto it : client->gameState.lobby.players) {
+            auto player = client->gameState.objects.at(it.first);
+
+            if (!player.has_value())    continue;
+
+            SharedObject playerObj = player.get();
+            
+            if (playerObj.inventoryInfo.get().hasOrb) {
+                orbIsCarried = true;
+                orbStateString = it.second + " has the Orb!";
+                break;
+            }
+        }
+
+        if (!orbIsCarried) {
+            orbStateString = "The Orb has been dropped!";
+        }
+    }
+
+    auto matchPhaseFlex = widget::Flexbox::make(
+        glm::vec2(10, 900),
+        glm::vec2(0, 0),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+    );
+
+    matchPhaseFlex->push(widget::DynText::make(
+        orbStateString,
+        fonts,
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
+    ));
+
+    //  Add timer string
+    if (client->gameState.matchPhase == MatchPhase::RelayRace) {
+        std::string timerString = "Time Left: ";
+        int timerSeconds = client->gameState.timesteps_left * ((float) TIMESTEP_LEN.count()) / 1000;
+        timerString += std::to_string(timerSeconds) + " seconds";
+
+        matchPhaseFlex->push(widget::DynText::make(
+            timerString,
+            fonts,
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
+        ));
+    }
+
+    this->addWidget(std::move(matchPhaseFlex));
+
+    /*auto orbStateText = widget::CenterText::make(
+        orbStateString,
+        font::Font::TEXT,
+        font::Size::MEDIUM,
+        font::Color::WHITE,
+        fonts,
+        font::getRelativePixels(900)
+    );*/
+
+    /*auto matchPhaseFlex = widget::Flexbox::make(
+        glm::vec2(10, FRAC_WINDOW_HEIGHT(2, 3)),
+        glm::vec2(0, 0),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+    );
+
+    matchPhaseFlex->push(orbStateText);*/
+
+    //this->addWidget(std::move(orbStateText));
 }
 
 void GUI::_layoutGameEscMenu() {
