@@ -276,6 +276,14 @@ void Client::processServerInput(boost::asio::io_context& context) {
             // Change the UI to the game hud UI whenever we change into the GAME game phase
             if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
                 this->gui_state = GUIState::GAME_HUD;
+
+                AudioManager* clientAudioManager = this->getAudioManager();
+
+                clientAudioManager->setSoundPosition(SoundType::Background, 5.412482f, 3.608721f, 5.139973f);
+                clientAudioManager->setAttenuation(SoundType::Background, 10.f);
+                clientAudioManager->setSoundMinDistance(SoundType::Background, 5.f);
+
+                clientAudioManager->playAudio(SoundType::Background);
             }
         }
     }
@@ -296,6 +304,10 @@ void Client::draw() {
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
+
+                    // update listener position & facing
+                    sf::Listener::setPosition(pos.x, pos.y, pos.z);
+                    sf::Listener::setDirection(sharedObject->physics.facing.x, sharedObject->physics.facing.y, sharedObject->physics.facing.z);
 
                     // reset back to game mode if this is the first frame in which you are respawned
                     if (this->gui_state == GUIState::DEAD_SCREEN && sharedObject->playerInfo->is_alive) {

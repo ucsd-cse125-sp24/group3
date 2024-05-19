@@ -51,10 +51,22 @@ public:
 	 */
 	void changeVolume(SoundType type, float volume);
 
+	void setAttenuation(SoundType type, float attenuation);
+
+	void setSoundMinDistance(SoundType type, float distance);
+
+	void setSoundPosition(SoundType type, float x, float y, float z);
+
+	void setListenerPosition(float x, float y, float z);
+
+	void setListenerDirection(float x, float y, float z); 
+
 private:
 	std::unordered_map<SoundType, std::shared_ptr<sf::SoundSource>> soundMap;
 
 	void loadAudioFiles(std::vector< std::pair<boost::filesystem::path, SoundType>> audioPaths);
 
 	void loadMusicFiles(std::vector< std::pair<boost::filesystem::path, SoundType>> musicPaths);
+
+	std::unique_ptr<sf::Listener> listener;
 };

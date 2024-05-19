@@ -17,7 +17,7 @@ void AudioManager::init() {
 	audioPaths.push_back({ getRepoRoot() / "assets/sounds/collide.wav", SoundType::Collision });
 
 	std::vector< std::pair<boost::filesystem::path, SoundType>> musicPaths;
-	musicPaths.push_back({ getRepoRoot() / "assets/sounds/piano.wav", SoundType::Background });
+	musicPaths.push_back({ getRepoRoot() / "assets/sounds/mono-retrowave.mp3", SoundType::Background });
 
 	this->loadAudioFiles(audioPaths);
 	this->loadMusicFiles(musicPaths);
@@ -93,4 +93,24 @@ void AudioManager::loop(SoundType type) {
 			std::cout << "Error: Not an sf::Music object." << std::endl;
 		}
 	}
+}
+
+void AudioManager::setAttenuation(SoundType type, float attenuation) {
+	this->soundMap[type]->setAttenuation(attenuation);
+}
+
+void AudioManager::setSoundMinDistance(SoundType type, float distance) {
+	this->soundMap[type]->setMinDistance(distance);
+}
+
+void AudioManager::setSoundPosition(SoundType type, float x, float y, float z) {
+	this->soundMap[type]->setPosition(x, y, z);
+}
+
+void AudioManager::setListenerPosition(float x, float y, float z) {
+	this->listener->setPosition(x, y, z);
+}
+
+void AudioManager::setListenerDirection(float x, float y, float z) {
+	this->listener->setDirection(x, y, z);
 }
