@@ -13,13 +13,17 @@ SharedObject Player::toShared() {
 
 Player::Player(glm::vec3 corner, glm::vec3 facing):
     Creature(ObjectType::Player, corner, facing, ModelType::Player, SharedStats(
-        Stat(0, 100, 50),
+        Stat(0, 100, 100),
         Stat(0, 10, 5)
     )),
-    sharedInventory(SharedInventory { .selected = 1, .inventory_size = INVENTORY_SIZE })
+    sharedInventory(SharedInventory { .selected = 1, .inventory_size = INVENTORY_SIZE, .inventory = std::vector<ModelType>(INVENTORY_SIZE, ModelType::Frame) })
 {
     this->info.is_alive = true;
     this->info.respawn_time = NULL;
+    this->info.render = true;
+
+    // initialize inventory as empty
+    this->inventory = std::vector<SpecificID>(INVENTORY_SIZE, -1);
 }
 
 Player::~Player() {

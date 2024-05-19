@@ -1,7 +1,11 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/spiketrap.hpp"
+#include "server/game/fireballtrap.hpp"
+#include "server/game/projectile.hpp"
 #include "server/game/potion.hpp"
+#include "server/game/spell.hpp"
+#include "server/game/orb.hpp"
 
 #include <memory>
 
@@ -27,9 +31,30 @@ SpecificID ObjectManager::createObject(Object* object) {
 	EntityID globalID = this->objects.push(object);
 	object->globalID = globalID;
 
+	object->gridCellPositions = this->objectGridCells(object);
+	for (auto pos : object->gridCellPositions) {
+		if (!this->cellToObjects.contains(pos)) {
+			this->cellToObjects.insert({pos, std::vector<Object*>()});
+		}
+	}
+
 	switch (object->type) {
+		case ObjectType::Projectile:
+			object->typeID = this->projectiles.push(dynamic_cast<Projectile*>(object));
+			break;
+		case ObjectType::FireballTrap:
+		case ObjectType::FakeWall:
 		case ObjectType::SpikeTrap:
-			object->typeID = this->traps.push(dynamic_cast<SpikeTrap*>(object));
+		case ObjectType::FloorSpike:
+		case ObjectType::ArrowTrap:
+		case ObjectType::TeleporterTrap:
+			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
+			break;
+		case ObjectType::Orb:
+			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
+			break;
+		case ObjectType::Spell:
+			object->typeID = this->items.push(dynamic_cast<Spell*>(object));
 			break;
 		case ObjectType::Potion:
 			object->typeID = this->items.push(dynamic_cast<Potion*>(object));
@@ -44,9 +69,13 @@ SpecificID ObjectManager::createObject(Object* object) {
 			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
 			break;
         default:
-			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << "\n";
+			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << 
+				"\nDid you remember to add a new switch statement to ObjectManager::createObject?\n";
 			std::exit(1);
 	}
+
+	//	Move object to its given position
+	moveObject(object, object->physics.shared.corner);
 
 	return object->typeID;
 }
@@ -70,9 +99,41 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		//	SmartVector
 		this->base_objects.remove(object->typeID);
 		break;
-	case ObjectType::Potion:
+	case ObjectType::FireballTrap:
+	case ObjectType::SpikeTrap:
+		this->traps.remove(object->typeID);
+		break;
+	case ObjectType::Item:
 		this->items.remove(object->typeID);
 		break;
+	case ObjectType::Player:
+		this->players.remove(object->typeID);
+		break;
+	case ObjectType::Projectile:
+		this->projectiles.remove(object->typeID);
+		break;
+	case ObjectType::Enemy:
+		this->enemies.remove(object->typeID);
+		break;
+	case ObjectType::Spell:
+	case ObjectType::Potion:
+	case ObjectType::Orb:
+		this->items.remove(object->typeID);
+		break;
+	}
+
+	//	Remove object from cellToObjects hashmap
+	for (glm::vec2 cellPosition : object->gridCellPositions) {
+		std::vector<Object*>& objectsInCell =
+			this->cellToObjects[cellPosition];
+
+		//	Remove object from Object * vector of objects in this cell
+		for (int i = 0; i < objectsInCell.size(); i++) {
+			if (objectsInCell.at(i)->globalID == object->globalID) {
+				objectsInCell.erase(objectsInCell.begin() + i);
+				break;
+			}
+		}
 	}
 
 	//	Delete object
@@ -156,23 +217,60 @@ SmartVector<Trap*> ObjectManager::getTraps() {
 	return this->traps;
 }
 
+SmartVector<Projectile*> ObjectManager::getProjectiles() {
+	return this->projectiles;
+}
+
+/*	Object Movement	*/
+bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
+	if (object == nullptr) {
+		return false;
+	}
+
+	//	Remove the object from the cellToObjects hashmap
+	for (auto cellPosition : object->gridCellPositions) {
+		std::vector<Object*>& objectsInCell = this->cellToObjects.at(cellPosition);
+
+		//	Remove object from Object * vector of objects in this cell
+		for (int i = 0; i < objectsInCell.size(); i++) {
+			if (objectsInCell.at(i)->globalID == object->globalID) {
+				objectsInCell.erase(objectsInCell.begin() + i);
+				break;
+			}
+		}
+	}
+
+
+	//	Update object's corner position
+	object->physics.shared.corner = newCornerPosition;
+
+	//	Get the object's new occupied GridCell position vector
+	object->gridCellPositions = objectGridCells(object);
+
+	for (int i = 0; i < object->gridCellPositions.size(); i++) {
+		this->cellToObjects[object->gridCellPositions[i]].push_back(object);
+	}
+
+    return true;
+}
+
+std::vector<glm::ivec2> ObjectManager::objectGridCells(Object* object) {
+	return Grid::getCellsFromPositionRange(object->physics.shared.corner,
+		object->physics.shared.corner + object->physics.shared.dimensions);
+}
+
 /*	SharedGameState generation	*/
 
-std::vector<std::shared_ptr<SharedObject>> ObjectManager::toShared() {
-	std::vector<std::shared_ptr<SharedObject>> shared;
+std::vector<boost::optional<SharedObject>> ObjectManager::toShared() {
+	std::vector<boost::optional<SharedObject>> shared;
 
-	//	Fill shared SmartVector of SharedObjects
 	for (int i = 0; i < this->objects.size(); i++) {
 		Object* object = this->objects.get(i);
 
 		if (object == nullptr) {
-			//	Push empty object to SharedObject SmartVector
-			shared.push_back(nullptr);
-		}
-		else {
-			//	Create a SharedObject representation for this object and push it
-			//	to the SharedObject SmartVector
-			shared.push_back(std::make_shared<SharedObject>(object->toShared()));
+			shared.push_back({});
+		} else {
+			shared.push_back(object->toShared());
 		}
 	}
 

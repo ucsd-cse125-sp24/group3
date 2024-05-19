@@ -40,6 +40,7 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
                 .timestep_length_ms = std::chrono::milliseconds(json.at("game").at("timestep_length_ms")),
                 .maze = {
                     .directory = json.at("game").at("maze").at("directory"),
+                    .procedural = json.at("game").at("maze").at("procedural"),
                     .maze_file = json.at("game").at("maze").at("maze_file")
                 }
             },
@@ -71,6 +72,7 @@ GameConfig getDefaultConfig() {
             .timestep_length_ms = std::chrono::milliseconds(30),
             .maze = {
                 .directory = "maps",
+                .procedural = true,
                 .maze_file = "default_maze.maze"
             }
         },

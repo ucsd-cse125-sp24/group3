@@ -113,19 +113,11 @@ std::chrono::milliseconds Server::doTick() {
             }
 
             this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
-
-            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
-            // Tell each client the current lobby status
-
-            std::cout << "waiting for " << this->state.getLobby().max_players << " players" << std::endl;
-
             break;
         case GamePhase::GAME: {
             EventList allClientEvents = getAllClientEvents();
 
             updateGameState(allClientEvents);
-
-            sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(this->state.generateSharedGameState())));
             break;
         }
         default:
@@ -133,11 +125,15 @@ std::chrono::milliseconds Server::doTick() {
             std::exit(1);
     }
 
+    // send partial updates to the clients
+    for (const auto& partial_update: this->state.generateSharedGameState(false)) {
+        sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
+    }
+
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(
         this->state.getTimestepLength() - (stop - start));
-    assert(wait.count() > 0);
     return wait;
 }
 
@@ -148,12 +144,21 @@ void Server::_doAccept() {
                 auto addr = this->socket.remote_endpoint().address();
                 auto new_session = this->_handleNewSession(addr);
 
+                // send complete gamestate to the new person who connected
+                for (auto& partial_update : this->state.generateSharedGameState(true)) {
+                    new_session->sendEventAsync(Event(0, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
+                }
+
                 new_session->startListen();
                 std::cout << "about to send server assign id packet" <<std::endl;
                 new_session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                     ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value() }));
             } else {
                 std::cerr << "Error accepting tcp connection: " << ec << std::endl;
+
+                if (ec == boost::asio::error::already_open) {
+                    
+                }
             }
 
             this->_doAccept();

@@ -17,7 +17,16 @@ set(FILES
     game/grid.cpp
     game/trap.cpp
     game/spiketrap.cpp
+    game/fireballtrap.cpp
+    game/arrowtrap.cpp
+    game/projectile.cpp
+    game/floorspike.cpp
+    game/fakewall.cpp
     game/potion.cpp
+    game/mazegenerator.cpp
+    game/teleportertrap.cpp
+    game/spell.cpp
+    game/orb.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

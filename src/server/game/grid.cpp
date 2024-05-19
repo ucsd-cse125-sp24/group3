@@ -1,13 +1,14 @@
 #include "server/game/grid.hpp"
 #include "shared/utilities/rng.hpp"
+#include "shared/utilities/root_path.hpp"
+#include <boost/filesystem.hpp>
+#include <fstream>
+#include <iostream>
 
 /*	Constructors and Destructors	*/
 Grid::Grid(int rows, int columns) : rows(rows), columns(columns) {
 	//	Note that there is a max columns limit.
-	assert(columns <= MAX_MAZE_COLUMNS);
-
-	//	Initialize GridCell width to default value
-	this->grid_cell_width = DEFAULT_GRIDCELL_WIDTH;
+	// assert(columns <= MAX_MAZE_COLUMNS);
 
 	//	Intialize GridCell vector with specified number of rows and columns
 	this->grid.resize(rows);
@@ -51,15 +52,6 @@ GridCell* Grid::getCell(int x, int y) {
 }
 
 /*	Getters and Setters	*/
-void Grid::setGridCellWidth(float new_width) {
-	assert(new_width > 0);
-
-	this->grid_cell_width = new_width;
-}
-
-float Grid::getGridCellWidth() const {
-	return this->grid_cell_width;
-}
 
 int Grid::getRows() const {
 	return this->rows;
@@ -94,4 +86,69 @@ glm::vec3 Grid::gridCellCenterPosition(GridCell* cell) {
 	return glm::vec3((0.5 + cell->x) * grid_cell_width,
 			0,
 			(0.5 + cell->y) * grid_cell_width);
+}
+
+void Grid::writeToFile(std::string path) {
+	std::ofstream of;
+	of.open(path);
+
+	assert(of.is_open());
+
+	for (int y = 0; y < this->rows; y++) {
+		for (int x = 0; x < this->columns; x++) {
+			CellType type = this->getCell(x, y)->type;
+			of << cellTypeToChar(type);
+		}
+        if (y!=rows-1) {
+            of << '\n';
+        }
+	}
+
+	of.close();
+}
+/*	Static members	*/
+
+//	Initialize GridCell width to default value
+const float Grid::grid_cell_width = DEFAULT_GRIDCELL_WIDTH;
+
+glm::ivec2 Grid::getGridCellFromPosition(glm::vec3 position) {
+	//	Consider a GridCell with 2-D Grid coordinates (x, y).
+	//	A 3-D game world position (x_w, y_w, z_w) is within that GridCell 
+	//	iff
+	//	x * grid_cell_width <= x_w < (x + 1) * grid_cell_width
+	//	and
+	//	y * grid_cell_width <= z_w < (y + 1) * grid_cell_width
+	//
+	//	Therefore, given a 3-D game world position (x_w, y_w, z_w), we can
+	//	determine the coordinates of the GridCell containing it via
+	//	x = floor(x_w / grid_cell_width) and y = floor(z_w / grid_cell_width)
+
+	return glm::ivec2(glm::floor(position.x / grid_cell_width),
+		glm::floor(position.z / grid_cell_width));
+}
+
+std::vector<glm::ivec2> Grid::getCellsFromPositionRange(glm::vec3 p1, glm::vec3 p2) {
+	std::vector<glm::ivec2> cellPositions;
+	//	Get GridCell positions for p1 and p2
+	glm::ivec2 gridCellStart = Grid::getGridCellFromPosition(p1);
+	glm::ivec2 gridCellEnd = Grid::getGridCellFromPosition(p2);
+
+	/*std::cout << "First grid cell: " << glm::to_string(gridCellStart) << " ";
+	std::cout << "Second grid cell: " << glm::to_string(gridCellEnd) << std::endl;*/
+
+	if (gridCellStart.x > gridCellEnd.x || gridCellStart.y > gridCellEnd.y) {
+		return std::vector<glm::ivec2>();
+	}
+
+	if (gridCellStart == gridCellEnd) {
+		return std::vector<glm::ivec2> { gridCellStart };
+	}
+
+	for (int x = gridCellStart.x; x <= gridCellEnd.x; x++) {
+		for (int y = gridCellStart.y; y <= gridCellEnd.y; y++) {
+			cellPositions.push_back(glm::ivec2(x, y));
+		}
+	}
+
+	return cellPositions;
 }
