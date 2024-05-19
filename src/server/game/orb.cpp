@@ -19,22 +19,8 @@ void Orb::doCollision(Object* other, ServerGameState& state) {
 
 		player->sharedInventory.hasOrb = true;
 
-		//	if the phase is MatchPhase::MazeExploration, update the match phase 
-		//	to MatchPhase::RelayRace
-		if (state.getMatchPhase() == MatchPhase::MazeExploration) {
-			state.setMatchPhase(MatchPhase::RelayRace);
-
-			//	If anything else needs to be set when phase changes, can do it here
-			//	Open all exits!
-			for (int i = 0; i < state.objects.getExits().size(); i++) {
-				Exit* exit = state.objects.getExits().get(i);
-
-				if (exit == nullptr)
-					continue;
-
-				exit->shared.open = true;
-			}
-		}
+		//	update match phase to MatchPhase::RelayRace
+		state.transitionToRelayRace();
 	}
 
 	std::cout << "Object type: " << ((this->type) == ObjectType::Orb ? "Orb" : "not Orb!") << std::endl;

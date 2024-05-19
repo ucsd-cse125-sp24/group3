@@ -41,6 +41,9 @@ ServerGameState::ServerGameState(GameConfig config) {
 	//	while holding the Orb to win, whereas DM wins on time limit expiration)
 	this->playerVictory = false;
 
+	//	No player died yet
+	this->numPlayerDeaths = 0;
+
     MazeGenerator generator(config);
     int attempts = 1;
     auto grid = generator.generate();
@@ -94,6 +97,7 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 		curr_update.matchPhase = this->matchPhase;
 		curr_update.timesteps_left = this->timesteps_left;
 		curr_update.playerVictory = this->playerVictory;
+		curr_update.numPlayerDeaths = this->numPlayerDeaths;
 		return curr_update;
 	};
 
@@ -579,6 +583,13 @@ void ServerGameState::handleDeaths() {
 		if (player == nullptr) continue;
 
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
+			//	Player died - increment number of player deaths
+			this->numPlayerDeaths++;
+
+			if (numPlayerDeaths == PLAYER_DEATHS_TO_RELAY_RACE) {
+				this->transitionToRelayRace();
+			}
+
 			//handle dropping items (sets collider to none so it doesn't pick up items when dead)
 			player->physics.collider = Collider::None;
 			for (int i = 0; i < player->sharedInventory.inventory_size; i++) {
@@ -656,8 +667,22 @@ MatchPhase ServerGameState::getMatchPhase() const {
 	return this->matchPhase;
 }
 
-void ServerGameState::setMatchPhase(MatchPhase phase) {
-	this->matchPhase = phase;
+void ServerGameState::transitionToRelayRace() {
+	//	Return immediately if the match phase is already Relay Race
+	if (this->matchPhase == MatchPhase::RelayRace)
+		return;
+
+	this->matchPhase = MatchPhase::RelayRace;
+
+	//	Open all exits!
+	for (int i = 0; i < this->objects.getExits().size(); i++) {
+		Exit* exit = this->objects.getExits().get(i);
+
+		if (exit == nullptr)
+			continue;
+
+		exit->shared.open = true;
+	}
 }
 
 void ServerGameState::setPlayerVictory(bool playerVictory) {

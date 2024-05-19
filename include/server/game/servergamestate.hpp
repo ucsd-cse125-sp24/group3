@@ -147,10 +147,11 @@ public:
 	MatchPhase getMatchPhase() const;
 
 	/**
-	 * @brief Sets this ServerGameState's match phase to the given match phase.
-	 * @param phase New MatchPhase for this ServerGameState instance.
+	 * @brief Transitions this ServerGameState's match phase to
+	 * MatchPhase::RelayRace and updates all necessary data. If the match phase
+	 * is already MatchPhase::RelayRace, this method returns immediately.
 	 */
-	void setMatchPhase(MatchPhase phase);
+	void transitionToRelayRace();
 
 	/**
 	 * @brief Sets the playerVictory boolean
@@ -241,6 +242,12 @@ private:
 	 * collides with an open exit while holding the Orb
 	 */
 	bool playerVictory;
+
+	/**
+	 * @brief Counter of player deaths (needed for premature transition to
+	 * MatchPhase::RelayRace even if players didn't find the Orb yet)
+	 */
+	unsigned int numPlayerDeaths;
 
 	/**
 	 * @brief Name of maze file that the server should load.

@@ -75,6 +75,8 @@ struct SharedGameState {
 
 	bool playerVictory;
 
+	unsigned int numPlayerDeaths;
+
 	SharedGameState():
 		objects(std::unordered_map<EntityID, boost::optional<SharedObject>>())
 	{
@@ -84,6 +86,7 @@ struct SharedGameState {
 		this->matchPhase = MatchPhase::MazeExploration;
 		this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
 		this->playerVictory = false;
+		this->numPlayerDeaths = 0;
 	}
 
 	SharedGameState(GamePhase start_phase, const GameConfig& config):
@@ -96,11 +99,12 @@ struct SharedGameState {
 		this->matchPhase = MatchPhase::MazeExploration;
 		this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
 		this->playerVictory = false;
+		this->numPlayerDeaths = 0;
 	}
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
 		ar & objects & timestep & lobby & phase & matchPhase
-			& timesteps_left & playerVictory;
+			& timesteps_left & playerVictory & numPlayerDeaths;
 	}
 
 	/**

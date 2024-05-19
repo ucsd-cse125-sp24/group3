@@ -582,7 +582,9 @@ void GUI::_layoutGameHUD() {
     if (client->gameState.matchPhase == MatchPhase::RelayRace) {
         std::string timerString = "Time Left: ";
         int timerSeconds = client->gameState.timesteps_left * ((float) TIMESTEP_LEN.count()) / 1000;
-        timerString += std::to_string(timerSeconds) + " seconds";
+        timerString += std::to_string(timerSeconds);
+
+        timerString += (timerSeconds > 1) ? " seconds" : " second";
 
         matchPhaseFlex->push(widget::DynText::make(
             timerString,
@@ -590,6 +592,17 @@ void GUI::_layoutGameHUD() {
             widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
         ));
     }
+
+    //  Add player deaths string
+    std::string playerDeathsString = std::to_string(client->gameState.numPlayerDeaths)
+        + " / " + std::to_string(PLAYER_DEATHS_TO_RELAY_RACE) 
+        + " Player Deaths";
+
+    matchPhaseFlex->push(widget::DynText::make(
+        playerDeathsString,
+        fonts,
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
+    ));
 
     this->addWidget(std::move(matchPhaseFlex));
 
