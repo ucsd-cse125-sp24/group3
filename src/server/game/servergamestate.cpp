@@ -1,5 +1,6 @@
 #include "server/game/servergamestate.hpp"
 #include "server/game/gridcell.hpp"
+#include "server/game/object.hpp"
 #include "server/game/torchlight.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "server/game/spiketrap.hpp"
@@ -13,6 +14,7 @@
 #include "server/game/orb.hpp"
 #include "server/game/constants.hpp"
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/game/sharedobject.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 #include "shared/network/constants.hpp"
@@ -816,8 +818,8 @@ void ServerGameState::loadMaze(const Grid& grid) {
                 case CellType::TorchDown:
                 case CellType::TorchRight:
                 case CellType::TorchLeft: {
-                    this->spawnWall(cell);
                     this->spawnTorch(cell);
+                    this->spawnWall(cell);
                     break;
                 }
 				case CellType::FloorSpikeFull:
@@ -903,17 +905,17 @@ void ServerGameState::spawnWall(GridCell* cell) {
 
     if (cell->type == CellType::FakeWall) {
         this->objects.createObject(new FakeWall(corner, dimensions));
-    } else if (cell->type == CellType::Wall) {
+    } else if (cell->type == CellType::Wall ||
+        cell->type == CellType::TorchUp ||
+        cell->type == CellType::TorchDown ||
+        cell->type == CellType::TorchLeft ||
+        cell->type == CellType::TorchRight) {
         this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
     }
 }
 
 void ServerGameState::spawnTorch(GridCell *cell) {
-    glm::vec3 dimensions(
-        this->grid.grid_cell_width,
-        MAZE_CEILING_HEIGHT,
-        this->grid.grid_cell_width
-    );
+    glm::vec3 dimensions = Object::models.at(ModelType::Torchlight);
     glm::vec3 corner(
         cell->x * this->grid.grid_cell_width,
         MAZE_CEILING_HEIGHT / 2.0f,
@@ -922,21 +924,23 @@ void ServerGameState::spawnTorch(GridCell *cell) {
 
     switch (cell->type) {
         case CellType::TorchDown: {
-            corner.x += this->grid.grid_cell_width / 2.0f; 
-            corner.y += this->grid.grid_cell_width; 
+            corner.x += (this->grid.grid_cell_width / 2.0f) - (dimensions.x / 2.0f); 
+            corner.z += this->grid.grid_cell_width;
             break;
         }
         case CellType::TorchUp: {
-            corner.x += this->grid.grid_cell_width / 2.0f; 
+            corner.x += (this->grid.grid_cell_width / 2.0f) - (dimensions.x / 2.0f); 
+            corner.z -= dimensions.z;
             break;
         }
         case CellType::TorchLeft: {
-            corner.y += this->grid.grid_cell_width / 2.0f; 
+            corner.x -= dimensions.x; 
+            corner.z += (this->grid.grid_cell_width / 2.0f) - (dimensions.z / 2.0f); 
             break;
         }
         case CellType::TorchRight: {
-            corner.x += this->grid.grid_cell_width; 
-            corner.y += this->grid.grid_cell_width / 2.0f;
+            corner.x += this->grid.grid_cell_width;
+            corner.z += (this->grid.grid_cell_width / 2.0f) - (dimensions.z / 2.0f);
             break;
         }
         default: {
