@@ -275,7 +275,7 @@ void ServerGameState::update(const EventList& events) {
 	if (this->matchPhase == MatchPhase::RelayRace) {
 		this->timesteps_left--;
 
-		if (this->timesteps_left <= 0) {
+		if (this->timesteps_left == 0) {
 			//	Dungeon Master won on time limit expiration
 			this->phase = GamePhase::RESULTS;
 		}

@@ -17,7 +17,7 @@ void Exit::doCollision(Object* other, ServerGameState& state) {
 	//		4. The Player is holding the Orb
 	//	Then, the game is won for the players!
 	if (other->type == ObjectType::Player
-		&& this - shared.open
+		&& this->shared.open
 		&& state.getMatchPhase() == MatchPhase::RelayRace) {
 		//	Get Player object
 		Player* player = state.objects.getPlayer(other->typeID);

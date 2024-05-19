@@ -547,8 +547,8 @@ void GUI::_layoutGameHUD() {
     }
     else {
         bool orbIsCarried = false;
-        for (auto it : client->gameState.lobby.players) {
-            auto player = client->gameState.objects.at(it.first);
+        for (auto [id, name] : client->gameState.lobby.players) {
+            auto player = client->gameState.objects.at(id);
 
             if (!player.has_value())    continue;
 
@@ -556,7 +556,7 @@ void GUI::_layoutGameHUD() {
             
             if (playerObj.inventoryInfo.get().hasOrb) {
                 orbIsCarried = true;
-                orbStateString = it.second + " has the Orb!";
+                orbStateString = name + " has the Orb!";
                 break;
             }
         }
