@@ -57,3 +57,4 @@
 /* DM Constants */
 #define MAX_TRAPS 10
 #define TRAP_INVENTORY_SIZE 7
+#define TRAP_TIME 10

@@ -336,6 +336,8 @@ void ServerGameState::update(const EventList& events) {
 					);
 
 					Trap* trap = createTrap(trapPlacementEvent.cell, corner);
+					trap->setIsDMTrap(true);
+					trap->setExpiration(std::chrono::system_clock::now() + std::chrono::seconds(10));
 
 					this->objects.createObject(trap);
 					this->updated_entities.insert(trap->globalID);
@@ -650,6 +652,18 @@ void ServerGameState::updateTraps() {
 	for (int i = 0; i < traps.size(); i++) {
 		auto trap = traps.get(i);
 		if (trap == nullptr) { continue; } // unsure if i need this?
+		if (trap->getIsDMTrap()) {
+			auto current_time = std::chrono::system_clock::now();
+			
+			if (current_time >= trap->getExpiration()) {
+				DungeonMaster* dm = this->objects.getDM();
+				int trapsPlaced = dm->getPlacedTraps();
+
+				this->markForDeletion(trap->globalID);
+				dm->setPlacedTraps(trapsPlaced - 1);
+				continue;
+			}
+		}
 		if (trap->shouldTrigger(*this)) {
 			trap->trigger(*this);
 			this->updated_entities.insert(trap->globalID);
