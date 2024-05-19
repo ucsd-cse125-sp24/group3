@@ -108,6 +108,8 @@ public:
 
 	void tickStatuses();
 
+	void spawnEnemies();
+
 	void deleteEntities();
 
 	/*	SharedGameState generation	*/
@@ -246,4 +248,9 @@ private:
 	 * collision detection) and updateMovement() (which clears it)
 	 */
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
+
+	/**
+	 * @brief number of enemies currently in the maze
+	 */
+	int alive_enemy_weight;
 };

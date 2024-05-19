@@ -5,6 +5,7 @@ using namespace std::chrono_literals;
 
 class Slime : public Enemy {
 public:
+    inline static const float SIGHT_LIMIT_GRID_CELLS = 8.0f; // can see you within 8 grid cells
 
     Slime(glm::vec3 corner, glm::vec3 facing, int size);
 

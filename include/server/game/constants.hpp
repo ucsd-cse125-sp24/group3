@@ -16,6 +16,9 @@
 #define TIMESTEP_LEN			std::chrono::milliseconds(30)
 #define	MAX_PLAYERS				4
 
+/* ServerGameState Constants */
+#define MAX_ALIVE_ENEMIES 15
+
 /*	Maze Constants */
 #define	MAX_MAZE_COLUMNS		10000
 #define	MAZE_CEILING_HEIGHT		10	// Maze ceiling height in meters

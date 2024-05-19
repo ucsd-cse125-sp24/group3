@@ -61,7 +61,7 @@ bool Slime::doBehavior(ServerGameState& state) {
             }
         }
 
-        if (closest_dist < Grid::grid_cell_width * 8.0f) {
+        if (closest_dist < Grid::grid_cell_width * Slime::SIGHT_LIMIT_GRID_CELLS) {
             this->physics.shared.facing = glm::normalize(
                 target->physics.shared.getCenterPosition() - this->physics.shared.getCenterPosition()
             );

@@ -476,15 +476,6 @@ void GUI::_sharedGameHUD() {
 
     this->addWidget(std::move(frameflex));
 
-    // display crosshair
-
-    auto crosshair = this->images.getImg(img::ImgID::Crosshair);
-
-    this->addWidget(widget::StaticImg::make(
-        glm::vec2((WINDOW_WIDTH / 2.0f) - (crosshair.width / 2.0f),
-            (WINDOW_HEIGHT / 2.0f) - (crosshair.height / 2.0f)),
-        this->images.getImg(img::ImgID::Crosshair)
-    ));
 }
 
 void GUI::_layoutGameHUD() {
@@ -551,6 +542,15 @@ void GUI::_layoutGameHUD() {
         ++it;
     }
     this->addWidget(std::move(durationFlex));
+
+    // display crosshair
+    auto crosshair = this->images.getImg(img::ImgID::Crosshair);
+
+    this->addWidget(widget::StaticImg::make(
+        glm::vec2((WINDOW_WIDTH / 2.0f) - (crosshair.width / 2.0f),
+            (WINDOW_HEIGHT / 2.0f) - (crosshair.height / 2.0f)),
+        this->images.getImg(img::ImgID::Crosshair)
+    ));
 }
 
 void GUI::_layoutGameEscMenu() {
