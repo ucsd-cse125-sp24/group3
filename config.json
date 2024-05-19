@@ -3,7 +3,8 @@
       "timestep_length_ms": 30,
       "maze": {
         "directory": "maps",
-        "maze_file": "tylers_hellhole.maze"
+        "procedural": false,
+        "maze_file": "test/itemRoom.maze"
       }
     },
     "network": {

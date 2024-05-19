@@ -50,7 +50,7 @@ public:
 
     SharedObject toShared();
 
-    bool doTick(ServerGameState& state) override;
+    bool doTick(ServerGameState& state);
 private:
     TorchlightProperties properties;
 

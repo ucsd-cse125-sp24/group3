@@ -91,6 +91,8 @@ public:
 	 */
 	glm::vec3 gridCellCenterPosition(GridCell * cell);
 
+	void writeToFile(std::string path);
+
 	/*	Static members	*/
 
 	/**
