@@ -48,11 +48,29 @@ bool Slime::doBehavior(ServerGameState& state) {
         this->physics.velocity.y += JUMP_SPEED * 1.75;
 
         auto players = state.objects.getPlayers();
-        auto player = players.get(0);
+        float closest_dist = std::numeric_limits<float>::max();
+        Player* target = nullptr;
+        for (int p = 0; p < players.size(); p++) {
+            auto player = players.get(p);
+            if (player == nullptr) continue;
 
-        this->physics.shared.facing = glm::normalize(
-            player->physics.shared.getCenterPosition() - this->physics.shared.getCenterPosition()
-        );
+            float distance_to_player = glm::distance(this->physics.shared.corner, player->physics.shared.corner);
+            if (distance_to_player < closest_dist) {
+                closest_dist = distance_to_player;
+                target = player;
+            }
+        }
+
+        if (closest_dist < Grid::grid_cell_width * 8.0f) {
+            this->physics.shared.facing = glm::normalize(
+                target->physics.shared.getCenterPosition() - this->physics.shared.getCenterPosition()
+            );
+        } else {
+            this->physics.shared.facing = glm::normalize(glm::vec3(
+                randomDouble(-1, 1), randomDouble(-1, 1), randomDouble(-1, 1)
+            ));
+        }
+
 
         this->physics.velocity.x = this->jump_strengths.at(this->jump_index) * this->physics.shared.facing.x;
         this->physics.velocity.z = this->jump_strengths.at(this->jump_index) * this->physics.shared.facing.z;

@@ -10,7 +10,7 @@
  * @param min exclusive upper end of range for random number 
  * @return random double within the specified range
 */
-double random(double min, double max);
+double randomDouble(double min, double max);
 
 /**
  * Generate a random integer between given min and max values.
