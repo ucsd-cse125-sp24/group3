@@ -15,4 +15,14 @@ enum class ModelType {
 	HealSpell,
 	Frame,
 	Orb,
+	FloorSpikeHorizontal,
+	FloorSpikeVertical,
+	FloorSpikeFull,
+	ArrowTrapUp,
+	ArrowTrapDown,
+	ArrowTrapLeft,
+	ArrowTrapRight,
+	SpikeTrap,
+	FireballTrap,
+	TeleporterTrap
 };

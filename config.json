@@ -15,7 +15,7 @@
         "lobby_name": "Tyler's Hellhole",
         "lobby_broadcast": true,
         "max_players": 1,
-        "is_dungeon_master":  true
+        "is_dungeon_master": true
     },
     "client": {
         "default_name": "John Doe",

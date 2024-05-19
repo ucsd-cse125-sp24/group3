@@ -16,6 +16,9 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
     this->physics.feels_gravity = false;
     this->placedTraps = 0;
 
+    // TODO: fill in rest of traps
+    this->sharedInventory.inventory[0] = ModelType::FloorSpikeFull;
+
     this->inventory = std::vector<SpecificID>(TRAP_INVENTORY_SIZE, -1);
 }
 

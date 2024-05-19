@@ -382,35 +382,48 @@ void GUI::_sharedGameHUD() {
     auto selected = self->inventoryInfo->selected - 1;
 
     auto itemString = "";
-    if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
-        switch (self->inventoryInfo->inventory[selected]) {
-        case ModelType::HealthPotion: {
-            itemString = "Health Potion";
-            break;
-        }
-        case ModelType::NauseaPotion:
-        case ModelType::InvincibilityPotion: {
-            itemString = "??? Potion";
-            break;
-        }
-        case ModelType::InvisibilityPotion: {
-            itemString = "Invisibility Potion";
-            break;
-        }
-        case ModelType::FireSpell: {
-            itemString = "Fireball Wand";
-            break;
-        }
-        case ModelType::HealSpell: {
-            itemString = "Healing Wand";
-            break;
-        }
-        case ModelType::Orb: {
-            itemString = "Orb";
-            break;
-        }
+    if (is_dm.has_value() && !is_dm) {
+        if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
+            switch (self->inventoryInfo->inventory[selected]) {
+            case ModelType::HealthPotion: {
+                itemString = "Health Potion";
+                break;
+            }
+            case ModelType::NauseaPotion:
+            case ModelType::InvincibilityPotion: {
+                itemString = "??? Potion";
+                break;
+            }
+            case ModelType::InvisibilityPotion: {
+                itemString = "Invisibility Potion";
+                break;
+            }
+            case ModelType::FireSpell: {
+                itemString = "Fireball Wand";
+                break;
+            }
+            case ModelType::HealSpell: {
+                itemString = "Healing Wand";
+                break;
+            }
+            case ModelType::Orb: {
+                itemString = "Orb";
+                break;
+            }
+            }
         }
     }
+    else if (is_dm.has_value() && is_dm) { // DM hotbar
+        if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
+            switch (self->inventoryInfo->inventory[selected]) {
+            case ModelType::FloorSpikeFull: {
+                itemString = "Floor Spike Full";
+                break;
+            }
+            }
+        }
+    }
+
     // Text for item description
     auto item_txt = widget::CenterText::make(
         itemString,
@@ -454,6 +467,10 @@ void GUI::_sharedGameHUD() {
                 break;
             }
             case ModelType::Orb: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                break;
+            }
+            case ModelType::FloorSpikeFull: { // CHANGE
                 itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                 break;
             }

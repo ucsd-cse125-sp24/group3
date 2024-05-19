@@ -256,7 +256,15 @@ void Client::idleCallback(boost::asio::io_context& context) {
         }
 
         if (this->session->getInfo().is_dungeon_master.value() && is_pressed_p && is_left_mouse_down) {
-            this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FloorSpikeFull, false, true)));
+            auto self = this->gameState.objects.at(eid);
+
+            auto selectedTrap = self->inventoryInfo->inventory[self->inventoryInfo->selected - 1];
+
+            switch (selectedTrap) {
+            case ModelType::FloorSpikeFull:
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FloorSpikeFull, false, true)));
+                break;
+            }
         }
 
         // If movement 0, send stopevent
@@ -801,6 +809,7 @@ void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { /
     if (is_pressed_p) {
         auto eid = this->session->getInfo().client_eid.value();
 
+        // the actual trap doesn't matter, this is just for highlighting purposes
         this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FloorSpikeFull, true, false)));
     }
 }
