@@ -85,7 +85,7 @@ bool Potion::timeOut() {
     return (now - this->used_time) > std::chrono::seconds(this->duration);
 }
 
-void Potion::revertEffect(ServerGameState& state) {
+UsedItemsMap::iterator Potion::revertEffect(ServerGameState& state) {
     switch (this->potType) {
     case PotionType::Nausea: {
         this->usedPlayer->physics.nauseous = 1.0f;
@@ -101,7 +101,9 @@ void Potion::revertEffect(ServerGameState& state) {
         break;
     }                          
     }
-
-    this->usedPlayer->sharedInventory.usedItems.erase(this->typeID);
     state.markForDeletion(this->globalID);
+
+    auto it = this->usedPlayer->sharedInventory.usedItems.find(this->typeID);
+    it = this->usedPlayer->sharedInventory.usedItems.erase(it);
+    return it;
 }

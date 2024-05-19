@@ -23,10 +23,10 @@ Slime::Slime(glm::vec3 corner, glm::vec3 facing, int size):
     this->last_jump_time = std::chrono::system_clock::now();
 
     for (auto& time : this->jump_intervals) {
-        time += std::chrono::milliseconds(randomInt(-200, 200));
+        time += std::chrono::milliseconds(randomInt(-200, 200)); // cppcheck-suppress useStlAlgorithm
     }
     for (auto& str : this->jump_strengths) {
-        str += 0.1f * randomInt(-1, 1);
+        str += 0.1f * randomInt(-1, 1); // cppcheck-suppress useStlAlgorithm
     }
 
     this->jump_index = jump_intervals.size() - 1;

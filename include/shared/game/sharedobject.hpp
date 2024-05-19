@@ -90,12 +90,14 @@ private:
 };
 
 
+using UsedItemsMap = std::unordered_map<SpecificID, std::pair<ModelType, double>>;
+
 struct SharedInventory {
 	// need to share itemtype data...
 	int selected;
 	int inventory_size;
 	std::vector<ModelType> inventory;
-	std::unordered_map<SpecificID, std::pair<ModelType, double>> usedItems;
+	UsedItemsMap usedItems;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
 		ar& selected& inventory_size& inventory& usedItems;
