@@ -124,6 +124,10 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 	return partial_updates;
 }
 
+const SoundTable& ServerGameState::getSoundTable() const {
+	return this->sound_table;
+}
+
 /*	Update methods	*/
 
 void ServerGameState::update(const EventList& events) {

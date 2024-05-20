@@ -25,7 +25,7 @@
 #include "shared/network/constants.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
-#include "client/audiomanager.hpp"
+#include "client/audio/audiomanager.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 
@@ -171,6 +171,7 @@ bool Client::init() {
     this->gui_state = GUIState::TITLE_SCREEN;
 
     this->audioManager->init();
+    this->audioManager->playMusic(ClientMusic::TitleTheme);
 
     return true;
 }
@@ -277,13 +278,15 @@ void Client::processServerInput(boost::asio::io_context& context) {
             if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
                 this->gui_state = GUIState::GAME_HUD;
 
-                AudioManager* clientAudioManager = this->getAudioManager();
-
-                clientAudioManager->setSoundPosition(SoundType::Background, glm::vec3(5.412482f, 3.608721f, 5.139973f));
-                clientAudioManager->setAttenuation(SoundType::Background, 10.f);
-                clientAudioManager->setSoundMinDistance(SoundType::Background, 5.f);
-
-                clientAudioManager->playAudio(SoundType::Background);
+                audioManager->stopMusic(ClientMusic::TitleTheme);
+                audioManager->playMusic(ClientMusic::GameTheme);
+            }
+        } else if (event.type == EventType::LoadSoundTable) {
+            auto self_eid = this->session->getInfo().client_eid;
+            if (self_eid.has_value()) {
+                auto self = this->gameState.objects.at(*self_eid);
+                this->audioManager->doTick(
+                    self->physics.getCenterPosition(), boost::get<LoadSoundTableEvent>(event.data).table);
             }
         }
     }

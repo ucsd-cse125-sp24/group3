@@ -6,8 +6,11 @@
 static auto audio_dir = getRepoRoot() / "assets" / "sounds";
 
 std::string getAudioPath(ClientSFX sound) {
-    // TODO:
-    return "";
+    switch (sound) {
+        case ClientSFX::TEMP:
+        default:
+            return (audio_dir / "arrow.wav").string();
+    }
 }
 
 std::string getAudioPath(ServerSFX sfx) {

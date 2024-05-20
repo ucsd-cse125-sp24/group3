@@ -5,6 +5,7 @@
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/smartvector.hpp"
 #include "shared/utilities/custom_hash.hpp"
+#include "shared/audio/soundtable.hpp"
 #include "server/game/object.hpp"
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"
@@ -118,6 +119,9 @@ public:
 	 * of the SharedGameState instance
 	 */
 	std::vector<SharedGameState> generateSharedGameState(bool send_all);
+
+	/* Audio Information */
+	const SoundTable& getSoundTable() const;
 
 	/*	Other getters and setters	*/
 
@@ -237,4 +241,10 @@ private:
 	 * collision detection) and updateMovement() (which clears it)
 	 */
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
+
+
+	/**
+	 * @brief table of all currently playing sounds
+	 */
+	SoundTable sound_table;
 };

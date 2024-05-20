@@ -19,6 +19,7 @@ void AudioManager::init() {
 
 	for (auto type : GET_CLIENT_MUSICS()) {
 		this->clientMusics.insert({type, this->makeMusic(type)});
+		// these are just streamed from the files at play time, so we are done for initing
 	}	
 	for (auto type : GET_CLIENT_SFXS()) {
 		auto buf = this->loadSFXBuf(type);
@@ -26,6 +27,7 @@ void AudioManager::init() {
 		// can make sf::Sound objects right away, since there will only ever be 1 of them playing at a time
 		auto sfx = std::make_unique<sf::Sound>();
 		sfx->setBuffer(buf);
+		sfx->setRelativeToListener(true); // make it not dependent on the position of player
 		this->clientSFXs.insert({type, std::move(sfx)});
 	}
 	for (auto type : GET_SERVER_SFXS()) {
@@ -53,7 +55,7 @@ void AudioManager::playSFX(ClientSFX sfx) {
 
 void AudioManager::doTick(glm::vec3 player_pos, const SoundTable& delta) {
 	sf::Listener::setPosition(player_pos.x, player_pos.y, player_pos.z);
-	updateSoundTable(delta);
+	this->updateSoundTable(delta);
 }
 
 void AudioManager::updateSoundTable(const SoundTable& delta) {
@@ -68,12 +70,14 @@ void AudioManager::updateSoundTable(const SoundTable& delta) {
 				auto sound = this->makeSound(*source);
 				sound->play();
 				this->serverSFXs.insert({id, std::move(sound)});
-			}
+			} // in the else case
 		} else {
 			this->serverTable.updateSoundSource(id, source);
-			// not currently updating audio levels if they change
-
-			if (!source.has_value()) {
+			if (source.has_value()) {
+				// something about this sound changed, but we dont need to completely
+				// restart/stop it
+				this->setSoundParams(*this->serverSFXs.at(id), *source);
+			} else {
 				// sound with ID should be stopped and deleted
 				this->serverSFXs.at(id)->stop();
 				this->serverSFXs.erase(id);
@@ -102,15 +106,17 @@ sf::SoundBuffer loadSFXBuf(std::string path) {
 	return std::move(buffer);
 }
 
+void AudioManager::setSoundParams(sf::Sound& sound, const SoundSource& source) {
+	sound.setBuffer(this->serverSFXBufs.at(source.sfx));
+	sound.setAttenuation(source.atten);
+	sound.setMinDistance(source.min_dist);
+	sound.setPosition(source.pos.x, source.pos.y, source.pos.z);
+	sound.setVolume(source.volume);
+}
+
 std::unique_ptr<sf::Sound> AudioManager::makeSound(const SoundSource& source) {
 	auto sound = std::make_unique<sf::Sound>();
-
-	sound->setBuffer(this->serverSFXBufs.at(source.sfx));
-	sound->setAttenuation(source.atten);
-	sound->setMinDistance(source.min_dist);
-	sound->setPosition(source.pos.x, source.pos.y, source.pos.z);
-	sound->setVolume(source.volume);
-
+	this->setSoundParams(*sound, source);
 	return std::move(sound);
 }
 
@@ -123,5 +129,6 @@ std::unique_ptr<sf::Music> makeMusic(ClientMusic music_type) {
 		std::exit(1);
 	}
 	music->setLoop(true);
+	music->setRelativeToListener(true); // make it not dependent on position of player
 	return std::move(music);
 }

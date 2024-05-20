@@ -18,7 +18,7 @@
 #include "client/lobbyfinder.hpp"
 #include "client/gui/gui.hpp"
 #include "client/camera.hpp"
-#include "client/audiomanager.hpp"
+#include "client/audio/audiomanager.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/game/sharedobject.hpp"

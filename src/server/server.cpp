@@ -130,6 +130,12 @@ std::chrono::milliseconds Server::doTick() {
         sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
     }
 
+    sendUpdateToAllClients(Event(
+        this->world_eid, 
+        EventType::LoadSoundTable, 
+        LoadSoundTableEvent(this->state.getSoundTable())
+    ));
+
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(

@@ -48,6 +48,8 @@ private:
 	sf::SoundBuffer loadSFXBuf(ServerSFX sfx);
 	sf::SoundBuffer loadSFXBuf(std::string path);
 
+	void setSoundParams(sf::Sound& sound, const SoundSource& source);
+
 	std::unique_ptr<sf::Sound> makeSound(const SoundSource& source);
 	std::unique_ptr<sf::Music> makeMusic(ClientMusic music);
 };
