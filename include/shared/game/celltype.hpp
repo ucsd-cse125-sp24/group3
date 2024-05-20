@@ -26,5 +26,6 @@ enum class CellType {
 	SpikeTrap,
 	FireballTrap,
 	TeleporterTrap,
+	Exit,
 	Unknown
 };

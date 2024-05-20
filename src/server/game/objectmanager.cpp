@@ -152,6 +152,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 
 	if (object->physics.movable) {
 		movableObjects.remove(object->movableID);
+	}
 
 	//	Remove object from cellToObjects hashmap
 	for (glm::vec2 cellPosition : object->gridCellPositions) {
