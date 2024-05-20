@@ -233,7 +233,7 @@ struct DropItemEvent {
 };
 
 struct UpdateLightSourcesEvent {
-    std::array<EntityID, MAX_POINT_LIGHTS> lightSources;
+    std::array<boost::optional<EntityID>, MAX_POINT_LIGHTS> lightSources;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar & lightSources;

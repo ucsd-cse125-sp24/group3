@@ -27,6 +27,7 @@
 #include "shared/network/packet.hpp"
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
+#include "shared/utilities/constants.hpp"
 #include "shared/utilities/typedefs.hpp"
 
 #define WINDOW_WIDTH Client::getWindowSize().x
@@ -237,6 +238,6 @@ private:
     basic_resolver_results<class boost::asio::ip::tcp> endpoints;
     std::shared_ptr<Session> session;
 
-    UpdateLightSourcesEvent closest_light_sources;
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> closest_light_sources;
 };
 

@@ -139,7 +139,7 @@ Cube::~Cube() {
 void Cube::draw(std::shared_ptr<Shader> shader,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
-    std::set<SharedObject, CompareLightPos>& lightSources,
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
     bool fill) {
 
     // actiavte the shader program

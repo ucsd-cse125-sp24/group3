@@ -20,6 +20,7 @@
 #include "client/util.hpp"
 #include "server/game/torchlight.hpp"
 #include "shared/game/sharedobject.hpp"
+#include "shared/utilities/constants.hpp"
 
 #include "assimp/types.h"
 #include "assimp/aabb.h"
@@ -84,7 +85,7 @@ void Mesh::draw(
     std::shared_ptr<Shader> shader,
     glm::mat4 viewProj,
     glm::vec3 camPos,
-    std::set<SharedObject, CompareLightPos>& lightSources,
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
     bool fill) {
     // activate the shader program
     shader->use();
@@ -108,8 +109,12 @@ void Mesh::draw(
         if (curr_light_num > MAX_POINT_LIGHTS) {
             break;
         }
-        SharedPointLightInfo& properties = curr_source.pointLightInfo.value();
-        glm::vec3 pos = curr_source.physics.getCenterPosition();
+        if (!curr_source.has_value()) {
+            continue;
+        }
+
+        SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
+        glm::vec3 pos = curr_source->physics.getCenterPosition();
 
         std::string pointLight = "pointLights[" + std::to_string(curr_light_num) + "]";
         shader->setBool(pointLight + ".enabled", true);
@@ -183,7 +188,7 @@ Model::Model(const std::string& filepath) {
 void Model::draw(std::shared_ptr<Shader> shader,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
-    std::set<SharedObject, CompareLightPos>& lightSources,
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
     bool fill) {
 
     for(Mesh& mesh : this->meshes) {

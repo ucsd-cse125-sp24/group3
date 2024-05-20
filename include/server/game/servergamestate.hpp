@@ -1,5 +1,6 @@
 #pragma once
 
+#include "shared/utilities/constants.hpp"
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/config.hpp"
@@ -258,4 +259,5 @@ private:
      */
     void spawnTorch(GridCell *cell);
 
+    std::unordered_map<EntityID, std::array<std::optional<EntityID>, MAX_POINT_LIGHTS>> lightSourcesPerPlayer;
 };
