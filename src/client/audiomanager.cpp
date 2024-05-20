@@ -103,14 +103,6 @@ void AudioManager::setSoundMinDistance(SoundType type, float distance) {
 	this->soundMap[type]->setMinDistance(distance);
 }
 
-void AudioManager::setSoundPosition(SoundType type, float x, float y, float z) {
-	this->soundMap[type]->setPosition(x, y, z);
-}
-
-void AudioManager::setListenerPosition(float x, float y, float z) {
-	this->listener->setPosition(x, y, z);
-}
-
-void AudioManager::setListenerDirection(float x, float y, float z) {
-	this->listener->setDirection(x, y, z);
+void AudioManager::setSoundPosition(SoundType type, glm::vec3 pos) {
+	this->soundMap[type]->setPosition(pos.x, pos.y, pos.z);
 }

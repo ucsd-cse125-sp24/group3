@@ -279,7 +279,7 @@ void Client::processServerInput(boost::asio::io_context& context) {
 
                 AudioManager* clientAudioManager = this->getAudioManager();
 
-                clientAudioManager->setSoundPosition(SoundType::Background, 5.412482f, 3.608721f, 5.139973f);
+                clientAudioManager->setSoundPosition(SoundType::Background, glm::vec3(5.412482f, 3.608721f, 5.139973f));
                 clientAudioManager->setAttenuation(SoundType::Background, 10.f);
                 clientAudioManager->setSoundMinDistance(SoundType::Background, 5.f);
 

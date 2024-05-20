@@ -5,6 +5,8 @@
 #include <SFML/Audio.hpp>
 #include <memory>
 
+#include "client/core.hpp"
+
 enum class SoundType {
     Collision,
     Background
@@ -55,11 +57,7 @@ public:
 
 	void setSoundMinDistance(SoundType type, float distance);
 
-	void setSoundPosition(SoundType type, float x, float y, float z);
-
-	void setListenerPosition(float x, float y, float z);
-
-	void setListenerDirection(float x, float y, float z); 
+	void setSoundPosition(SoundType type, glm::vec3 pos);
 
 private:
 	std::unordered_map<SoundType, std::shared_ptr<sf::SoundSource>> soundMap;
@@ -67,6 +65,4 @@ private:
 	void loadAudioFiles(std::vector< std::pair<boost::filesystem::path, SoundType>> audioPaths);
 
 	void loadMusicFiles(std::vector< std::pair<boost::filesystem::path, SoundType>> musicPaths);
-
-	std::unique_ptr<sf::Listener> listener;
 };
