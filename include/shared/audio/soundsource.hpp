@@ -6,6 +6,7 @@
 #include "shared/utilities/typedefs.hpp"
 
 struct SoundSource {
+    SoundSource() = default;
     SoundSource(ServerSFX sfx, glm::vec3 pos, float volume, float min_dist, float atten);
 
     ServerSFX sfx;

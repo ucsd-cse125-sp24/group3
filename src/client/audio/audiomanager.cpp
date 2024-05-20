@@ -3,6 +3,7 @@
 #include "shared/audio/soundsource.hpp"
 #include "shared/utilities/root_path.hpp"
 #include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -86,15 +87,15 @@ void AudioManager::updateSoundTable(const SoundTable& delta) {
 	}
 }
 
-sf::SoundBuffer loadSFXBuf(ClientSFX sfx) {
-	return loadSFXBuf(getAudioPath(sfx));
+sf::SoundBuffer AudioManager::loadSFXBuf(ClientSFX sfx) {
+	return this->loadSFXBuf(getAudioPath(sfx));
 }
 
-sf::SoundBuffer loadSFXBuf(ServerSFX sfx) {
-	return loadSFXBuf(getAudioPath(sfx));
+sf::SoundBuffer AudioManager::loadSFXBuf(ServerSFX sfx) {
+	return this->loadSFXBuf(getAudioPath(sfx));
 }
 
-sf::SoundBuffer loadSFXBuf(std::string path) {
+sf::SoundBuffer AudioManager::loadSFXBuf(std::string path) {
 	sf::SoundBuffer buffer;
 
 	std::cout << "Loading " << path << "\n";
@@ -120,7 +121,7 @@ std::unique_ptr<sf::Sound> AudioManager::makeSound(const SoundSource& source) {
 	return std::move(sound);
 }
 
-std::unique_ptr<sf::Music> makeMusic(ClientMusic music_type) {
+std::unique_ptr<sf::Music> AudioManager::makeMusic(ClientMusic music_type) {
 	auto music = std::make_unique<sf::Music>();
 	auto path = getAudioPath(music_type);
 	std::cout << "Opening " << path << "\n";

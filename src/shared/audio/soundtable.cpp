@@ -24,10 +24,10 @@ void SoundTable::addNewSoundSource(SoundSource source) {
     this->map.insert({this->SERVER_next_id++, source});
 }
 
-void SoundTable::updateSoundSource(SoundID id, std::optional<SoundSource> source) {
+void SoundTable::updateSoundSource(SoundID id, boost::optional<SoundSource> source) {
     this->map[id] = source;
 }
 
-const std::unordered_map<SoundID, std::optional<SoundSource>> SoundTable::data() const {
+const std::unordered_map<SoundID, boost::optional<SoundSource>> SoundTable::data() const {
     return this->map;
 }

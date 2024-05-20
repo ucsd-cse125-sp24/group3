@@ -7,7 +7,7 @@
 #include "client/client.hpp"
 #include "shared/utilities/rng.hpp"
 #include "shared/utilities/config.hpp"
-#include "client/audiomanager.hpp"
+#include "client/audio/audiomanager.hpp"
 #include "shared/utilities/root_path.hpp"
 
 #include "shared/utilities/root_path.hpp"

@@ -4,6 +4,7 @@
 #include <boost/filesystem.hpp>
 #include <SFML/Audio.hpp>
 #include <memory>
+#include <string>
 
 #include "client/core.hpp"
 #include "shared/audio/soundtype.hpp"
@@ -25,7 +26,7 @@ public:
 	void stopMusic(ClientMusic music);
 	void playSFX(ClientSFX sfx);
 
-	void AudioManager::doTick(glm::vec3 player_pos, const SoundTable& delta);
+	void doTick(glm::vec3 player_pos, const SoundTable& delta);
 
 private:
 	/**
