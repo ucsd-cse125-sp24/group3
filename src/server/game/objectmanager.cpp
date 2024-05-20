@@ -229,6 +229,10 @@ SmartVector<Projectile*> ObjectManager::getProjectiles() {
 	return this->projectiles;
 }
 
+SmartVector<Torchlight*> ObjectManager::getTorchlights() {
+	return this->torchlights;
+}
+
 /*	Object Movement	*/
 bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 	if (object == nullptr) {

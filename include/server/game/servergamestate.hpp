@@ -93,6 +93,8 @@ public:
 
 	void doProjectileTicks();
 
+	void doTorchlightTicks();
+
 	void updateTraps();
 
 	void handleDeaths();

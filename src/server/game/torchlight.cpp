@@ -4,6 +4,7 @@
 #include "server/game/collider.hpp"
 #include "server/game/object.hpp"
 #include "shared/game/sharedobject.hpp"
+#include "shared/utilities/rng.hpp"
 
 SharedObject Torchlight::toShared() {
     auto so = Object::toShared();
@@ -25,19 +26,16 @@ Torchlight::Torchlight(
 		ModelType::Torchlight)
 {
     this->properties = TorchlightProperties {
-        .flickering = false,
+        .flickering = true,
         .min_intensity = 0.3f,
         .max_intensity = 1.0f,
-        .flickering_speed = 0.05f,
         .ambient_color = glm::vec3(0.5f, 0.25f, 0.015f),
         .diffuse_color = glm::vec3(1.0f, 0.5f, 0.03f),
         .specular_color = glm::vec3(0.5f, 0.25f, 0.015f),
         .attenuation_linear = 0.07f,
         .attenuation_quadratic = 0.017f
     };
-    if (!this->properties.flickering) {
-        this->curr_intensity = this->properties.max_intensity;
-    }
+    init();
 }
 
 Torchlight::Torchlight(
@@ -48,8 +46,19 @@ Torchlight::Torchlight(
 		ModelType::Torchlight),
     properties(properties)
 {
+    init();
+}
+
+void Torchlight::init() {
+    // if not flickering, set intensity to a static 
+    // value
     if (!this->properties.flickering) {
         this->curr_intensity = this->properties.max_intensity;
+    } else {
+        // if flickering randomize initial  
+        // animation step to offset flickering
+        this->curr_step = random(0.0f, 1.0f);
+        this->flickering_speed = random(0.005f, 0.02f);
     }
 }
 
@@ -62,21 +71,30 @@ bool Torchlight::doTick(ServerGameState& state) {
 
     // either increment or decrement intensity
     if (inc_intensity) {
-        this->curr_time += this->properties.flickering_speed;
+        this->curr_step += this->flickering_speed;
     } else {
-        this->curr_time -= this->properties.flickering_speed;
+        this->curr_step -= this->flickering_speed;
     }
 
     // toggle inc_intensity for next tick
-    if (this->curr_intensity >= 1.0f) {
+    if (this->curr_step >= 1.0f) {
         this->inc_intensity = false;
     }
-    if (this->curr_intensity <= 0.0f) {
+    if (this->curr_step <= 0.0f) {
         this->inc_intensity = true;
     }
 
     // non-linear function for setting intensity over
-    // time
-    curr_intensity = pow(2, 10 * this->curr_time - 10);
+    // time. taken from https://easings.net/#easeOutBack
+    const float c1 = 1.70158;
+    const float c3 = c1 + 1;
+    this->curr_intensity = 1 + c3 * std::pow(this->curr_step - 1, 3) + c1 * std::pow(curr_step - 1, 2);
+
+    // cut off intensities outside desired range
+    if (this->curr_intensity > this->properties.max_intensity) {
+        this->curr_intensity = this->properties.max_intensity;
+    } else if (this->curr_intensity < this->properties.min_intensity) {
+        this->curr_intensity = this->properties.min_intensity;
+    }
     return true;
 }

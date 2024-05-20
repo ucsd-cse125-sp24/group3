@@ -251,6 +251,7 @@ void ServerGameState::update(const EventList& events) {
 
 	//	TODO: fill update() method with updating object movement
 	doProjectileTicks();
+    doTorchlightTicks();
 	updateMovement();
 	updateItems();
 	updateTraps();
@@ -521,6 +522,18 @@ void ServerGameState::doProjectileTicks() {
 
 		if (projectile->doTick(*this)) {
 			this->updated_entities.insert(projectile->globalID);
+		}
+	}
+}
+
+void ServerGameState::doTorchlightTicks() {
+	auto torchlights = this->objects.getTorchlights();
+	for (int t = 0; t < torchlights.size(); t++) {
+		auto torchlight = torchlights.get(t);
+		if (torchlight == nullptr) continue;
+
+		if (torchlight->doTick(*this)) {
+			this->updated_entities.insert(torchlight->globalID);
 		}
 	}
 }

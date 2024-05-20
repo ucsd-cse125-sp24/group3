@@ -175,6 +175,14 @@ public:
 	 */
 	SmartVector<Projectile*> getProjectiles();
 
+	/**
+	 * @brief Get a list of all Projectiles in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Projectile pointers of all Projectile objects in the game
+	 * instance
+	 */
+	SmartVector<Torchlight*> getTorchlights();
+
 	/*	Object Movement	*/
 	
 	/**

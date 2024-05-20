@@ -16,8 +16,6 @@ struct TorchlightProperties {
     // range is from 0-1. if flickering is false, this intensity 
     // will be used.
     float max_intensity;
-    // how much the intensity should change on every server tick
-    float flickering_speed; 
 
     // lighting properties of that the light source
     // emits
@@ -50,6 +48,11 @@ public:
 
     SharedObject toShared();
 
+    /**
+     * @brief runs on every server tick to update torchlight flickering 
+     * animations
+     * @parm current ServerGameState
+     */
     bool doTick(ServerGameState& state);
 private:
     TorchlightProperties properties;
@@ -60,9 +63,14 @@ private:
 
     // state needed for animated flickering 
 
-    // curr_time from 0-1 in flickering animation
-    float curr_time;
+    // curr_step from 0-1 in flickering animation
+    float curr_step;
+    // how much the intensity should change on every server tick
+    float flickering_speed; 
     // if the flickering animation is inceasing in
     // intensity or decreasing
     bool inc_intensity;
+
+    // shared initialization between multiple constructors 
+    void init();
 };
