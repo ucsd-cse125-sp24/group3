@@ -38,7 +38,7 @@ struct PointLight {
     float intensity;
 };
 
-#define NR_POINT_LIGHTS 100
+#define NR_POINT_LIGHTS 16
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 out vec4 fragColor;

@@ -8,20 +8,22 @@
 #include <string.h>
 
 #include <string>
+#include <sys/types.h>
 #include <vector>
 #include <optional>
 #include <iostream>
 #include <filesystem>
 
-#include "assimp/aabb.h"
-#include "assimp/material.h"
-#include "assimp/types.h"
 #include "client/lightsource.hpp"
 #include "client/renderable.hpp"
+#include "client/constants.hpp"
 #include "client/util.hpp"
-#include "glm/ext/matrix_transform.hpp"
 #include "server/game/torchlight.hpp"
 #include "shared/game/sharedobject.hpp"
+
+#include "assimp/types.h"
+#include "assimp/aabb.h"
+#include "assimp/material.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -36,12 +38,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/euler_angles.hpp>
-
-/** maximum number of supported point lights.
- *  must match the corresponding macro 
- *  in the fragment shader
- */
-#define NR_POINT_LIGHTS 4
+#include "glm/ext/matrix_transform.hpp"
 
 Mesh::Mesh(
     const std::vector<Vertex>& vertices,
@@ -87,7 +84,7 @@ void Mesh::draw(
     std::shared_ptr<Shader> shader,
     glm::mat4 viewProj,
     glm::vec3 camPos,
-    std::vector<SharedObject> lightSources,
+    std::set<SharedObject, CompareLightPos>& lightSources,
     bool fill) {
     // activate the shader program
     shader->use();
@@ -106,12 +103,16 @@ void Mesh::draw(
     shader->setVec3("viewPos", camPos);
 
     // set lightsource uniforms 
-    for (ssize_t i = 0; i < lightSources.size() && i < NR_POINT_LIGHTS; i++) {
-        SharedObject& curr_source = lightSources.at(i);
+    uint curr_light_num = 0;
+    for (auto curr_source : lightSources) {
+        if (curr_light_num > MAX_POINT_LIGHTS) {
+            break;
+        }
+        curr_light_num++;
         SharedPointLightInfo& properties = curr_source.pointLightInfo.value();
         glm::vec3 pos = curr_source.physics.getCenterPosition();
 
-        std::string pointLight = "pointLights[" + std::to_string(i) + "]";
+        std::string pointLight = "pointLights[" + std::to_string(curr_light_num) + "]";
         // needed for attenuation
         shader->setBool(pointLight + ".enabled", true);
         shader->setFloat(pointLight + ".intensity", properties.intensity);
@@ -181,7 +182,7 @@ Model::Model(const std::string& filepath) {
 void Model::draw(std::shared_ptr<Shader> shader,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
-    std::vector<SharedObject> lightSources,
+    std::set<SharedObject, CompareLightPos>& lightSources,
     bool fill) {
 
     for(Mesh& mesh : this->meshes) {

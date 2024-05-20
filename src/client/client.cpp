@@ -1,6 +1,7 @@
 #include "client/client.hpp"
 #include <iostream>
 #include <algorithm>
+#include <functional>
 #include <memory>
 
 #include <GLFW/glfw3.h>
@@ -12,6 +13,7 @@
 #include <thread>
 #include <sstream>
 
+#include "client/util.hpp"
 #include "client/gui/gui.hpp"
 #include "client/constants.hpp"
 #include <boost/dll/runtime_symbol_info.hpp>
@@ -31,6 +33,7 @@
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 #include "shared/utilities/timer.hpp"
+#include "shared/utilities/typedefs.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/ext/matrix_clip_space.hpp"
@@ -70,8 +73,6 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     Client::window_width = config.client.window_width;
     Client::window_height = static_cast<int>((config.client.window_width * 2.0f) / 3.0f);
 
-    shouldUpdateClosestLights = true;
-    
     if (config.client.lobby_discovery)  {
         lobby_finder.startSearching();
     }
@@ -298,48 +299,20 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
-    // Check if it's time for us to update the list of closest light sources.
-    // We don't want to do this on every draw call since it's expensive to sort
-    // all the light sources by how close they are to the player.
-    if (this->shouldUpdateClosestLights) {
-
-        std::cout << "vector after" << std::endl;
-        for (auto x : this->lightSources) {
-            std::cout << "\t" << glm::to_string(x.physics.corner) << "\n";
-        }
-        std::cout << "updating light sources" << std::endl;
-
-        // clear previously cached lightSources
-        this->lightSources.clear();
-
-        // put all valid point lights in the list
-        for (auto& [id, sharedObject] : this->gameState.objects) {
-            if (!sharedObject.has_value()) {
-                continue;
-            }
-            if (sharedObject->type == ObjectType::Torchlight &&
-                    sharedObject->pointLightInfo.has_value()) {
-                this->lightSources.push_back(sharedObject.value());
-            }
+    // collect all light sources into a sorted set to determine which ones are closest to the
+    // player. this is needed since the shader needs to have a static amount of memory allocated 
+    // and can't grow it as needed.
+    std::set<SharedObject, CompareLightPos> closestPointLights(CompareLightPos(this->cam->getPos()));
+    for (const auto& [id, sharedObject] : this->gameState.objects) {
+        if (!sharedObject.has_value()) {
+            continue;
         }
 
-        // sort the light sources as the closest to the camera's position 
-        sortObjectsByPos(this->lightSources, this->cam->getPos());
-
-        // don't run this branch on the next draw call
-        this->shouldUpdateClosestLights = false;
-        auto shouldUpdateClosestLights = [this] () {
-            this->shouldUpdateClosestLights = true;
-        };
-        // set a timer to set a flag at some point in the future
-        // and find the closest light sources
-        setTimer(5s, shouldUpdateClosestLights);
-
-        std::cout << "vector before" << std::endl;
-        for (auto x : this->lightSources) {
-            std::cout << "\t" << glm::to_string(x.physics.corner) << "\n";
+        if (sharedObject->pointLightInfo.has_value() &&
+            sharedObject->type == ObjectType::Torchlight) {
+            closestPointLights.insert(sharedObject.value());
         }
-    }     
+    }
 
     for (auto& [id, sharedObject] : this->gameState.objects) {
 
@@ -379,7 +352,7 @@ void Client::draw() {
                     this->model_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightSources,
+                    closestPointLights,
                     true);
                 this->drawBbox(sharedObject);
                 break;
@@ -395,7 +368,7 @@ void Client::draw() {
                     this->model_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightSources,
+                    closestPointLights,
                     true);
                 this->drawBbox(sharedObject);
                 break;
@@ -406,7 +379,7 @@ void Client::draw() {
                 this->cube_model->draw(this->solid_surface_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightSources,
+                    closestPointLights,
                     true);
                 break;
             }
@@ -425,7 +398,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightSources,
+                    closestPointLights,
                     true);
                 break;
             }
@@ -436,7 +409,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightSources, 
+                    closestPointLights, 
                     true);
                 break;
             }
@@ -446,7 +419,7 @@ void Client::draw() {
                     this->light_source_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightSources,
+                    closestPointLights,
                     true);
                 break;
             }
@@ -457,7 +430,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightSources,
+                    closestPointLights,
                     true);
                 break;
             }
@@ -468,7 +441,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightSources,
+                    closestPointLights,
                     true);
                 break;
             }
@@ -480,7 +453,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightSources,
+                    closestPointLights,
                     true);
                 break;
             }
@@ -491,7 +464,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightSources,
+                    closestPointLights,
                     true);
                 break;
             }
@@ -504,7 +477,7 @@ void Client::draw() {
                     cube->draw(this->cube_shader,
                         this->cam->getViewProj(),
                         this->cam->getPos(),
-                        lightSources,
+                        closestPointLights,
                         true);
                 }
                 break;
@@ -526,7 +499,7 @@ void Client::draw() {
                     cube->draw(this->cube_shader,
                         this->cam->getViewProj(),
                         this->cam->getPos(),
-                        lightSources,
+                        closestPointLights,
                         true);
                 }
                 break;
@@ -547,7 +520,7 @@ void Client::draw() {
                     cube->draw(this->cube_shader,
                         this->cam->getViewProj(),
                         this->cam->getPos(),
-                        lightSources,
+                        closestPointLights,
                         true);
                 }
                 break;
@@ -559,7 +532,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightSources,
+                    closestPointLights,
                     true);
                 break;
             }
@@ -577,13 +550,14 @@ void Client::drawBbox(boost::optional<SharedObject> object) {
         // it was off on the x axis. 
         bbox_pos.y += object->physics.dimensions.y / 2.0f; 
 
+        std::set<SharedObject, CompareLightPos> no_lights = {};
         auto object_bbox = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 1.0f));
         object_bbox->scaleAbsolute(object->physics.dimensions);
         object_bbox->translateAbsolute(bbox_pos);
         object_bbox->draw(this->cube_shader,
             this->cam->getViewProj(),
             this->cam->getPos(),
-            {},
+            no_lights,
             false);
     }
 }

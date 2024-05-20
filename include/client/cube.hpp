@@ -20,7 +20,7 @@ public:
     void draw(std::shared_ptr<Shader> shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            std::vector<SharedObject> lightSources,
+            std::set<SharedObject, CompareLightPos>& lightSources,
             bool fill) override;
 private:
     GLuint VAO;
