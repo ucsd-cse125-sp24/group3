@@ -28,8 +28,9 @@ enum class ObjectType {
 	TeleporterTrap,
 	Spell,
 	Slime,
-	Orb,
-	Item
+	Item,
+	Exit,
+	Orb
 };
 
 /**
@@ -99,8 +100,13 @@ struct SharedInventory {
 	std::vector<ModelType> inventory;
 	UsedItemsMap usedItems;
 
+	/**
+	 * @brief Denotes whether this player is carrying the Orb in their inventory
+	 */
+	bool hasOrb;
+
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& selected& inventory_size& inventory& usedItems;
+		ar& selected& inventory_size& inventory & hasOrb & usedItems;
 	}
 }; 
 
@@ -181,6 +187,17 @@ struct SharedPlayerInfo {
 	}
 };
 
+struct SharedExit {
+	/**
+	 * @brief Whether the given exit is open or closed
+	 */
+	bool open;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & open;
+	}
+};
+
 /**
  * @brief Representation of the Object class used by ServerGameState, containing
  * exactly the subset of Object data required by the client.
@@ -199,12 +216,13 @@ public:
 	boost::optional<SharedPlayerInfo> playerInfo;
 	boost::optional<SharedInventory> inventoryInfo;
 	boost::optional<SharedStatuses> statuses;
+	boost::optional<SharedExit> exit;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & statuses;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & statuses & exit;
 	}
 private:
 };

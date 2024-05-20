@@ -139,12 +139,6 @@ public:
 	unsigned int getTimestep() const;
 
 	/**
-	 * @brief Returns the timestep length of this ServerGameState instance.
-	 * @return Timestep length (in milliseconds)
-	 */
-	std::chrono::milliseconds getTimestepLength() const;
-
-	/**
 	 * @brief Returns the phase that this ServerGameState instance is currently
 	 * in.
 	 * @return The current GamePhase of this ServerGameState instance. 
@@ -155,6 +149,26 @@ public:
 	 * @brief setter for game phase
 	 */
 	void setPhase(GamePhase phase);
+
+	/**
+	 * @brief Returns the match phase that this ServerGameState instance is
+	 * currently in.
+	 * @return The current MatchPhase of this ServerGameState instance.
+	 */
+	MatchPhase getMatchPhase() const;
+
+	/**
+	 * @brief Transitions this ServerGameState's match phase to
+	 * MatchPhase::RelayRace and updates all necessary data. If the match phase
+	 * is already MatchPhase::RelayRace, this method returns immediately.
+	 */
+	void transitionToRelayRace();
+
+	/**
+	 * @brief Sets the playerVictory boolean
+	 * @param playerVictory boolean value to set the playerVictory value to
+	 */
+	void setPlayerVictory(bool playerVictory);
 
 	/**
 	 * Reassign id to the specified name in the mapping. This is okay to call if the
@@ -206,11 +220,6 @@ private:
 	std::unordered_set<EntityID> updated_entities;
 
 	/**
-	 *  Timestep length in milliseconds.
-	 */
-	std::chrono::milliseconds timestep_length;
-
-	/**
 	 *  Current timestep (starts at 0)
 	 */
 	unsigned int timestep;
@@ -225,6 +234,31 @@ private:
 	 * @brief The current phase of this game instance.
 	 */
 	GamePhase phase;
+
+	/**
+	 * @brief The current match phase of this game instance - at the start of
+	 * the game, this is MatchPhase::MazeExploration
+	 */
+	MatchPhase matchPhase;
+
+	/**
+	 * @brief Amount of time, in timesteps, left until the end of the match
+	 * This value only becomes relevant when matchPhase is set to
+	 * MatchPhase::RelayRace
+	 */
+	unsigned int timesteps_left;
+
+	/**
+	 * @brief Player victory is by default false - only becomes true if a Player
+	 * collides with an open exit while holding the Orb
+	 */
+	bool playerVictory;
+
+	/**
+	 * @brief Counter of player deaths (needed for premature transition to
+	 * MatchPhase::RelayRace even if players didn't find the Orb yet)
+	 */
+	unsigned int numPlayerDeaths;
 
 	/**
 	 * @brief Name of maze file that the server should load.

@@ -11,10 +11,6 @@
 #define MAX_TRAPS 10
 #define MAX_SPELLS 4
 
-/*	Constants	*/
-#define	FIRST_TIMESTEP			0
-#define TIMESTEP_LEN			std::chrono::milliseconds(30)
-#define	MAX_PLAYERS				4
 
 /* ServerGameState Constants */
 #define MAX_ALIVE_ENEMIES 15

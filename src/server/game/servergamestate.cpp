@@ -8,8 +8,10 @@
 #include "server/game/projectile.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/potion.hpp"
-#include "server/game/orb.hpp"
 #include "server/game/constants.hpp"
+#include "server/game/exit.hpp"
+#include "server/game/orb.hpp"
+
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -26,12 +28,22 @@ ServerGameState::ServerGameState() : ServerGameState(getDefaultConfig()) {}
 ServerGameState::ServerGameState(GameConfig config) {
 	this->phase = GamePhase::LOBBY;
 	this->timestep = FIRST_TIMESTEP;
-	this->timestep_length = config.game.timestep_length_ms;
 	this->lobby.max_players = config.server.max_players;
 	this->lobby.name = config.server.lobby_name;
 
 	this->maps_directory = config.game.maze.directory;
 	this->maze_file = config.game.maze.maze_file;
+
+	//	Initialize game instance match phase data
+	//	Match begins in MazeExploration phase (no timer)
+	this->matchPhase = MatchPhase::MazeExploration;
+	this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
+	//	Player victory is by default false (need to collide with an open exit
+	//	while holding the Orb to win, whereas DM wins on time limit expiration)
+	this->playerVictory = false;
+
+	//	No player died yet
+	this->numPlayerDeaths = 0;
 
     MazeGenerator generator(config);
     int attempts = 1;
@@ -81,9 +93,12 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 	auto getUpdateTemplate = [this]() {
 		SharedGameState curr_update;
 		curr_update.timestep = this->timestep;
-		curr_update.timestep_length = this->timestep_length;
 		curr_update.lobby = this->lobby;
 		curr_update.phase = this->phase;
+		curr_update.matchPhase = this->matchPhase;
+		curr_update.timesteps_left = this->timesteps_left;
+		curr_update.playerVictory = this->playerVictory;
+		curr_update.numPlayerDeaths = this->numPlayerDeaths;
 		return curr_update;
 	};
 
@@ -137,21 +152,21 @@ void ServerGameState::update(const EventList& events) {
 		}
 
 		Object* obj;
-	
-        switch (event.type) {
+
+		switch (event.type) {
 		case EventType::ChangeFacing: {
-            auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
-            obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
-            obj->physics.shared.facing = changeFacingEvent.facing;
-			this->updated_entities.insert({obj->globalID});
-            break;
+			auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
+			obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+			obj->physics.shared.facing = changeFacingEvent.facing;
+			this->updated_entities.insert({ obj->globalID });
+			break;
 		}
-	
+
 		case EventType::StartAction: {
 			auto startAction = boost::get<StartActionEvent>(event.data);
 			obj = this->objects.getObject(startAction.entity_to_act);
-			this->updated_entities.insert({obj->globalID});
-			
+			this->updated_entities.insert({ obj->globalID });
+
 			//switch case for action (currently using keys)
 			switch (startAction.action) {
 			case ActionType::MoveCam: {
@@ -176,7 +191,7 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StopAction: {
 			auto stopAction = boost::get<StopActionEvent>(event.data);
 			obj = this->objects.getObject(stopAction.entity_to_act);
-			this->updated_entities.insert({obj->globalID});
+			this->updated_entities.insert({ obj->globalID });
 			//switch case for action (currently using keys)
 			switch (stopAction.action) {
 			case ActionType::MoveCam: {
@@ -192,7 +207,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
-	
+
 		case EventType::MoveRelative:
 		{
 			//currently just sets the velocity to given 
@@ -241,8 +256,8 @@ void ServerGameState::update(const EventList& events) {
 
 		// default:
 		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
-        }
-    }
+		}
+	}
 
 
 	//	TODO: fill update() method with updating object movement
@@ -259,6 +274,21 @@ void ServerGameState::update(const EventList& events) {
 	
 	//	Increment timestep
 	this->timestep++;
+
+	//	Countdown timer if the Orb has been picked up by a Player and the match
+	//	phase is now RelayRace
+	if (this->matchPhase == MatchPhase::RelayRace) {
+		this->timesteps_left--;
+
+		if (this->timesteps_left == 0) {
+			//	Dungeon Master won on time limit expiration
+			this->phase = GamePhase::RESULTS;
+		}
+	}
+
+	//	DEBUG
+	//std::cout << "playerVictory: " << this->playerVictory << std::endl;
+	//	DEBUG
 }
 
 void ServerGameState::markForDeletion(EntityID id) {
@@ -617,6 +647,13 @@ void ServerGameState::handleDeaths() {
 		if (player == nullptr) continue;
 
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
+			//	Player died - increment number of player deaths
+			this->numPlayerDeaths++;
+
+			if (numPlayerDeaths == PLAYER_DEATHS_TO_RELAY_RACE) {
+				this->transitionToRelayRace();
+			}
+
 			//handle dropping items (sets collider to none so it doesn't pick up items when dead)
 			player->physics.collider = Collider::None;
 			for (int i = 0; i < player->sharedInventory.inventory_size; i++) {
@@ -714,16 +751,38 @@ unsigned int ServerGameState::getTimestep() const {
 	return this->timestep;
 }
 
-std::chrono::milliseconds ServerGameState::getTimestepLength() const {
-	return this->timestep_length;
-}
-
 GamePhase ServerGameState::getPhase() const {
 	return this->phase;
 }
 
 void ServerGameState::setPhase(GamePhase phase) {
 	this->phase = phase;
+}
+
+MatchPhase ServerGameState::getMatchPhase() const {
+	return this->matchPhase;
+}
+
+void ServerGameState::transitionToRelayRace() {
+	//	Return immediately if the match phase is already Relay Race
+	if (this->matchPhase == MatchPhase::RelayRace)
+		return;
+
+	this->matchPhase = MatchPhase::RelayRace;
+
+	//	Open all exits!
+	for (int i = 0; i < this->objects.getExits().size(); i++) {
+		Exit* exit = this->objects.getExits().get(i);
+
+		if (exit == nullptr)
+			continue;
+
+		exit->shared.open = true;
+	}
+}
+
+void ServerGameState::setPlayerVictory(bool playerVictory) {
+	this->playerVictory = playerVictory;
 }
 
 void ServerGameState::addPlayerToLobby(EntityID id, const std::string& name) {
@@ -986,6 +1045,22 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					this->objects.createObject(new TeleporterTrap(corner));
 					break;
 				}
+				case CellType::Exit: {
+					glm::vec3 corner(
+						cell->x* Grid::grid_cell_width,
+						0.0f,
+						cell->y* Grid::grid_cell_width
+					);
+
+					glm::vec3 dimensions(
+						Grid::grid_cell_width,
+						MAZE_CEILING_HEIGHT,
+						Grid::grid_cell_width
+					);
+
+					this->objects.createObject(new Exit(false, corner, dimensions));
+					break;
+				}
 			}
 		}
 	}
@@ -1000,7 +1075,7 @@ Grid& ServerGameState::getGrid() {
 std::string ServerGameState::to_string() {
 	std::string representation = "{";
 	representation += "\n\ttimestep:\t\t" + std::to_string(this->timestep);
-	representation += "\n\ttimestep len:\t\t" + std::to_string(this->timestep_length.count());
+	representation += "\n\ttimestep len:\t\t" + std::to_string(TIMESTEP_LEN.count());
 	representation += "\n\tobjects: [\n";
 
 	SmartVector<Object*> gameObjects = this->objects.getObjects();

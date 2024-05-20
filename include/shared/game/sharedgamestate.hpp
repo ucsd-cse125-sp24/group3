@@ -11,13 +11,20 @@
 #include "shared/utilities/smartvector.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/utilities/config.hpp"
-#include "server/game/constants.hpp"
+//#include "server/game/constants.hpp"
+#include "shared/game/constants.hpp"
 
 
 enum class GamePhase {
 	TITLE_SCREEN,
 	LOBBY,
-	GAME
+	GAME,
+	RESULTS
+};
+
+enum class MatchPhase {
+	MazeExploration,
+	RelayRace
 };
 
 /**
@@ -56,21 +63,30 @@ struct Lobby {
 struct SharedGameState {
 	std::unordered_map<EntityID, boost::optional<SharedObject>> objects;
 
-	std::chrono::milliseconds timestep_length;
-
 	unsigned int timestep;
 
 	Lobby lobby;
 
 	GamePhase phase;
 
+	MatchPhase matchPhase;
+
+	unsigned int timesteps_left;
+
+	bool playerVictory;
+
+	unsigned int numPlayerDeaths;
+
 	SharedGameState():
 		objects(std::unordered_map<EntityID, boost::optional<SharedObject>>())
 	{
 		this->phase = GamePhase::TITLE_SCREEN;
 		this->timestep = FIRST_TIMESTEP;
-		this->timestep_length = TIMESTEP_LEN;
 		this->lobby.max_players = MAX_PLAYERS;
+		this->matchPhase = MatchPhase::MazeExploration;
+		this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
+		this->playerVictory = false;
+		this->numPlayerDeaths = 0;
 	}
 
 	SharedGameState(GamePhase start_phase, const GameConfig& config):
@@ -78,13 +94,17 @@ struct SharedGameState {
 	{
 		this->phase = start_phase;
 		this->timestep = FIRST_TIMESTEP;
-		this->timestep_length = config.game.timestep_length_ms;
 		this->lobby.max_players = config.server.max_players;
 		this->lobby.name = config.server.lobby_name;
+		this->matchPhase = MatchPhase::MazeExploration;
+		this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
+		this->playerVictory = false;
+		this->numPlayerDeaths = 0;
 	}
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & phase & lobby & objects;
+		ar & objects & timestep & lobby & phase & matchPhase
+			& timesteps_left & playerVictory & numPlayerDeaths;
 	}
 
 	/**

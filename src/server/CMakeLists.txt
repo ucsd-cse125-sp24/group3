@@ -27,6 +27,7 @@ set(FILES
     game/teleportertrap.cpp
     game/slime.cpp
     game/spell.cpp
+    game/exit.cpp
     game/orb.cpp
 )
 
