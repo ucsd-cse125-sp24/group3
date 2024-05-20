@@ -22,6 +22,6 @@ jobs:
           key: ${{ secrets.SITE_KEY }}
           port: ${{ secrets.SITE_PORT }}
           source: docs/*
-          target: /var/www/html/class/cse125/www/cse125/2024/cse125g3/site/docs/
+          target: /var/www/html/class/cse125/www/cse125/2024/cse125g3/docs/
           rm: true
           strip_components: 1

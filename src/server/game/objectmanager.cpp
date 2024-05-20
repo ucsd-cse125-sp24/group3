@@ -4,8 +4,9 @@
 #include "server/game/fireballtrap.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/potion.hpp"
-#include "server/game/spell.hpp"
+#include "server/game/exit.hpp"
 #include "server/game/orb.hpp"
+#include "server/game/spell.hpp"
 
 #include <memory>
 
@@ -51,9 +52,6 @@ SpecificID ObjectManager::createObject(Object* object) {
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
 			std::cout << "DM PLACED A TRAP! " << "global ID: " << object->globalID << " specific ID: " << object->typeID << std::endl;
 			break;
-		case ObjectType::Orb:
-			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
-			break;
 		case ObjectType::Spell:
 			object->typeID = this->items.push(dynamic_cast<Spell*>(object));
 			break;
@@ -70,8 +68,14 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
 			break;
-        case ObjectType::Enemy:
+        case ObjectType::Slime:
 			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
+			break;
+		case ObjectType::Exit:
+			object->typeID = this->exits.push(dynamic_cast<Exit*>(object));
+			break;
+		case ObjectType::Orb:
+			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
 			break;
         default:
 			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << 
@@ -127,7 +131,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Projectile:
 		this->projectiles.remove(object->typeID);
 		break;
-	case ObjectType::Enemy:
+	case ObjectType::Slime:
 		this->enemies.remove(object->typeID);
 		break;
 	case ObjectType::Spell:
@@ -135,14 +139,19 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Orb:
 		this->items.remove(object->typeID);
 		break;
+	case ObjectType::Exit:
+		this->exits.remove(object->typeID);
+		break;
+	case ObjectType::SolidSurface:
+		this->solid_surfaces.remove(object->typeID);
+		break;
 	default:
-		std::cerr << "FATAL: unknown ObjectType in ObjectManager::removeObject\n"
-			<< "You will probably seg fault soon... Good luck o7" << std::endl;
+		std::cerr << "WARN: Cannot delete object! Did you forget to add a switch statement to \n"
+			<< "ObjectManager::removeObject? Continuing, but there may be deallocated memory still accessible!";
 	}
 
 	if (object->physics.movable) {
 		movableObjects.remove(object->movableID);
-	}
 
 	//	Remove object from cellToObjects hashmap
 	for (glm::vec2 cellPosition : object->gridCellPositions) {
@@ -249,6 +258,10 @@ SmartVector<Trap*> ObjectManager::getTraps() {
 
 SmartVector<Projectile*> ObjectManager::getProjectiles() {
 	return this->projectiles;
+}
+
+SmartVector<Exit*> ObjectManager::getExits() {
+	return this->exits;
 }
 
 /*	Object Movement	*/

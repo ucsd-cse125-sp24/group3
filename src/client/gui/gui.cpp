@@ -166,6 +166,10 @@ void GUI::layoutFrame(GUIState state) {
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             this->_layoutDeadScreen();
             break;
+        case GUIState::RESULTS_SCREEN:
+            //  TODO: fill results screen logic here
+            this->_layoutResultsScreen();
+            break;
         case GUIState::NONE:
             break;
     }
@@ -546,6 +550,7 @@ void GUI::_sharedGameHUD() {
     }
 
     this->addWidget(std::move(frameflex));
+
 }
 
 void GUI::_layoutGameHUD() {
@@ -572,6 +577,21 @@ void GUI::_layoutGameHUD() {
     );
     this->addWidget(std::move(health_txt));
 
+    auto status_flex = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(20), font::getRelativePixels(20)),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
+    );
+
+    for (const std::string& status: self->statuses->getStatusStrings()) {
+        status_flex->push(widget::DynText::make(
+            status,
+            fonts,
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+        ));
+    }
+
+    this->addWidget(std::move(status_flex));
     // Flexbox for item durations
     auto durationFlex = widget::Flexbox::make(
         glm::vec2(10.0f, FRAC_WINDOW_HEIGHT(1, 2)),
@@ -592,7 +612,7 @@ void GUI::_layoutGameHUD() {
             name = "INVINCIBILITY: ";
         }
         else if (type == ModelType::NauseaPotion) {
-            name = "Naseous: ";
+            name = "Nauseous: ";
         }
 
         durationFlex->push(widget::DynText::make(
@@ -603,6 +623,108 @@ void GUI::_layoutGameHUD() {
         ++it;
     }
     this->addWidget(std::move(durationFlex));
+
+    // display crosshair
+    auto crosshair = this->images.getImg(img::ImgID::Crosshair);
+
+    this->addWidget(widget::StaticImg::make(
+        glm::vec2((WINDOW_WIDTH / 2.0f) - (crosshair.width / 2.0f),
+            (WINDOW_HEIGHT / 2.0f) - (crosshair.height / 2.0f)),
+        this->images.getImg(img::ImgID::Crosshair)
+    ));
+    //  Display orb state here?
+
+    //  Orb state breakdown:
+    //  if match phase is MatchPhase::MazeExploration
+    //      --> orb hasn't been found yet
+    //  if match phase is MatchPhase::RelayRace
+    //      --> orb has been found at least once!
+    //          if the orb is currently being carried, print which player name
+    //              is carrying it
+    //          otherwise, "the orb is lost"
+    std::string orbStateString;
+    if (client->gameState.matchPhase == MatchPhase::MazeExploration) {
+        orbStateString = "The Orb is hidden somewhere in the Labyrinth...";
+    }
+    else {
+        bool orbIsCarried = false;
+        for (auto [id, name] : client->gameState.lobby.players) {
+            auto player = client->gameState.objects.at(id);
+
+            if (!player.has_value())    continue;
+
+            SharedObject playerObj = player.get();
+            
+            if (playerObj.inventoryInfo.get().hasOrb) {
+                orbIsCarried = true;
+                orbStateString = name + " has the Orb!";
+                break;
+            }
+        }
+
+        if (!orbIsCarried) {
+            orbStateString = "The Orb has been dropped!";
+        }
+    }
+
+    auto matchPhaseFlex = widget::Flexbox::make(
+        glm::vec2(10, 900),
+        glm::vec2(0, 0),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+    );
+
+    matchPhaseFlex->push(widget::DynText::make(
+        orbStateString,
+        fonts,
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
+    ));
+
+    //  Add timer string
+    if (client->gameState.matchPhase == MatchPhase::RelayRace) {
+        std::string timerString = "Time Left: ";
+        int timerSeconds = client->gameState.timesteps_left * ((float) TIMESTEP_LEN.count()) / 1000;
+        timerString += std::to_string(timerSeconds);
+
+        timerString += (timerSeconds > 1) ? " seconds" : " second";
+
+        matchPhaseFlex->push(widget::DynText::make(
+            timerString,
+            fonts,
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
+        ));
+    }
+
+    //  Add player deaths string
+    std::string playerDeathsString = std::to_string(client->gameState.numPlayerDeaths)
+        + " / " + std::to_string(PLAYER_DEATHS_TO_RELAY_RACE) 
+        + " Player Deaths";
+
+    matchPhaseFlex->push(widget::DynText::make(
+        playerDeathsString,
+        fonts,
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
+    ));
+
+    this->addWidget(std::move(matchPhaseFlex));
+
+    /*auto orbStateText = widget::CenterText::make(
+        orbStateString,
+        font::Font::TEXT,
+        font::Size::MEDIUM,
+        font::Color::WHITE,
+        fonts,
+        font::getRelativePixels(900)
+    );*/
+
+    /*auto matchPhaseFlex = widget::Flexbox::make(
+        glm::vec2(10, FRAC_WINDOW_HEIGHT(2, 3)),
+        glm::vec2(0, 0),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+    );
+
+    matchPhaseFlex->push(orbStateText);*/
+
+    //this->addWidget(std::move(orbStateText));
 }
 
 void GUI::_layoutGameEscMenu() {
@@ -652,6 +774,38 @@ void GUI::_layoutDeadScreen() {
         font::Color::BLACK,
         fonts,
         FRAC_WINDOW_HEIGHT(1, 3)
+    ));
+}
+
+void GUI::_layoutResultsScreen() {
+    auto self_eid = client->session->getInfo().client_eid;
+    if (!self_eid.has_value()) {
+        return;
+    }
+
+    auto self = client->gameState.objects.at(*self_eid);
+
+    //  Add widget based on whether the player won or lost
+    bool won;
+    if (self->type == ObjectType::Player) {
+        won = client->gameState.playerVictory;
+    }
+    else {
+        won = !(client->gameState.playerVictory);
+    }
+
+    //std::cout << "playerVictory: " << client->gameState.playerVictory << std::endl;
+    //std::cout << "won: " << won << std::endl;
+
+    std::string result_string = won ? "Victory" : "Defeat";
+
+    this->addWidget(widget::CenterText::make(
+        result_string,
+        font::Font::MENU,
+        font::Size::LARGE,
+        won ? font::Color::BLUE : font::Color::RED,
+        fonts,
+        FRAC_WINDOW_HEIGHT(1, 2)
     ));
 }
 

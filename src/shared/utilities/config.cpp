@@ -37,7 +37,6 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
     try {
         return GameConfig {
             .game = {
-                .timestep_length_ms = std::chrono::milliseconds(json.at("game").at("timestep_length_ms")),
                 .maze = {
                     .directory = json.at("game").at("maze").at("directory"),
                     .procedural = json.at("game").at("maze").at("procedural"),
@@ -70,7 +69,6 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
 GameConfig getDefaultConfig() {
     return GameConfig{
         .game = {
-            .timestep_length_ms = std::chrono::milliseconds(30),
             .maze = {
                 .directory = "maps",
                 .procedural = true,
