@@ -18,6 +18,10 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
 
     // TODO: fill in rest of traps
     this->sharedTrapInventory.inventory[0] = ModelType::FloorSpikeFull;
+    this->sharedTrapInventory.inventory[1] = ModelType::FloorSpikeHorizontal;
+    this->sharedTrapInventory.inventory[2] = ModelType::FloorSpikeVertical;
+    this->sharedTrapInventory.inventory[3] = ModelType::FireballTrap;
+    this->sharedTrapInventory.inventory[4] = ModelType::SpikeTrap;
 }
 
 int DungeonMaster::getPlacedTraps() {

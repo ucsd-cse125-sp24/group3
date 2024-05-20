@@ -46,9 +46,11 @@ GridCell* Grid::getCell(int x, int y) {
 	//	Attempt to retrieve a GridCell at coordinates (x, y)
 
 	//	Assert that input coordinates are within the Grid's dimensions
-	assert(x >= 0 && x < columns && y >= 0 && y < rows);
-
-	return this->grid.at(y).at(x);
+	if (x >= 0 && x < columns && y >= 0 && y < rows) {
+		return this->grid.at(y).at(x);
+	} else {
+		return nullptr;
+	}
 }
 
 /*	Getters and Setters	*/

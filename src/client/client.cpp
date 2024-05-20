@@ -262,7 +262,24 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
             switch (selectedTrap) {
             case ModelType::FloorSpikeFull:
+                std::cout << "Sending full\n" << std::endl;
+
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FloorSpikeFull, false, true)));
+                break;
+            case ModelType::FloorSpikeVertical:
+                std::cout << "Sending vertical\n" << std::endl;
+
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FloorSpikeVertical, false, true)));
+                break;
+            case ModelType::FloorSpikeHorizontal:
+                std::cout << "Sending horizontal\n" << std::endl;
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FloorSpikeHorizontal, false, true)));
+                break;
+            case ModelType::FireballTrap:
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FireballTrap, false, true)));
+                break;
+            case ModelType::SpikeTrap:
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::SpikeTrap, false, true)));
                 break;
             }
         }

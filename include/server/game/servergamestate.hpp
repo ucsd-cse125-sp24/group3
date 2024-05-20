@@ -175,6 +175,8 @@ public:
 
 	const Lobby& getLobby() const;
 
+	Trap* placeTrapInCell(GridCell* cell, CellType type);
+
 	/*	Maze initialization	*/
 	
 	/**

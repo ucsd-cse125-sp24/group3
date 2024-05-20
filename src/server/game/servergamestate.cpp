@@ -125,17 +125,7 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 	return partial_updates;
 }
 
-Trap* ServerGameState::createTrap(CellType type, glm::vec3 corner) {
-	switch (type) {
-	case CellType::FloorSpikeFull:
-		return new FloorSpike(corner, FloorSpike::Orientation::Full, Grid::grid_cell_width);
-	default:
-		std::cout << "i have no idea what trap you want" << std::endl;
-
-	}
-}
-
-/*	Update methods	*/
+/*	Updatre methods	*/
 
 void ServerGameState::update(const EventList& events) {
 
@@ -279,22 +269,34 @@ void ServerGameState::update(const EventList& events) {
 
 			float cellWidth = currGrid.grid_cell_width;
 
-			if (trapPlacementEvent.world_pos.z < glm::floor(trapPlacementEvent.world_pos.z) + 0.5) {
-				trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z) - DM_Z_DISCOUNT;
-			} else {
-				trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z + DM_Z_DISCOUNT);
-			}
+			DungeonMaster* dm = this->objects.getDM();
 
-			if (trapPlacementEvent.world_pos.x < glm::floor(trapPlacementEvent.world_pos.x) + 0.5) {
-				trapPlacementEvent.world_pos.x = glm::floor(trapPlacementEvent.world_pos.x) - DM_Z_DISCOUNT;
-			}
-			else {
-				trapPlacementEvent.world_pos.x = glm::floor(trapPlacementEvent.world_pos.x + DM_Z_DISCOUNT);
-			}
+			glm::vec3 dir = glm::normalize(trapPlacementEvent.world_pos-dm->physics.shared.corner);
+
+			std::cout << "world pos trap: " << glm::to_string(trapPlacementEvent.world_pos) << std::endl;
+
+			//if (trapPlacementEvent.world_pos.z < glm::floor(trapPlacementEvent.world_pos.z) + 0.5) {
+			//	trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z) - DM_Z_DISCOUNT;
+			//} else {
+			//	trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z + DM_Z_DISCOUNT);
+			//}
+
+			//if (trapPlacementEvent.world_pos.x > glm::floor(trapPlacementEvent.world_pos.x) + 0.5) {
+			//	trapPlacementEvent.world_pos.x = glm::ceil(trapPlacementEvent.world_pos.x) + DM_Z_DISCOUNT;
+			//}
+			//else {
+			//	trapPlacementEvent.world_pos.x = glm::ceil(trapPlacementEvent.world_pos.x - DM_Z_DISCOUNT);
+			//}
+
+			trapPlacementEvent.world_pos += (dir*(float)DM_Z_DISCOUNT);
 
 			glm::ivec2 gridCellPos = currGrid.getGridCellFromPosition(trapPlacementEvent.world_pos);
 
 			GridCell* cell = currGrid.getCell(gridCellPos.x, gridCellPos.y);
+
+			if (cell == nullptr)
+				break;
+
 
 			// unhighlight if highlighted
 			for (SolidSurface* surface : this->previouslyHighlighted) {
@@ -322,6 +324,8 @@ void ServerGameState::update(const EventList& events) {
 					break;
 				}
 
+				std::cout << static_cast<int>(trapPlacementEvent.cell) << "\n";
+
 				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
 
 				// in cooldown and haven't elapsed enough time yet
@@ -330,33 +334,25 @@ void ServerGameState::update(const EventList& events) {
 					break;
 				}
 
-				glm::vec3 corner(
-					cell->x* Grid::grid_cell_width,
-					0.0f,
-					cell->y* Grid::grid_cell_width
-				);
+				auto curr_time = std::chrono::system_clock::now();
 
-				// force FLOOR placement for now
-				if (cell->type == CellType::Empty) {
-					glm::vec3 corner(
-						cell->x* Grid::grid_cell_width,
-						0.0f,
-						cell->y* Grid::grid_cell_width
-					);
+				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
-					auto curr_time = std::chrono::system_clock::now();
-
-					Trap* trap = createTrap(trapPlacementEvent.cell, corner);
-					trap->setIsDMTrap(true);
-					trap->setExpiration(curr_time + std::chrono::seconds(10));
-
-					this->objects.createObject(trap);
-					this->updated_entities.insert(trap->globalID);
-
-					dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
-
-					dm->setPlacedTraps(trapsPlaced + 1);
+				// trap can't be placed, break out
+				if (trap == nullptr) {
+					break;
 				}
+
+				std::cout << "PLACING A TRAP BEFORE setIsDMTrap and setExpiration" << std::endl;
+
+				trap->setIsDMTrap(true);
+				trap->setExpiration(curr_time + std::chrono::seconds(10));
+
+				this->updated_entities.insert(trap->globalID);
+
+				dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
+
+				dm->setPlacedTraps(trapsPlaced + 1);
 			}
 			break;
 		}
@@ -402,8 +398,6 @@ void ServerGameState::updateMovement() {
 
 	//	Iterate through all game objects
 	SmartVector<Object*> gameObjects = this->objects.getMovableObjects();
-
-	std::cout << "size of movable: " << gameObjects.size() << std::endl;
 
 	for (int i = 0; i < gameObjects.size(); i++) {
 		//	Get iterating game object
@@ -801,6 +795,155 @@ void ServerGameState::removePlayerFromLobby(EntityID id) {
 
 const Lobby& ServerGameState::getLobby() const {
 	return this->lobby;
+}
+
+Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
+	switch (type) {
+	case CellType::FireballTrap: {
+		if (cell->type != CellType::Empty)
+			return nullptr;
+
+		glm::vec3 dimensions(
+			Grid::grid_cell_width / 2,
+			0.5f,
+			Grid::grid_cell_width / 2
+		);
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			1.0f,
+			cell->y * Grid::grid_cell_width
+		);
+
+		FireballTrap* fireBallTrap = new FireballTrap(corner, dimensions);
+		this->objects.createObject(fireBallTrap);
+		return fireBallTrap;
+	}
+	case CellType::SpikeTrap: {
+		if (cell->type != CellType::Empty)
+			return nullptr;
+
+		const float HEIGHT_SHOWING = 0.5;
+		glm::vec3 dimensions(
+			Grid::grid_cell_width,
+			MAZE_CEILING_HEIGHT,
+			Grid::grid_cell_width
+		);
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			MAZE_CEILING_HEIGHT - HEIGHT_SHOWING,
+			cell->y * Grid::grid_cell_width
+		);
+		
+		SpikeTrap* spikeTrap = new SpikeTrap(corner, dimensions);
+		this->objects.createObject(spikeTrap);
+		return spikeTrap;
+	}
+	/*
+	* TODO: ADD BACK FAKEWALL
+	case CellType::FakeWall: {
+		glm::vec3 dimensions(
+			Grid::grid_cell_width,
+			MAZE_CEILING_HEIGHT,
+			Grid::grid_cell_width
+		);
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			0.0f,
+			cell->y * Grid::grid_cell_width
+		);
+
+		if (cell->type == CellType::FakeWall) {
+			this->objects.createObject(new FakeWall(corner, dimensions));
+		}
+		break;
+	}*/
+	case CellType::FloorSpikeFull:
+	case CellType::FloorSpikeHorizontal:
+	case CellType::FloorSpikeVertical: {
+		if (cell->type != CellType::Empty)
+			return nullptr;
+
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			0.0f,
+			cell->y * Grid::grid_cell_width
+		);
+
+		FloorSpike::Orientation orientation;
+		if (type == CellType::FloorSpikeFull) {
+			std::cout << "PLACING FLOOR SPIKE FULL" << std::endl;
+			orientation = FloorSpike::Orientation::Full;
+		}
+		else if (type == CellType::FloorSpikeHorizontal) {
+			std::cout << "PLACING FLOOR SPIKE HORIZONTAL" << std::endl;
+			orientation = FloorSpike::Orientation::Horizontal;
+			corner.z += Grid::grid_cell_width * 0.25f;
+		}
+		else {
+			std::cout << "PLACING FLOOR SPIKE VERTICAL" << std::endl;
+			orientation = FloorSpike::Orientation::Vertical;
+			corner.x += Grid::grid_cell_width * 0.25f;
+		}
+
+		FloorSpike* floorSpike = new FloorSpike(corner, orientation, Grid::grid_cell_width);
+		this->objects.createObject(floorSpike);
+		return floorSpike;
+	}
+	/*
+	TODO: ADD BACK ARROWS!
+
+	case CellType::ArrowTrapDown:
+	case CellType::ArrowTrapLeft:
+	case CellType::ArrowTrapRight:
+	case CellType::ArrowTrapUp: {
+		ArrowTrap::Direction dir;
+		if (cell->type == CellType::ArrowTrapDown) {
+			dir = ArrowTrap::Direction::DOWN;
+		}
+		else if (cell->type == CellType::ArrowTrapUp) {
+
+		}
+		else if (cell->type == CellType::ArrowTrapLeft) {
+			dir = ArrowTrap::Direction::LEFT;
+		}
+		else {
+			dir = ArrowTrap::Direction::RIGHT;
+		}
+
+		glm::vec3 dimensions(
+			Grid::grid_cell_width,
+			MAZE_CEILING_HEIGHT,
+			Grid::grid_cell_width
+		);
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			0.0f,
+			cell->y * Grid::grid_cell_width
+		);
+
+		this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
+		break;
+	}*/
+
+	case CellType::TeleporterTrap: {
+		if (cell->type != CellType::Empty)
+			return nullptr;
+
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			0.0f,
+			cell->y * Grid::grid_cell_width
+		);
+
+		TeleporterTrap* teleporterTrap = new TeleporterTrap(corner);
+		this->objects.createObject(teleporterTrap);
+		return teleporterTrap;
+	}
+	default: {
+		std::cout << "i have no idea what trap you want" << std::endl;
+		return nullptr;
+	}
+	}
 }
 
 /*	Maze initialization	*/

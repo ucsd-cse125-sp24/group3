@@ -423,6 +423,22 @@ void GUI::_sharedGameHUD() {
                 itemString = "Floor Spike Full";
                 break;
             }
+            case ModelType::FloorSpikeHorizontal: {
+                itemString = "Floor Spike Horizontal";
+                break;
+            }
+            case ModelType::FloorSpikeVertical: {
+                itemString = "Floor Spike Vertical";
+                break;
+            }
+            case ModelType::FireballTrap: {
+                itemString = "Fireball Trap";
+                break;
+            }
+            case ModelType::SpikeTrap: {
+                itemString = "Ceiling Spike Trap";
+                break;
+            }
             }
         }
     }
@@ -484,6 +500,22 @@ void GUI::_sharedGameHUD() {
             if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
                 switch (self->trapInventoryInfo->inventory[i]) {
                 case ModelType::FloorSpikeFull: { // CHANGE
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::FloorSpikeHorizontal: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::FloorSpikeVertical: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::FireballTrap: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::SpikeTrap: {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }

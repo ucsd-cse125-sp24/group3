@@ -111,10 +111,11 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		this->base_objects.remove(object->typeID);
 		break;
 	case ObjectType::FireballTrap:
-	case ObjectType::SpikeTrap:
-	case ObjectType::TeleporterTrap:
 	case ObjectType::FakeWall:
+	case ObjectType::SpikeTrap:
 	case ObjectType::FloorSpike:
+	case ObjectType::ArrowTrap:
+	case ObjectType::TeleporterTrap:
 		this->traps.remove(object->typeID);
 		break;
 	case ObjectType::Item:
@@ -139,6 +140,10 @@ bool ObjectManager::removeObject(EntityID globalID) {
 			<< "You will probably seg fault soon... Good luck o7" << std::endl;
 	}
 
+	if (object->physics.movable) {
+		movableObjects.remove(object->movableID);
+	}
+
 	//	Remove object from cellToObjects hashmap
 	for (glm::vec2 cellPosition : object->gridCellPositions) {
 		std::vector<Object*>& objectsInCell =
@@ -151,10 +156,6 @@ bool ObjectManager::removeObject(EntityID globalID) {
 				break;
 			}
 		}
-	}
-
-	if (object->physics.movable) {
-		movableObjects.remove(object->movableID);
 	}
 
 	//	Delete object
@@ -268,7 +269,6 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 			}
 		}
 	}
-
 
 	//	Update object's corner position
 	object->physics.shared.corner = newCornerPosition;
