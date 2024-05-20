@@ -310,7 +310,10 @@ void Client::draw() {
 
         if (sharedObject->pointLightInfo.has_value() &&
             sharedObject->type == ObjectType::Torchlight) {
-            closestPointLights.insert(sharedObject.value());
+            auto [iter, ok] = closestPointLights.insert(sharedObject.value());
+            if (!ok) {
+                std::cout << "failed to insert torchlight of ID to closest light sources set" <<  sharedObject->globalID << std::endl;
+            }
         }
     }
 

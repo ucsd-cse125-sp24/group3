@@ -45,14 +45,8 @@ struct CompareLightPos {
     CompareLightPos() = default;
     CompareLightPos(const glm::vec3& refPos) : refPos(refPos) {};
     bool operator()(const SharedObject& a, const SharedObject& b) const {
-        // manhattan distance because it's cheaper to compute than euclidian.
-        // also, only need to compare distance in x and z dimensions since
-        // everything in the maze is about the same height
-        float distanceToA = std::abs(this->refPos.x - a.physics.corner.x) +
-            std::abs(this->refPos.z - a.physics.corner.z);
-        float distanceToB = std::abs(this->refPos.x - b.physics.corner.x) +
-            std::abs(this->refPos.z - b.physics.corner.z);
-
+        float distanceToA = glm::distance(this->refPos, a.physics.corner);
+        float distanceToB = glm::distance(this->refPos, b.physics.corner);
         return distanceToA < distanceToB;
     };
     glm::vec3 refPos;

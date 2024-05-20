@@ -103,20 +103,19 @@ void Mesh::draw(
     shader->setVec3("viewPos", camPos);
 
     // set lightsource uniforms 
-    uint curr_light_num = 0;
+    unsigned int curr_light_num = 0;
     for (auto curr_source : lightSources) {
         if (curr_light_num > MAX_POINT_LIGHTS) {
             break;
         }
-        curr_light_num++;
         SharedPointLightInfo& properties = curr_source.pointLightInfo.value();
         glm::vec3 pos = curr_source.physics.getCenterPosition();
 
         std::string pointLight = "pointLights[" + std::to_string(curr_light_num) + "]";
-        // needed for attenuation
         shader->setBool(pointLight + ".enabled", true);
         shader->setFloat(pointLight + ".intensity", properties.intensity);
         shader->setVec3(pointLight + ".position", pos);
+        // needed for attenuation
         shader->setFloat(pointLight + ".constant", 1.0f);
         shader->setFloat(pointLight + ".linear", properties.attenuation_linear);
         shader->setFloat(pointLight + ".quadratic", properties.attenuation_quadratic);
@@ -125,6 +124,8 @@ void Mesh::draw(
         shader->setVec3(pointLight + ".ambient", properties.ambient_color);
         shader->setVec3(pointLight + ".diffuse", properties.diffuse_color);
         shader->setVec3(pointLight + ".specular", properties.specular_color);
+
+        curr_light_num++;
     }
 
     if (textures.size() == 0) {
