@@ -9,7 +9,8 @@ class SoundTable {
 public:
     SoundTable();
 
-    void addSoundSource(SoundSource source);
+    void addNewSoundSource(SoundSource source);
+    void updateSoundSource(SoundID id, std::optional<SoundSource> source);
     void tickSounds();
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {

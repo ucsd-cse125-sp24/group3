@@ -5,18 +5,23 @@
 
 static auto audio_dir = getRepoRoot() / "assets" / "sounds";
 
-std::string soundTypeToPath(ServerSound sound) {
-    switch (sound) {
-        case ServerSound::ArrowShoot:
+std::string getAudioPath(ClientSFX sound) {
+    // TODO:
+    return "";
+}
+
+std::string getAudioPath(ServerSFX sfx) {
+    switch (sfx) {
+        case ServerSFX::ArrowShoot:
             return (audio_dir / "arrow.wav").string();
     }
 }
 
-std::string soundTypeToPath(ClientSound sound) {
-    switch (sound) {
-        case ClientSound::TitleTheme:
+std::string getAudioPath(ClientMusic music) {
+    switch (music) {
+        case ClientMusic::TitleTheme:
             return (audio_dir / "piano.wav").string();
-        case ClientSound::GameTheme:
+        case ClientMusic::GameTheme:
             return (audio_dir / "mono-retrowave.mp3").string();
     }
 }

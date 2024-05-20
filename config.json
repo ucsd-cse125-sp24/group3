@@ -12,7 +12,7 @@
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "don't click on this one anthony",
+        "lobby_name": "Hope you're doing well!",
         "lobby_broadcast": true,
         "max_players": 1
     },

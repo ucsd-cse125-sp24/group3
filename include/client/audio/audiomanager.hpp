@@ -20,6 +20,14 @@ public:
 	 */
 	void init();
 
+	void playMusic(ClientMusic music);
+	void pauseMusic(ClientMusic music);
+	void stopMusic(ClientMusic music);
+	void playSFX(ClientSFX sfx);
+
+	void AudioManager::doTick(glm::vec3 player_pos, const SoundTable& delta);
+
+private:
 	/**
 	 * Updates the record of sounds received from the server
 	 * 
@@ -27,50 +35,19 @@ public:
 	 */
 	void updateSoundTable(const SoundTable& delta);
 
-	/**
-	 * Play the audio of a particular SoundType
-	 *
-	 * @param the SoundType to play
-	 */
-	void playClientAudio(ClientSound type);
+	std::unordered_map<ClientMusic, std::unique_ptr<sf::Music>> clientMusics;
 
-	/**
-	 * Pause the audio of a particular SoundType
-	 *
-	 * @param the SoundType to play
-	 */
-	void pauseClientAudio(ClientSound type);
+	std::unordered_map<ClientSFX, sf::SoundBuffer> clientSFXBufs;
+	std::unordered_map<ClientSFX, std::unique_ptr<sf::Sound>> clientSFXs;
 
-	/**
-	 * Pause the audio of a particular SoundType
-	 *
-	 * @param the SoundType to play
-	 */
-	void loopClientAudio(ClientSound type);
-
-	/**
-	 * Change the volume of a particular SoundType
-	 * The volume is a value between 0 (mute) and 100 (full volume). 
-	 * The default value for the volume is 100.
-	 * 
-	 * @param the SoundType to change
-	 * #param the volume to set it to
-	 */
-	void changeClientVolume(ClientSound type, float volume);
-
-	// void setAttenuation(SoundType type, float attenuation);
-
-	// void setSoundMinDistance(SoundType type, float distance);
-
-	// void setSoundPosition(SoundType type, glm::vec3 pos);
-
-private:
-	std::unordered_map<ClientSound, std::shared_ptr<sf::SoundSource>> clientSounds;
-
+	std::unordered_map<ServerSFX, sf::SoundBuffer> serverSFXBufs;
 	SoundTable serverTable;
-	std::unordered_map<SoundID, std::unique_ptr<sf::SoundSource>> serverSounds;
+	std::unordered_map<SoundID, std::unique_ptr<sf::Sound>> serverSFXs;
 
-	void loadClientSounds();
+	sf::SoundBuffer loadSFXBuf(ClientSFX sfx);
+	sf::SoundBuffer loadSFXBuf(ServerSFX sfx);
+	sf::SoundBuffer loadSFXBuf(std::string path);
 
-	std::shared_ptr<sf::Sound> loadSound(std::string path);
+	std::unique_ptr<sf::Sound> makeSound(const SoundSource& source);
+	std::unique_ptr<sf::Music> makeMusic(ClientMusic music);
 };

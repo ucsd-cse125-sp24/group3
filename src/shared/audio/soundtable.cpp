@@ -20,8 +20,12 @@ void SoundTable::tickSounds() {
     }
 }
 
-void SoundTable::addSoundSource(SoundSource source) {
+void SoundTable::addNewSoundSource(SoundSource source) {
     this->map.insert({this->SERVER_next_id++, source});
+}
+
+void SoundTable::updateSoundSource(SoundID id, std::optional<SoundSource> source) {
+    this->map[id] = source;
 }
 
 const std::unordered_map<SoundID, std::optional<SoundSource>> SoundTable::data() const {
