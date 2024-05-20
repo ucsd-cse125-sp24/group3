@@ -3,10 +3,12 @@
 #include <glm/glm.hpp>
 #include <map>
 #include <vector>
+#include <unordered_map>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include "client/animation.hpp"
 #include "client/bone.hpp"
+#include "shared/game/sharedobject.hpp"
 
 class AnimationManager
 {
@@ -23,6 +25,7 @@ public:
 
 private:
 	std::vector<glm::mat4> m_finalBoneMatrices;
+	std::unordered_map<ObjectType, std::unordered_map<AnimState, Animation*>> objAnimMap;
 	Animation* m_currentAnimation;
 	float m_currentTime;
 	float m_deltaTime;

@@ -52,7 +52,6 @@ struct SharedStats {
 	}
 };
 
-
 using UsedItemsMap = std::unordered_map<SpecificID, std::pair<ModelType, double>>;
 
 struct SharedInventory {
@@ -144,6 +143,14 @@ struct SharedPlayerInfo {
 	}
 };
 
+enum class AnimState {
+	IdleAnim,
+	WalkAnim,
+	JumpAnim,
+	AttackAnim,
+	DeathAnim
+};
+
 /**
  * @brief Representation of the Object class used by ServerGameState, containing
  * exactly the subset of Object data required by the client.
@@ -155,6 +162,7 @@ public:
 	SharedPhysics physics;
 	ModelType modelType;
 
+	boost::optional<AnimState> animState;
 	boost::optional<SharedStats> stats;
 	boost::optional<SharedItemInfo> iteminfo;
 	boost::optional<SharedSolidSurface> solidSurface;
@@ -166,7 +174,7 @@ public:
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo;
+		ar & globalID & type & physics & modelType & animState & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo;
 	}
 private:
 };

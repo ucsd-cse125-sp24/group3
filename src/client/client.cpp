@@ -156,11 +156,11 @@ bool Client::init() {
     // this->bear_model = std::make_unique<Model>(bear_model_path.string());
     // // this->bear_model->scaleAbsolute(0.25);
 
-    auto bear_model_path = graphics_assets_dir / "walk4.fbx";
-    auto bear_anim_path = graphics_assets_dir / "walk4.fbx";
+    auto bear_model_path = graphics_assets_dir / "player_model.fbx";
+    auto bear_anim_path = graphics_assets_dir / "player_walk.fbx";
 
     this->bear_model = std::make_unique<Model>(bear_model_path.string());
-    this->bear_model->scaleAbsolute(0.0025);
+    this->bear_model->scaleAbsolute(0.004);
     Animation* bear = new Animation(bear_anim_path.string(), bear_model.get());
     animManager = new AnimationManager(bear);
 
@@ -299,7 +299,7 @@ void Client::draw() {
         }
 
         /* Update model animation */
-        animManager->updateAnimation(0.00125f);
+        animManager->updateAnimation(0.002f);
         auto transforms = animManager->getFinalBoneMatrices();
         // std::cout << transforms.size() << std::endl;
         this->model_shader->use();
@@ -379,13 +379,13 @@ void Client::draw() {
             }
             case ObjectType::FakeWall: {
                 glm::vec3 color;
-                if (sharedObject->trapInfo->triggered) {
-                    color = glm::vec3(0.4f, 0.5f, 0.7f);
-                } else {
-                    // off-color if not currently "visible"
-                    // TODO: change to translucent
+                // if (sharedObject->trapInfo->triggered) {
+                //     color = glm::vec3(0.4f, 0.5f, 0.7f);
+                // } else {
+                //     // off-color if not currently "visible"
+                //     // TODO: change to translucent
                     color = glm::vec3(0.5f, 0.6f, 0.8f);
-                }
+                // }
                 auto cube = std::make_unique<Cube>(color);
                 cube->scaleAbsolute(sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
