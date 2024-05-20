@@ -86,8 +86,6 @@ SpecificID ObjectManager::createObject(Object* object) {
 }
 
 bool ObjectManager::removeObject(EntityID globalID) {
-	std::cout << "REMOVING GLOBAL ID: " << globalID << std::endl;
-
 	//	Check that the given object exists
 	Object* object = this->objects.get(globalID);
 
@@ -109,7 +107,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		break;
 	case ObjectType::FireballTrap:
 	case ObjectType::SpikeTrap:
-		std::cout << "TRAP BEING REMOVED" << std::endl;
+	case ObjectType::TeleporterTrap:
+	case ObjectType::FakeWall:
+	case ObjectType::FloorSpike:
 		this->traps.remove(object->typeID);
 		break;
 	case ObjectType::Item:
@@ -129,6 +129,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Orb:
 		this->items.remove(object->typeID);
 		break;
+	default:
+		std::cerr << "FATAL: unknown ObjectType in ObjectManager::removeObject\n"
+			<< "You will probably seg fault soon... Good luck o7" << std::endl;
 	}
 
 	//	Remove object from cellToObjects hashmap
