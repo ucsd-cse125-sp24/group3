@@ -127,6 +127,14 @@ public:
 	SmartVector<Object*> getObjects();
 
 	/**
+	 * @brief Get a list of all objects in this game instance at the current
+	 * timestep that are MOVABLE.
+	 * @return SmartVector of Object pointers of all objects in the game
+	 * instance that are MOVABLE.
+	 */
+	SmartVector<Object*> getMovableObjects();
+
+	/**
 	 * @brief Get a list of all items in this game instance at the current
 	 * timestep.
 	 * @return SmartVector of Item pointers of all items in the game
@@ -253,6 +261,16 @@ private:
 	 */
 	SmartVector<Object *> objects;
 
+	/**
+	 * @brief SmartVector of Object pointers to all objects in the current
+	 * timestep of this game instance that are MOVABLE.
+	 *
+	 * The objects smart vector is indexed by each Object's global EntityID;
+	 * that is, the Object pointer at index x points to the Object with global
+	 * EntityID x.
+	 */
+	SmartVector<Object*> movableObjects;
+
 	/*	Type-specific object smart vectors	*/
 	
 	/**
@@ -295,5 +313,8 @@ private:
 	 */
 	SmartVector<Projectile *> projectiles;
 
+	/**
+	 * @brief The Dungeon Master
+	 */
 	DungeonMaster * dm; 
 };

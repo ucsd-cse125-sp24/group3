@@ -302,7 +302,7 @@ void ServerGameState::update(const EventList& events) {
 				surface->setDMHighlight(false);
 			}
 
-			std::vector<SolidSurface*> surfaces = solidSurfaceInGridCells[std::make_pair(cell->x, cell->y)];
+			std::vector<SolidSurface*> surfaces = solidSurfaceInGridCells[{cell->x, cell->y}];
 
 			this->previouslyHighlighted = surfaces;
 
@@ -401,7 +401,10 @@ void ServerGameState::updateMovement() {
 	const float INCREMENTAL_MOVE_RATIO = 1.0f / NUM_INCREMENTAL_STEPS;
 
 	//	Iterate through all game objects
-	SmartVector<Object*> gameObjects = this->objects.getObjects();
+	SmartVector<Object*> gameObjects = this->objects.getMovableObjects();
+
+	std::cout << "size of movable: " << gameObjects.size() << std::endl;
+
 	for (int i = 0; i < gameObjects.size(); i++) {
 		//	Get iterating game object
 		Object* object = gameObjects.get(i);
@@ -1051,7 +1054,6 @@ void ServerGameState::loadMaze(const Grid& grid) {
 		}
 	}
 
-
 	// Create Floor
 	for (int c = 0; c < this->grid.getColumns(); c++) {
 		for (int r = 0; r < this->grid.getRows(); r++) {
@@ -1069,7 +1071,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 			this->objects.createObject(floor);
 
 			if(freeSpots[r][c])
-				solidSurfaceInGridCells.insert(std::make_pair<std::pair<int, int>, std::vector<SolidSurface*>>(std::make_pair(c, r), { floor }));
+				solidSurfaceInGridCells.insert(std::make_pair<std::pair<int, int>, std::vector<SolidSurface*>>({c, r}, {floor}));
 		}
 	}
 }

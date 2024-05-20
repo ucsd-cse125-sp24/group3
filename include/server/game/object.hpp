@@ -102,6 +102,12 @@ public:
 	SpecificID typeID {};
 
 	/**
+	 * @brief Movable ID (used to index into the movable
+	 * objects vector in ServerGameState)
+	 */
+	MovableID movableID{};
+
+	/**
 	 * @brief Identifies this object's type (derived class)
 	 */
 	ObjectType type;

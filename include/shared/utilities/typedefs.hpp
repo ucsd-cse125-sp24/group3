@@ -14,3 +14,9 @@ using EntityID = uint32_t;
  * ServerGameState's ObjectManager)
  */
 using SpecificID = uint32_t;
+
+/**
+ * @brief Object ID within an movable SmartVector (used by
+ * ServerGameState's ObjectManager)
+ */
+using MovableID = uint32_t;

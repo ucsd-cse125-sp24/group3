@@ -79,6 +79,11 @@ SpecificID ObjectManager::createObject(Object* object) {
 			std::exit(1);
 	}
 
+	if (object->physics.movable) {
+		auto movableID = movableObjects.push(object);
+		object->movableID = movableID;
+	}
+
 	//	Move object to its given position
 	moveObject(object, object->physics.shared.corner);
 
@@ -148,6 +153,10 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		}
 	}
 
+	if (object->physics.movable) {
+		movableObjects.remove(object->movableID);
+	}
+
 	//	Delete object
 	delete object;
 
@@ -182,6 +191,10 @@ Object* ObjectManager::getObject(EntityID globalID) {
 
 SmartVector<Object*> ObjectManager::getObjects() {
 	return this->objects;
+}
+
+SmartVector<Object*> ObjectManager::getMovableObjects() {
+	return this->movableObjects;
 }
 
 /*	SpecificID object getters by type	*/
