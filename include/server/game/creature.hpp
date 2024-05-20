@@ -7,6 +7,7 @@
 class Creature : public Object {
 public:
 	SharedStats stats;
+	SharedStatuses statuses;
 
 	/**
 	 * @param type Type of Object

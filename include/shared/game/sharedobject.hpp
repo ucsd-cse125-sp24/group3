@@ -7,6 +7,7 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/stat.hpp"
 #include "shared/game/sharedmodel.hpp"
+#include "shared/game/status.hpp"
 #include <chrono>
 
 /**
@@ -18,7 +19,6 @@ enum class ObjectType {
 	SolidSurface,
 	Potion,
 	Player,
-	Enemy,
 	SpikeTrap,
 	FireballTrap,
 	Projectile,
@@ -27,6 +27,7 @@ enum class ObjectType {
 	ArrowTrap,
 	TeleporterTrap,
 	Spell,
+	Slime,
 	Item,
 	Exit,
 	Orb
@@ -51,6 +52,42 @@ struct SharedStats {
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
 		ar & health & speed;
 	}
+};
+
+struct SharedStatuses {
+public:
+	SharedStatuses() = default;
+
+	/**
+	 * @param st Status to add
+	 * @param len how many ticks it should be active
+	 */
+	void addStatus(Status st, size_t len);
+
+	/**
+	 * For the GUI, returns a list of every status string.
+	 * 
+	 * @returns All status strings, or "Unafflicted" if there are no statuses
+	 */
+	std::vector<std::string> getStatusStrings() const;
+
+	/**
+	 * counts down all status lengths by one tick
+	 */
+	void tickStatus();
+
+	/**
+	 * @param st Status to check for
+	 * @returns The amount of ticks remaining for a particular status. Returns 0 if the status is not applied
+	 */
+	size_t getStatusLength(Status st) const;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & map;
+	}
+
+private:
+	std::unordered_map<Status, size_t> map;
 };
 
 
@@ -155,6 +192,10 @@ struct SharedExit {
 	 * @brief Whether the given exit is open or closed
 	 */
 	bool open;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & open;
+	}
 };
 
 /**
@@ -174,13 +215,14 @@ public:
 	boost::optional<SharedTrapInfo> trapInfo;
 	boost::optional<SharedPlayerInfo> playerInfo;
 	boost::optional<SharedInventory> inventoryInfo;
+	boost::optional<SharedStatuses> statuses;
 	boost::optional<SharedExit> exit;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & statuses & exit;
 	}
 private:
 };

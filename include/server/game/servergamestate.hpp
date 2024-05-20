@@ -69,6 +69,11 @@ public:
 	 */
 	void markForDeletion(EntityID id);
 
+	/**
+	 * @brief mark an entity as updated
+	 */
+	void markAsUpdated(EntityID id);
+
 	//	TODO: Add specific update methods (E.g., updateMovement() to update
 	//	object movement)
 
@@ -91,6 +96,8 @@ public:
 	//	TODO: Add implementations of items
 	void updateItems();
 
+	void updateEnemies();
+
 	void doProjectileTicks();
 
 	void updateTraps();
@@ -98,6 +105,10 @@ public:
 	void handleDeaths();
 
 	void handleRespawns();
+
+	void tickStatuses();
+
+	void spawnEnemies();
 
 	void deleteEntities();
 
@@ -271,4 +282,9 @@ private:
 	 * collision detection) and updateMovement() (which clears it)
 	 */
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
+
+	/**
+	 * @brief number of enemies currently in the maze
+	 */
+	int alive_enemy_weight;
 };

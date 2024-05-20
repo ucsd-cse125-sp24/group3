@@ -1,6 +1,7 @@
 #include "server/game/servergamestate.hpp"
 #include "server/game/spiketrap.hpp"
 #include "server/game/fireballtrap.hpp"
+#include "server/game/slime.hpp"
 #include "server/game/floorspike.hpp"
 #include "server/game/fakewall.hpp"
 #include "server/game/teleportertrap.hpp"
@@ -258,15 +259,19 @@ void ServerGameState::update(const EventList& events) {
 		}
 	}
 
+
 	//	TODO: fill update() method with updating object movement
 	doProjectileTicks();
 	updateMovement();
+	updateEnemies();
 	updateItems();
 	updateTraps();
 	handleDeaths();
 	handleRespawns();
 	deleteEntities();
-
+	spawnEnemies();
+	tickStatuses();
+	
 	//	Increment timestep
 	this->timestep++;
 
@@ -288,6 +293,11 @@ void ServerGameState::update(const EventList& events) {
 
 void ServerGameState::markForDeletion(EntityID id) {
 	this->entities_to_delete.insert(id);
+}
+
+
+void ServerGameState::markAsUpdated(EntityID id) {
+	this->updated_entities.insert(id);
 }
 
 void ServerGameState::updateMovement() {
@@ -325,6 +335,16 @@ void ServerGameState::updateMovement() {
 			object->physics.velocity * object->physics.velocityMultiplier;
 		totalMovementStep.x *= object->physics.nauseous;
 		totalMovementStep.z *= object->physics.nauseous;
+
+		auto creature = dynamic_cast<Creature*>(object);
+		if (creature != nullptr) {
+			if (creature->statuses.getStatusLength(Status::Slimed) > 0) {
+				totalMovementStep *= 0.5f;
+			}
+			if (creature->statuses.getStatusLength(Status::Frozen) > 0) {
+				totalMovementStep *= 0.0f;
+			}
+		}
 
 		//	If the object doesn't have a collider, update its movement without
 		//	collision detection
@@ -488,7 +508,10 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				//	Exception - if the other object is a floor spike trap,
 				//	perform collision handling but do not return true as the
 				//	trap doesn't affect the movement of the object it hits
-				if (otherObj->type == ObjectType::FloorSpike || otherObj->type == ObjectType::Potion || otherObj->type == ObjectType::Spell) {
+				if (otherObj->type == ObjectType::FloorSpike || 
+					otherObj->type == ObjectType::Potion || 
+					otherObj->type == ObjectType::Spell ||
+					otherObj->type == ObjectType::Slime) {
 					continue;
 				}
 
@@ -498,6 +521,34 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 	}
 
 	return false;
+}
+
+void ServerGameState::spawnEnemies() {
+	// temp numbers, to tune later...
+	// 1/300 chance every 30ms -> expected spawn every 9s 
+	// TODO 1: small slimes are weighted the same as large slimes
+	// TODO 2: check that no collision in the cell you are spawning in
+	if (randomInt(1, 300) == 1 && this->objects.getEnemies().numElements() < MAX_ALIVE_ENEMIES) {
+		int cols = this->grid.getColumns();
+		int rows = this->grid.getRows();
+
+		glm::ivec2 random_cell;
+		while (true) {
+			random_cell.x = randomInt(0, cols - 1);
+			random_cell.y = randomInt(0, rows - 1); // corresponds to z in the world
+
+			if (this->grid.getCell(random_cell.x, random_cell.y)->type == CellType::Empty) {
+				break;
+			}
+		}
+
+		int size = randomInt(2, 4);
+		this->objects.createObject(new Slime(
+			glm::vec3(random_cell.x * Grid::grid_cell_width, 0, random_cell.y * Grid::grid_cell_width),
+			glm::vec3(0, 0, 0),
+			size
+		));
+	}
 }
 
 void ServerGameState::updateItems() {
@@ -519,6 +570,19 @@ void ServerGameState::updateItems() {
 					this->updated_entities.insert(pot->globalID);
 				}
 			}
+		}
+	}
+}
+
+void ServerGameState::updateEnemies() {
+	auto enemies = this->objects.getEnemies();
+
+	for (int e = 0; e < enemies.size(); e++){
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		if (enemy->doBehavior(*this)) {
+			this->updated_entities.insert(enemy->globalID);
 		}
 	}
 }
@@ -621,7 +685,22 @@ void ServerGameState::handleDeaths() {
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
 		}
 	}
+
+	auto enemies = this->objects.getEnemies();
+	for (int e = 0; e < enemies.size(); e++) {
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		if (enemy->stats.health.current() <= 0) {
+			this->updated_entities.insert(enemy->globalID);
+			if (enemy->doDeath(*this)) {
+				this->entities_to_delete.insert(enemy->globalID);
+				this->alive_enemy_weight--;
+			}
+		}
+	}
 }
+
 
 void ServerGameState::handleRespawns() {
 	auto players = this->objects.getPlayers();
@@ -649,6 +728,23 @@ void ServerGameState::deleteEntities() {
 
 	std::unordered_set<EntityID> empty;
 	std::swap(this->entities_to_delete, empty);
+}
+
+void ServerGameState::tickStatuses() {
+	auto players = this->objects.getPlayers();
+	for (auto p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		player->statuses.tickStatus();
+	}
+	auto enemies = this->objects.getEnemies();
+	for (auto e = 0; e < players.size(); e++) {
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		enemy->statuses.tickStatus();
+	}
 }
 
 unsigned int ServerGameState::getTimestep() const {
@@ -858,8 +954,11 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				case CellType::Enemy: {
-					this->objects.createObject(new Enemy(
-						this->grid.gridCellCenterPosition(cell), glm::vec3(0.0f)));
+					this->objects.createObject(new Slime(
+						this->grid.gridCellCenterPosition(cell),
+						glm::vec3(0.0f),
+						3
+					));
 					break;
 				}
 				case CellType::Wall:

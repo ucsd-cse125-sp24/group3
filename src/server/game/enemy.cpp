@@ -6,11 +6,8 @@ SharedObject Enemy::toShared() {
     return so;
 }
 
-Enemy::Enemy(glm::vec3 corner, glm::vec3 facing):
-    Creature(ObjectType::Enemy, corner, facing, ModelType::WarrenBear, SharedStats(
-        Stat(0, 100, 100),
-        Stat(0, 10, 5)
-    ))
+Enemy::Enemy(glm::vec3 corner, glm::vec3 facing, ObjectType type, ModelType model, SharedStats&& stats):
+    Creature(type, corner, facing, model, std::move(stats))
 {}
 
 Enemy::~Enemy() {}

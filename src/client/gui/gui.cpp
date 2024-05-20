@@ -479,6 +479,7 @@ void GUI::_sharedGameHUD() {
     }
 
     this->addWidget(std::move(frameflex));
+
 }
 
 void GUI::_layoutGameHUD() {
@@ -499,6 +500,21 @@ void GUI::_layoutGameHUD() {
     );
     this->addWidget(std::move(health_txt));
 
+    auto status_flex = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(20), font::getRelativePixels(20)),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
+    );
+
+    for (const std::string& status: self->statuses->getStatusStrings()) {
+        status_flex->push(widget::DynText::make(
+            status,
+            fonts,
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+        ));
+    }
+
+    this->addWidget(std::move(status_flex));
     // Flexbox for item durations
     auto durationFlex = widget::Flexbox::make(
         glm::vec2(10.0f, FRAC_WINDOW_HEIGHT(1, 2)),
@@ -531,6 +547,14 @@ void GUI::_layoutGameHUD() {
     }
     this->addWidget(std::move(durationFlex));
 
+    // display crosshair
+    auto crosshair = this->images.getImg(img::ImgID::Crosshair);
+
+    this->addWidget(widget::StaticImg::make(
+        glm::vec2((WINDOW_WIDTH / 2.0f) - (crosshair.width / 2.0f),
+            (WINDOW_HEIGHT / 2.0f) - (crosshair.height / 2.0f)),
+        this->images.getImg(img::ImgID::Crosshair)
+    ));
     //  Display orb state here?
 
     //  Orb state breakdown:
