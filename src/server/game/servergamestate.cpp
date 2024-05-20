@@ -1055,7 +1055,9 @@ void ServerGameState::loadMaze(const Grid& grid) {
 	// Create Floor
 	for (int c = 0; c < this->grid.getColumns(); c++) {
 		for (int r = 0; r < this->grid.getRows(); r++) {
-			//TODO: skip outside maze 
+			if(this->grid.getCell(c, r)->type == CellType::OutsideTheMaze) 
+				continue;
+
 			glm::vec3 corner = glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width);
 
 			SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
