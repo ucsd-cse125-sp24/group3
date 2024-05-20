@@ -49,6 +49,7 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::ArrowTrap:
 		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
+			std::cout << "DM PLACED A TRAP! " << "global ID: " << object->globalID << " specific ID: " << object->typeID << std::endl;
 			break;
 		case ObjectType::Orb:
 			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
@@ -85,11 +86,14 @@ SpecificID ObjectManager::createObject(Object* object) {
 }
 
 bool ObjectManager::removeObject(EntityID globalID) {
+	std::cout << "REMOVING GLOBAL ID: " << globalID << std::endl;
+
 	//	Check that the given object exists
 	Object* object = this->objects.get(globalID);
 
 	if (object == nullptr) {
 		//	Object with the given index doesn't exist
+		std::cout << "obj doesn't exist?" << std::endl;
 		return false;
 	}
 
@@ -105,6 +109,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		break;
 	case ObjectType::FireballTrap:
 	case ObjectType::SpikeTrap:
+		std::cout << "TRAP BEING REMOVED" << std::endl;
 		this->traps.remove(object->typeID);
 		break;
 	case ObjectType::Item:

@@ -373,16 +373,19 @@ void GUI::_sharedGameHUD() {
     auto self_eid = client->session->getInfo().client_eid;
     auto is_dm = client->session->getInfo().is_dungeon_master;
 
-    if (!self_eid.has_value()) {
+    // if one doesn't have, the other shouldn't
+    // but just to be safe check both
+    if (!self_eid.has_value() || !is_dm.has_value()) {
         return;
     }
 
     auto self = client->gameState.objects.at(*self_eid);
-    auto inventory_size = self->inventoryInfo->inventory_size;
-    auto selected = self->inventoryInfo->selected - 1;
+
+    auto inventory_size = !is_dm.value() ? self->inventoryInfo->inventory_size : self->trapInventoryInfo->inventory_size;
+    auto selected = !is_dm.value() ? self->inventoryInfo->selected - 1 : self->trapInventoryInfo->selected - 1;
 
     auto itemString = "";
-    if (is_dm.has_value() && !is_dm) {
+    if (!is_dm.value()) {
         if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
             switch (self->inventoryInfo->inventory[selected]) {
             case ModelType::HealthPotion: {
@@ -413,9 +416,9 @@ void GUI::_sharedGameHUD() {
             }
         }
     }
-    else if (is_dm.has_value() && is_dm) { // DM hotbar
-        if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
-            switch (self->inventoryInfo->inventory[selected]) {
+    else { // DM hotbar
+        if (self->trapInventoryInfo->inventory[selected] != ModelType::Frame) {
+            switch (self->trapInventoryInfo->inventory[selected]) {
             case ModelType::FloorSpikeFull: {
                 itemString = "Floor Spike Full";
                 break;
@@ -443,41 +446,52 @@ void GUI::_sharedGameHUD() {
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
     );
     for (int i = 0; i < inventory_size; i++) {
-        if (self->inventoryInfo->inventory[i] != ModelType::Frame) {
-            switch (self->inventoryInfo->inventory[i]) {
-            case ModelType::HealthPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion), 2));
-                break;
+        if (!is_dm.value()) {
+            if (self->inventoryInfo->inventory[i] != ModelType::Frame) {
+                switch (self->inventoryInfo->inventory[i]) {
+                case ModelType::HealthPotion: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion), 2));
+                    break;
+                }
+                case ModelType::NauseaPotion:
+                case ModelType::InvincibilityPotion: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::UnknownPotion), 2));
+                    break;
+                }
+                case ModelType::InvisibilityPotion: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion), 2));
+                    break;
+                }
+                case ModelType::FireSpell: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FireSpell), 2));
+                    break;
+                }
+                case ModelType::HealSpell: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell), 2));
+                    break;
+                }
+                case ModelType::Orb: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                }
             }
-            case ModelType::NauseaPotion:
-            case ModelType::InvincibilityPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::UnknownPotion), 2));
-                break;
-            }
-            case ModelType::InvisibilityPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion), 2));
-                break;
-            }
-            case ModelType::FireSpell: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FireSpell), 2));
-                break;
-            }
-            case ModelType::HealSpell: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell), 2));
-                break;
-            }
-            case ModelType::Orb: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
-                break;
-            }
-            case ModelType::FloorSpikeFull: { // CHANGE
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
-                break;
-            }
+            else {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
             }
         }
         else {
-            itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+            if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
+                switch (self->trapInventoryInfo->inventory[i]) {
+                case ModelType::FloorSpikeFull: { // CHANGE
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                }
+            }
+            else {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+            }
         }
     }
 

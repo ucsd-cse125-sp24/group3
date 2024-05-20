@@ -4,7 +4,7 @@
 
 SharedObject DungeonMaster::toShared() {
     auto so = Creature::toShared();
-    so.inventoryInfo = this->sharedInventory;
+    so.trapInventoryInfo = this->sharedTrapInventory;
     return so;
 }
 
@@ -12,14 +12,12 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
     Creature(ObjectType::DungeonMaster, corner, facing, ModelType::Cube, SharedStats(
     Stat(0, 100, 100),
     Stat(0, 10, 5)
-)), sharedInventory(SharedInventory{ .selected = 1, .inventory_size = TRAP_INVENTORY_SIZE, .inventory = std::vector<ModelType>(TRAP_INVENTORY_SIZE, ModelType::Frame) }) {
+)), sharedTrapInventory(SharedTrapInventory{ .selected = 1, .inventory_size = TRAP_INVENTORY_SIZE, .inventory = std::vector<ModelType>(TRAP_INVENTORY_SIZE, ModelType::Frame) }) {
     this->physics.feels_gravity = false;
     this->placedTraps = 0;
 
     // TODO: fill in rest of traps
-    this->sharedInventory.inventory[0] = ModelType::FloorSpikeFull;
-
-    this->inventory = std::vector<SpecificID>(TRAP_INVENTORY_SIZE, -1);
+    this->sharedTrapInventory.inventory[0] = ModelType::FloorSpikeFull;
 }
 
 int DungeonMaster::getPlacedTraps() {

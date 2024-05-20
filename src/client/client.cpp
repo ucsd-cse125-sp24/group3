@@ -258,7 +258,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
         if (this->session->getInfo().is_dungeon_master.value() && is_pressed_p && is_left_mouse_down) {
             auto self = this->gameState.objects.at(eid);
 
-            auto selectedTrap = self->inventoryInfo->inventory[self->inventoryInfo->selected - 1];
+            auto selectedTrap = self->trapInventoryInfo->inventory[self->trapInventoryInfo->selected - 1];
 
             switch (selectedTrap) {
             case ModelType::FloorSpikeFull:

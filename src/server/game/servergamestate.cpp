@@ -228,12 +228,12 @@ void ServerGameState::update(const EventList& events) {
 			if (is_dungeon_master) {
 				DungeonMaster* dm = this->objects.getDM();
 
-				if (dm->sharedInventory.selected + selectItemEvent.itemNum == 0)
-					dm->sharedInventory.selected = TRAP_INVENTORY_SIZE;
-				else if (dm->sharedInventory.selected + selectItemEvent.itemNum == TRAP_INVENTORY_SIZE + 1)
-					dm->sharedInventory.selected = 1;
+				if (dm->sharedTrapInventory.selected + selectItemEvent.itemNum == 0)
+					dm->sharedTrapInventory.selected = TRAP_INVENTORY_SIZE;
+				else if (dm->sharedTrapInventory.selected + selectItemEvent.itemNum == TRAP_INVENTORY_SIZE + 1)
+					dm->sharedTrapInventory.selected = 1;
 				else
-					dm->sharedInventory.selected = dm->sharedInventory.selected + selectItemEvent.itemNum;
+					dm->sharedTrapInventory.selected = dm->sharedTrapInventory.selected + selectItemEvent.itemNum;
 
 				this->updated_entities.insert(dm->globalID);
 			}
@@ -271,7 +271,8 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
-		case EventType::TrapPlacement: {
+		case EventType::TrapPlacement: 
+		{
 			auto trapPlacementEvent = boost::get<TrapPlacementEvent>(event.data);
 
 			Grid& currGrid = this->getGrid();
@@ -318,7 +319,15 @@ void ServerGameState::update(const EventList& events) {
 
 				if (trapsPlaced == MAX_TRAPS) {
 					std::cout << "CAN'T PLACE ANYMORE TRAPS!" << std::endl;
-					return;
+					break;
+				}
+
+				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
+
+				// in cooldown and haven't elapsed enough time yet
+				if (it != dm->sharedTrapInventory.trapsInCooldown.end() && 
+					std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(it->second)) < std::chrono::seconds(TRAP_COOL_DOWN)) { // trap is in cooldown
+					break;
 				}
 
 				glm::vec3 corner(
@@ -335,16 +344,21 @@ void ServerGameState::update(const EventList& events) {
 						cell->y* Grid::grid_cell_width
 					);
 
+					auto curr_time = std::chrono::system_clock::now();
+
 					Trap* trap = createTrap(trapPlacementEvent.cell, corner);
 					trap->setIsDMTrap(true);
-					trap->setExpiration(std::chrono::system_clock::now() + std::chrono::seconds(10));
+					trap->setExpiration(curr_time + std::chrono::seconds(10));
 
 					this->objects.createObject(trap);
 					this->updated_entities.insert(trap->globalID);
-				}
 
-				dm->setPlacedTraps(trapsPlaced + 1);
+					dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
+
+					dm->setPlacedTraps(trapsPlaced + 1);
+				}
 			}
+			break;
 		}
 
 		// default:
@@ -664,6 +678,13 @@ void ServerGameState::updateTraps() {
 				continue;
 			}
 		}
+
+		if (trap == nullptr)
+			std::cout << "TRAP IS NULLPTR?" << std::endl;
+		
+		if (this == nullptr)
+			std::cout << "THIS IS NULLPTR??" << std::endl;
+
 		if (trap->shouldTrigger(*this)) {
 			trap->trigger(*this);
 			this->updated_entities.insert(trap->globalID);

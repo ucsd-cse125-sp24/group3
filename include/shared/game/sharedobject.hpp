@@ -7,6 +7,7 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/stat.hpp"
 #include "shared/game/sharedmodel.hpp"
+#include "shared/game/celltype.hpp"
 #include <chrono>
 
 /**
@@ -67,6 +68,18 @@ struct SharedInventory {
 		ar& selected& inventory_size& inventory& usedItems;
 	}
 }; 
+
+struct SharedTrapInventory {
+	// need to share itemtype data...
+	int selected;
+	int inventory_size;
+	std::vector<ModelType> inventory;
+	std::unordered_map<CellType, std::time_t> trapsInCooldown;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& selected& inventory_size& inventory& trapsInCooldown;
+	}
+};
 
 struct SharedItemInfo {
 	bool held; // for rendering
@@ -164,12 +177,13 @@ public:
 	boost::optional<SharedTrapInfo> trapInfo;
 	boost::optional<SharedPlayerInfo> playerInfo;
 	boost::optional<SharedInventory> inventoryInfo;
+	boost::optional<SharedTrapInventory> trapInventoryInfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & trapInventoryInfo;
 	}
 private:
 };

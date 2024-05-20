@@ -58,3 +58,4 @@
 #define MAX_TRAPS 10
 #define TRAP_INVENTORY_SIZE 10
 #define TRAP_TIME 10
+#define TRAP_COOL_DOWN 5
