@@ -4,8 +4,9 @@
 #include "server/game/fireballtrap.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/potion.hpp"
-#include "server/game/spell.hpp"
+#include "server/game/exit.hpp"
 #include "server/game/orb.hpp"
+#include "server/game/spell.hpp"
 
 #include <memory>
 
@@ -50,9 +51,6 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
 			break;
-		case ObjectType::Orb:
-			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
-			break;
 		case ObjectType::Spell:
 			object->typeID = this->items.push(dynamic_cast<Spell*>(object));
 			break;
@@ -67,6 +65,12 @@ SpecificID ObjectManager::createObject(Object* object) {
 			break;
         case ObjectType::Enemy:
 			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
+			break;
+		case ObjectType::Exit:
+			object->typeID = this->exits.push(dynamic_cast<Exit*>(object));
+			break;
+		case ObjectType::Orb:
+			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
 			break;
         default:
 			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << 
@@ -119,6 +123,12 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Potion:
 	case ObjectType::Orb:
 		this->items.remove(object->typeID);
+		break;
+	case ObjectType::Exit:
+		this->exits.remove(object->typeID);
+		break;
+	case ObjectType::SolidSurface:
+		this->solid_surfaces.remove(object->typeID);
 		break;
 	}
 
@@ -219,6 +229,10 @@ SmartVector<Trap*> ObjectManager::getTraps() {
 
 SmartVector<Projectile*> ObjectManager::getProjectiles() {
 	return this->projectiles;
+}
+
+SmartVector<Exit*> ObjectManager::getExits() {
+	return this->exits;
 }
 
 /*	Object Movement	*/

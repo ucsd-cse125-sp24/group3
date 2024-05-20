@@ -26,6 +26,7 @@ set(FILES
     game/mazegenerator.cpp
     game/teleportertrap.cpp
     game/spell.cpp
+    game/exit.cpp
     game/orb.cpp
 )
 
