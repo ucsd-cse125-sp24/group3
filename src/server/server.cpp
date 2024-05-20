@@ -88,6 +88,24 @@ void Server::sendUpdateToAllClients(Event event) {
     }
 }
 
+void Server::sendLightSourceUpdates(EntityID playerID) {
+    UpdateLightSourcesEvent event_data;
+    event_data.lightSources[0] = 123123123;
+    // TODO: add sets to servergamestate
+
+    auto& by_id = this->sessions.get<IndexByID>();
+    auto session_ref = by_id.find(playerID);
+    if (session_ref != by_id.end()) {
+        auto session = session_ref->session;
+        if (!session.expired()) {
+            session.lock()->sendEventAsync(Event(
+                this->world_eid,
+                EventType::UpdateLightSources,
+                event_data));
+        }
+    }
+}
+
 std::chrono::milliseconds Server::doTick() {
     auto start = std::chrono::high_resolution_clock::now();
 

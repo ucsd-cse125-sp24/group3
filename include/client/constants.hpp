@@ -9,9 +9,3 @@
 #define UNIT_WINDOW_HEIGHT 1000
 
 #define PLAYER_EYE_LEVEL 2.35f
-
-/** maximum number of supported point lights.
- *  must match the corresponding macro 
- *  in the fragment shader
- */
-#define MAX_POINT_LIGHTS 16

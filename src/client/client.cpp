@@ -294,28 +294,30 @@ void Client::processServerInput(boost::asio::io_context& context) {
             if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
                 this->gui_state = GUIState::GAME_HUD;
             }
+        } else if (event.type == EventType::UpdateLightSources) {
+            this->closest_light_sources = boost::get<UpdateLightSourcesEvent>(event.data);
         }
     }
 }
 
 void Client::draw() {
-    // collect all light sources into a sorted set to determine which ones are closest to the
-    // player. this is needed since the shader needs to have a static amount of memory allocated 
-    // and can't grow it as needed.
+    // // collect all light sources into a sorted set to determine which ones are closest to the
+    // // player. this is needed since the shader needs to have a static amount of memory allocated 
+    // // and can't grow it as needed.
     std::set<SharedObject, CompareLightPos> closestPointLights(CompareLightPos(this->cam->getPos()));
-    for (const auto& [id, sharedObject] : this->gameState.objects) {
-        if (!sharedObject.has_value()) {
-            continue;
-        }
+    // for (const auto& [id, sharedObject] : this->gameState.objects) {
+    //     if (!sharedObject.has_value()) {
+    //         continue;
+    //     }
 
-        if (sharedObject->pointLightInfo.has_value() &&
-            sharedObject->type == ObjectType::Torchlight) {
-            auto [iter, ok] = closestPointLights.insert(sharedObject.value());
-            if (!ok) {
-                std::cout << "failed to insert torchlight of ID to closest light sources set" <<  sharedObject->globalID << std::endl;
-            }
-        }
-    }
+    //     if (sharedObject->pointLightInfo.has_value() &&
+    //         sharedObject->type == ObjectType::Torchlight) {
+    //         auto [iter, ok] = closestPointLights.insert(sharedObject.value());
+    //         if (!ok) {
+    //             std::cout << "failed to insert torchlight of ID to closest light sources set" <<  sharedObject->globalID << std::endl;
+    //         }
+    //     }
+    // }
 
     for (auto& [id, sharedObject] : this->gameState.objects) {
 
