@@ -4,6 +4,7 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/collider.hpp"
+#include "shared/audio/constants.hpp"
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -75,9 +76,9 @@ void FireballTrap::trigger(ServerGameState& state) {
     state.soundTable().addNewSoundSource(SoundSource(
         ServerSFX::FireballShoot,
         this->physics.shared.getCenterPosition(),
-        100,
-        20,
-        10
+        MEDIUM_VOLUME,
+        MEDIUM_DIST,
+        MEDIUM_ATTEN
     ));
 }
 

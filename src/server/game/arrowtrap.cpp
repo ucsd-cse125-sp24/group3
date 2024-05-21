@@ -4,6 +4,7 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/collider.hpp"
+#include "shared/audio/constants.hpp"
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -68,6 +69,14 @@ void ArrowTrap::trigger(ServerGameState& state) {
         this->physics.shared.facing, this->dir));
 
     this->shoot_time = std::chrono::system_clock::now();
+
+    state.soundTable().addNewSoundSource(SoundSource(
+        ServerSFX::ArrowShoot,
+        this->physics.shared.getCenterPosition(),
+        MEDIUM_VOLUME,
+        MEDIUM_DIST,
+        MEDIUM_ATTEN
+    ));
 }
 
 bool ArrowTrap::shouldReset(ServerGameState& state) {
