@@ -30,11 +30,16 @@ enum class ServerSFX {
     ArrowImpact,
     FireballShoot,
     FireballImpact,
+    SlimeJump,
+    SlimeLand,
+    PlayerJump,
+    PlayerLand,
     // make sure to add to macro below!
 };
 
 #define GET_SERVER_SFXS() { \
     ServerSFX::ArrowShoot, ServerSFX::FireballShoot, ServerSFX::ArrowImpact, ServerSFX::FireballImpact, \
+    ServerSFX::SlimeJump, ServerSFX::SlimeLand, ServerSFX::PlayerJump, ServerSFX::PlayerLand, \
 }
 
 // const std::unordered_map<ServerSound, size_t> serverSoundTickLengths = {

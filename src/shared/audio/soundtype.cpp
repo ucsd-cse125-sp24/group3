@@ -24,6 +24,14 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "fireball_shoot_mono.wav").string(); 
         case ServerSFX::FireballImpact:
             return (dir / "fireball_impact_mono.wav").string(); 
+        case ServerSFX::SlimeJump:
+            return (dir / "slime_jump_mono.wav").string();
+        case ServerSFX::SlimeLand:
+            return (dir / "slime_land_mono.wav").string();
+        case ServerSFX::PlayerJump:
+            return (dir / "player_jump_mono.wav").string();
+        case ServerSFX::PlayerLand:
+            return (dir / "player_land_mono.wav").string();
     }
 }
 

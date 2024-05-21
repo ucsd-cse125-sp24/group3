@@ -13,6 +13,7 @@
 #include "server/game/orb.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/audio/constants.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 #include "shared/network/constants.hpp"
@@ -181,6 +182,13 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::Jump: {
 				if (obj->physics.velocity.y != 0) { break; }
 				obj->physics.velocity.y += (startAction.movement * JUMP_SPEED / 2.0f).y;
+				this->sound_table.addNewSoundSource(SoundSource(
+					ServerSFX::PlayerJump,
+					obj->physics.shared.corner,
+					MEDIUM_VOLUME,
+					MEDIUM_DIST,
+					MEDIUM_ATTEN
+				));
 				break;
 			}
 			case ActionType::Sprint: {
@@ -331,6 +339,8 @@ void ServerGameState::updateMovement() {
 		if (object == nullptr || !(object->physics.movable))
 			continue;
 
+		glm::vec3 starting_corner_pos = object->physics.shared.corner;
+
 		//	Object is movable - for now, add to updated entities set
 		this->updated_entities.insert(object->globalID);
 
@@ -439,6 +449,15 @@ void ServerGameState::updateMovement() {
 		//	Vertical movement
 		//	Clamp object to floor if corner's y position is lower than the floor
 		if (object->physics.shared.corner.y < 0) {
+			if (starting_corner_pos.y != 0.0f && object->type == ObjectType::Player) {
+				this->sound_table.addNewSoundSource(SoundSource(
+					ServerSFX::PlayerLand,
+					object->physics.shared.corner,
+					MEDIUM_VOLUME,
+					MEDIUM_DIST,
+					MEDIUM_ATTEN
+				));
+			}
 			object->physics.shared.corner.y = 0;
 		}
 
