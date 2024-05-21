@@ -16,4 +16,7 @@ enum class ModelType {
 	TeleportSpell,
 	Frame,
 	Orb,
+	Dagger,
+	Katana,
+	Hammer,
 };

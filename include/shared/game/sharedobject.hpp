@@ -30,7 +30,8 @@ enum class ObjectType {
 	Slime,
 	Item,
 	Exit,
-	Orb
+	Orb,
+	Weapon,
 };
 
 /**

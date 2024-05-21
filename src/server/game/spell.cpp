@@ -36,7 +36,7 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
 
     glm::vec3 spell_origin(
         player->physics.shared.getCenterPosition().x,
-        1.5f,
+        3.3f,
         player->physics.shared.getCenterPosition().z
     );
 

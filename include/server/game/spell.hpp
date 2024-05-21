@@ -17,8 +17,8 @@ class Spell : public Item {
 public:
 
     /**
-     * @param corner     Corner position of the Potion
-     * @param dimensions Dimensions applied for the Potion
+     * @param corner     Corner position of the Spell
+     * @param dimensions Dimensions applied for the Spell
      * @param type       Type of Spell
      */
     Spell(glm::vec3 corner, glm::vec3 dimensions, SpellType type);
