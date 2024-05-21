@@ -27,6 +27,7 @@ enum class CellType {
 	Orb,
 	OutsideTheMaze,
 	TeleporterTrap,
+	Exit,
 	Unknown
 };
 

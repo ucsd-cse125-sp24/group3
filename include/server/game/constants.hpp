@@ -11,10 +11,9 @@
 #define MAX_TRAPS 10
 #define MAX_SPELLS 4
 
-/*	Constants	*/
-#define	FIRST_TIMESTEP			0
-#define TIMESTEP_LEN			std::chrono::milliseconds(30)
-#define	MAX_PLAYERS				4
+
+/* ServerGameState Constants */
+#define MAX_ALIVE_ENEMIES 15
 
 /*	Maze Constants */
 #define	MAX_MAZE_COLUMNS		10000
@@ -30,8 +29,8 @@
 #define	INVENTORY_SIZE			4
 
 /*	Spell Constants	*/
-#define	FIRE_LIMIT				5
-#define	HEAL_LIMIT				5
+#define	FIRE_LIMIT				50
+#define	HEAL_LIMIT				50
 #define	TELEPORT_LIMIT			1
 #define	TELEPORT_RANGE			15
 
