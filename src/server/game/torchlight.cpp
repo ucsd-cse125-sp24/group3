@@ -57,8 +57,8 @@ void Torchlight::init() {
     } else {
         // if flickering randomize initial  
         // animation step to offset flickering
-        this->curr_step = random(0.0f, 1.0f);
-        this->flickering_speed = random(0.005f, 0.01f);
+        this->curr_step = randomDouble(0.0f, 1.0f);
+        this->flickering_speed = randomDouble(0.005f, 0.01f);
     }
 }
 

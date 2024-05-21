@@ -17,6 +17,8 @@
 class Trap; 
 class Projectile;
 class Item;
+class Exit;
+class Orb;
 
 
 class ObjectManager {
@@ -163,7 +165,7 @@ public:
 	 * @brief Get a list of all Traps in this game instance at the current
 	 * timestep.
 	 * @return SmartVector of Trap pointers of all Trap objects in the game
-	 * instance
+	 * instance.
 	 */
 	SmartVector<Trap*> getTraps();
 
@@ -171,7 +173,7 @@ public:
 	 * @brief Get a list of all Projectiles in this game instance at the current
 	 * timestep.
 	 * @return SmartVector of Projectile pointers of all Projectile objects in the game
-	 * instance
+	 * instance.
 	 */
 	SmartVector<Projectile*> getProjectiles();
 
@@ -182,6 +184,14 @@ public:
 	 * instance
 	 */
 	SmartVector<Torchlight*> getTorchlights();
+
+    /**
+	 * @brief Get a list of all Exits in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Exit pointers of all Exit objects in the game
+	 * instance.
+	 */
+	SmartVector<Exit*> getExits();
 
 	/*	Object Movement	*/
 	
@@ -309,4 +319,10 @@ private:
 	 * ObjectType::Projectile.
 	 */
 	SmartVector<Projectile *> projectiles;
+
+	/**
+	 * @brief SmartVector of Exit pointers to all objects whose ObjectType is
+	 * ObjectType::Exit.
+	 */
+	SmartVector<Exit*> exits;
 };

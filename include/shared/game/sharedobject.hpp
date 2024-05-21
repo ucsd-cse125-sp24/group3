@@ -8,6 +8,7 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/stat.hpp"
 #include "shared/game/sharedmodel.hpp"
+#include "shared/game/status.hpp"
 #include <chrono>
 
 /**
@@ -29,8 +30,10 @@ enum class ObjectType {
 	ArrowTrap,
 	TeleporterTrap,
 	Spell,
-	Orb,
-	Item
+	Slime,
+	Item,
+	Exit,
+	Orb
 };
 
 /**
@@ -54,6 +57,42 @@ struct SharedStats {
 	}
 };
 
+struct SharedStatuses {
+public:
+	SharedStatuses() = default;
+
+	/**
+	 * @param st Status to add
+	 * @param len how many ticks it should be active
+	 */
+	void addStatus(Status st, size_t len);
+
+	/**
+	 * For the GUI, returns a list of every status string.
+	 * 
+	 * @returns All status strings, or "Unafflicted" if there are no statuses
+	 */
+	std::vector<std::string> getStatusStrings() const;
+
+	/**
+	 * counts down all status lengths by one tick
+	 */
+	void tickStatus();
+
+	/**
+	 * @param st Status to check for
+	 * @returns The amount of ticks remaining for a particular status. Returns 0 if the status is not applied
+	 */
+	size_t getStatusLength(Status st) const;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & map;
+	}
+
+private:
+	std::unordered_map<Status, size_t> map;
+};
+
 
 using UsedItemsMap = std::unordered_map<SpecificID, std::pair<ModelType, double>>;
 
@@ -64,8 +103,13 @@ struct SharedInventory {
 	std::vector<ModelType> inventory;
 	UsedItemsMap usedItems;
 
+	/**
+	 * @brief Denotes whether this player is carrying the Orb in their inventory
+	 */
+	bool hasOrb;
+
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& selected& inventory_size& inventory& usedItems;
+		ar& selected& inventory_size& inventory & hasOrb & usedItems;
 	}
 }; 
 
@@ -161,6 +205,17 @@ struct SharedPointLightInfo {
 	DEF_SERIALIZE(Archive& ar, const int version) {
 		ar & intensity & ambient_color & diffuse_color & specular_color &
             attenuation_linear & attenuation_quadratic;
+    }
+};
+
+struct SharedExit {
+	/**
+	 * @brief Whether the given exit is open or closed
+	 */
+	bool open;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & open;
 	}
 };
 
@@ -182,12 +237,14 @@ public:
 	boost::optional<SharedPlayerInfo> playerInfo;
 	boost::optional<SharedInventory> inventoryInfo;
     boost::optional<SharedPointLightInfo> pointLightInfo;
+	boost::optional<SharedStatuses> statuses;
+	boost::optional<SharedExit> exit;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & pointLightInfo;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & pointLightInfo & statuses & exit;
 	}
 private:
 };

@@ -4,6 +4,7 @@ set(FILES
     game/event.cpp
     game/sharedobject.cpp
     game/sharedgamestate.cpp
+    game/status.cpp
 
     network/session.cpp
 

@@ -12,7 +12,6 @@
 struct GameConfig {
     /// @brief Game config options
     struct {
-        std::chrono::milliseconds timestep_length_ms;
         struct {
             /**
              * @brief Path of the directory (contained in the repository

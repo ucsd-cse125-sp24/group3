@@ -1,9 +1,8 @@
 {
     "game": {
-      "timestep_length_ms": 30,
       "maze": {
         "directory": "maps",
-        "procedural": false,
+        "procedural": true,
         "maze_file": "test/itemRoom.maze"
       }
     },
@@ -12,12 +11,12 @@
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "Tyler's Hellhole",
+        "lobby_name": "The Orb of Orbos",
         "lobby_broadcast": true,
         "max_players": 1
     },
     "client": {
-        "default_name": "John Doe",
+        "default_name": "Conan O'Brien",
         "lobby_discovery": true,
         "window_width": 1500,
         "draw_bboxes": false
