@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <glm/glm.hpp>
 #include "shared/audio/soundtype.hpp"
 #include "shared/utilities/serialize_macro.hpp"
@@ -15,7 +16,7 @@ struct SoundSource {
     float min_dist;
     float atten;
 
-    size_t SERVER_ticks_remaining; // not serialized b/c not used by client
+    std::chrono::milliseconds SERVER_time_remaining; // not serialized b/c not used by client
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar & sfx & pos & volume & min_dist & atten;

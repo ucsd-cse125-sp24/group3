@@ -67,14 +67,14 @@ void AudioManager::updateSoundTable(const SoundTable& delta) {
 	for (const auto& [id, source] : delta.data()) {
 		if (!this->serverTable.data().contains(id)) {
 			// yo new sound just dropped! sick
-			std::cout << "new sound from server sound table yipee!\n";
+			// std::cout << "new sound from server sound table yipee!\n";
 			this->serverTable.updateSoundSource(id, source);
 
 			if (source.has_value()) {
 				// Need to allocate an sf::Sound for this instance
 				// and start playing it
 				auto sound = this->makeSound(*source);
-				std::cout << "playing new sound!\n";
+				// std::cout << "playing new sound!\n";
 				sound->play();
 				this->serverSFXs.insert({id, std::move(sound)});
 			} // in the else case
@@ -88,12 +88,15 @@ void AudioManager::updateSoundTable(const SoundTable& delta) {
 				// std::cout << "updating params!\n";
 			} else {
 				// sound with ID should be stopped and deleted
+				std::cout << "erasing sound\n";
 				this->serverSFXs.at(id)->stop();
 				this->serverSFXs.erase(id);
-				std::cout << "stopping sound!\n";
+				// std::cout << "stopping sound!\n";
 			}
 		}
 	}
+
+	std::cout << this->serverSFXs.size() << "\n";
 }
 
 std::unique_ptr<sf::SoundBuffer> AudioManager::loadSFXBuf(ClientSFX sfx) {
@@ -117,12 +120,6 @@ std::unique_ptr<sf::SoundBuffer> AudioManager::loadSFXBuf(std::string path) {
 }
 
 void AudioManager::setSoundParams(sf::Sound& sound, const SoundSource& source) {
-	std::cout << "---\n";
-	std::cout << source.atten << "\n";
-	std::cout << source.min_dist << "\n";
-	std::cout << source.volume << "\n";
-	std::cout << glm::to_string(source.pos) << "\n";
-	std::cout << sf::Listener::getPosition().x << ", " << sf::Listener::getPosition().y << "," << sf::Listener::getPosition().z << "\n";
 	sound.setBuffer(*this->serverSFXBufs.at(source.sfx));
 	sound.setAttenuation(source.atten);
 	sound.setMinDistance(source.min_dist);
@@ -146,8 +143,5 @@ std::unique_ptr<sf::Music> AudioManager::makeMusic(ClientMusic music_type) {
 	}
 	music->setLoop(true);
 	music->setRelativeToListener(true); // make it not dependent on position of player
-	// music->setPosition(26, 1, 8);
-	// music->setAttenuation(10);
-	// music->setMinDistance(4);
 	return std::move(music);
 }

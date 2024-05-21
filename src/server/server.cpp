@@ -141,6 +141,7 @@ std::chrono::milliseconds Server::doTick() {
         EventType::LoadSoundTable, 
         LoadSoundTableEvent(this->state.soundTable())
     ));
+    this->state.soundTable().tickSounds();
 
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();

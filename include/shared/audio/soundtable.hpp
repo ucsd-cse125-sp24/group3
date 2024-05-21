@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deque>
 #include <boost/optional.hpp>
 #include "shared/audio/soundsource.hpp"
 #include "shared/utilities/serialize_macro.hpp"
@@ -23,5 +24,6 @@ public:
 private:
     std::unordered_map<SoundID, boost::optional<SoundSource>> map;
 
+    std::deque<SoundID> id_free_list;
     SoundID SERVER_next_id;
 };

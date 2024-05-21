@@ -1,6 +1,10 @@
 #pragma once
 
 #include <string>
+#include <chrono>
+#include <unordered_map>
+
+using namespace std::chrono_literals;
 
 // Sounds that the client can decide to play on its own
 // (e.g. BGM, clicking on UI elements...)
@@ -34,7 +38,20 @@ enum class ServerSFX {
     SlimeLand,
     PlayerJump,
     PlayerLand,
+    // make sure to add to server sfx len map!
     // make sure to add to macro below!
+};
+
+const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS = {
+    {ServerSFX::ArrowShoot, 620ms},
+    {ServerSFX::ArrowImpact, 1030ms},
+    {ServerSFX::FireballShoot, 1220ms},
+    {ServerSFX::FireballImpact, 370ms},
+    {ServerSFX::SlimeJump, 610ms},
+    {ServerSFX::SlimeLand, 760ms},
+    {ServerSFX::PlayerJump, 500ms},
+    {ServerSFX::PlayerLand, 500ms}
+    // dont forget macro below!
 };
 
 #define GET_SERVER_SFXS() { \
