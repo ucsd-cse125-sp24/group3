@@ -36,17 +36,17 @@ public:
      * Creates a torchight with default lighting properties.
 	 * @param corner Corner position of the surface
 	 */
-	Torchlight(glm::vec3 corner);
+	explicit Torchlight(glm::vec3 corner);
 
 	/**
 	 * @param corner Corner position of the surface
      * @param properties allows for customization of lighting
      * and flickering properties
 	 */
-	Torchlight(glm::vec3 corner, TorchlightProperties properties);
+	Torchlight(glm::vec3 corner, const TorchlightProperties& properties);
 	~Torchlight();
 
-    SharedObject toShared();
+    SharedObject toShared() override;
 
     /**
      * @brief runs on every server tick to update torchlight flickering 

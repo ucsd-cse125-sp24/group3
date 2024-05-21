@@ -40,7 +40,7 @@ Torchlight::Torchlight(
 
 Torchlight::Torchlight(
     glm::vec3 corner,
-    TorchlightProperties properties):
+    const TorchlightProperties& properties):
 	Object(ObjectType::Torchlight, Physics(false, 
 		Collider::Box, corner, glm::vec3(0.0f), glm::vec3(1.0f)),
 		ModelType::Torchlight),
@@ -50,6 +50,7 @@ Torchlight::Torchlight(
 }
 
 void Torchlight::init() {
+    this->inc_intensity = true;
     // if not flickering, set intensity to a static 
     // value
     if (!this->properties.flickering) {
