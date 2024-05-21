@@ -213,9 +213,11 @@ void Client::displayCallback() {
     this->gui.beginFrame();
 
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
-        
+        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     } else if (this->gameState.phase == GamePhase::LOBBY) {
+        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     } else if (this->gameState.phase == GamePhase::GAME) {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         this->draw();
     }
     else if (this->gameState.phase == GamePhase::RESULTS) {
