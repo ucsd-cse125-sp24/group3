@@ -56,6 +56,9 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
         Player* rand_player;
         while (true) {
             rand_player = players.get(randomInt(0, players.size() - 1));
+            if (players.size() == 1) { 
+                break; 
+            }
             if (player->typeID != rand_player->typeID) {
                 break;
             }
