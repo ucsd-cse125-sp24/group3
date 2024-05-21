@@ -323,24 +323,19 @@ void Client::draw() {
     }
     auto eid = this->session->getInfo().client_eid.value();
     glm::vec3 my_pos = this->gameState.objects[eid]->physics.corner;
-    // std::cout << "starting loop\n";
     for (auto& [id, sharedObject] : this->gameState.objects) {
 
         if (!sharedObject.has_value()) {
             continue;
         }
         auto dist = glm::distance(sharedObject->physics.corner, my_pos);
-        // std::cout << "dist is " << dist << std::endl;
-        // std::cout << "\tcamPos " << glm::to_string(my_pos) << std::endl;
-        // std::cout << "\tobjPos " << glm::to_string(sharedObject->physics.corner) << std::endl;
+        // temporary fix to always render ceiling and floor since their corner
+        // will be outside our range. will be fixed with DM PR
         if (sharedObject->solidSurface.has_value() && sharedObject->solidSurface->surfaceType != SurfaceType::Wall) {
 
-        } else {
-            if (dist > 100.0f) {
+        } else if (dist > RENDER_DISTANCE) {
                 continue;
-            }
         }
-        // std::cout << "rendring stuff\n";
 
         switch (sharedObject->type) {
             case ObjectType::Player: {
