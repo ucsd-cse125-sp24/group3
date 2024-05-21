@@ -32,7 +32,7 @@ public:
 
     virtual void useItem(Object* other, ServerGameState& state, int itemSelected);
 
-    void dropItem(Object* other, ServerGameState& state, int itemSelected, float dropDistance);
+    virtual void dropItem(Object* other, ServerGameState& state, int itemSelected, float dropDistance);
 
 	void doCollision(Object* other, ServerGameState& state) override;
 

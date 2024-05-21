@@ -1,14 +1,17 @@
 #include "server/game/servergamestate.hpp"
 #include "server/game/spiketrap.hpp"
 #include "server/game/fireballtrap.hpp"
+#include "server/game/slime.hpp"
 #include "server/game/floorspike.hpp"
 #include "server/game/fakewall.hpp"
 #include "server/game/teleportertrap.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/potion.hpp"
-#include "server/game/orb.hpp"
 #include "server/game/constants.hpp"
+#include "server/game/exit.hpp"
+#include "server/game/orb.hpp"
+
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -25,12 +28,22 @@ ServerGameState::ServerGameState() : ServerGameState(getDefaultConfig()) {}
 ServerGameState::ServerGameState(GameConfig config) {
 	this->phase = GamePhase::LOBBY;
 	this->timestep = FIRST_TIMESTEP;
-	this->timestep_length = config.game.timestep_length_ms;
 	this->lobby.max_players = config.server.max_players;
 	this->lobby.name = config.server.lobby_name;
 
 	this->maps_directory = config.game.maze.directory;
 	this->maze_file = config.game.maze.maze_file;
+
+	//	Initialize game instance match phase data
+	//	Match begins in MazeExploration phase (no timer)
+	this->matchPhase = MatchPhase::MazeExploration;
+	this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
+	//	Player victory is by default false (need to collide with an open exit
+	//	while holding the Orb to win, whereas DM wins on time limit expiration)
+	this->playerVictory = false;
+
+	//	No player died yet
+	this->numPlayerDeaths = 0;
 
     MazeGenerator generator(config);
     int attempts = 1;
@@ -80,9 +93,12 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 	auto getUpdateTemplate = [this]() {
 		SharedGameState curr_update;
 		curr_update.timestep = this->timestep;
-		curr_update.timestep_length = this->timestep_length;
 		curr_update.lobby = this->lobby;
 		curr_update.phase = this->phase;
+		curr_update.matchPhase = this->matchPhase;
+		curr_update.timesteps_left = this->timesteps_left;
+		curr_update.playerVictory = this->playerVictory;
+		curr_update.numPlayerDeaths = this->numPlayerDeaths;
 		return curr_update;
 	};
 
@@ -136,21 +152,21 @@ void ServerGameState::update(const EventList& events) {
 		}
 
 		Object* obj;
-	
-        switch (event.type) {
+
+		switch (event.type) {
 		case EventType::ChangeFacing: {
-            auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
-            obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
-            obj->physics.shared.facing = changeFacingEvent.facing;
-			this->updated_entities.insert({obj->globalID});
-            break;
+			auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
+			obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+			obj->physics.shared.facing = changeFacingEvent.facing;
+			this->updated_entities.insert({ obj->globalID });
+			break;
 		}
-	
+
 		case EventType::StartAction: {
 			auto startAction = boost::get<StartActionEvent>(event.data);
 			obj = this->objects.getObject(startAction.entity_to_act);
-			this->updated_entities.insert({obj->globalID});
-			
+			this->updated_entities.insert({ obj->globalID });
+
 			//switch case for action (currently using keys)
 			switch (startAction.action) {
 			case ActionType::MoveCam: {
@@ -175,7 +191,7 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StopAction: {
 			auto stopAction = boost::get<StopActionEvent>(event.data);
 			obj = this->objects.getObject(stopAction.entity_to_act);
-			this->updated_entities.insert({obj->globalID});
+			this->updated_entities.insert({ obj->globalID });
 			//switch case for action (currently using keys)
 			switch (stopAction.action) {
 			case ActionType::MoveCam: {
@@ -191,7 +207,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
-	
+
 		case EventType::MoveRelative:
 		{
 			//currently just sets the velocity to given 
@@ -240,24 +256,48 @@ void ServerGameState::update(const EventList& events) {
 
 		// default:
 		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
-        }
-    }
+		}
+	}
+
 
 	//	TODO: fill update() method with updating object movement
 	doProjectileTicks();
 	updateMovement();
+	updateEnemies();
 	updateItems();
 	updateTraps();
 	handleDeaths();
 	handleRespawns();
 	deleteEntities();
+	spawnEnemies();
+	tickStatuses();
 	
 	//	Increment timestep
 	this->timestep++;
+
+	//	Countdown timer if the Orb has been picked up by a Player and the match
+	//	phase is now RelayRace
+	if (this->matchPhase == MatchPhase::RelayRace) {
+		this->timesteps_left--;
+
+		if (this->timesteps_left == 0) {
+			//	Dungeon Master won on time limit expiration
+			this->phase = GamePhase::RESULTS;
+		}
+	}
+
+	//	DEBUG
+	//std::cout << "playerVictory: " << this->playerVictory << std::endl;
+	//	DEBUG
 }
 
 void ServerGameState::markForDeletion(EntityID id) {
 	this->entities_to_delete.insert(id);
+}
+
+
+void ServerGameState::markAsUpdated(EntityID id) {
+	this->updated_entities.insert(id);
 }
 
 void ServerGameState::updateMovement() {
@@ -295,6 +335,16 @@ void ServerGameState::updateMovement() {
 			object->physics.velocity * object->physics.velocityMultiplier;
 		totalMovementStep.x *= object->physics.nauseous;
 		totalMovementStep.z *= object->physics.nauseous;
+
+		auto creature = dynamic_cast<Creature*>(object);
+		if (creature != nullptr) {
+			if (creature->statuses.getStatusLength(Status::Slimed) > 0) {
+				totalMovementStep *= 0.5f;
+			}
+			if (creature->statuses.getStatusLength(Status::Frozen) > 0) {
+				totalMovementStep *= 0.0f;
+			}
+		}
 
 		//	If the object doesn't have a collider, update its movement without
 		//	collision detection
@@ -458,7 +508,10 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				//	Exception - if the other object is a floor spike trap,
 				//	perform collision handling but do not return true as the
 				//	trap doesn't affect the movement of the object it hits
-				if (otherObj->type == ObjectType::FloorSpike || otherObj->type == ObjectType::Potion || otherObj->type == ObjectType::Spell) {
+				if (otherObj->type == ObjectType::FloorSpike || 
+					otherObj->type == ObjectType::Potion || 
+					otherObj->type == ObjectType::Spell ||
+					otherObj->type == ObjectType::Slime) {
 					continue;
 				}
 
@@ -468,6 +521,34 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 	}
 
 	return false;
+}
+
+void ServerGameState::spawnEnemies() {
+	// temp numbers, to tune later...
+	// 1/300 chance every 30ms -> expected spawn every 9s 
+	// TODO 1: small slimes are weighted the same as large slimes
+	// TODO 2: check that no collision in the cell you are spawning in
+	if (randomInt(1, 300) == 1 && this->objects.getEnemies().numElements() < MAX_ALIVE_ENEMIES) {
+		int cols = this->grid.getColumns();
+		int rows = this->grid.getRows();
+
+		glm::ivec2 random_cell;
+		while (true) {
+			random_cell.x = randomInt(0, cols - 1);
+			random_cell.y = randomInt(0, rows - 1); // corresponds to z in the world
+
+			if (this->grid.getCell(random_cell.x, random_cell.y)->type == CellType::Empty) {
+				break;
+			}
+		}
+
+		int size = randomInt(2, 4);
+		this->objects.createObject(new Slime(
+			glm::vec3(random_cell.x * Grid::grid_cell_width, 0, random_cell.y * Grid::grid_cell_width),
+			glm::vec3(0, 0, 0),
+			size
+		));
+	}
 }
 
 void ServerGameState::updateItems() {
@@ -489,6 +570,19 @@ void ServerGameState::updateItems() {
 					this->updated_entities.insert(pot->globalID);
 				}
 			}
+		}
+	}
+}
+
+void ServerGameState::updateEnemies() {
+	auto enemies = this->objects.getEnemies();
+
+	for (int e = 0; e < enemies.size(); e++){
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		if (enemy->doBehavior(*this)) {
+			this->updated_entities.insert(enemy->globalID);
 		}
 	}
 }
@@ -553,6 +647,13 @@ void ServerGameState::handleDeaths() {
 		if (player == nullptr) continue;
 
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
+			//	Player died - increment number of player deaths
+			this->numPlayerDeaths++;
+
+			if (numPlayerDeaths == PLAYER_DEATHS_TO_RELAY_RACE) {
+				this->transitionToRelayRace();
+			}
+
 			//handle dropping items (sets collider to none so it doesn't pick up items when dead)
 			player->physics.collider = Collider::None;
 			for (int i = 0; i < player->sharedInventory.inventory_size; i++) {
@@ -584,7 +685,22 @@ void ServerGameState::handleDeaths() {
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
 		}
 	}
+
+	auto enemies = this->objects.getEnemies();
+	for (int e = 0; e < enemies.size(); e++) {
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		if (enemy->stats.health.current() <= 0) {
+			this->updated_entities.insert(enemy->globalID);
+			if (enemy->doDeath(*this)) {
+				this->entities_to_delete.insert(enemy->globalID);
+				this->alive_enemy_weight--;
+			}
+		}
+	}
 }
+
 
 void ServerGameState::handleRespawns() {
 	auto players = this->objects.getPlayers();
@@ -614,12 +730,25 @@ void ServerGameState::deleteEntities() {
 	std::swap(this->entities_to_delete, empty);
 }
 
-unsigned int ServerGameState::getTimestep() const {
-	return this->timestep;
+void ServerGameState::tickStatuses() {
+	auto players = this->objects.getPlayers();
+	for (auto p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		player->statuses.tickStatus();
+	}
+	auto enemies = this->objects.getEnemies();
+	for (auto e = 0; e < players.size(); e++) {
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		enemy->statuses.tickStatus();
+	}
 }
 
-std::chrono::milliseconds ServerGameState::getTimestepLength() const {
-	return this->timestep_length;
+unsigned int ServerGameState::getTimestep() const {
+	return this->timestep;
 }
 
 GamePhase ServerGameState::getPhase() const {
@@ -628,6 +757,32 @@ GamePhase ServerGameState::getPhase() const {
 
 void ServerGameState::setPhase(GamePhase phase) {
 	this->phase = phase;
+}
+
+MatchPhase ServerGameState::getMatchPhase() const {
+	return this->matchPhase;
+}
+
+void ServerGameState::transitionToRelayRace() {
+	//	Return immediately if the match phase is already Relay Race
+	if (this->matchPhase == MatchPhase::RelayRace)
+		return;
+
+	this->matchPhase = MatchPhase::RelayRace;
+
+	//	Open all exits!
+	for (int i = 0; i < this->objects.getExits().size(); i++) {
+		Exit* exit = this->objects.getExits().get(i);
+
+		if (exit == nullptr)
+			continue;
+
+		exit->shared.open = true;
+	}
+}
+
+void ServerGameState::setPlayerVictory(bool playerVictory) {
+	this->playerVictory = playerVictory;
 }
 
 void ServerGameState::addPlayerToLobby(EntityID id, const std::string& name) {
@@ -799,8 +954,11 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				case CellType::Enemy: {
-					this->objects.createObject(new Enemy(
-						this->grid.gridCellCenterPosition(cell), glm::vec3(0.0f)));
+					this->objects.createObject(new Slime(
+						this->grid.gridCellCenterPosition(cell),
+						glm::vec3(0.0f),
+						3
+					));
 					break;
 				}
 				case CellType::Wall:
@@ -887,6 +1045,22 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					this->objects.createObject(new TeleporterTrap(corner));
 					break;
 				}
+				case CellType::Exit: {
+					glm::vec3 corner(
+						cell->x* Grid::grid_cell_width,
+						0.0f,
+						cell->y* Grid::grid_cell_width
+					);
+
+					glm::vec3 dimensions(
+						Grid::grid_cell_width,
+						MAZE_CEILING_HEIGHT,
+						Grid::grid_cell_width
+					);
+
+					this->objects.createObject(new Exit(false, corner, dimensions));
+					break;
+				}
 			}
 		}
 	}
@@ -901,7 +1075,7 @@ Grid& ServerGameState::getGrid() {
 std::string ServerGameState::to_string() {
 	std::string representation = "{";
 	representation += "\n\ttimestep:\t\t" + std::to_string(this->timestep);
-	representation += "\n\ttimestep len:\t\t" + std::to_string(this->timestep_length.count());
+	representation += "\n\ttimestep len:\t\t" + std::to_string(TIMESTEP_LEN.count());
 	representation += "\n\tobjects: [\n";
 
 	SmartVector<Object*> gameObjects = this->objects.getObjects();

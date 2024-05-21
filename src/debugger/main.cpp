@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 	//	Initial printouts
 	std::cout << "GameState Debugger" << std::endl;
 	std::cout << "Current timestep: " << state.getTimestep();
-	std::cout << " | Timestep Length: " << state.getTimestepLength().count() << std::endl;
+	std::cout << " | Timestep Length: " << TIMESTEP_LEN.count() << std::endl;
 
 	//	4.	Load all debugger commands
 	std::cout << "Loading debugger commands...";
