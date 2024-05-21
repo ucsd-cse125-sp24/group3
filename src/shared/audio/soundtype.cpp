@@ -14,11 +14,12 @@ std::string getAudioPath(ClientSFX sound) {
 }
 
 std::string getAudioPath(ServerSFX sfx) {
+    static auto dir = audio_dir / "server_sfx";
     switch (sfx) {
         case ServerSFX::ArrowShoot:
-            return (audio_dir / "arrow.wav").string();
+            return (dir / "arrow_shoot.wav").string();
         case ServerSFX::FireballShoot:
-            return (audio_dir / "vine-boom-mono.mp3").string(); 
+            return (dir / "fireball_shoot.wav").string(); 
     }
 }
 
