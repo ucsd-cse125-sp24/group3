@@ -148,12 +148,7 @@ void GUI::layoutFrame(GUIState state) {
             this->_layoutLobbyBrowser();
             break;
         case GUIState::GAME_HUD:
-            if (client->session != nullptr && client->session->getInfo().is_dungeon_master.value()) {
-                glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            }
-            else {
-                glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            }
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
             this->_sharedGameHUD();
             this->_layoutGameHUD();
@@ -557,6 +552,15 @@ void GUI::_layoutGameHUD() {
     auto self_eid = client->session->getInfo().client_eid;
     auto is_dm = client->session->getInfo().is_dungeon_master;
 
+    // display crosshair
+    auto crosshair = this->images.getImg(img::ImgID::Crosshair);
+
+    this->addWidget(widget::StaticImg::make(
+        glm::vec2((WINDOW_WIDTH / 2.0f) - (crosshair.width / 2.0f),
+            (WINDOW_HEIGHT / 2.0f) - (crosshair.height / 2.0f)),
+        this->images.getImg(img::ImgID::Crosshair)
+    ));
+
     if (!self_eid.has_value()) {
         return;
     }
@@ -624,14 +628,6 @@ void GUI::_layoutGameHUD() {
     }
     this->addWidget(std::move(durationFlex));
 
-    // display crosshair
-    auto crosshair = this->images.getImg(img::ImgID::Crosshair);
-
-    this->addWidget(widget::StaticImg::make(
-        glm::vec2((WINDOW_WIDTH / 2.0f) - (crosshair.width / 2.0f),
-            (WINDOW_HEIGHT / 2.0f) - (crosshair.height / 2.0f)),
-        this->images.getImg(img::ImgID::Crosshair)
-    ));
     //  Display orb state here?
 
     //  Orb state breakdown:

@@ -158,7 +158,7 @@ public:
 
     AudioManager* getAudioManager();
 
-    glm::vec3 getWorldPos();
+    void setWorldPos();
 
 private:
     /**
@@ -239,5 +239,7 @@ private:
     /// @brief Generate endpoints the client can connect to
     basic_resolver_results<class boost::asio::ip::tcp> endpoints;
     std::shared_ptr<Session> session;
+
+    glm::vec3 world_pos; // stored world pause, calculated before the GUI is rendered
 };
 

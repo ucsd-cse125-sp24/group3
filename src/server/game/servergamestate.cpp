@@ -186,7 +186,7 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::Zoom: { // only for DM
 				DungeonMaster * dm = this->objects.getDM();
 
-				if ((dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 50.0f))
+				if ((dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f))
 					dm->physics.shared.corner += startAction.movement;
 
 				break;

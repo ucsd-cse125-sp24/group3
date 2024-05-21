@@ -207,6 +207,8 @@ void Client::displayCallback() {
         this->draw();
     }
 
+    this->setWorldPos();
+
     this->gui.layoutFrame(this->gui_state);
     this->gui.handleInputs(mouse_xpos, mouse_ypos, is_left_mouse_down);
     this->gui.renderFrame();
@@ -273,22 +275,22 @@ void Client::idleCallback(boost::asio::io_context& context) {
             case ModelType::FloorSpikeFull:
                 std::cout << "Sending full\n" << std::endl;
 
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FloorSpikeFull, false, true)));
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, false, true)));
                 break;
             case ModelType::FloorSpikeVertical:
                 std::cout << "Sending vertical\n" << std::endl;
 
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FloorSpikeVertical, false, true)));
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeVertical, false, true)));
                 break;
             case ModelType::FloorSpikeHorizontal:
                 std::cout << "Sending horizontal\n" << std::endl;
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FloorSpikeHorizontal, false, true)));
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeHorizontal, false, true)));
                 break;
             case ModelType::FireballTrap:
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FireballTrap, false, true)));
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrap, false, true)));
                 break;
             case ModelType::SpikeTrap:
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::SpikeTrap, false, true)));
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, false, true)));
                 break;
             }
         }
@@ -788,7 +790,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
                 // unhighlight hover
                 if (eid.has_value()) {
                     // nothing being placed, so the CellType we pass shouldn't matter!
-                    this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), getWorldPos(), CellType::ArrowTrapUp, false, false)));
+                    this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, false, false)));
                 }
             }
             is_pressed_p = !is_pressed_p;
@@ -872,20 +874,23 @@ void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { /
         auto eid = this->session->getInfo().client_eid.value();
 
         // the actual trap doesn't matter, this is just for highlighting purposes
-        this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, getWorldPos(), CellType::FloorSpikeFull, true, false)));
+        this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
     }
 }
 
-glm::vec3 Client::getWorldPos() {
+void Client::setWorldPos() {
+    float center_mouse_ypos = window_height / 2;
+    float center_mouse_xpos = window_width / 2;
+
     GLfloat winZ;
-    glReadPixels(mouse_xpos, window_height - mouse_ypos, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
-    glm::vec3 win(mouse_xpos, window_height - mouse_ypos, winZ);
+    glReadPixels(center_mouse_xpos, window_height - center_mouse_ypos, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
+    glm::vec3 win(center_mouse_xpos, window_height - center_mouse_ypos, winZ);
 
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
     glm::vec4 vport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
-    return glm::unProject(win, glm::mat4(1.0f), this->cam->getProjection() * this->cam->getView(), vport);
+    this->world_pos = glm::unProject(win, glm::mat4(1.0f), this->cam->getProjection() * this->cam->getView(), vport);
 }
 
 void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
