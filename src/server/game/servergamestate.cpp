@@ -626,9 +626,7 @@ void ServerGameState::doTorchlightTicks() {
 		auto torchlight = torchlights.get(t);
 		if (torchlight == nullptr) continue;
 
-		if (torchlight->doTick(*this)) {
-			this->updated_entities.insert(torchlight->globalID);
-		}
+		torchlight->doTick(*this);
 	}
 }
 

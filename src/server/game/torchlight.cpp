@@ -65,9 +65,9 @@ void Torchlight::init() {
 
 Torchlight::~Torchlight() {}
 
-bool Torchlight::doTick(ServerGameState& state) {
+void Torchlight::doTick(ServerGameState& state) {
     if(!this->properties.flickering) {
-        return false;
+        return;
     }
 
     // either increment or decrement intensity
@@ -97,5 +97,8 @@ bool Torchlight::doTick(ServerGameState& state) {
     } else if (this->curr_intensity < this->properties.min_intensity) {
         this->curr_intensity = this->properties.min_intensity;
     }
-    return true;
+}
+
+float Torchlight::getIntensity() const {
+    return this->curr_intensity;
 }

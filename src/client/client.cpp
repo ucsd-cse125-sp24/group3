@@ -307,13 +307,16 @@ void Client::processServerInput(boost::asio::io_context& context) {
                 this->gui_state = GUIState::GAME_HUD;
             }
         } else if (event.type == EventType::UpdateLightSources) {
-            const auto& closest_light_source_ids = boost::get<UpdateLightSourcesEvent>(event.data);
+            const auto& updated_light_source = boost::get<UpdateLightSourcesEvent>(event.data);
             for (int i = 0; i < closest_light_sources.size(); i++) {
-                if (!closest_light_source_ids.lightSources[i].has_value()) {
+
+                if (!updated_light_source.lightSources[i].has_value()) {
                     continue;
                 }
-                EntityID light_id = closest_light_source_ids.lightSources[i].value();
+                EntityID light_id = updated_light_source.lightSources[i].value().eid;
                 this->closest_light_sources[i] = this->gameState.objects[light_id];
+                // update intensity with incoming intensity 
+                this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
             }
         }
     }

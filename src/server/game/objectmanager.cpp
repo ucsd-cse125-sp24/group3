@@ -134,6 +134,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::SolidSurface:
 		this->solid_surfaces.remove(object->typeID);
 		break;
+	case ObjectType::Torchlight:
+		this->torchlights.remove(object->typeID);
+		break;
 	default:
 		std::cerr << "WARN: Cannot delete object! Did you forget to add a switch statement to \n"
 			<< "ObjectManager::removeObject? Continuing, but there may be deallocated memory still accessible!";

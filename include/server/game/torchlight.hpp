@@ -53,7 +53,12 @@ public:
      * animations
      * @parm current ServerGameState
      */
-    bool doTick(ServerGameState& state);
+    void doTick(ServerGameState& state);
+
+    /**
+     * @brief get current intensity of torch from 0-1
+     */
+    float getIntensity() const;
 private:
     TorchlightProperties properties;
 

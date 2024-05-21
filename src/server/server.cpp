@@ -129,7 +129,13 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
         EntityID light_id = closestPointLights.top(); 
         closestPointLights.pop();
 
-        event_data.lightSources[curr_light_num] = light_id;
+        auto torchlight = dynamic_cast<Torchlight*>(this->state.objects.getObject(light_id));
+        if (torchlight != nullptr) {
+            event_data.lightSources[curr_light_num] = UpdateLightSourcesEvent::UpdatedLightSource {
+                .eid = light_id,
+                .intensity = torchlight->getIntensity()
+            };
+        } 
         curr_light_num++;
     }
 
