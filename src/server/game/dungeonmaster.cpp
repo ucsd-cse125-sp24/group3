@@ -14,6 +14,9 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
     Stat(0, 10, 5)
 )), sharedTrapInventory(SharedTrapInventory{ .selected = 1, .inventory_size = TRAP_INVENTORY_SIZE, .inventory = std::vector<ModelType>(TRAP_INVENTORY_SIZE, ModelType::Frame) }) {
     this->physics.feels_gravity = false;
+    this->physics.velocityMultiplier = glm::vec3(5.0f, 1.0f, 5.0f);
+
+
     this->placedTraps = 0;
 
     // TODO: fill in rest of traps

@@ -350,8 +350,6 @@ void Client::draw() {
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
 
-                    std::cout << glm::to_string(pos) << std::endl;
-
                     // reset back to game mode if this is the first frame in which you are respawned
                     if (this->gui_state == GUIState::DEAD_SCREEN && sharedObject->playerInfo->is_alive) {
                         this->gui_state = GUIState::GAME_HUD;
@@ -796,7 +794,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
         /* Send an event to start 'shift' movement (i.e. sprint) */
         case GLFW_KEY_LEFT_SHIFT:
-            if (eid.has_value()) {
+            if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
                 this->session->sendEventAsync(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
             break;
@@ -829,7 +827,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
 
         case GLFW_KEY_LEFT_SHIFT:
-            if (eid.has_value()) {
+            if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
                 this->session->sendEventAsync(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
             break;

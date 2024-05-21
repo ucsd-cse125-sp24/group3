@@ -289,8 +289,6 @@ void ServerGameState::update(const EventList& events) {
 
 			glm::vec3 dir = glm::normalize(trapPlacementEvent.world_pos-dm->physics.shared.corner);
 
-			std::cout << "world pos trap: " << glm::to_string(trapPlacementEvent.world_pos) << std::endl;
-
 			//if (trapPlacementEvent.world_pos.z < glm::floor(trapPlacementEvent.world_pos.z) + 0.5) {
 			//	trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z) - DM_Z_DISCOUNT;
 			//} else {
@@ -340,8 +338,6 @@ void ServerGameState::update(const EventList& events) {
 					break;
 				}
 
-				std::cout << "Trying to place trap of type " << static_cast<int>(trapPlacementEvent.cell) << "\n";
-
 				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
 
 				// in cooldown and haven't elapsed enough time yet
@@ -360,8 +356,6 @@ void ServerGameState::update(const EventList& events) {
 					std::cout << "cant place trap: placeTrapInCell returned nullptr\n";
 					break;
 				}
-
-				std::cout << "PLACING A TRAP BEFORE setIsDMTrap and setExpiration" << std::endl;
 
 				trap->setIsDMTrap(true);
 				trap->setExpiration(curr_time + std::chrono::seconds(10));
