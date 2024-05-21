@@ -38,16 +38,16 @@ private:
 
 	std::unordered_map<ClientMusic, std::unique_ptr<sf::Music>> clientMusics;
 
-	std::unordered_map<ClientSFX, sf::SoundBuffer> clientSFXBufs;
+	std::unordered_map<ClientSFX, std::unique_ptr<sf::SoundBuffer>> clientSFXBufs;
 	std::unordered_map<ClientSFX, std::unique_ptr<sf::Sound>> clientSFXs;
 
-	std::unordered_map<ServerSFX, sf::SoundBuffer> serverSFXBufs;
+	std::unordered_map<ServerSFX, std::unique_ptr<sf::SoundBuffer>> serverSFXBufs;
 	SoundTable serverTable;
 	std::unordered_map<SoundID, std::unique_ptr<sf::Sound>> serverSFXs;
 
-	sf::SoundBuffer loadSFXBuf(ClientSFX sfx);
-	sf::SoundBuffer loadSFXBuf(ServerSFX sfx);
-	sf::SoundBuffer loadSFXBuf(std::string path);
+	std::unique_ptr<sf::SoundBuffer> loadSFXBuf(ClientSFX sfx);
+	std::unique_ptr<sf::SoundBuffer> loadSFXBuf(ServerSFX sfx);
+	std::unique_ptr<sf::SoundBuffer> loadSFXBuf(std::string path);
 
 	void setSoundParams(sf::Sound& sound, const SoundSource& source);
 

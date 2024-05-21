@@ -1,6 +1,5 @@
 {
     "game": {
-      "timestep_length_ms": 30,
       "maze": {
         "directory": "maps",
         "procedural": false,
@@ -17,7 +16,7 @@
         "max_players": 1
     },
     "client": {
-        "default_name": "John Doe",
+        "default_name": "Conan O'Brien",
         "lobby_discovery": true,
         "window_width": 1500,
         "draw_bboxes": false

@@ -27,11 +27,12 @@ enum class ClientSFX {
 // Sounds that correspond to something in the game world
 enum class ServerSFX {
     ArrowShoot,
+    FireballShoot,
     // make sure to add to macro below!
 };
 
 #define GET_SERVER_SFXS() { \
-    ServerSFX::ArrowShoot, \
+    ServerSFX::ArrowShoot, ServerSFX::FireballShoot, \
 }
 
 // const std::unordered_map<ServerSound, size_t> serverSoundTickLengths = {

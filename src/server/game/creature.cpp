@@ -5,6 +5,7 @@
 SharedObject Creature::toShared() {
     auto so = Object::toShared();
     so.stats = this->stats;
+    so.statuses = this->statuses;
     return so;
 }
 

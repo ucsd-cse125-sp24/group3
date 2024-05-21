@@ -120,6 +120,12 @@ std::chrono::milliseconds Server::doTick() {
             updateGameState(allClientEvents);
             break;
         }
+        case GamePhase::RESULTS: {
+            //  Do nothing - in this phase, the client(s) just display the
+            //  end-of-match data to the players
+            break;
+        }
+
         default:
             std::cerr << "Invalid GamePhase on server:" << static_cast<int>(this->state.getPhase()) << std::endl;
             std::exit(1);
@@ -133,13 +139,13 @@ std::chrono::milliseconds Server::doTick() {
     sendUpdateToAllClients(Event(
         this->world_eid, 
         EventType::LoadSoundTable, 
-        LoadSoundTableEvent(this->state.getSoundTable())
+        LoadSoundTableEvent(this->state.soundTable())
     ));
 
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(
-        this->state.getTimestepLength() - (stop - start));
+        TIMESTEP_LEN - (stop - start));
     return wait;
 }
 

@@ -9,7 +9,7 @@ std::string getAudioPath(ClientSFX sound) {
     switch (sound) {
         case ClientSFX::TEMP:
         default:
-            return (audio_dir / "arrow.wav").string();
+            return (audio_dir / "vine-boom-mono.mp3").string();
     }
 }
 
@@ -17,6 +17,8 @@ std::string getAudioPath(ServerSFX sfx) {
     switch (sfx) {
         case ServerSFX::ArrowShoot:
             return (audio_dir / "arrow.wav").string();
+        case ServerSFX::FireballShoot:
+            return (audio_dir / "vine-boom-mono.mp3").string(); 
     }
 }
 

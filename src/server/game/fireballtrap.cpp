@@ -71,6 +71,14 @@ void FireballTrap::trigger(ServerGameState& state) {
     ));
 
     this->shoot_time = std::chrono::system_clock::now();
+
+    state.soundTable().addNewSoundSource(SoundSource(
+        ServerSFX::FireballShoot,
+        this->physics.shared.getCenterPosition(),
+        100,
+        20,
+        10
+    ));
 }
 
 bool FireballTrap::shouldReset(ServerGameState& state) {

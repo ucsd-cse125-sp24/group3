@@ -2,6 +2,9 @@
 #include "shared/audio/soundtype.hpp"
 #include "shared/audio/soundsource.hpp"
 #include "shared/utilities/root_path.hpp"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <iostream>
 #include <string>
 
@@ -24,11 +27,12 @@ void AudioManager::init() {
 	}	
 	for (auto type : GET_CLIENT_SFXS()) {
 		auto buf = this->loadSFXBuf(type);
-		this->clientSFXBufs.insert({type, buf});	
-		// can make sf::Sound objects right away, since there will only ever be 1 of them playing at a time
 		auto sfx = std::make_unique<sf::Sound>();
-		sfx->setBuffer(buf);
+		sfx->setBuffer(*buf);
 		sfx->setRelativeToListener(true); // make it not dependent on the position of player
+		this->clientSFXBufs.insert({type, std::move(buf)});	
+
+		// can make sf::Sound objects right away, since there will only ever be 1 of them playing at a time
 		this->clientSFXs.insert({type, std::move(sfx)});
 	}
 	for (auto type : GET_SERVER_SFXS()) {
@@ -63,43 +67,48 @@ void AudioManager::updateSoundTable(const SoundTable& delta) {
 	for (const auto& [id, source] : delta.data()) {
 		if (!this->serverTable.data().contains(id)) {
 			// yo new sound just dropped! sick
+			std::cout << "new sound from server sound table yipee!\n";
 			this->serverTable.updateSoundSource(id, source);
 
 			if (source.has_value()) {
 				// Need to allocate an sf::Sound for this instance
 				// and start playing it
 				auto sound = this->makeSound(*source);
+				std::cout << "playing new sound!\n";
 				sound->play();
 				this->serverSFXs.insert({id, std::move(sound)});
 			} // in the else case
 		} else {
+			// std::cout << "updating sound already in table!\n";
 			this->serverTable.updateSoundSource(id, source);
 			if (source.has_value()) {
 				// something about this sound changed, but we dont need to completely
 				// restart/stop it
-				this->setSoundParams(*this->serverSFXs.at(id), *source);
+				// this->setSoundParams(*this->serverSFXs.at(id), *source);
+				// std::cout << "updating params!\n";
 			} else {
 				// sound with ID should be stopped and deleted
 				this->serverSFXs.at(id)->stop();
 				this->serverSFXs.erase(id);
+				std::cout << "stopping sound!\n";
 			}
 		}
 	}
 }
 
-sf::SoundBuffer AudioManager::loadSFXBuf(ClientSFX sfx) {
+std::unique_ptr<sf::SoundBuffer> AudioManager::loadSFXBuf(ClientSFX sfx) {
 	return this->loadSFXBuf(getAudioPath(sfx));
 }
 
-sf::SoundBuffer AudioManager::loadSFXBuf(ServerSFX sfx) {
+std::unique_ptr<sf::SoundBuffer> AudioManager::loadSFXBuf(ServerSFX sfx) {
 	return this->loadSFXBuf(getAudioPath(sfx));
 }
 
-sf::SoundBuffer AudioManager::loadSFXBuf(std::string path) {
-	sf::SoundBuffer buffer;
+std::unique_ptr<sf::SoundBuffer> AudioManager::loadSFXBuf(std::string path) {
+	auto buffer = std::make_unique<sf::SoundBuffer>();
 
 	std::cout << "Loading " << path << "\n";
-	if (!buffer.loadFromFile(path)) {
+	if (!buffer->loadFromFile(path)) {
 		std::cout << "Failed to load " << path << std::endl;
 		std::exit(1);
 	}
@@ -108,7 +117,13 @@ sf::SoundBuffer AudioManager::loadSFXBuf(std::string path) {
 }
 
 void AudioManager::setSoundParams(sf::Sound& sound, const SoundSource& source) {
-	sound.setBuffer(this->serverSFXBufs.at(source.sfx));
+	std::cout << "---\n";
+	std::cout << source.atten << "\n";
+	std::cout << source.min_dist << "\n";
+	std::cout << source.volume << "\n";
+	std::cout << glm::to_string(source.pos) << "\n";
+	std::cout << sf::Listener::getPosition().x << ", " << sf::Listener::getPosition().y << "," << sf::Listener::getPosition().z << "\n";
+	sound.setBuffer(*this->serverSFXBufs.at(source.sfx));
 	sound.setAttenuation(source.atten);
 	sound.setMinDistance(source.min_dist);
 	sound.setPosition(source.pos.x, source.pos.y, source.pos.z);
@@ -131,5 +146,8 @@ std::unique_ptr<sf::Music> AudioManager::makeMusic(ClientMusic music_type) {
 	}
 	music->setLoop(true);
 	music->setRelativeToListener(true); // make it not dependent on position of player
+	// music->setPosition(26, 1, 8);
+	// music->setAttenuation(10);
+	// music->setMinDistance(4);
 	return std::move(music);
 }
