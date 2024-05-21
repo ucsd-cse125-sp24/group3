@@ -340,13 +340,14 @@ void ServerGameState::update(const EventList& events) {
 					break;
 				}
 
-				std::cout << static_cast<int>(trapPlacementEvent.cell) << "\n";
+				std::cout << "Trying to place trap of type " << static_cast<int>(trapPlacementEvent.cell) << "\n";
 
 				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
 
 				// in cooldown and haven't elapsed enough time yet
 				if (it != dm->sharedTrapInventory.trapsInCooldown.end() && 
-					std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(it->second)) < std::chrono::seconds(TRAP_COOL_DOWN)) { // trap is in cooldown
+					std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(it->second)) < std::chrono::seconds(TRAP_COOL_DOWN)) {
+					std::cout << "cant place trap because of cooldown\n";// trap is in cooldown
 					break;
 				}
 
@@ -356,6 +357,7 @@ void ServerGameState::update(const EventList& events) {
 
 				// trap can't be placed, break out
 				if (trap == nullptr) {
+					std::cout << "cant place trap: placeTrapInCell returned nullptr\n";
 					break;
 				}
 
@@ -1017,8 +1019,12 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 	case CellType::FloorSpikeFull:
 	case CellType::FloorSpikeHorizontal:
 	case CellType::FloorSpikeVertical: {
-		if (cell->type != CellType::Empty)
+		if (cell->type != CellType::Empty) {
+
+			std::cout << "trying to place in non empty cell\n";
 			return nullptr;
+
+		}
 
 		glm::vec3 corner(
 			cell->x * Grid::grid_cell_width,

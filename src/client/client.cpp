@@ -432,8 +432,11 @@ void Client::draw() {
             }
             case ObjectType::SolidSurface: {
                 // do not render ceiling if dungeon master
+                if (!this->session->getInfo().is_dungeon_master.has_value()) {
+                    break; // just in case this message wasn't received, don't crash
+                }
 
-                if (this->session->getInfo().is_dungeon_master) {
+                if (this->session->getInfo().is_dungeon_master.value()) {
                     if (sharedObject->solidSurface->surfaceType != SurfaceType::Ceiling) {
                         if (sharedObject->solidSurface->dm_highlight) {
                             this->cube_model->overrideSolidColor(glm::vec3(1.0f, 0.0f, 0.0f));

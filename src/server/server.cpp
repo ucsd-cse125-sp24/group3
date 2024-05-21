@@ -204,8 +204,10 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         }
     }
 
+    static bool first_player = true;
+
     // first player is Dungeon Master
-    if (state.is_dungeon_master) {
+    if (first_player) {
         this->state.objects.createObject(new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
         DungeonMaster* dm = this->state.objects.getDM();
 
@@ -216,13 +218,15 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         //  the same spawn point?
 
         auto session = std::make_shared<Session>(std::move(this->socket),
-            SessionInfo({}, dm->globalID, state.is_dungeon_master));
+            SessionInfo({}, dm->globalID, true));
 
 
         this->sessions.insert(SessionEntry(dm->globalID, state.is_dungeon_master, addr, session));
 
         std::cout << "Established new connection with " << addr << ", which was assigned eid "
             << dm->globalID << std::endl;
+
+        first_player = false;
 
         return session;
     } 
