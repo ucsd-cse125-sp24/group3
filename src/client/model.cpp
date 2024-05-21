@@ -8,17 +8,23 @@
 #include <string.h>
 
 #include <string>
+#include <sys/types.h>
 #include <vector>
 #include <optional>
 #include <iostream>
 #include <filesystem>
 
+#include "client/lightsource.hpp"
+#include "client/renderable.hpp"
+#include "client/constants.hpp"
+#include "client/util.hpp"
+#include "server/game/torchlight.hpp"
+#include "shared/game/sharedobject.hpp"
+#include "shared/utilities/constants.hpp"
+
+#include "assimp/types.h"
 #include "assimp/aabb.h"
 #include "assimp/material.h"
-#include "assimp/types.h"
-#include "client/renderable.hpp"
-#include "client/util.hpp"
-#include "glm/ext/matrix_transform.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -33,7 +39,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/euler_angles.hpp>
-
+#include "glm/ext/matrix_transform.hpp"
 
 Mesh::Mesh(
     const std::vector<Vertex>& vertices,
@@ -79,9 +85,9 @@ void Mesh::draw(
     std::shared_ptr<Shader> shader,
     glm::mat4 viewProj,
     glm::vec3 camPos,
-    glm::vec3 lightPos,
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
     bool fill) {
-    // actiavte the shader program
+    // activate the shader program
     shader->use();
 
     // vertex shader uniforms
@@ -94,10 +100,38 @@ void Mesh::draw(
     shader->setVec3("material.ambient", this->material.ambient);
     shader->setVec3("material.specular", this->material.specular);
     shader->setFloat("material.shininess", this->material.shininess);
+
     shader->setVec3("viewPos", camPos);
-    auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-    shader->setVec3("lightColor",  lightColor);
-    shader->setVec3("lightPos", lightPos);
+
+    // set lightsource uniforms 
+    unsigned int curr_light_num = 0;
+    for (auto curr_source : lightSources) {
+        if (curr_light_num > MAX_POINT_LIGHTS) {
+            break;
+        }
+        if (!curr_source.has_value()) {
+            continue;
+        }
+
+        SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
+        glm::vec3 pos = curr_source->physics.getCenterPosition();
+
+        std::string pointLight = "pointLights[" + std::to_string(curr_light_num) + "]";
+        shader->setBool(pointLight + ".enabled", true);
+        shader->setFloat(pointLight + ".intensity", properties.intensity);
+        shader->setVec3(pointLight + ".position", pos);
+        // needed for attenuation
+        shader->setFloat(pointLight + ".constant", 1.0f);
+        shader->setFloat(pointLight + ".linear", properties.attenuation_linear);
+        shader->setFloat(pointLight + ".quadratic", properties.attenuation_quadratic);
+
+        // light color
+        shader->setVec3(pointLight + ".ambient", properties.ambient_color);
+        shader->setVec3(pointLight + ".diffuse", properties.diffuse_color);
+        shader->setVec3(pointLight + ".specular", properties.specular_color);
+
+        curr_light_num++;
+    }
 
     if (textures.size() == 0) {
     } else {
@@ -154,11 +188,11 @@ Model::Model(const std::string& filepath) {
 void Model::draw(std::shared_ptr<Shader> shader,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
-    glm::vec3 lightPos,
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
     bool fill) {
 
     for(Mesh& mesh : this->meshes) {
-        mesh.draw(shader, viewProj, camPos, lightPos, fill);
+        mesh.draw(shader, viewProj, camPos, lightSources, fill);
     }
 }
 

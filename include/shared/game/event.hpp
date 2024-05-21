@@ -7,6 +7,7 @@
 #include "shared/utilities/serialize.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/utilities/constants.hpp"
 
 
 /****************************************************
@@ -37,6 +38,7 @@ enum class EventType {
     SelectItem,
     UseItem,
     DropItem,
+    UpdateLightSources,
 };
 
 enum class ActionType {
@@ -230,6 +232,22 @@ struct DropItemEvent {
 
 };
 
+struct UpdateLightSourcesEvent {
+    struct UpdatedLightSource {
+        EntityID eid;
+        float intensity;
+        DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+            ar & eid & intensity;
+        }
+    };
+    std::array<boost::optional<UpdatedLightSource>, MAX_POINT_LIGHTS> lightSources;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & lightSources;
+    }
+};
+
+
 /**
  * All of the different kinds of events in a tagged union, so we can
  * easily pull out the actual data for a specific Event
@@ -245,7 +263,8 @@ using EventData = boost::variant<
     SpawnEntityEvent,
     SelectItemEvent,
     UseItemEvent,
-    DropItemEvent
+    DropItemEvent,
+    UpdateLightSourcesEvent
 >;
 
 /**

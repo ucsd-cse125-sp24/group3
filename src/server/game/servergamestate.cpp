@@ -1,4 +1,8 @@
 #include "server/game/servergamestate.hpp"
+#include "server/game/gridcell.hpp"
+#include "server/game/object.hpp"
+#include "server/game/torchlight.hpp"
+#include "shared/game/sharedgamestate.hpp"
 #include "server/game/spiketrap.hpp"
 #include "server/game/fireballtrap.hpp"
 #include "server/game/slime.hpp"
@@ -13,9 +17,11 @@
 #include "server/game/orb.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/game/sharedobject.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 #include "shared/network/constants.hpp"
+#include "server/game/grid.hpp"
 #include "shared/utilities/rng.hpp"
 #include "server/game/mazegenerator.hpp"
 
@@ -262,6 +268,7 @@ void ServerGameState::update(const EventList& events) {
 
 	//	TODO: fill update() method with updating object movement
 	doProjectileTicks();
+    doTorchlightTicks();
 	updateMovement();
 	updateEnemies();
 	updateItems();
@@ -610,6 +617,16 @@ void ServerGameState::doProjectileTicks() {
 		if (projectile->doTick(*this)) {
 			this->updated_entities.insert(projectile->globalID);
 		}
+	}
+}
+
+void ServerGameState::doTorchlightTicks() {
+	auto torchlights = this->objects.getTorchlights();
+	for (int t = 0; t < torchlights.size(); t++) {
+		auto torchlight = torchlights.get(t);
+		if (torchlight == nullptr) continue;
+
+		torchlight->doTick(*this);
 	}
 }
 
@@ -963,24 +980,17 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				}
 				case CellType::Wall:
 				case CellType::FakeWall: {
-					glm::vec3 dimensions(
-						Grid::grid_cell_width,
-						MAZE_CEILING_HEIGHT,
-						Grid::grid_cell_width
-					);
-					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
-						0.0f, 
-						cell->y * Grid::grid_cell_width
-					);
-
-					if (cell->type == CellType::FakeWall) {
-						this->objects.createObject(new FakeWall(corner, dimensions));
-					} else if (cell->type == CellType::Wall) {
-						this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
-					}
+                    this->spawnWall(cell);
 					break;
 				}
+                case CellType::TorchUp:
+                case CellType::TorchDown:
+                case CellType::TorchRight:
+                case CellType::TorchLeft: {
+                    this->spawnTorch(cell);
+                    this->spawnWall(cell);
+                    break;
+                }
 				case CellType::FloorSpikeFull:
 				case CellType::FloorSpikeHorizontal:
 				case CellType::FloorSpikeVertical: {
@@ -1064,6 +1074,65 @@ void ServerGameState::loadMaze(const Grid& grid) {
 			}
 		}
 	}
+}
+
+void ServerGameState::spawnWall(GridCell* cell) {
+    glm::vec3 dimensions(
+        this->grid.grid_cell_width,
+        MAZE_CEILING_HEIGHT,
+        this->grid.grid_cell_width
+    );
+    glm::vec3 corner(
+        cell->x * this->grid.grid_cell_width,
+        0.0f, 
+        cell->y * this->grid.grid_cell_width
+    );
+
+    if (cell->type == CellType::FakeWall) {
+        this->objects.createObject(new FakeWall(corner, dimensions));
+    } else if (cell->type == CellType::Wall ||
+        cell->type == CellType::TorchUp ||
+        cell->type == CellType::TorchDown ||
+        cell->type == CellType::TorchLeft ||
+        cell->type == CellType::TorchRight) {
+        this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
+    }
+}
+
+void ServerGameState::spawnTorch(GridCell *cell) {
+    glm::vec3 dimensions = Object::models.at(ModelType::Torchlight);
+    glm::vec3 corner(
+        cell->x * this->grid.grid_cell_width,
+        MAZE_CEILING_HEIGHT / 2.0f,
+        cell->y * this->grid.grid_cell_width
+    );
+
+    switch (cell->type) {
+        case CellType::TorchDown: {
+            corner.x += (this->grid.grid_cell_width / 2.0f) - (dimensions.x / 2.0f); 
+            corner.z += this->grid.grid_cell_width;
+            break;
+        }
+        case CellType::TorchUp: {
+            corner.x += (this->grid.grid_cell_width / 2.0f) - (dimensions.x / 2.0f); 
+            corner.z -= dimensions.z;
+            break;
+        }
+        case CellType::TorchLeft: {
+            corner.x -= dimensions.x; 
+            corner.z += (this->grid.grid_cell_width / 2.0f) - (dimensions.z / 2.0f); 
+            break;
+        }
+        case CellType::TorchRight: {
+            corner.x += this->grid.grid_cell_width;
+            corner.z += (this->grid.grid_cell_width / 2.0f) - (dimensions.z / 2.0f);
+            break;
+        }
+        default: {
+            std::cout << "Invalid Torch cell type when spawning torch\n";
+        }
+    }
+    this->objects.createObject(new Torchlight(corner));
 }
 
 Grid& ServerGameState::getGrid() {

@@ -1,10 +1,15 @@
 #pragma once
 
 #include <memory>
+#include <vector>
+#include <set>
 
 #include <glm/glm.hpp>
 
 #include "client/shader.hpp"
+#include "client/util.hpp"
+#include "shared/game/sharedobject.hpp"
+#include "shared/utilities/constants.hpp"
 
 class Renderable {
  public:
@@ -19,7 +24,7 @@ class Renderable {
     virtual void draw(std::shared_ptr<Shader> shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            glm::vec3 lightPos,
+            std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
             bool fill) = 0;
 
     /**
