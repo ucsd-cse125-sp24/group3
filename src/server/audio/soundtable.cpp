@@ -15,7 +15,6 @@ SoundTable::SoundTable() {
 std::unordered_map<EntityID, std::vector<SoundCommand>> SoundTable::getCommandsPerPlayer(SmartVector<Player*>& players) {
     std::vector<SoundCommand> commands;
     std::swap(this->current_commands, commands);
-    std::cout << commands.size() << "\n";
     // current commands is now empty, and we can parse these commands as we wish
 
     std::unordered_map<EntityID, std::vector<SoundCommand>> commands_per_player;

@@ -4,6 +4,8 @@
 #include "assimp/types.h"
 #include <glm/glm.hpp>
 
+#include "shared/game/sharedobject.hpp"
+
 /**
  * Convert ASSIMP color to a glm::vec3
  *
@@ -38,3 +40,4 @@ Bbox aiBboxToGLM(const aiAABB& bbox);
  * of the provided bounding boxes
  */
 Bbox combineBboxes(const Bbox& bbox1, const Bbox& bbox2);
+

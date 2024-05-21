@@ -87,8 +87,6 @@ void AudioManager::doTick(glm::vec3 player_pos, const LoadSoundCommandsEvent& ev
                 break;
         }
     }	
-
-    std::cout << this->serverSFXs.size() << "\n";
 }
 
 std::unique_ptr<sf::SoundBuffer> AudioManager::loadSFXBuf(ClientSFX sfx) {

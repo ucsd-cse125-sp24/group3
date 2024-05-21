@@ -1,5 +1,6 @@
 #pragma once
 
+#include "shared/utilities/constants.hpp"
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/config.hpp"
@@ -100,6 +101,8 @@ public:
 	void updateEnemies();
 
 	void doProjectileTicks();
+
+	void doTorchlightTicks();
 
 	void updateTraps();
 
@@ -286,6 +289,26 @@ private:
 	 * collision detection) and updateMovement() (which clears it)
 	 */
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
+
+    /**
+     * @brief helper function to spawn a wall at a specified cell
+     * @param cell is a single cell of the maze's grid where a wall
+     * should be placed
+     */
+    void spawnWall(GridCell* cell);
+
+    /**
+     * @brief helper function to spawn a wall with a torch at a specified 
+     * cell
+     * @param cell is a single cell of the maze's grid where a wall + torch
+     * should be placed
+     * @param cellType determines which direction the torch should face. 
+     * This means that only TorchUp, TorchDown, TorchRight, and TorchLeft
+     * are acceptable values of cellType 
+     */
+    void spawnTorch(GridCell *cell);
+
+    std::unordered_map<EntityID, std::array<std::optional<EntityID>, MAX_POINT_LIGHTS>> lightSourcesPerPlayer;
 
 	/**
 	 * @brief table of all currently playing sounds
