@@ -146,7 +146,9 @@ struct SharedPlayerInfo {
 enum class AnimState {
 	IdleAnim,
 	WalkAnim,
+	RunAnim,
 	JumpAnim,
+	LandAnim,
 	AttackAnim,
 	DeathAnim
 };

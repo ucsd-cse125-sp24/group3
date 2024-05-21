@@ -23,7 +23,7 @@ public:
 
 	void addAnimation(Animation* anim, ObjectType objType, AnimState animState);
 
-	void setAnimation(objType, animState);
+	void setAnimation(ObjectType objType, AnimState animState);
 
 	std::vector<glm::mat4> getFinalBoneMatrices() { return m_finalBoneMatrices; }
 

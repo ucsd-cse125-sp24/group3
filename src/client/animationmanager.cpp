@@ -52,12 +52,16 @@ void AnimationManager::calculateBoneTransform(const AssimpNodeData* node, glm::m
         calculateBoneTransform(&node->children[i], globalTransformation);
 }
 
-void addAnimation(Animation* anim, ObjectType objType, AnimState animState) {
-    if (objAnimMap.find(objType) == objType.end()) {
-        std::unordered_map<animState, anim> animMap;
+void AnimationManager::setAnimation(ObjectType objType, AnimState animState) {
+    this->m_currentAnimation = objAnimMap[objType][animState];
+}
+
+void AnimationManager::addAnimation(Animation* anim, ObjectType objType, AnimState animState) {
+    if (objAnimMap.find(objType) == objAnimMap.end()) {
+        std::unordered_map<AnimState, Animation*> animMap;
         objAnimMap[objType] = animMap;
     }
-    
+
     this->objAnimMap[objType][animState] = anim;
 }
 

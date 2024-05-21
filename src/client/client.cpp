@@ -156,8 +156,8 @@ bool Client::init() {
     // this->bear_model = std::make_unique<Model>(bear_model_path.string());
     // // this->bear_model->scaleAbsolute(0.25);
 
-    auto bear_model_path = graphics_assets_dir / "player_model.fbx";
-    auto bear_anim_path = graphics_assets_dir / "player_walk.fbx";
+    auto bear_model_path = graphics_assets_dir / "Taunt.fbx";
+    auto bear_anim_path = graphics_assets_dir / "Taunt.fbx";
 
     this->bear_model = std::make_unique<Model>(bear_model_path.string());
     this->bear_model->scaleAbsolute(0.004);
