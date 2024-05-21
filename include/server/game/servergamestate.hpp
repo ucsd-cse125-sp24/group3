@@ -5,7 +5,7 @@
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/smartvector.hpp"
 #include "shared/utilities/custom_hash.hpp"
-#include "shared/audio/soundtable.hpp"
+#include "server/audio/soundtable.hpp"
 #include "server/game/object.hpp"
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"

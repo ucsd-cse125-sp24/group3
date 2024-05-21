@@ -291,12 +291,12 @@ void Client::processServerInput(boost::asio::io_context& context) {
                 audioManager->stopMusic(ClientMusic::TitleTheme);
                 audioManager->playMusic(ClientMusic::GameTheme);
             }
-        } else if (event.type == EventType::LoadSoundTable) {
+        } else if (event.type == EventType::LoadSoundCommands) {
             auto self_eid = this->session->getInfo().client_eid;
             if (self_eid.has_value()) {
                 auto self = this->gameState.objects.at(*self_eid);
-                this->audioManager->doTick(
-                    self->physics.getCenterPosition(), boost::get<LoadSoundTableEvent>(event.data).table);
+                this->audioManager->doTick(self->physics.getCenterPosition(),
+                    boost::get<LoadSoundCommandsEvent>(event.data));
             }
         }
     }

@@ -14,7 +14,6 @@ set(FILES
     utilities/time.cpp
 
     audio/soundtype.cpp
-    audio/soundtable.cpp
     audio/soundsource.cpp
 )
 

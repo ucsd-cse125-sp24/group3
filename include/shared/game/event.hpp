@@ -7,7 +7,7 @@
 #include "shared/utilities/serialize.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/game/sharedgamestate.hpp"
-#include "shared/audio/soundtable.hpp"
+#include "shared/audio/soundcommand.hpp"
 
 
 /****************************************************
@@ -30,7 +30,7 @@ enum class EventType {
     ChangeFacing,
     LobbyAction,
     LoadGameState,
-    LoadSoundTable,
+    LoadSoundCommands,
     StartAction,
     StopAction, 
     MoveRelative,
@@ -106,15 +106,15 @@ struct LoadGameStateEvent {
 /**
  * Event sent by the server to a client, giving a partial update to the AudioTable
  */
-struct LoadSoundTableEvent {
+struct LoadSoundCommandsEvent {
     // Dummy value doesn't matter because will be overridden with whatever you deserialize
-    LoadSoundTableEvent() = default;
-    explicit LoadSoundTableEvent(const SoundTable& table) : table(table) {}
+    LoadSoundCommandsEvent() = default;
+    explicit LoadSoundCommandsEvent(const std::vector<SoundCommand>& commands) : commands(commands) {}
 
-    SoundTable table;
+    std::vector<SoundCommand> commands;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & table;
+        ar & commands;
     }
 };
 
@@ -254,7 +254,7 @@ using EventData = boost::variant<
     ChangeFacingEvent,
     LobbyActionEvent,
     LoadGameStateEvent,
-    LoadSoundTableEvent,
+    LoadSoundCommandsEvent,
     StartActionEvent,
     StopActionEvent,
     MoveRelativeEvent,

@@ -43,14 +43,14 @@ enum class ServerSFX {
 };
 
 const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS = {
-    {ServerSFX::ArrowShoot, 620ms},
-    {ServerSFX::ArrowImpact, 1030ms},
+    {ServerSFX::ArrowShoot,     620ms},
+    {ServerSFX::ArrowImpact,   1030ms},
     {ServerSFX::FireballShoot, 1220ms},
     {ServerSFX::FireballImpact, 370ms},
-    {ServerSFX::SlimeJump, 610ms},
-    {ServerSFX::SlimeLand, 760ms},
-    {ServerSFX::PlayerJump, 500ms},
-    {ServerSFX::PlayerLand, 500ms}
+    {ServerSFX::SlimeJump,      610ms},
+    {ServerSFX::SlimeLand,      760ms},
+    {ServerSFX::PlayerJump,     500ms},
+    {ServerSFX::PlayerLand,     500ms},
     // dont forget macro below!
 };
 
