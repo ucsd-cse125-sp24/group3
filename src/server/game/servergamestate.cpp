@@ -30,7 +30,6 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->timestep = FIRST_TIMESTEP;
 	this->lobby.max_players = config.server.max_players;
 	this->lobby.name = config.server.lobby_name;
-	this->is_dungeon_master = config.server.is_dungeon_master;
 
 	this->maps_directory = config.game.maze.directory;
 	this->maze_file = config.game.maze.maze_file;
@@ -230,8 +229,14 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::SelectItem:
 		{
 			auto selectItemEvent = boost::get<SelectItemEvent>(event.data);
+			obj = this->objects.getObject(selectItemEvent.playerEID);
 
-			if (is_dungeon_master) {
+			if (obj == nullptr) {
+				std::cerr << "Certified Bruh Moment... " << __LINE__ << "\n";
+				std::exit(1);
+			}
+
+			if (obj->type == ObjectType::DungeonMaster) {
 				DungeonMaster* dm = this->objects.getDM();
 
 				if (dm->sharedTrapInventory.selected + selectItemEvent.itemNum == 0)

@@ -774,12 +774,13 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         /* Space also uses a flag to constantly send events when key is held */
         case GLFW_KEY_SPACE:
             is_held_space = true;
+            is_held_o = true;
             break;
 
         case GLFW_KEY_I: // zoom in
             is_held_i = true;
             break;
-        case GLFW_KEY_O: // zoom in
+        case GLFW_KEY_O: // zoom out
             is_held_o = true;
             break;
         case GLFW_KEY_P: // to place or not to place
@@ -797,6 +798,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
                 this->session->sendEventAsync(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
+            is_held_i = true;
             break;
 
         default:
@@ -824,12 +826,14 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             
         case GLFW_KEY_SPACE:
             is_held_space = false;
+            is_held_o = false;
             break;
 
         case GLFW_KEY_LEFT_SHIFT:
             if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
                 this->session->sendEventAsync(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
+            is_held_i = false;
             break;
 
         case GLFW_KEY_O: // zoom out

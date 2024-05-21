@@ -39,11 +39,6 @@ struct IntPairHash {
 class ServerGameState {
 public:
 	/**
-	 * @brief is the current player the dungeon master?
-	 */
-	bool is_dungeon_master;
-
-	/**
 	 * @brief ObjectManager instance that manages all objects in this game
 	 * instance at the current timestep.
 	 */

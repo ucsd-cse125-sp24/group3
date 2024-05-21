@@ -221,7 +221,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
             SessionInfo({}, dm->globalID, true));
 
 
-        this->sessions.insert(SessionEntry(dm->globalID, state.is_dungeon_master, addr, session));
+        this->sessions.insert(SessionEntry(dm->globalID, true, addr, session));
 
         std::cout << "Established new connection with " << addr << ", which was assigned eid "
             << dm->globalID << std::endl;
