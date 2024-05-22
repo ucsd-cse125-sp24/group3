@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include <set>
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -89,7 +90,7 @@ class Mesh : public Renderable {
     void draw(std::shared_ptr<Shader> shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            glm::vec3 lightPos,
+            std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
             bool fill) override;
  private:
      std::vector<Vertex>       vertices;
@@ -122,7 +123,7 @@ class Model : public Renderable {
     void draw(std::shared_ptr<Shader> shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            glm::vec3 lightPos,
+            std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
             bool fill) override;
 
     /**

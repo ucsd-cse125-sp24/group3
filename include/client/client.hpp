@@ -5,6 +5,7 @@
 #include <utility>
 #include <unordered_map>
 #include <chrono>
+#include <map>
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_service.hpp>
@@ -19,12 +20,15 @@
 #include "client/gui/gui.hpp"
 #include "client/camera.hpp"
 #include "client/audiomanager.hpp"
+#include "client/constants.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
+#include "shared/utilities/constants.hpp"
+#include "shared/utilities/typedefs.hpp"
 
 #define WINDOW_WIDTH Client::getWindowSize().x
 #define WINDOW_HEIGHT Client::getWindowSize().y
@@ -191,6 +195,7 @@ private:
     std::unique_ptr<Model> player_model;
     std::unique_ptr<Model> bear_model;
     std::unique_ptr<LightSource> light_source;
+    std::unique_ptr<Model> torchlight_model;
 
     GLFWwindow *window;
 
@@ -232,5 +237,7 @@ private:
     /// @brief Generate endpoints the client can connect to
     basic_resolver_results<class boost::asio::ip::tcp> endpoints;
     std::shared_ptr<Session> session;
+
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> closest_light_sources;
 };
 

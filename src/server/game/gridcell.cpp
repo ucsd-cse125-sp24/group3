@@ -40,6 +40,14 @@ CellType charToCellType(char c) {
 		return CellType::NauseaPotion;
 	case 'i':
 		return CellType::InvisibilityPotion;
+    case '[':
+        return CellType::TorchDown;
+    case ']':
+        return CellType::TorchUp;
+    case '{':
+        return CellType::TorchRight;
+    case '}':
+        return CellType::TorchLeft;
 	case 'z':
 		return CellType::InvincibilityPotion;
 	case 'f':
@@ -110,6 +118,14 @@ char cellTypeToChar(CellType type) {
 		return 'n';
 	case CellType::InvisibilityPotion:
 		return 'i';	
+	case CellType::TorchDown:
+		return '[';
+	case CellType::TorchUp:
+		return ']';
+	case CellType::TorchRight:
+		return '{';
+	case CellType::TorchLeft:
+		return '}';
 	case CellType::InvincibilityPotion:
 		return 'z';
 	case CellType::FireSpell:
