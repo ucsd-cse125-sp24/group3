@@ -8,7 +8,7 @@
 #include "server/game/exit.hpp"
 #include "server/game/orb.hpp"
 #include "server/game/spell.hpp"
-#include "server/game/weaponCollider.hpp"
+#include "server/game/weaponcollider.hpp"
 #include "server/game/weapon.hpp"
 
 #include <memory>
