@@ -4,6 +4,7 @@
 #include "shared/audio/soundcommand.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/game/event.hpp"
+#include "shared/audio/constants.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
@@ -42,6 +43,16 @@ void AudioManager::init() {
         // dont make sound objects right now, because will need to dynamically make them as the server
         // sends sound tables
     }
+    for (int i = 0; i < this->serverLightSFXs.size(); i++) {
+        this->serverLightSFXs.at(i) = makeSound(SoundSource(
+            ServerSFX::TorchLoop,
+            glm::vec3(1000, 1000, 1000), // by default just put way outside, so wont accidentally play prematurely
+            QUIET_VOLUME,
+            SHORT_DIST,
+            SHORT_ATTEN,
+            true
+        ));
+    }
 }
 
 void AudioManager::playMusic(ClientMusic music) {
@@ -60,7 +71,10 @@ void AudioManager::playSFX(ClientSFX sfx) {
     this->clientSFXs.at(sfx)->play();
 }
 
-void AudioManager::doTick(glm::vec3 player_pos, const LoadSoundCommandsEvent& event) {
+void AudioManager::doTick(glm::vec3 player_pos, 
+    const LoadSoundCommandsEvent& event, 
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> light_sources) 
+{
     sf::Listener::setPosition(player_pos.x, player_pos.y, player_pos.z);
 
     for (const auto& command : event.commands) {
@@ -84,6 +98,16 @@ void AudioManager::doTick(glm::vec3 player_pos, const LoadSoundCommandsEvent& ev
                 break;
         }
     }	
+
+    for (int i = 0; i < light_sources.size(); i++) {
+        auto source = light_sources.at(i);
+        if (source.has_value() && source->type == ObjectType::Torchlight) {
+            this->serverLightSFXs.at(i)->setPosition(source->physics.corner.x, source->physics.corner.y, source->physics.corner.z);
+            this->serverLightSFXs.at(i)->play();
+        } else {
+            this->serverLightSFXs.at(i)->stop();
+        }
+    }
 }
 
 std::unique_ptr<sf::SoundBuffer> AudioManager::loadSFXBuf(ClientSFX sfx) {

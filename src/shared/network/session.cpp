@@ -102,6 +102,7 @@ void Session::_receivePacketAsync() {
             }
 
             PacketHeader hdr(static_cast<void*>(&buf.get()[0]));
+            std::cout << hdr.size << "\n";
 
             boost::asio::async_read(socket, boost::asio::buffer(buf.get(), BUF_SIZE),
                 boost::asio::transfer_exactly(hdr.size),

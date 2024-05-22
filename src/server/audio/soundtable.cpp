@@ -28,19 +28,7 @@ std::unordered_map<EntityID, std::vector<SoundCommand>> SoundTable::getCommandsP
                 commands_per_player[player->globalID].push_back(command);
             }
         }
-
-        // calculate static sources & send per player
-        // TODO: optimize to not send DELETE for each light source every time?
-        for (const SoundID& static_id : this->static_sources) {
-            const auto& source = this->map.at(static_id);
-            if (source.canBeHeardFrom(player->physics.shared.getCenterPosition())) {
-                commands_per_player[player->globalID].push_back(SoundCommand(static_id, SoundAction::PLAY, source));
-            } else {
-                commands_per_player[player->globalID].push_back(SoundCommand(static_id, SoundAction::DELETE, source));
-            }
-        }
     }
-
 
     return commands_per_player;
 }

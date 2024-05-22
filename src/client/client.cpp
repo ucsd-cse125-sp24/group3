@@ -316,7 +316,8 @@ void Client::processServerInput(boost::asio::io_context& context) {
             if (self_eid.has_value()) {
                 auto self = this->gameState.objects.at(*self_eid);
                 this->audioManager->doTick(self->physics.getCenterPosition(),
-                    boost::get<LoadSoundCommandsEvent>(event.data));
+                    boost::get<LoadSoundCommandsEvent>(event.data),
+                    this->closest_light_sources);
             }
         } else if (event.type == EventType::UpdateLightSources) {
             const auto& updated_light_source = boost::get<UpdateLightSourcesEvent>(event.data);

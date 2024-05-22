@@ -27,7 +27,9 @@ public:
 	void stopMusic(ClientMusic music);
 	void playSFX(ClientSFX sfx);
 
-	void doTick(glm::vec3 player_pos, const LoadSoundCommandsEvent& delta);
+	void doTick(glm::vec3 player_pos, 
+		const LoadSoundCommandsEvent& delta, 
+		std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> light_sources);
 
 private:
 	std::unordered_map<ClientMusic, std::unique_ptr<sf::Music>> clientMusics;
@@ -37,6 +39,8 @@ private:
 
 	std::unordered_map<ServerSFX, std::unique_ptr<sf::SoundBuffer>> serverSFXBufs;
 	std::unordered_map<SoundID, std::unique_ptr<sf::Sound>> serverSFXs;
+
+	std::array<std::unique_ptr<sf::Sound>, MAX_POINT_LIGHTS> serverLightSFXs;
 
 	std::unique_ptr<sf::SoundBuffer> loadSFXBuf(ClientSFX sfx);
 	std::unique_ptr<sf::SoundBuffer> loadSFXBuf(ServerSFX sfx);
