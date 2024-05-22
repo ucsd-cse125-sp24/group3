@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <chrono>
+#include <iostream>
 
 SoundSource::SoundSource(ServerSFX sfx, glm::vec3 pos, float volume, float min_dist, float atten, bool loop):
     sfx(sfx), pos(pos), volume(volume), min_dist(min_dist), atten(atten), loop(loop)
@@ -20,5 +21,5 @@ bool SoundSource::canBeHeardFrom(glm::vec3 pos) const {
 
     float factor = min_dist / (min_dist + atten + std::max(dist, min_dist) - min_dist);
 
-    return (factor > 0.0f);
+    return (factor > 0.04f); // experimentally this seems too far away
 }

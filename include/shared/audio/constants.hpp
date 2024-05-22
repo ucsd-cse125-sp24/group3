@@ -6,9 +6,9 @@
 
 #define DEFAULT_VOLUME FULL_VOLUME
 
-// Sound values fitting for something that should be audible only close
-#define SHORT_ATTEN 10.0f
-#define SHORT_DIST 15.0f
+// Sound values fitting for something that should be audible only very close
+#define SHORT_ATTEN 50.0f
+#define SHORT_DIST 5.0f
 
 // Sound values fitting for something that should be audible within a 10x10 room
 #define MEDIUM_ATTEN 5.0f

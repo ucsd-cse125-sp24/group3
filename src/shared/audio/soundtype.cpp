@@ -7,9 +7,10 @@
 static auto audio_dir = getRepoRoot() / "assets" / "sounds";
 
 std::string getAudioPath(ClientSFX sound) {
+    static auto dir = audio_dir / "client_sfx";
     switch (sound) {
         case ClientSFX::TEMP:
-            return (audio_dir / "vine-boom-mono.mp3").string();
+            return (dir / "vine-boom-mono.mp3").string();
         default:
             std::cerr << "FATAL: no known path for ClientSFX " << static_cast<int>(sound) << std::endl;
             std::exit(1);
@@ -49,6 +50,8 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "ceiling_spike_impact_short_mono.wav").string();
         case ServerSFX::CeilingSpikeTrigger:
             return (dir / "ceiling_spike_trigger_mono.wav").string();
+        case ServerSFX::TorchLoop:
+            return (dir / "torch_loop_mono.wav").string();
         
         default:
             std::cerr << "FATAL: no known path for ServerSFX " << static_cast<int>(sfx) << std::endl;
@@ -57,11 +60,13 @@ std::string getAudioPath(ServerSFX sfx) {
 }
 
 std::string getAudioPath(ClientMusic music) {
+    static auto dir = audio_dir / "client_music";
+
     switch (music) {
         case ClientMusic::TitleTheme:
-            return (audio_dir / "piano.wav").string();
+            return (dir / "piano.wav").string();
         case ClientMusic::GameTheme:
-            return (audio_dir / "mono-retrowave.mp3").string();
+            return (dir / "mono-retrowave.mp3").string();
         default:
             std::cerr << "FATAL: no known path for ClientMusic " << static_cast<int>(music) << std::endl;
             std::exit(1);

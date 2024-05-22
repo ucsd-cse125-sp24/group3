@@ -1184,6 +1184,17 @@ void ServerGameState::spawnTorch(GridCell *cell) {
             std::cout << "Invalid Torch cell type when spawning torch\n";
         }
     }
+
+	// Add an entry in the sound table for this
+	this->sound_table.addStaticSoundSource(SoundSource(
+		ServerSFX::TorchLoop,
+		corner,
+		MIDDLE_VOLUME,
+		SHORT_DIST,
+		SHORT_ATTEN,
+		true
+	));
+
     this->objects.createObject(new Torchlight(corner));
 }
 

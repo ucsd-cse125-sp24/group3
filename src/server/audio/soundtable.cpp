@@ -19,16 +19,28 @@ std::unordered_map<EntityID, std::vector<SoundCommand>> SoundTable::getCommandsP
 
     std::unordered_map<EntityID, std::vector<SoundCommand>> commands_per_player;
 
-    for (const SoundCommand& command : commands) {
-        for (int i = 0; i < players.size(); i++) {
-            Player* player = players.get(i);
-            if (player == nullptr) continue;
+    for (int i = 0; i < players.size(); i++) {
+        Player* player = players.get(i);
+        if (player == nullptr) continue;
 
+        for (const SoundCommand& command : commands) {
             if (command.source.canBeHeardFrom(player->physics.shared.getCenterPosition())) {
                 commands_per_player[player->globalID].push_back(command);
             }
         }
+
+        // calculate static sources & send per player
+        // TODO: optimize to not send DELETE for each light source every time?
+        for (const SoundID& static_id : this->static_sources) {
+            const auto& source = this->map.at(static_id);
+            if (source.canBeHeardFrom(player->physics.shared.getCenterPosition())) {
+                commands_per_player[player->globalID].push_back(SoundCommand(static_id, SoundAction::PLAY, source));
+            } else {
+                commands_per_player[player->globalID].push_back(SoundCommand(static_id, SoundAction::DELETE, source));
+            }
+        }
     }
+
 
     return commands_per_player;
 }
@@ -49,6 +61,12 @@ void SoundTable::tickSounds() {
 
         ++it;
     }
+}
+
+void SoundTable::addStaticSoundSource(const SoundSource& source) {
+    SoundID id = this->next_id++;
+    this->map.insert({id, source});
+    this->static_sources.push_back(id);
 }
 
 void SoundTable::addNewSoundSource(const SoundSource& source) {

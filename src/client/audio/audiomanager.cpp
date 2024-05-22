@@ -69,7 +69,6 @@ void AudioManager::doTick(glm::vec3 player_pos, const LoadSoundCommandsEvent& ev
                 if (this->serverSFXs.contains(command.id)) {
                     continue; // ignore the command because this id is already playing, this is expected to happen
                 }	
-
                 auto sound = this->makeSound(command.source);
                 sound->play();
                 this->serverSFXs.insert({command.id, std::move(sound)});
@@ -77,9 +76,7 @@ void AudioManager::doTick(glm::vec3 player_pos, const LoadSoundCommandsEvent& ev
             }
             case SoundAction::DELETE:
                 if (!this->serverSFXs.contains(command.id)) {
-                    // this is not expected to happen, so warn... Sorry if you're here (@Tyler on Discord pls)
-                    std::cerr << "WARNING: received DELETE audio command for id " << command.id << ", which does not currently exist on this client.\n";
-                    continue;
+                    continue; // ignore the command because we aren't even playing this sound
                 }
 
                 this->serverSFXs.at(command.id)->stop();
