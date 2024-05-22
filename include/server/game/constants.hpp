@@ -51,6 +51,18 @@
 #define DAGGER_DMG				10
 #define HAMMER_DMG				30
 
+#define	KATANA_PREP				250
+#define	KATANA_DUR				300
+#define	KATANA_TOTAL			550
+
+#define	DAGGER_PREP				150
+#define	DAGGER_DUR				150
+#define	DAGGER_TOTAL			300
+
+#define	HAMMER_PREP				400
+#define	HAMMER_DUR				500
+#define	HAMMER_TOTAL			900
+
 /*	Game	*/
 #define	GRAVITY					0.03f
 #define	PLAYER_SPEED 			1.5f

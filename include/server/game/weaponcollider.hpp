@@ -25,53 +25,43 @@ public:
     void doCollision(Object* other, ServerGameState& state) override;
     void updateMovement(ServerGameState& state);
     bool readyTime();
-    bool timeOut();
-    void removeAttack(ServerGameState& state);
+    bool timeOut(ServerGameState& state);
+    virtual SharedObject toShared() override;
 
 private:
     std::chrono::time_point<std::chrono::system_clock> preparing_time;
     std::chrono::time_point<std::chrono::system_clock> attacked_time;
-    bool attacked;
     Player* usedPlayer;
+    SharedWeaponInfo info;
     WeaponOptions opt;
 };
 
-class ShortAttacks : public WeaponCollider {
+class ShortAttack : public WeaponCollider {
 public:
-    //TODO find good dimension
     inline static const glm::vec3 DIMENSION = glm::vec3(1.0f, 5.0f, 1.0f);
-    inline static const int DMG = DAGGER_DMG;
-    inline static const float PREP_TIME = 150;
-    inline static const float ATTACK_DURATION = 150;
 
-    ShortAttacks(Player* usedPlayer, glm::vec3 corner, glm::vec3 facing):
+    ShortAttack(Player* usedPlayer, glm::vec3 corner, glm::vec3 facing):
         WeaponCollider(usedPlayer, corner, facing, DIMENSION, ModelType::Cube,
-            WeaponOptions(DMG, PREP_TIME, ATTACK_DURATION))
+            WeaponOptions(DAGGER_DMG, DAGGER_PREP, DAGGER_DUR))
     {}
 };
 
-class LongAttacks : public WeaponCollider {
+class MediumAttack : public WeaponCollider {
 public:
     inline static const glm::vec3 DIMENSION = glm::vec3(1.5f, 5.0f, 1.5f);
-    inline static const int DMG = KATANA_DMG;
-    inline static const float PREP_TIME = 250;
-    inline static const float ATTACK_DURATION = 300;
 
-    LongAttacks(Player* usedPlayer, glm::vec3 corner, glm::vec3 facing) :
+    MediumAttack(Player* usedPlayer, glm::vec3 corner, glm::vec3 facing) :
         WeaponCollider(usedPlayer, corner, facing, DIMENSION, ModelType::Cube,
-            WeaponOptions(DMG, PREP_TIME, ATTACK_DURATION))
+            WeaponOptions(KATANA_DMG, KATANA_PREP, KATANA_DUR))
     {}
 };
 
-class BigAttacks : public WeaponCollider {
+class BigAttack : public WeaponCollider {
 public:
     inline static const glm::vec3 DIMENSION = glm::vec3(2.5f, 5.0f, 2.5f);
-    inline static const int DMG = HAMMER_DMG;
-    inline static const float PREP_TIME = 400;
-    inline static const float ATTACK_DURATION = 500;
 
-    BigAttacks(Player* usedPlayer, glm::vec3 corner, glm::vec3 facing) :
+    BigAttack(Player* usedPlayer, glm::vec3 corner, glm::vec3 facing) :
         WeaponCollider(usedPlayer, corner, facing, DIMENSION, ModelType::Cube,
-            WeaponOptions(DMG, PREP_TIME, ATTACK_DURATION))
+            WeaponOptions(HAMMER_DMG, HAMMER_PREP, HAMMER_DUR))
     {}
 };

@@ -576,6 +576,11 @@ void ServerGameState::updateItems() {
 				}
 			}
 		}
+
+		if (item->type == ObjectType::Weapon) {
+			Weapon* weapon = dynamic_cast<Weapon*>(item);
+			weapon->reset(*this);
+		}
 	}
 }
 
@@ -609,14 +614,17 @@ void ServerGameState::updateAttacks() {
 	for (int i = 0; i < weaponColliders.size(); i++) {
 		auto weaponCollider = weaponColliders.get(i);
 		if (weaponCollider == nullptr) { continue; }
-
+		weaponCollider->updateMovement(*this);
 		if(weaponCollider->readyTime()){
-			weaponCollider->updateMovement(*this);
-			if (weaponCollider->timeOut()) {
-				weaponCollider->removeAttack(*this);
+			if (weaponCollider->timeOut(*this)) {
+				this->markForDeletion(weaponCollider->globalID);
+			}
+			else {
 				this->updated_entities.insert(weaponCollider->globalID);
+				continue;
 			}
 		}
+		this->updated_entities.insert(weaponCollider->globalID);
 	}
 }
 

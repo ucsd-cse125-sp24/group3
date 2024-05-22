@@ -17,4 +17,4 @@
 // How many objects we send in one LoadGameState packet
 // If there are more objects that need to be sent, then
 // they are split up into multiple LoadGameState packets
-#define OBJECTS_PER_UPDATE 200
+#define OBJECTS_PER_UPDATE 100

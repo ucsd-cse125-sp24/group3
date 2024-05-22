@@ -13,14 +13,15 @@ WeaponCollider::WeaponCollider(Player* usedPlayer, glm::vec3 corner, glm::vec3 f
     this->physics.velocityMultiplier = glm::vec3(0.0f);
     this->preparing_time = std::chrono::system_clock::now();
     this->usedPlayer = usedPlayer;
-    this->attacked = false;
+    this->info.attacked = false;
 }
 
 void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
     
     Creature* creature = dynamic_cast<Creature*>(other);
     if (creature == nullptr) return;
-    // since the collider may hit yourself if looking down, just ignore this case
+
+    // don't dmg yourself
     if (creature->globalID == this->usedPlayer->globalID) return;
 
     // do damage if creature
@@ -52,11 +53,11 @@ void WeaponCollider::updateMovement(ServerGameState& state) {
 }
 
 bool WeaponCollider::readyTime() {
-    if (this->attacked) { return true; }
+    if (this->info.attacked) { return true; }
     auto now = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_milliseconds{ now - this->preparing_time };
-    if ((now - this->preparing_time) > std::chrono::milliseconds(this->opt.timeUntilAttack)) {
-        this->attacked = true;
+    if (elapsed_milliseconds > std::chrono::milliseconds(1000)) {
+        this->info.attacked = true;
         this->attacked_time = now;
         this->physics.collider = Collider::Box;
         return true;
@@ -64,12 +65,18 @@ bool WeaponCollider::readyTime() {
     return false;
 }
 
-bool WeaponCollider::timeOut() {
+bool WeaponCollider::timeOut(ServerGameState& state) {
     auto now = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_milliseconds{ now - this->attacked_time};
-    return (now - this->attacked_time) > std::chrono::milliseconds(this->opt.attackDuration);
+    std::chrono::duration<double> elapsed_milliseconds{ now - this->attacked_time };
+    if (elapsed_milliseconds > std::chrono::milliseconds(2000)) {
+        return true;
+    }
+    return false;
 }
 
-void WeaponCollider::removeAttack(ServerGameState& state) {
-    state.markForDeletion(this->globalID);
+SharedObject WeaponCollider::toShared() {
+    auto so = Object::toShared();
+    //so.weaponInfo = this->info;
+    std::cout << this->info.attacked << "\n";
+    return so;
 }

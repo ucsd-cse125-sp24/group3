@@ -117,9 +117,18 @@ struct SharedItemInfo {
 	bool held; // for rendering
 	bool used; // for rendering
 	double remaining_time;
+	bool attacked;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& used& held& remaining_time;
+		ar& used& held& remaining_time& attacked;
+	}
+};
+
+struct SharedWeaponInfo {
+	bool attacked;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& attacked;
 	}
 };
 
@@ -220,6 +229,7 @@ public:
 	boost::optional<SharedInventory> inventoryInfo;
 	boost::optional<SharedStatuses> statuses;
 	boost::optional<SharedExit> exit;
+	boost::optional<SharedWeaponInfo> weaponInfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}

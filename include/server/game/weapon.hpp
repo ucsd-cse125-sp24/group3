@@ -27,7 +27,10 @@ public:
     WeaponType weaponType;
 
     void useItem(Object* other, ServerGameState& state, int itemSelected) override;
+    void reset(ServerGameState& state);
 
 private:
-
+    int delay;
+    bool resetAttack;
+    std::chrono::time_point<std::chrono::system_clock> attacked_time;
 };
