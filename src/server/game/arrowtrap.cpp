@@ -51,7 +51,7 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
         }
 
         for (const auto& curr_player_pos : player_grid_positions) {
-            if (curr_grid_pos == curr_player_pos) {
+            if (curr_grid_pos == curr_player_pos) { // cppcheck-suppress useStlAlgorithm
                 return randomInt(1, 4) == 1;
             }
         } 

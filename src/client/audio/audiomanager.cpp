@@ -127,7 +127,7 @@ std::unique_ptr<sf::SoundBuffer> AudioManager::loadSFXBuf(std::string path) {
         std::exit(1);
     }
 
-    return std::move(buffer);
+    return buffer;
 }
 
 void AudioManager::setSoundParams(sf::Sound& sound, const SoundSource& source) {
@@ -142,7 +142,7 @@ void AudioManager::setSoundParams(sf::Sound& sound, const SoundSource& source) {
 std::unique_ptr<sf::Sound> AudioManager::makeSound(const SoundSource& source) {
     auto sound = std::make_unique<sf::Sound>();
     this->setSoundParams(*sound, source);
-    return std::move(sound);
+    return sound;
 }
 
 std::unique_ptr<sf::Music> AudioManager::makeMusic(ClientMusic music_type) {
@@ -155,5 +155,5 @@ std::unique_ptr<sf::Music> AudioManager::makeMusic(ClientMusic music_type) {
     }
     music->setLoop(true);
     music->setRelativeToListener(true); // make it not dependent on position of player
-    return std::move(music);
+    return music;
 }

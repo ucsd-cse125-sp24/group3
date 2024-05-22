@@ -35,7 +35,7 @@ std::unordered_map<EntityID, std::vector<SoundCommand>> SoundTable::getCommandsP
 
 void SoundTable::tickSounds() {
     for (auto it = this->map.begin(); it != this->map.end(); ) {
-        auto& [id, source] = *it;
+        auto& [id, source] = *it; // cppcheck-suppress variableScope
 
         if (source.SERVER_time_remaining.has_value()) {
             source.SERVER_time_remaining.value() -= TIMESTEP_LEN;
