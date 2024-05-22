@@ -17,6 +17,7 @@ class Projectile;
 class Item;
 class Exit;
 class Orb;
+class WeaponCollider;
 
 #include "shared/utilities/smartvector.hpp"
 
@@ -170,6 +171,14 @@ public:
 	SmartVector<Projectile*> getProjectiles();
 
 	/**
+	 * @brief Get a list of all WeaponCollider in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of WeaponCollider pointers of all WeaponCollider objects in the game
+	 * instance.
+	 */
+	SmartVector<WeaponCollider*> getWeaponColliders();
+
+	/**
 	 * @brief Get a list of all Exits in this game instance at the current
 	 * timestep.
 	 * @return SmartVector of Exit pointers of all Exit objects in the game
@@ -297,6 +306,12 @@ private:
 	 * ObjectType::Projectile.
 	 */
 	SmartVector<Projectile *> projectiles;
+
+	/**
+	 * @brief SmartVector of weapon colliders that spawn upon weapon use
+	 * ObjectType::WeaponCollider.
+	 */
+	SmartVector<WeaponCollider*> weaponColliders;
 
 	/**
 	 * @brief SmartVector of Exit pointers to all objects whose ObjectType is

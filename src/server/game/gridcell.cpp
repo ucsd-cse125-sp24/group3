@@ -48,6 +48,14 @@ CellType charToCellType(char c) {
 		return CellType::HealSpell;
 	case 't':
 		return CellType::TeleportSpell;
+	case 'd':
+		return CellType::Dagger;
+	case 'k':
+		return CellType::Katana;
+	case 'm':
+		return CellType::Hammer;
+	case 'w':
+		return CellType::RandomWeapon;
 	case 'p':
 		return CellType::RandomPotion;
 	case 's':
@@ -110,6 +118,14 @@ char cellTypeToChar(CellType type) {
 		return 'e';
 	case CellType::TeleportSpell:
 		return 't';
+	case CellType::Dagger:
+		return 'd';
+	case CellType::Katana:
+		return 'k';
+	case CellType::Hammer:
+		return 'm';
+	case CellType::RandomWeapon:
+		return 'w';
 	case CellType::RandomPotion:
 		return 'p';
 	case CellType::RandomSpell:

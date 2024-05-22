@@ -46,6 +46,11 @@
 #define	INVINCIBLITY_SCALAR		100
 #define INVINCIBLITY_DUR		15
 
+/*	Weapon Stats	*/
+#define	KATANA_DMG				20
+#define DAGGER_DMG				10
+#define HAMMER_DMG				30
+
 /*	Game	*/
 #define	GRAVITY					0.03f
 #define	PLAYER_SPEED 			1.5f

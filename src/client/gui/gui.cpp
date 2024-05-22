@@ -414,6 +414,18 @@ void GUI::_sharedGameHUD() {
             itemString = "Orb";
             break;
         }
+        case ModelType::Dagger: {
+            itemString = "Dagger";
+            break;
+        }
+        case ModelType::Katana: {
+            itemString = "Katana";
+            break;
+        }
+        case ModelType::Hammer: {
+            itemString = "Hammer";
+            break;
+        }
         }
     }
     // Text for item description
@@ -465,6 +477,18 @@ void GUI::_sharedGameHUD() {
             case ModelType::Orb: {
                 itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                 break;
+            }
+            case ModelType::Dagger: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Dagger), 2));
+                break;
+            }
+            case ModelType::Katana: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Katana), 2));
+                break;
+            case ModelType::Hammer: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Hammer), 2));
+                break;
+            }
             }
             }
         }

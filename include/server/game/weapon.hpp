@@ -22,7 +22,7 @@ public:
      * @param dimensions Dimensions applied for the weapon
      * @param type       Type of weapon
      */
-    Spell(glm::vec3 corner, glm::vec3 dimensions, WeaponType type);
+    Weapon(glm::vec3 corner, glm::vec3 dimensions, WeaponType type);
 
     WeaponType weaponType;
 

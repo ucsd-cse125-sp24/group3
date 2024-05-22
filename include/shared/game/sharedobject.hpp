@@ -32,6 +32,7 @@ enum class ObjectType {
 	Exit,
 	Orb,
 	Weapon,
+	WeaponCollider,
 };
 
 /**

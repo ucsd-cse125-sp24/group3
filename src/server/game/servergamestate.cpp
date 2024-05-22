@@ -11,6 +11,8 @@
 #include "server/game/constants.hpp"
 #include "server/game/exit.hpp"
 #include "server/game/orb.hpp"
+#include "server/game/weapon.hpp"
+#include "server/game/weaponcollider.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/root_path.hpp"
@@ -263,6 +265,7 @@ void ServerGameState::update(const EventList& events) {
 	//	TODO: fill update() method with updating object movement
 	doProjectileTicks();
 	updateMovement();
+	updateAttacks();
 	updateEnemies();
 	updateItems();
 	updateTraps();
@@ -511,6 +514,8 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				if (otherObj->type == ObjectType::FloorSpike || 
 					otherObj->type == ObjectType::Potion || 
 					otherObj->type == ObjectType::Spell ||
+					otherObj->type == ObjectType::Weapon ||
+					otherObj->type == ObjectType::WeaponCollider ||
 					otherObj->type == ObjectType::Slime) {
 					continue;
 				}
@@ -587,20 +592,6 @@ void ServerGameState::updateEnemies() {
 	}
 }
 
-//void ServerGameState::useItem() {
-//	// Update whatever is necesssary for item
-//	// This method may need to be broken down for different types
-//	// of item types
-//
-//	SmartVector<Item*> items = this->objects.getItems();
-//	for (int i = 0; i < items.size(); i++) {
-//		const Item* item = items.get(i);
-//
-//		if (item == nullptr)
-//			continue;
-//	}
-//}
-
 void ServerGameState::doProjectileTicks() {
 	auto projectiles = this->objects.getProjectiles();
 	for (int p = 0; p < projectiles.size(); p++) {
@@ -609,6 +600,22 @@ void ServerGameState::doProjectileTicks() {
 
 		if (projectile->doTick(*this)) {
 			this->updated_entities.insert(projectile->globalID);
+		}
+	}
+}
+
+void ServerGameState::updateAttacks() {
+	auto weaponColliders = this->objects.getWeaponColliders();
+	for (int i = 0; i < weaponColliders.size(); i++) {
+		auto weaponCollider = weaponColliders.get(i);
+		if (weaponCollider == nullptr) { continue; }
+
+		if(weaponCollider->readyTime()){
+			weaponCollider->updateMovement(*this);
+			if (weaponCollider->timeOut()) {
+				weaponCollider->removeAttack(*this);
+				this->updated_entities.insert(weaponCollider->globalID);
+			}
 		}
 	}
 }
@@ -849,6 +856,17 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				} else {
 					cell->type = CellType::TeleportSpell;
 				}
+			} else if (cell->type == CellType::RandomWeapon) {
+				int r = randomInt(1, 3);
+				if (r == 1) {
+					cell->type = CellType::Dagger;
+				}
+				else if (r == 2) {
+					cell->type = CellType::Katana;
+				}
+				else {
+					cell->type = CellType::Hammer;
+				}
 			}
 
 			switch (cell->type) {
@@ -875,6 +893,39 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						cell->y * Grid::grid_cell_width
 					);
 					this->objects.createObject(new FireballTrap(corner, dimensions));
+					break;
+				}
+				case CellType::Dagger: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Dagger));
+					break;
+				}
+				case CellType::Katana: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Katana));
+					break;
+				}
+				case CellType::Hammer: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Hammer));
 					break;
 				}
 				case CellType::TeleportSpell: {

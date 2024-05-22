@@ -529,6 +529,30 @@ void Client::draw() {
                     true);
                 break;
             }
+            case ObjectType::Weapon: {
+                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+                    auto cube = std::make_unique<Cube>(glm::vec3(0.5f));
+                    cube->scaleAbsolute(sharedObject->physics.dimensions);
+                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    cube->draw(this->cube_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        glm::vec3(),
+                        true);
+                }
+                break;
+            }
+            case ObjectType::WeaponCollider: {
+                auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
+                cube->scaleAbsolute(sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    glm::vec3(),
+                    false);
+                break;
+            }
             default:
                 break;
         }

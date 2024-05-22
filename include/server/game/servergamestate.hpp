@@ -93,8 +93,9 @@ public:
 	 */
 	bool hasObjectCollided(Object* object, glm::vec3 newCornerPosition);
 
-	//	TODO: Add implementations of items
 	void updateItems();
+
+	void updateAttacks();
 
 	void updateEnemies();
 
