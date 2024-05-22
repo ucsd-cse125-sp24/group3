@@ -1,5 +1,8 @@
 #include "client/client.hpp"
 #include <iostream>
+#include <algorithm>
+#include <functional>
+#include <iterator>
 #include <memory>
 
 #include <GLFW/glfw3.h>
@@ -11,6 +14,7 @@
 #include <thread>
 #include <sstream>
 
+#include "client/util.hpp"
 #include "client/gui/gui.hpp"
 #include "client/constants.hpp"
 #include <boost/dll/runtime_symbol_info.hpp>
@@ -19,6 +23,7 @@
 #include "client/shader.hpp"
 #include "client/model.hpp"
 #include "glm/fwd.hpp"
+#include "server/game/object.hpp"
 #include "server/game/solidsurface.hpp"
 #include "shared/game/event.hpp"
 #include "shared/game/sharedobject.hpp"
@@ -29,6 +34,16 @@
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 #include "shared/game/celltype.hpp"
+#include "shared/utilities/timer.hpp"
+#include "shared/utilities/typedefs.hpp"
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/ext/matrix_clip_space.hpp"
+#include "glm/fwd.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 
 using namespace boost::asio::ip;
@@ -59,7 +74,7 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
 
     Client::window_width = config.client.window_width;
     Client::window_height = static_cast<int>((config.client.window_width * 2.0f) / 3.0f);
-    
+
     if (config.client.lobby_discovery)  {
         lobby_finder.startSearching();
     }
@@ -165,6 +180,9 @@ bool Client::init() {
     auto lightFragFilepath = shaders_dir / "lightsource.frag";
     this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
 
+    auto torchlight_model_path = graphics_assets_dir / "cube.obj";
+    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
+
     auto solid_surface_vert_path = shaders_dir / "solidsurface.vert";
     auto solid_surface_frag_path = shaders_dir / "solidsurface.frag";
     this->solid_surface_shader = std::make_shared<Shader>(solid_surface_vert_path.string(), solid_surface_frag_path.string());
@@ -196,9 +214,11 @@ void Client::displayCallback() {
     this->gui.beginFrame();
 
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
-        
+        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     } else if (this->gameState.phase == GamePhase::LOBBY) {
+        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     } else if (this->gameState.phase == GamePhase::GAME) {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         this->draw();
     }
     else if (this->gameState.phase == GamePhase::RESULTS) {
@@ -332,15 +352,40 @@ void Client::processServerInput(boost::asio::io_context& context) {
 
                 this->gui_state = GUIState::GAME_HUD;
             }
+        } else if (event.type == EventType::UpdateLightSources) {
+            const auto& updated_light_source = boost::get<UpdateLightSourcesEvent>(event.data);
+            for (int i = 0; i < closest_light_sources.size(); i++) {
+
+                if (!updated_light_source.lightSources[i].has_value()) {
+                    continue;
+                }
+                EntityID light_id = updated_light_source.lightSources[i].value().eid;
+                this->closest_light_sources[i] = this->gameState.objects[light_id];
+                // update intensity with incoming intensity 
+                this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
+            }
         }
     }
 }
 
 void Client::draw() {
+    if (!this->session->getInfo().client_eid.has_value()) {
+        return;
+    }
+    auto eid = this->session->getInfo().client_eid.value();
+    glm::vec3 my_pos = this->gameState.objects[eid]->physics.corner;
     for (auto& [id, sharedObject] : this->gameState.objects) {
 
         if (!sharedObject.has_value()) {
             continue;
+        }
+        auto dist = glm::distance(sharedObject->physics.corner, my_pos);
+        // temporary fix to always render ceiling and floor since their corner
+        // will be outside our range. will be fixed with DM PR
+        if (sharedObject->solidSurface.has_value() && sharedObject->solidSurface->surfaceType != SurfaceType::Wall) {
+
+        } else if (dist > RENDER_DISTANCE) {
+                continue;
         }
 
         switch (sharedObject->type) {
@@ -374,7 +419,7 @@ void Client::draw() {
                     this->model_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightPos,
+                    {},
                     true);
                 break;
             }
@@ -398,7 +443,7 @@ void Client::draw() {
                     this->model_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    lightPos,
+                    {},
                     true);
                 this->drawBbox(sharedObject);
                 break;
@@ -426,7 +471,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    {},
                     true);
                 break;
             }
@@ -445,24 +490,22 @@ void Client::draw() {
                             this->cube_model->overrideSolidColor({});
                         }
 
-                        auto lightPos = glm::vec3(-2.0f, 10.0f, 0.0f);
                         this->cube_model->setDimensions(sharedObject->physics.dimensions);
                         this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                         this->cube_model->draw(this->solid_surface_shader,
                             this->cam->getViewProj(),
                             this->cam->getPos(),
-                            lightPos,
+                            this->closest_light_sources,
                             true);
                     }
                 }
                 else {
-                    auto lightPos = glm::vec3(-2.0f, 10.0f, 0.0f);
                     this->cube_model->setDimensions(sharedObject->physics.dimensions);
                     this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                     this->cube_model->draw(this->solid_surface_shader,
                         this->cam->getViewProj(),
                         this->cam->getPos(),
-                        lightPos,
+                        this->closest_light_sources,
                         true);
                 }
                 break;
@@ -482,7 +525,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    {},
                     true);
                 break;
             }
@@ -493,7 +536,17 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    {}, 
+                    true);
+                break;
+            }
+            case ObjectType::Torchlight: {
+                this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->torchlight_model->draw(
+                    this->light_source_shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    {},
                     true);
                 break;
             }
@@ -504,7 +557,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    {},
                     true);
                 break;
             }
@@ -515,7 +568,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    {},
                     true);
                 break;
             }
@@ -527,7 +580,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    {},
                     true);
                 break;
             }
@@ -538,7 +591,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    {},
                     true);
                 break;
             }
@@ -551,7 +604,7 @@ void Client::draw() {
                     cube->draw(this->cube_shader,
                         this->cam->getViewProj(),
                         this->cam->getPos(),
-                        glm::vec3(),
+                        {},
                         true);
                 }
                 break;
@@ -573,7 +626,7 @@ void Client::draw() {
                     cube->draw(this->cube_shader,
                         this->cam->getViewProj(),
                         this->cam->getPos(),
-                        glm::vec3(),
+                        {},
                         true);
                 }
                 break;
@@ -594,7 +647,7 @@ void Client::draw() {
                     cube->draw(this->cube_shader,
                         this->cam->getViewProj(),
                         this->cam->getPos(),
-                        glm::vec3(),
+                        {},
                         true);
                 }
                 break;
@@ -606,7 +659,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    {},
                     true);
                 break;
             }
@@ -617,7 +670,7 @@ void Client::draw() {
                 cube->draw(this->cube_shader,
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    glm::vec3(),
+                    {},
                     true);
                 break;
             }
@@ -641,7 +694,7 @@ void Client::drawBbox(boost::optional<SharedObject> object) {
         object_bbox->draw(this->cube_shader,
             this->cam->getViewProj(),
             this->cam->getPos(),
-            glm::vec3(),
+            {},
             false);
     }
 }

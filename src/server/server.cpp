@@ -10,10 +10,12 @@
 #include <iostream>
 #include <fstream>
 #include <ostream>
+#include <queue>
 #include <thread>
 #include <chrono>
 
 #include "boost/variant/get.hpp"
+#include "server/game/objectmanager.hpp"
 #include "server/game/potion.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/player.hpp"
@@ -24,6 +26,10 @@
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/utilities/config.hpp"
+#include "shared/game/sharedobject.hpp"
+#include "shared/utilities/constants.hpp"
+#include "shared/utilities/light.hpp"
+#include "shared/utilities/typedefs.hpp"
 
 using namespace std::chrono_literals;
 using namespace boost::asio::ip;
@@ -88,6 +94,64 @@ void Server::sendUpdateToAllClients(Event event) {
     }
 }
 
+void Server::sendLightSourceUpdates(EntityID playerID) {
+    struct CompareLightPos {
+        CompareLightPos() = default;
+        CompareLightPos(const glm::vec3& refPos, ObjectManager& objects) : 
+            refPos(refPos), objects(objects) {};
+        bool operator()(const EntityID& a, const EntityID& b) const {
+            glm::vec3 aPos = this->objects.getObject(a)->physics.shared.getCenterPosition();
+            glm::vec3 bPos = this->objects.getObject(b)->physics.shared.getCenterPosition();
+
+            float distanceToA = glm::distance(this->refPos, aPos);
+            float distanceToB = glm::distance(this->refPos, bPos);
+            return distanceToA > distanceToB;
+        };
+        glm::vec3 refPos;
+        ObjectManager& objects;
+    };
+
+    glm::vec3 playerPos = this->state.objects.getObject(playerID)->physics.shared.getCenterPosition();
+
+    std::priority_queue<EntityID, std::vector<EntityID>, CompareLightPos> closestPointLights(CompareLightPos(playerPos, this->state.objects));
+
+    for(int i = 0; i < this->state.objects.getTorchlights().size(); i++) {
+        auto torch = this->state.objects.getTorchlights().get(i);
+        if (torch == nullptr) continue;
+        closestPointLights.push(torch->globalID);
+    }
+
+
+    // put set into an array
+    UpdateLightSourcesEvent event_data;
+    int curr_light_num = 0;
+    while (!closestPointLights.empty() && curr_light_num < MAX_POINT_LIGHTS) {
+        EntityID light_id = closestPointLights.top(); 
+        closestPointLights.pop();
+
+        auto torchlight = dynamic_cast<Torchlight*>(this->state.objects.getObject(light_id));
+        if (torchlight != nullptr) {
+            event_data.lightSources[curr_light_num] = UpdateLightSourcesEvent::UpdatedLightSource {
+                .eid = light_id,
+                .intensity = torchlight->getIntensity()
+            };
+        } 
+        curr_light_num++;
+    }
+
+    auto& by_id = this->sessions.get<IndexByID>();
+    auto session_ref = by_id.find(playerID);
+    if (session_ref != by_id.end()) {
+        auto session = session_ref->session;
+        if (!session.expired()) {
+            session.lock()->sendEventAsync(Event(
+                this->world_eid,
+                EventType::UpdateLightSources,
+                event_data));
+        }
+    }
+}
+
 std::chrono::milliseconds Server::doTick() {
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -118,6 +182,11 @@ std::chrono::milliseconds Server::doTick() {
             EventList allClientEvents = getAllClientEvents();
 
             updateGameState(allClientEvents);
+
+            for (auto& [playerID, name] : this->state.getLobby().players) {
+                sendLightSourceUpdates(playerID);
+            }
+
             break;
         }
         case GamePhase::RESULTS: {

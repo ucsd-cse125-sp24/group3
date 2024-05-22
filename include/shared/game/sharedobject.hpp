@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <algorithm>
 #include <glm/glm.hpp>
 
 #include "shared/utilities/serialize_macro.hpp"
@@ -20,8 +21,9 @@ enum class ObjectType {
 	SolidSurface,
 	Potion,
 	Player,
-	SpikeTrap,
 	Enemy,
+    Torchlight,
+	SpikeTrap,
 	DungeonMaster,
 	FireballTrap,
 	Projectile,
@@ -179,7 +181,7 @@ struct SharedPhysics {
 	 * @brief Calculates and returns the center position of this object.
 	 * @return glm::vec3 that denotes the center position of this object.
 	 */
-	glm::vec3 getCenterPosition();
+	glm::vec3 getCenterPosition() const;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
 		ar& corner& facing & dimensions;
@@ -202,6 +204,24 @@ struct SharedPlayerInfo {
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
 		ar & is_alive & respawn_time & render;
 	}
+};
+
+struct SharedPointLightInfo {
+    float intensity;
+    // lighting properties of that the light source
+    // emits
+    glm::vec3 ambient_color;
+    glm::vec3 diffuse_color;
+    glm::vec3 specular_color; // shiny effects
+    // these two affect the dropoff of the light intensity
+    // as distance increases
+    float attenuation_linear;
+    float attenuation_quadratic;
+
+	DEF_SERIALIZE(Archive& ar, const int version) {
+		ar & intensity & ambient_color & diffuse_color & specular_color &
+            attenuation_linear & attenuation_quadratic;
+    }
 };
 
 struct SharedExit {
@@ -233,6 +253,7 @@ public:
 	boost::optional<SharedPlayerInfo> playerInfo;
 	boost::optional<SharedInventory> inventoryInfo;
 	boost::optional<SharedTrapInventory> trapInventoryInfo;
+    boost::optional<SharedPointLightInfo> pointLightInfo;
 	boost::optional<SharedStatuses> statuses;
 	boost::optional<SharedExit> exit;
 
@@ -240,7 +261,7 @@ public:
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo& statuses& exit & trapInventoryInfo;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & statuses & trapInventoryInfo & pointLightInfo & exit;
 	}
 private:
 };

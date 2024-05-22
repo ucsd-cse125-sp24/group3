@@ -10,7 +10,9 @@
 #include "server/game/enemy.hpp"
 #include "server/game/dungeonmaster.hpp"
 #include "server/game/solidsurface.hpp"
+#include "server/game/torchlight.hpp"
 //#include "server/game/grid.hpp"
+#include "shared/utilities/smartvector.hpp"
 
 // forward declarations to use pointers
 class Trap; 
@@ -19,7 +21,6 @@ class Item;
 class Exit;
 class Orb;
 
-#include "shared/utilities/smartvector.hpp"
 
 class ObjectManager {
 public:
@@ -114,6 +115,13 @@ public:
 	Enemy* getEnemy(SpecificID enemyID);
 
 	/**
+	 * @brief Attempts to retrieve the Torchlight with the given SpecificID.
+	 * @param torchlightID SpecificID of the Torchlight to retrieve
+	 * @return A pointer 
+	 */
+	Torchlight* getTorchlight(SpecificID torchlightID);
+
+    /**
 	 * @brief Attempts to retrieve the Trap with the given SpecificID.
 	 * @param trapID lSpecificID of the Trap to retrieve
 	 * @return A pointer 
@@ -185,6 +193,14 @@ public:
 	SmartVector<Projectile*> getProjectiles();
 
 	/**
+	 * @brief Get a list of all Projectiles in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Projectile pointers of all Projectile objects in the game
+	 * instance
+	 */
+	SmartVector<Torchlight*> getTorchlights();
+
+    /**
 	 * @brief Get a list of all Exits in this game instance at the current
 	 * timestep.
 	 * @return SmartVector of Exit pointers of all Exit objects in the game
@@ -312,6 +328,12 @@ private:
 	SmartVector<Enemy *> enemies;
 
 	/**
+	 * @brief SmartVector of TorchLight pointers to all objects whose ObjectType is
+	 * ObjectType::Enemy.
+	 */
+	SmartVector<Torchlight *> torchlights;
+
+    /**
 	 * @brief SmartVector of Trap pointers to all objects whose ObjectType is
 	 * ObjectType::Trap.
 	 */

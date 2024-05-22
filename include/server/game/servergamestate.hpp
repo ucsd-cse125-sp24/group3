@@ -1,5 +1,6 @@
 #pragma once
 
+#include "shared/utilities/constants.hpp"
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/config.hpp"
@@ -111,6 +112,8 @@ public:
 	void updateEnemies();
 
 	void doProjectileTicks();
+
+	void doTorchlightTicks();
 
 	void updateTraps();
 
@@ -303,6 +306,27 @@ private:
 	std::unordered_map<std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
 
 	std::vector<SolidSurface*> previouslyHighlighted;
+
+	/**
+    /**
+     * @brief helper function to spawn a wall at a specified cell
+     * @param cell is a single cell of the maze's grid where a wall
+     * should be placed
+     */
+    void spawnWall(GridCell* cell, int col, int row);
+
+    /**
+     * @brief helper function to spawn a wall with a torch at a specified 
+     * cell
+     * @param cell is a single cell of the maze's grid where a wall + torch
+     * should be placed
+     * @param cellType determines which direction the torch should face. 
+     * This means that only TorchUp, TorchDown, TorchRight, and TorchLeft
+     * are acceptable values of cellType 
+     */
+    void spawnTorch(GridCell *cell);
+
+    std::unordered_map<EntityID, std::array<std::optional<EntityID>, MAX_POINT_LIGHTS>> lightSourcesPerPlayer;
 
 	/**
 	 * @brief number of enemies currently in the maze

@@ -9,6 +9,7 @@ enum class ModelType {
 	WarrenBear,
 	HealthPotion,
 	InvisibilityPotion,
+    Torchlight,
 	NauseaPotion,
 	InvincibilityPotion,
 	FireSpell,

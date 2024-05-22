@@ -1,5 +1,6 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
+#include "server/game/torchlight.hpp"
 #include "server/game/spiketrap.hpp"
 #include "server/game/fireballtrap.hpp"
 #include "server/game/projectile.hpp"
@@ -61,6 +62,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::SolidSurface:
 			object->typeID = this->solid_surfaces.push(dynamic_cast<SolidSurface*>(object));
 			break;
+        case ObjectType::Torchlight:
+            object->typeID = this->torchlights.push(dynamic_cast<Torchlight*>(object));
+            break;
 		case ObjectType::DungeonMaster: { // has no type ID
 			this->dm = dynamic_cast<DungeonMaster*>(object);
 			break;
@@ -144,6 +148,9 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		break;
 	case ObjectType::SolidSurface:
 		this->solid_surfaces.remove(object->typeID);
+		break;
+	case ObjectType::Torchlight:
+		this->torchlights.remove(object->typeID);
 		break;
 	default:
 		std::cerr << "WARN: Cannot delete object! Did you forget to add a switch statement to \n"
@@ -233,6 +240,10 @@ Enemy* ObjectManager::getEnemy(SpecificID enemyID) {
 	return this->enemies.get(enemyID);
 }
 
+Torchlight* ObjectManager::getTorchlight(SpecificID torchlightID) {
+	return this->torchlights.get(torchlightID);
+}
+
 Trap* ObjectManager::getTrap(SpecificID trapID) {
 	return this->traps.get(trapID);
 }
@@ -259,6 +270,10 @@ SmartVector<Trap*> ObjectManager::getTraps() {
 
 SmartVector<Projectile*> ObjectManager::getProjectiles() {
 	return this->projectiles;
+}
+
+SmartVector<Torchlight*> ObjectManager::getTorchlights() {
+	return this->torchlights;
 }
 
 SmartVector<Exit*> ObjectManager::getExits() {
