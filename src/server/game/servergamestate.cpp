@@ -464,7 +464,6 @@ void ServerGameState::updateMovement() {
 		totalMovementStep.x *= object->physics.nauseous;
 		totalMovementStep.z *= object->physics.nauseous;
 
-		// handle edge case Dungeon Master
 		if (object->type == ObjectType::DungeonMaster) {
 			object->physics.shared.corner += totalMovementStep;
 
@@ -472,7 +471,6 @@ void ServerGameState::updateMovement() {
 			// check z length
 			bool zInBounds = (object->physics.shared.corner.z <= this->grid.getRows() * this->grid.grid_cell_width) && (object->physics.shared.corner.z >= 0);
 
-			// check x length
 			bool xInBounds = (object->physics.shared.corner.x <= this->grid.getColumns() * this->grid.grid_cell_width) && (object->physics.shared.corner.x >= 0);
 
 			if (!zInBounds) {

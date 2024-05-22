@@ -289,12 +289,19 @@ void Client::idleCallback(boost::asio::io_context& context) {
             this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Jump)));
         }
 
-        if (this->session->getInfo().is_dungeon_master.value() && is_held_i) {
-            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, -1.0f, 0.0f), ActionType::Zoom)));
-        }
-
-        if (this->session->getInfo().is_dungeon_master.value() && is_held_o) {
-            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Zoom)));
+        if (this->session->getInfo().is_dungeon_master.value()) {
+            if(is_held_i)
+                this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, -1.0f, 0.0f), ActionType::Zoom)));
+            if(is_held_o)
+                this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Zoom)));
+            if (is_held_right)
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
+            if (is_held_left)
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
+            if (is_held_up)
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
+            if (is_held_down)
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
         }
 
         if (this->session->getInfo().is_dungeon_master.value() && is_pressed_p && is_left_mouse_down) {
@@ -328,14 +335,12 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
         // If movement 0, send stopevent
         if ((sentCamMovement != cam_movement) && cam_movement == glm::vec3(0.0f)) {
-            this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
             this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement, ActionType::MoveCam)));
             sentCamMovement = cam_movement;
         }
 
         // If movement detected, different from previous, send start event
         else if (sentCamMovement != cam_movement) {
-            this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
             this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement, ActionType::MoveCam)));
             sentCamMovement = cam_movement;
         }
@@ -921,7 +926,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
     if (action == GLFW_REPEAT) {
         switch (key) {
-        case GLFW_KEY_S:
+       /* case GLFW_KEY_S:
             this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
             break;
         case GLFW_KEY_W:
@@ -932,7 +937,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
         case GLFW_KEY_D:
             this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
-            break;
+            break;*/
         case GLFW_KEY_BACKSPACE:
             auto ms_since_epoch = getMsSinceEpoch();
             if (Client::time_of_last_keystroke + 100 < ms_since_epoch) {
