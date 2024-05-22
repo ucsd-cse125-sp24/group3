@@ -28,13 +28,13 @@ enum class ImgID {
     Crosshair,
     Scroll,
     Dagger,
-    Katana,
+    Sword,
     Hammer,
 };
 #define GET_ALL_IMG_IDS() \
     {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::ItemFrame, ImgID::SelectedFrame, ImgID::HealthPotion, \
         ImgID::UnknownPotion, ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
-        ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Katana, ImgID::Hammer}
+        ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer}
 
 /**
  * Representation of a loaded image

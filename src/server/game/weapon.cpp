@@ -14,9 +14,9 @@ Weapon::Weapon(glm::vec3 corner, glm::vec3 dimensions, WeaponType weaponType):
     this->resetAttack = true;
 
     switch (weaponType) {
-    case WeaponType::Katana:
-        this->modelType = ModelType::Katana;
-        this->delay = KATANA_TOTAL;
+    case WeaponType::Sword:
+        this->modelType = ModelType::Sword;
+        this->delay = SWORD_TOTAL;
         break;
     case WeaponType::Dagger:
         this->modelType = ModelType::Dagger;
@@ -40,7 +40,7 @@ void Weapon::useItem(Object* other, ServerGameState& state, int itemSelected) {
 
     if (this->resetAttack) {
         switch (weaponType) {
-        case WeaponType::Katana:
+        case WeaponType::Sword:
             state.objects.createObject(new MediumAttack(player, attack_origin, player->physics.shared.facing));
             break;
         case WeaponType::Dagger:

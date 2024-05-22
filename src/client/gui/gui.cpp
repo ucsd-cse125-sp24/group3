@@ -418,8 +418,8 @@ void GUI::_sharedGameHUD() {
             itemString = "Dagger";
             break;
         }
-        case ModelType::Katana: {
-            itemString = "Katana";
+        case ModelType::Sword: {
+            itemString = "Sword";
             break;
         }
         case ModelType::Hammer: {
@@ -433,7 +433,7 @@ void GUI::_sharedGameHUD() {
         itemString,
         font::Font::TEXT,
         font::Size::SMALL,
-        font::Color::BLACK,
+        font::Color::WHITE,
         fonts,
         font::getRelativePixels(70)
     );
@@ -482,8 +482,8 @@ void GUI::_sharedGameHUD() {
                 itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Dagger), 2));
                 break;
             }
-            case ModelType::Katana: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Katana), 2));
+            case ModelType::Sword: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Sword), 2));
                 break;
             case ModelType::Hammer: {
                 itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Hammer), 2));
@@ -531,7 +531,7 @@ void GUI::_layoutGameHUD() {
         std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
         font::Font::MENU,
         font::Size::MEDIUM,
-        font::Color::RED,
+        font::Color::WHITE,
         fonts,
         font::getRelativePixels(90)
     );
@@ -547,7 +547,7 @@ void GUI::_layoutGameHUD() {
         status_flex->push(widget::DynText::make(
             status,
             fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
         ));
     }
 
@@ -578,7 +578,7 @@ void GUI::_layoutGameHUD() {
         durationFlex->push(widget::DynText::make(
             name + std::to_string((int)self->inventoryInfo->usedItems[id].second),
             fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::RED)));
+            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::WHITE)));
 
         ++it;
     }

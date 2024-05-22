@@ -10,7 +10,7 @@
  */
 enum class WeaponType {
 	Dagger,
-    Katana,
+    Sword,
     Hammer,
 };
 

@@ -58,8 +58,8 @@ CellType charToCellType(char c) {
 		return CellType::TeleportSpell;
 	case 'd':
 		return CellType::Dagger;
-	case 'k':
-		return CellType::Katana;
+	case 'r':
+		return CellType::Sword;
 	case 'm':
 		return CellType::Hammer;
 	case 'w':
@@ -136,8 +136,8 @@ char cellTypeToChar(CellType type) {
 		return 't';
 	case CellType::Dagger:
 		return 'd';
-	case CellType::Katana:
-		return 'k';
+	case CellType::Sword:
+		return 'r';
 	case CellType::Hammer:
 		return 'm';
 	case CellType::RandomWeapon:

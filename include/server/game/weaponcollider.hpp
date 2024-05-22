@@ -52,7 +52,7 @@ public:
 
     MediumAttack(Player* usedPlayer, glm::vec3 corner, glm::vec3 facing) :
         WeaponCollider(usedPlayer, corner, facing, DIMENSION, ModelType::Cube,
-            WeaponOptions(KATANA_DMG, KATANA_PREP, KATANA_DUR))
+            WeaponOptions(SWORD_DMG, SWORD_PREP, SWORD_DUR))
     {}
 };
 

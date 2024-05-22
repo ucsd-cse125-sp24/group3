@@ -47,13 +47,13 @@
 #define INVINCIBLITY_DUR		15
 
 /*	Weapon Stats	*/
-#define	KATANA_DMG				20
+#define	SWORD_DMG				20
 #define DAGGER_DMG				10
 #define HAMMER_DMG				30
 
-#define	KATANA_PREP				250
-#define	KATANA_DUR				300
-#define	KATANA_TOTAL			550
+#define	SWORD_PREP				250
+#define	SWORD_DUR				300
+#define	SWORD_TOTAL				550
 
 #define	DAGGER_PREP				150
 #define	DAGGER_DUR				150

@@ -887,7 +887,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					cell->type = CellType::Dagger;
 				}
 				else if (r == 2) {
-					cell->type = CellType::Katana;
+					cell->type = CellType::Sword;
 				}
 				else {
 					cell->type = CellType::Hammer;
@@ -931,7 +931,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Dagger));
 					break;
 				}
-				case CellType::Katana: {
+				case CellType::Sword: {
 					glm::vec3 dimensions(1.0f);
 
 					glm::vec3 corner(
@@ -939,7 +939,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						0,
 						cell->y * Grid::grid_cell_width + 1);
 
-					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Katana));
+					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Sword));
 					break;
 				}
 				case CellType::Hammer: {

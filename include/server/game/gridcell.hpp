@@ -27,7 +27,7 @@ enum class CellType {
 	HealSpell,
 	TeleportSpell,
 	Dagger,
-	Katana,
+	Sword,
 	Hammer,
 	RandomWeapon,
 	RandomPotion,

@@ -18,6 +18,6 @@ enum class ModelType {
 	Frame,
 	Orb,
 	Dagger,
-	Katana,
+	Sword,
 	Hammer,
 };

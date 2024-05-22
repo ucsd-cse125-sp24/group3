@@ -21,7 +21,7 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::Scroll: return (img_root / "scroll.png").string();
         case ImgID::Crosshair: return (img_root / "crosshair046.png").string();
         case ImgID::Dagger: return (img_root / "weapon_dagger.png").string();
-        case ImgID::Katana: return (img_root / "weapon_katana.png").string();
+        case ImgID::Sword: return (img_root / "weapon_sword.png").string();
         case ImgID::Hammer: return (img_root / "weapon_hammer.png").string();
     }
 }
