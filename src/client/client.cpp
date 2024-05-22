@@ -270,6 +270,8 @@ void Client::idleCallback(boost::asio::io_context& context) {
     // Update camera facing direction
     cam->update(mouse_xpos, mouse_ypos);
 
+    setWorldPos();
+
     // IF PLAYER, allow moving
     if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
         auto eid = this->session->getInfo().client_eid.value();
@@ -320,12 +322,14 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
         // If movement 0, send stopevent
         if ((sentCamMovement != cam_movement) && cam_movement == glm::vec3(0.0f)) {
+            this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
             this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement, ActionType::MoveCam)));
             sentCamMovement = cam_movement;
         }
 
         // If movement detected, different from previous, send start event
         else if (sentCamMovement != cam_movement) {
+            this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
             this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement, ActionType::MoveCam)));
             sentCamMovement = cam_movement;
         }
