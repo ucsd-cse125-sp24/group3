@@ -88,7 +88,7 @@ void AudioManager::doTick(glm::vec3 player_pos,
                 this->serverSFXs.insert({command.id, std::move(sound)});
                 break;
             }
-            case SoundAction::DELETE:
+            case SoundAction::DO_DELETE:
                 if (!this->serverSFXs.contains(command.id)) {
                     continue; // ignore the command because we aren't even playing this sound
                 }

@@ -7,7 +7,7 @@ using SoundID = unsigned long long;
 
 enum class SoundAction {
     PLAY,
-    DELETE
+    DO_DELETE // can't just be DELETE because that is already being set by some other macro on windows
 };
 
 struct SoundCommand {

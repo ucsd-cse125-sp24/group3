@@ -41,7 +41,7 @@ void SoundTable::tickSounds() {
             source.SERVER_time_remaining.value() -= TIMESTEP_LEN;
             if (source.SERVER_time_remaining.value() <= 0ms) {
                 // push back BEFORE erase so the ref to id and source don't go out of scope!!
-                this->current_commands.push_back(SoundCommand(id, SoundAction::DELETE, source));
+                this->current_commands.push_back(SoundCommand(id, SoundAction::DO_DELETE, source));
                 it = this->map.erase(it);
                 continue;
             }
