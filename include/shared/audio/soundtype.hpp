@@ -25,7 +25,7 @@ enum class ClientSFX {
 };
 
 #define GET_CLIENT_SFXS() { \
-    ClientSFX::TEMP, \ 
+    ClientSFX::TEMP, \
 }
 
 // Sounds that correspond to something in the game world
