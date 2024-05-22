@@ -42,25 +42,29 @@ enum class ServerSFX {
     PlayerWalk2,
     PlayerWalk3,
     PlayerWalk4,
-    PlayerWalk5
+    PlayerWalk5,
+    CeilingSpikeTrigger,
+    CeilingSpikeImpact,
     // make sure to add to server sfx len map!
     // make sure to add to macro below!
 };
 
 const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS = {
-    {ServerSFX::ArrowShoot,     620ms},
-    {ServerSFX::ArrowImpact,   1030ms},
-    {ServerSFX::FireballShoot, 1220ms},
-    {ServerSFX::FireballImpact, 370ms},
-    {ServerSFX::SlimeJump,      610ms},
-    {ServerSFX::SlimeLand,      760ms},
-    {ServerSFX::PlayerJump,     500ms},
-    {ServerSFX::PlayerLand,     500ms},
-    {ServerSFX::PlayerWalk1,    500ms},
-    {ServerSFX::PlayerWalk2,    500ms},
-    {ServerSFX::PlayerWalk3,    500ms},
-    {ServerSFX::PlayerWalk4,    500ms},
-    {ServerSFX::PlayerWalk5,    500ms}
+    {ServerSFX::ArrowShoot,          620ms},
+    {ServerSFX::ArrowImpact,        1030ms},
+    {ServerSFX::FireballShoot,      1220ms},
+    {ServerSFX::FireballImpact,      370ms},
+    {ServerSFX::SlimeJump,           610ms},
+    {ServerSFX::SlimeLand,           760ms},
+    {ServerSFX::PlayerJump,          500ms},
+    {ServerSFX::PlayerLand,          500ms},
+    {ServerSFX::PlayerWalk1,         500ms},
+    {ServerSFX::PlayerWalk2,         500ms},
+    {ServerSFX::PlayerWalk3,         500ms},
+    {ServerSFX::PlayerWalk4,         500ms},
+    {ServerSFX::PlayerWalk5,         500ms},
+    {ServerSFX::CeilingSpikeTrigger, 380ms},
+    {ServerSFX::CeilingSpikeImpact, 1180ms},
     // dont forget macro below!
 };
 
@@ -68,6 +72,7 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     ServerSFX::ArrowShoot, ServerSFX::FireballShoot, ServerSFX::ArrowImpact, ServerSFX::FireballImpact, \
     ServerSFX::SlimeJump, ServerSFX::SlimeLand, ServerSFX::PlayerJump, ServerSFX::PlayerLand, \
     ServerSFX::PlayerWalk1, ServerSFX::PlayerWalk2, ServerSFX::PlayerWalk3, ServerSFX::PlayerWalk4, ServerSFX::PlayerWalk5, \
+    ServerSFX::CeilingSpikeTrigger, ServerSFX::CeilingSpikeImpact, \
 }
 
 // const std::unordered_map<ServerSound, size_t> serverSoundTickLengths = {

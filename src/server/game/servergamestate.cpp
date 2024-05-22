@@ -192,7 +192,7 @@ void ServerGameState::update(const EventList& events) {
 				this->sound_table.addNewSoundSource(SoundSource(
 					ServerSFX::PlayerJump,
 					obj->physics.shared.corner,
-					MEDIUM_VOLUME,
+					DEFAULT_VOLUME,
 					MEDIUM_DIST,
 					MEDIUM_ATTEN
 				));
@@ -455,19 +455,30 @@ void ServerGameState::updateMovement() {
 		}
 
 		//	Vertical movement
-		//	Clamp object to floor if corner's y position is lower than the floor
 		if (object->physics.shared.corner.y < 0) {
-			// Play relevant landing sounds
-			if (starting_corner_pos.y != 0.0f && object->type == ObjectType::Player) {
-				this->sound_table.addNewSoundSource(SoundSource(
-					ServerSFX::PlayerLand,
-					object->physics.shared.corner,
-					MEDIUM_VOLUME,
-					MEDIUM_DIST,
-					MEDIUM_ATTEN
-				));
-			}
+			//	Clamp object to floor if corner's y position is lower than the floor
 			object->physics.shared.corner.y = 0;
+
+			// Play relevant landing sounds
+			if (starting_corner_pos.y != 0.0f) {
+				if (object->type == ObjectType::Player) {
+					this->sound_table.addNewSoundSource(SoundSource(
+						ServerSFX::PlayerLand,
+						object->physics.shared.corner,
+						DEFAULT_VOLUME,
+						MEDIUM_DIST,
+						MEDIUM_ATTEN
+					));
+				} else if (object->type == ObjectType::SpikeTrap) {
+					this->sound_table.addNewSoundSource(SoundSource(
+						ServerSFX::CeilingSpikeImpact,
+						object->physics.shared.corner,
+						FULL_VOLUME,
+						FAR_DIST,
+						FAR_ATTEN
+					));
+				}
+			}
 		}
 
 		// Play relevant footstep sounds
@@ -479,9 +490,9 @@ void ServerGameState::updateMovement() {
 				this->sound_table.addNewSoundSource(SoundSource(
 					getNextPlayerFootstep(object->globalID),
 					object->physics.shared.getCenterPosition(),
-					SHORT_VOLUME,
+					DEFAULT_VOLUME,
 					SHORT_DIST,
-					SHORT_ATTEN
+					SHORT_ATTEN	
 				));
 			}
 		}

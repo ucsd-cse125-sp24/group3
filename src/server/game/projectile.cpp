@@ -40,7 +40,7 @@ void Projectile::doCollision(Object* other, ServerGameState& state) {
         state.soundTable().addNewSoundSource(SoundSource(
             this->destroy_sound.value(),
             this->physics.shared.getCenterPosition(),
-            MEDIUM_VOLUME,
+            DEFAULT_VOLUME,
             MEDIUM_DIST,
             MEDIUM_ATTEN
         ));

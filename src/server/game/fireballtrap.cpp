@@ -76,7 +76,7 @@ void FireballTrap::trigger(ServerGameState& state) {
     state.soundTable().addNewSoundSource(SoundSource(
         ServerSFX::FireballShoot,
         this->physics.shared.getCenterPosition(),
-        MEDIUM_VOLUME,
+        DEFAULT_VOLUME,
         MEDIUM_DIST,
         MEDIUM_ATTEN
     ));

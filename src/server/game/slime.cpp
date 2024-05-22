@@ -44,7 +44,7 @@ bool Slime::doBehavior(ServerGameState& state) {
             state.soundTable().addNewSoundSource(SoundSource(
                 ServerSFX::SlimeLand,
                 this->physics.shared.getCenterPosition(),
-                MEDIUM_VOLUME,
+                DEFAULT_VOLUME,
                 MEDIUM_DIST,
                 MEDIUM_ATTEN
             ));
@@ -62,7 +62,7 @@ bool Slime::doBehavior(ServerGameState& state) {
         state.soundTable().addNewSoundSource(SoundSource(
             ServerSFX::SlimeJump,
             this->physics.shared.getCenterPosition(),
-            MEDIUM_VOLUME,
+            DEFAULT_VOLUME,
             MEDIUM_DIST,
             MEDIUM_ATTEN
         ));

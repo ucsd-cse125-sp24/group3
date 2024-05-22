@@ -45,6 +45,10 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "player_walk_4_mono.wav").string();
         case ServerSFX::PlayerWalk5:
             return (dir / "player_walk_5_mono.wav").string();
+        case ServerSFX::CeilingSpikeImpact:
+            return (dir / "ceiling_spike_impact_short_mono.wav").string();
+        case ServerSFX::CeilingSpikeTrigger:
+            return (dir / "ceiling_spike_trigger_mono.wav").string();
         
         default:
             std::cerr << "FATAL: no known path for ServerSFX " << static_cast<int>(sfx) << std::endl;
