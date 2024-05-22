@@ -11,6 +11,7 @@ Object::Object(ObjectType type, Physics physics, ModelType modelType):
 	//	Set object type to Object
 	this->type = type;
 	this->setModel(modelType);
+	this->distance_moved = 0.0f;
 }
 
 Object::~Object() {}

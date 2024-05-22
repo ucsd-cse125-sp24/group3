@@ -15,6 +15,7 @@ set(FILES
 
     audio/soundtype.cpp
     audio/soundsource.cpp
+    audio/utilities.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

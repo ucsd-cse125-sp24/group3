@@ -18,6 +18,7 @@
 
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/audio/constants.hpp"
+#include "shared/audio/utilities.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -456,6 +457,7 @@ void ServerGameState::updateMovement() {
 		//	Vertical movement
 		//	Clamp object to floor if corner's y position is lower than the floor
 		if (object->physics.shared.corner.y < 0) {
+			// Play relevant landing sounds
 			if (starting_corner_pos.y != 0.0f && object->type == ObjectType::Player) {
 				this->sound_table.addNewSoundSource(SoundSource(
 					ServerSFX::PlayerLand,
@@ -466,6 +468,22 @@ void ServerGameState::updateMovement() {
 				));
 			}
 			object->physics.shared.corner.y = 0;
+		}
+
+		// Play relevant footstep sounds
+
+		// Footstep audio for players
+		if (object->type == ObjectType::Player) {
+			if (object->distance_moved > 3.0f && object->physics.shared.corner.y == 0.0f) {
+				object->distance_moved = 0.0f; // reset so we only play footsteps every so often
+				this->sound_table.addNewSoundSource(SoundSource(
+					getNextPlayerFootstep(object->globalID),
+					object->physics.shared.getCenterPosition(),
+					SHORT_VOLUME,
+					SHORT_DIST,
+					SHORT_ATTEN
+				));
+			}
 		}
 
 		//	Update object's gravity velocity if the object is in the air or
