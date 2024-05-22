@@ -186,6 +186,15 @@ bool Client::init() {
     auto solid_surface_frag_path = shaders_dir / "solidsurface.frag";
     this->solid_surface_shader = std::make_shared<Shader>(solid_surface_vert_path.string(), solid_surface_frag_path.string());
 
+    auto wall_model_path = graphics_assets_dir / "wall.obj";
+    this->wall_model = std::make_unique<Model>(wall_model_path.string());
+    auto wall_vert_path = shaders_dir / "wall.vert";
+    auto wall_frag_path = shaders_dir / "wall.frag";
+    this->wall_shader = std::make_shared<Shader>(wall_vert_path.string(), wall_frag_path.string());
+
+    auto pillar_model_path = graphics_assets_dir / "pillar.obj";
+    this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
+
     this->gui_state = GUIState::TITLE_SCREEN;
 
     this->audioManager->init();
@@ -407,13 +416,35 @@ void Client::draw() {
                 break;
             }
             case ObjectType::SolidSurface: {
-                this->cube_model->setDimensions(sharedObject->physics.dimensions);
-                this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->cube_model->draw(this->solid_surface_shader,
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    this->closest_light_sources, 
-                    true);
+                switch (sharedObject->solidSurface->surfaceType) {
+                    case SurfaceType::Wall:
+                        this->wall_model->setDimensions(sharedObject->physics.dimensions);
+                        this->wall_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        this->wall_model->draw(this->wall_shader,
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            this->closest_light_sources, 
+                            true);
+                        break;
+                    case SurfaceType::Pillar:
+                        this->pillar_model->setDimensions(sharedObject->physics.dimensions);
+                        this->pillar_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        this->pillar_model->draw(this->wall_shader,
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            this->closest_light_sources, 
+                            true);
+                        break;
+                    default:
+                        this->cube_model->setDimensions(sharedObject->physics.dimensions);
+                        this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        this->cube_model->draw(this->solid_surface_shader,
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            this->closest_light_sources, 
+                            true);
+                        break;
+                }
                 break;
             }
             case ObjectType::FakeWall: {
