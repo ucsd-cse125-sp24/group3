@@ -172,11 +172,13 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::MoveCam: {
 				obj->physics.velocity.x = (startAction.movement * PLAYER_SPEED).x;
 				obj->physics.velocity.z = (startAction.movement * PLAYER_SPEED).z;
+				obj->animState = AnimState::WalkAnim;
 				break;
 			}
 			case ActionType::Jump: {
 				if (obj->physics.velocity.y != 0) { break; }
 				obj->physics.velocity.y += (startAction.movement * JUMP_SPEED / 2.0f).y;
+				obj->animState = AnimState::JumpAnim;
 				break;
 			}
 			case ActionType::Sprint: {
@@ -436,6 +438,9 @@ void ServerGameState::updateMovement() {
 		//	Clamp object to floor if corner's y position is lower than the floor
 		if (object->physics.shared.corner.y < 0) {
 			object->physics.shared.corner.y = 0;
+
+			// After landing, set object's animation to non-jump (idle)
+			object->animState = AnimState::WalkAnim;
 		}
 
 		//	Update object's gravity velocity if the object is in the air or

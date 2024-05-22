@@ -166,14 +166,19 @@ bool Client::init() {
     // Animation* bear = new Animation(bear_anim_path.string(), bear_model.get());
     // animManager = new AnimationManager(bear);
 
-    // auto player_model_path = graphics_assets_dir / "testanims/char1_final.fbx";
-    auto player_model_path = graphics_assets_dir / "testanims/player_walk.fbx";
-    auto player_walk_path = graphics_assets_dir / "testanims/player_walk.fbx";
+    auto player_model_path = graphics_assets_dir / "testanims/player_model.fbx";
+    auto player_walk_path = graphics_assets_dir / "testanims/Walking-8.fbx";
+    auto player_jump_path = graphics_assets_dir / "testanims/Running.fbx";
 
     this->player_model = std::make_unique<Model>(player_model_path.string());
     this->player_model->scaleAbsolute(0.0025);
-    Animation* player = new Animation(player_walk_path.string(), this->player_model.get());
-    animManager = new AnimationManager(player);
+    Animation* player_walk = new Animation(player_walk_path.string(), this->player_model.get());
+    Animation* player_jump = new Animation(player_jump_path.string(), this->player_model.get());
+    animManager = new AnimationManager(player_walk);
+
+    animManager->addAnimation(player_walk, ObjectType::Player, AnimState::WalkAnim);
+    animManager->addAnimation(player_jump, ObjectType::Player, AnimState::JumpAnim);
+    animManager->addAnimation(player_walk, ObjectType::Player, AnimState::IdleAnim);
 
     this->light_source = std::make_unique<LightSource>();
 
@@ -313,22 +318,52 @@ void Client::draw() {
         if (!sharedObject.has_value()) {
             continue;
         }
-
-        /* Update model animation */
-        animManager->updateAnimation(0.0025f);
-        auto transforms = animManager->getFinalBoneMatrices();
-        // std::cout << transforms.size() << std::endl;
-        this->model_shader->use();
-
-        for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
-            // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
-            model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
-        }
-
-        // this->model_shader->clear();
         
         switch (sharedObject->type) {
             case ObjectType::Player: {
+                AnimState animState = sharedObject->animState;
+                switch (sharedObject->animState) {
+                    case AnimState::WalkAnim:
+                        std::cout << "walk" << std::endl;
+                        break;
+                    case AnimState::JumpAnim:
+                        std::cout << "jump" << std::endl;
+                        break;
+                    case AnimState::IdleAnim:
+                        std::cout << "idle" << std::endl;
+                        break;
+                    case AnimState::LandAnim:
+                        std::cout << "land" << std::endl;
+                        break;
+                    case AnimState::SprintAnim:
+                        std::cout << "sprint" << std::endl;
+                        break;
+                    case AnimState::DeathAnim:
+                        std::cout << "death" << std::endl;
+                        break;
+                    case AnimState::AttackAnim:
+                        std::cout << "attack" << std::endl;
+                        break;
+                    default:
+                        std::cout << "undef" << std::endl;
+                        break;
+                }
+
+                animManager->setAnimation(sharedObject->type, sharedObject->animState);
+
+                /* Update model animation */
+                animManager->updateAnimation(0.025f);
+                auto transforms = animManager->getFinalBoneMatrices();
+                // std::cout << transforms.size() << std::endl;
+                this->model_shader->use();
+
+                for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
+                    // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
+                    model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+                }
+
+                this->model_shader->clear();
+
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
                     //  TODO: Update the player eye level to an acceptable level

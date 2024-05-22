@@ -53,7 +53,10 @@ void AnimationManager::calculateBoneTransform(const AssimpNodeData* node, glm::m
 }
 
 void AnimationManager::setAnimation(ObjectType objType, AnimState animState) {
-    this->m_currentAnimation = objAnimMap[objType][animState];
+    if (m_currentAnimation != objAnimMap[objType][animState]) {
+        this->m_currentAnimation = objAnimMap[objType][animState];
+        m_currentTime = 0.0f;
+    }
 }
 
 void AnimationManager::addAnimation(Animation* anim, ObjectType objType, AnimState animState) {

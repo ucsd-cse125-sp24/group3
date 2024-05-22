@@ -10,6 +10,7 @@ Object::Object(ObjectType type, Physics physics, ModelType modelType):
 	//	Set object type to Object
 	this->type = type;
 	this->setModel(modelType);
+	this->animState = AnimState::IdleAnim;
 }
 
 Object::~Object() {}
@@ -48,6 +49,7 @@ SharedObject Object::toShared() {
 	shared.type = this->type;
 	shared.physics = this->physics.shared;
 	shared.modelType = this->modelType;
+	shared.animState = this->animState;
 
 	return shared;
 }

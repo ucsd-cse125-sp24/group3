@@ -201,7 +201,7 @@ struct SharedExit {
 enum class AnimState {
 	IdleAnim,
 	WalkAnim,
-	RunAnim,
+	SprintAnim,
 	JumpAnim,
 	LandAnim,
 	AttackAnim,
@@ -218,8 +218,8 @@ public:
 	ObjectType type;
 	SharedPhysics physics;
 	ModelType modelType;
+	AnimState animState;
 
-	boost::optional<AnimState> animState;
 	boost::optional<SharedStats> stats;
 	boost::optional<SharedItemInfo> iteminfo;
 	boost::optional<SharedSolidSurface> solidSurface;
