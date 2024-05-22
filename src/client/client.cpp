@@ -920,7 +920,20 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     }
 
     if (action == GLFW_REPEAT) {
-        if (key == GLFW_KEY_BACKSPACE) {
+        switch (key) {
+        case GLFW_KEY_S:
+            this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
+            break;
+        case GLFW_KEY_W:
+            this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
+            break;
+        case GLFW_KEY_A:
+            this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
+            break;
+        case GLFW_KEY_D:
+            this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
+            break;
+        case GLFW_KEY_BACKSPACE:
             auto ms_since_epoch = getMsSinceEpoch();
             if (Client::time_of_last_keystroke + 100 < ms_since_epoch) {
                 Client::time_of_last_keystroke = ms_since_epoch;
