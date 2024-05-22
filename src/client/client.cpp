@@ -157,7 +157,10 @@ bool Client::init() {
 
     auto cube_vert_path = shaders_dir / "cube.vert";
     auto cube_frag_path = shaders_dir / "cube.frag";
-    this->cube_shader = std::make_shared<Shader>(cube_vert_path.string(), cube_frag_path.string());
+    this->cube_shader = std::make_shared<Shader>(cube_vert_path.string(), cube_frag_path.string());    
+    
+    auto dm_cube_frag_path = shaders_dir / "dm_cube.frag";
+    this->dm_cube_shader = std::make_shared<Shader>(cube_vert_path.string(), dm_cube_frag_path.string());
 
     auto model_vert_path = shaders_dir / "model.vert";
     auto model_frag_path = shaders_dir / "model.frag";
@@ -380,12 +383,9 @@ void Client::draw() {
             continue;
         }
         auto dist = glm::distance(sharedObject->physics.corner, my_pos);
-        // temporary fix to always render ceiling and floor since their corner
-        // will be outside our range. will be fixed with DM PR
-        if (sharedObject->solidSurface.has_value() && sharedObject->solidSurface->surfaceType != SurfaceType::Wall) {
 
-        } else if (dist > RENDER_DISTANCE) {
-                continue;
+        if (!this->session->getInfo().is_dungeon_master.value() && dist > RENDER_DISTANCE) {
+            continue;
         }
 
         switch (sharedObject->type) {
@@ -492,10 +492,10 @@ void Client::draw() {
 
                         this->cube_model->setDimensions(sharedObject->physics.dimensions);
                         this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                        this->cube_model->draw(this->solid_surface_shader,
+                        this->cube_model->draw(this->dm_cube_shader,
                             this->cam->getViewProj(),
                             this->cam->getPos(),
-                            this->closest_light_sources,
+                            {}, // will make everything black if empty
                             true);
                     }
                 }
@@ -541,13 +541,20 @@ void Client::draw() {
                 break;
             }
             case ObjectType::Torchlight: {
-                this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->torchlight_model->draw(
-                    this->light_source_shader,
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    {},
-                    true);
+                // do not render torches if dungeon master
+                if (!this->session->getInfo().is_dungeon_master.has_value()) {
+                    break; // just in case this message wasn't received, don't crash
+                }
+
+                if (!this->session->getInfo().is_dungeon_master.value()) {
+                    this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    this->torchlight_model->draw(
+                        this->light_source_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        {},
+                        true);
+                }
                 break;
             }
             case ObjectType::FireballTrap: {

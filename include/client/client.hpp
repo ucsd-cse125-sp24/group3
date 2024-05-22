@@ -187,7 +187,8 @@ private:
     SharedGameState gameState;
 
     /* Shader objects for various */
-    std::shared_ptr<Shader> cube_shader; 
+    std::shared_ptr<Shader> cube_shader;
+    std::shared_ptr<Shader> dm_cube_shader;
     std::shared_ptr<Shader> model_shader;
     std::shared_ptr<Shader> light_source_shader;
     std::shared_ptr<Shader> solid_surface_shader;
