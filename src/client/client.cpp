@@ -247,12 +247,20 @@ void Client::displayCallback() {
 
 // Handle any updates 
 void Client::idleCallback(boost::asio::io_context& context) {
+    // have to do before processing server input because if the phase changes
+    // in this call to process server input, we should just skip this first
+    // inbetween phase and don't get any input because we might get a serialization
+    // error, specifically with the world_pos variable
+    GamePhase rendered_phase = this->gameState.phase;
+
     if (this->session != nullptr) {
         processServerInput(context);
     }
 
     // If we aren't in the middle of the game then we shouldn't capture any movement info
     // or send any movement related events
+    if (rendered_phase != GamePhase::GAME) { return; }
+
     if (this->gui_state != GUIState::GAME_HUD) { return; }
 
     glm::vec3 cam_movement = glm::vec3(0.0f);
@@ -269,8 +277,6 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
     // Update camera facing direction
     cam->update(mouse_xpos, mouse_ypos);
-
-    setWorldPos();
 
     // IF PLAYER, allow moving
     if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
@@ -955,6 +961,9 @@ void Client::setWorldPos() {
     glm::vec4 vport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
     this->world_pos = glm::unProject(win, glm::mat4(1.0f), this->cam->getProjection() * this->cam->getView(), vport);
+    if (std::isnan(this->world_pos.x) || std::isnan(this->world_pos.y) || std::isnan(this->world_pos.z)) {
+        this->world_pos = glm::vec3(0, 0, 0);
+    }
 }
 
 void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
