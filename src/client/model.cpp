@@ -225,6 +225,20 @@ void Model::scaleRelative(const glm::vec3& scale) {
     }
 }
 
+void Model::rotateAbsolute(const glm::vec3& dir, const glm::vec3& axis) {
+    Renderable::rotateAbsolute(dir, axis);
+    for(Mesh& mesh : this->meshes) {
+        mesh.rotateAbsolute(dir, axis);
+    }
+}
+
+void Model::rotateRelative(const glm::vec3& dir, const glm::vec3& axis) {
+    Renderable::rotateRelative(dir, axis);
+    for(Mesh& mesh : this->meshes) {
+        mesh.rotateRelative(dir, axis);
+    }
+}
+
 void Model::clear() {
     Renderable::clear();
     for(Mesh& mesh : this->meshes) {
@@ -259,6 +273,7 @@ void Model::processNode(aiNode *node, const aiScene *scene) {
     // process all the node's meshes (if any)
     for(unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]]; 
+        // std::cout << "processing mesh at index[" << i << "]" << std::endl;
         meshes.push_back(processMesh(mesh, scene));			
 
         // update model's bounding box with new mesh
@@ -284,11 +299,21 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
                 mesh->mVertices[i].x,
                 mesh->mVertices[i].y,
                 mesh->mVertices[i].z);
-        glm::vec3 normal(
-                mesh->mNormals[i].x,
-                mesh->mNormals[i].y,
-                mesh->mNormals[i].z);
-        
+        // std::cout << "mNumVertices: " << mesh->mNumVertices << std::endl;
+        // std::cout << i << std::endl;
+
+        glm::vec3 normal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
+        if (mesh->mNormals) {
+            // std::cout << "Process vertex[" << i << "]: " << mesh->mNormals[i].x << ", ";
+            // std::cout << mesh->mNormals[i].y << ", ";
+            // std::cout << mesh->mNormals[i].z << std::endl;
+            normal = glm::vec3(
+                    mesh->mNormals[i].x,
+                    mesh->mNormals[i].y,
+                    mesh->mNormals[i].z);
+
+        }
+
         // check if the mesh contain texture coordinates
         glm::vec2 texture(0.0f, 0.0f);
         if(mesh->mTextureCoords[0]) {

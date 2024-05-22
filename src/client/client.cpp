@@ -33,6 +33,8 @@
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
+bool firstPos = true;
+
 // Checker for events sent / later can be made in an array
 glm::vec3 sentCamMovement = glm::vec3(-1.0f);
 
@@ -156,17 +158,22 @@ bool Client::init() {
     // this->bear_model = std::make_unique<Model>(bear_model_path.string());
     // // this->bear_model->scaleAbsolute(0.25);
 
-    auto bear_model_path = graphics_assets_dir / "Taunt.fbx";
-    auto bear_anim_path = graphics_assets_dir / "Taunt.fbx";
+    // auto bear_model_path = graphics_assets_dir / "Taunt.fbx";
+    // auto bear_anim_path = graphics_assets_dir / "Taunt.fbx";
 
-    this->bear_model = std::make_unique<Model>(bear_model_path.string());
-    this->bear_model->scaleAbsolute(0.004);
-    Animation* bear = new Animation(bear_anim_path.string(), bear_model.get());
-    animManager = new AnimationManager(bear);
+    // this->bear_model = std::make_unique<Model>(bear_model_path.string());
+    // this->bear_model->scaleAbsolute(0.004);
+    // Animation* bear = new Animation(bear_anim_path.string(), bear_model.get());
+    // animManager = new AnimationManager(bear);
 
-    auto player_model_path = graphics_assets_dir / "Fire-testing.obj";
+    // auto player_model_path = graphics_assets_dir / "testanims/char1_final.fbx";
+    auto player_model_path = graphics_assets_dir / "testanims/player_walk.fbx";
+    auto player_walk_path = graphics_assets_dir / "testanims/player_walk.fbx";
+
     this->player_model = std::make_unique<Model>(player_model_path.string());
-    this->player_model->scaleAbsolute(0.25);
+    this->player_model->scaleAbsolute(0.0025);
+    Animation* player = new Animation(player_walk_path.string(), this->player_model.get());
+    animManager = new AnimationManager(player);
 
     this->light_source = std::make_unique<LightSource>();
 
@@ -308,7 +315,7 @@ void Client::draw() {
         }
 
         /* Update model animation */
-        animManager->updateAnimation(0.002f);
+        animManager->updateAnimation(0.0025f);
         auto transforms = animManager->getFinalBoneMatrices();
         // std::cout << transforms.size() << std::endl;
         this->model_shader->use();
@@ -318,15 +325,17 @@ void Client::draw() {
             model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
         }
 
-        this->model_shader->clear();
+        // this->model_shader->clear();
         
         switch (sharedObject->type) {
             case ObjectType::Player: {
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
                     //  TODO: Update the player eye level to an acceptable level
+
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
+                    pos.z += 4.0f;
                     cam->updatePos(pos);
 
                     // reset back to game mode if this is the first frame in which you are respawned
@@ -338,16 +347,22 @@ void Client::draw() {
                     if (!sharedObject->playerInfo->is_alive) {
                         this->gui_state = GUIState::DEAD_SCREEN;
                     }
-                    break;
+                    // break;
                 }
 
                 if (!sharedObject->playerInfo->render) { break; } // dont render while invisible
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
 
                 auto player_pos = sharedObject->physics.corner;
+                auto player_dir = sharedObject->physics.facing;
 
-                this->player_model->setDimensions(sharedObject->physics.dimensions);
+                // this->player_model->setDimensions(sharedObject->physics.dimensions);
                 this->player_model->translateAbsolute(player_pos);
+                if (player_dir == glm::vec3(0.0f)) {
+                    player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
+                }
+                player_dir.y = 0.0f;
+                this->player_model->rotateAbsolute(glm::normalize(player_dir));
                 this->player_model->draw(
                     this->model_shader,
                     this->cam->getViewProj(),

@@ -3,7 +3,7 @@
     "maze": {
       "directory": "maps",
       "procedural": false,
-      "maze_file": "test/itemRoom.maze"
+      "maze_file": "test/anim_test.maze"
     }
   },
   "network": {
@@ -18,7 +18,7 @@
   "client": {
     "default_name": "Conan O'Brien",
     "lobby_discovery": true,
-    "window_width": 1500,
+    "window_width": 900,
     "draw_bboxes": false
   }
 }

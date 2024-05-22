@@ -201,6 +201,27 @@ class Model : public Renderable {
     void scaleRelative(const glm::vec3& scale) override;
 
     /**
+     * @brief Rotates the item along the specified axis. If
+     * no axis is specified, then assumes a rotation on the
+     * y-axis. This will not stack upon previous rotations.
+     * 
+     * @param angle The angle of rotation
+     * @param axis The axis of rotation 
+     */
+    void rotateAbsolute(const glm::vec3& dir, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f)) override;
+
+    /**
+     * @brief Rotates the item along the specified axis. If
+     * no axis is specified, then assumes a rotation on the
+     * y-axis. This will stack upon previous rotations.
+     * 
+     * @param angle The angle of rotation
+     * @param axis The axis of rotation 
+     */
+    void rotateRelative(const glm::vec3& dir, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f)) override;
+
+
+    /**
      * Clear transformations and reset the model matrix 
      * to the identity.
      */
