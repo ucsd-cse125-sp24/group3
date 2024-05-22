@@ -120,10 +120,9 @@ struct SharedItemInfo {
 	bool held; // for rendering
 	bool used; // for rendering
 	double remaining_time;
-	bool attacked;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& used& held& remaining_time& attacked;
+		ar& used& held& remaining_time;
 	}
 };
 
@@ -257,7 +256,7 @@ public:
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & pointLightInfo & statuses & exit;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & pointLightInfo & statuses & exit & weaponInfo;
 	}
 private:
 };

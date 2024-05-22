@@ -56,7 +56,7 @@ bool WeaponCollider::readyTime() {
     if (this->info.attacked) { return true; }
     auto now = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_milliseconds{ now - this->preparing_time };
-    if (elapsed_milliseconds > std::chrono::milliseconds(1000)) {
+    if (elapsed_milliseconds > std::chrono::milliseconds(this->opt.timeUntilAttack)) {
         this->info.attacked = true;
         this->attacked_time = now;
         this->physics.collider = Collider::Box;
@@ -68,7 +68,7 @@ bool WeaponCollider::readyTime() {
 bool WeaponCollider::timeOut(ServerGameState& state) {
     auto now = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_milliseconds{ now - this->attacked_time };
-    if (elapsed_milliseconds > std::chrono::milliseconds(2000)) {
+    if (elapsed_milliseconds > std::chrono::milliseconds(this->opt.attackDuration)) {
         return true;
     }
     return false;
@@ -76,7 +76,6 @@ bool WeaponCollider::timeOut(ServerGameState& state) {
 
 SharedObject WeaponCollider::toShared() {
     auto so = Object::toShared();
-    //so.weaponInfo = this->info;
-    std::cout << this->info.attacked << "\n";
+    so.weaponInfo = this->info;
     return so;
 }

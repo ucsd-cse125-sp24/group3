@@ -591,23 +591,23 @@ void Client::draw() {
                     cube->draw(this->cube_shader,
                         this->cam->getViewProj(),
                         this->cam->getPos(),
-                        glm::vec3(),
+                        {},
                         true);
                 }
                 break;
             }
             case ObjectType::WeaponCollider: {
                 //std::cout << sharedObject->weaponInfo->attacked << "\n";
-                //if (!sharedObject->weaponInfo->attacked) {
+                if (sharedObject->weaponInfo->attacked) {
                     auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
                     cube->scaleAbsolute(sharedObject->physics.dimensions);
                     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
                     cube->draw(this->cube_shader,
                         this->cam->getViewProj(),
                         this->cam->getPos(),
-                        glm::vec3(),
+                        {},
                         false);
-                //}
+                }
                 break;
             }
             default:
