@@ -363,8 +363,9 @@ void Client::processServerInput(boost::asio::io_context& context) {
             // Change the UI to the game hud UI whenever we change into the GAME game phase
             if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
                 // set to Dungeon Master POV if DM
-                if (this->session->getInfo().is_dungeon_master) {
+                if (this->session->getInfo().is_dungeon_master.has_value() && this->session->getInfo().is_dungeon_master.value()) {
                     this->cam = std::make_unique<DungeonMasterCamera>();
+                    // TODO: fix race condition where this doesn't get received in time when reconnecting because the server is doing way more stuff and is delayed
                 }
 
                 this->gui_state = GUIState::GAME_HUD;
@@ -413,10 +414,17 @@ void Client::draw() {
 
         bool is_ceiling = sharedObject->type == ObjectType::SolidSurface &&
             sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling;
+
+        bool is_floor = sharedObject->type == ObjectType::SolidSurface &&
+            sharedObject->solidSurface->surfaceType == SurfaceType::Floor;
+
         auto dist = glm::distance(sharedObject->physics.corner, my_pos);
 
-        if (!is_dm && !is_ceiling && dist > RENDER_DISTANCE) {
-            continue;
+
+        if (!is_floor) {
+            if (!is_dm && !is_ceiling && dist > RENDER_DISTANCE) {
+                continue;
+            }
         }
 
         switch (sharedObject->type) {

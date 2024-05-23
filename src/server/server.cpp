@@ -243,6 +243,9 @@ void Server::_doAccept() {
                 }
 
                 new_session->startListen();
+                std::cout << "sending assign eid\n";
+                std::cout << new_session->getInfo().is_dungeon_master.value() << "\n";
+                std::cout << new_session->getInfo().client_eid.value() << "\n";
                 new_session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                     ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value(), 
                                             .is_dungeon_master = new_session->getInfo().is_dungeon_master.value()}));
@@ -268,9 +271,6 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
             // The old session is expired, so create new one
 
-            // this means if Dungeon Master drops, THE PLAYER WILL NOT BE ON RECONNECT!
-
-            // TODO: need to change probably?
             auto new_session = std::make_shared<Session>(std::move(this->socket),
                 SessionInfo({}, old_id, old_session->is_dungeon_master));
             by_ip.replace(old_session, SessionEntry(old_id, old_session->is_dungeon_master, addr, new_session));

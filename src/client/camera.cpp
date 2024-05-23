@@ -99,7 +99,7 @@ void Camera::updatePos(glm::vec3 pos) {
 
 DungeonMasterCamera::DungeonMasterCamera() : Camera() {
     pitch = -89.0f;
-    this->farClip = 300.0f;
+    this->farClip = 500.0f;
 }
 
 DungeonMasterCamera::~DungeonMasterCamera() {
@@ -108,7 +108,6 @@ DungeonMasterCamera::~DungeonMasterCamera() {
 
 void DungeonMasterCamera::update(float xpos, float ypos) {
     // no pitch update for DM
-
     if (firstMouse)
     {
         lastX = xpos;
