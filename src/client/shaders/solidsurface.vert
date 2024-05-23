@@ -1,5 +1,5 @@
 #version 330 core
-#
+
 // Vertex shader for loaded models.
 // Also forwards texture coordinates to fragment shader.
 

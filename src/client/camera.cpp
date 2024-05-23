@@ -1,11 +1,13 @@
 #include "client/camera.hpp"
 // Code adapted from https://learnopengl.com/Getting-started/Camera
 
-Camera::Camera() : cameraPos(glm::vec3(0.0f)), cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)), cameraUp(glm::vec3(0.0f, 1.0f, 0.0f)), viewProjMat(glm::mat4(1.0f)) {
+Camera::Camera(): 
+    cameraPos(glm::vec3(0.0f)), cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)), cameraUp(glm::vec3(0.0f, 1.0f, 0.0f)), viewProjMat(glm::mat4(1.0f)) 
+{
     FOV = 90.0f;
     aspect = 1.33f;
     nearClip = 0.1f;
-    farClip = 300.0f;
+    farClip = 100.0f;
 
     yaw = -90.0f; // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
     pitch = 0.0f;
@@ -97,6 +99,7 @@ void Camera::updatePos(glm::vec3 pos) {
 
 DungeonMasterCamera::DungeonMasterCamera() : Camera() {
     pitch = -89.0f;
+    this->farClip = 300.0f;
 }
 
 DungeonMasterCamera::~DungeonMasterCamera() {

@@ -320,17 +320,12 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
             switch (selectedTrap) {
             case ModelType::FloorSpikeFull:
-                std::cout << "Sending full\n" << std::endl;
-
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, false, true)));
                 break;
             case ModelType::FloorSpikeVertical:
-                std::cout << "Sending vertical\n" << std::endl;
-
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeVertical, false, true)));
                 break;
             case ModelType::FloorSpikeHorizontal:
-                std::cout << "Sending horizontal\n" << std::endl;
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeHorizontal, false, true)));
                 break;
             case ModelType::FireballTrap:
@@ -411,15 +406,19 @@ void Client::draw() {
         return;
     }
     auto eid = this->session->getInfo().client_eid.value();
+    bool is_dm = this->session->getInfo().is_dungeon_master.value();
     glm::vec3 my_pos = this->gameState.objects[eid]->physics.corner;
     for (auto& [id, sharedObject] : this->gameState.objects) {
 
         if (!sharedObject.has_value()) {
             continue;
         }
+
+        bool is_ceiling = sharedObject->type == ObjectType::SolidSurface &&
+            sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling;
         auto dist = glm::distance(sharedObject->physics.corner, my_pos);
 
-        if (!this->session->getInfo().is_dungeon_master.value() && dist > RENDER_DISTANCE) {
+        if (!is_dm && !is_ceiling && dist > RENDER_DISTANCE) {
             continue;
         }
 
@@ -487,22 +486,6 @@ void Client::draw() {
                 this->drawBbox(sharedObject);
                 break;
             }
-            // case ObjectType::Enemy: {
-            //     // warren bear is an enemy because why not
-            //     auto lightPos = glm::vec3(-5.0f, 0.0f, 0.0f);
-            //     auto bear_pos = sharedObject->physics.corner;
-
-            //     this->bear_model->setDimensions(sharedObject->physics.dimensions);
-            //     this->bear_model->translateAbsolute(bear_pos);
-            //     this->bear_model->draw(
-            //         this->model_shader,
-            //         this->cam->getViewProj(),
-            //         this->cam->getPos(),
-            //         lightPos,
-            //         true);
-            //     this->drawBbox(sharedObject);
-            //     break;
-            // }
             case ObjectType::Slime: {
                 auto cube = std::make_unique<Cube>(glm::vec3(0.0, 1.0f, 0.0f));
                 cube->scaleAbsolute(sharedObject->physics.dimensions);
@@ -520,7 +503,6 @@ void Client::draw() {
                     break; // just in case this message wasn't received, don't crash
                 }
 
-                bool is_dm = this->session->getInfo().is_dungeon_master.value();
 
                 if (is_dm && sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling) {
                     // don't render ceiling as DM
@@ -539,24 +521,25 @@ void Client::draw() {
                         shader = this->wall_shader;
                         break;
                     case SurfaceType::Ceiling:
-                        model = this->cube_model.get();
-                        shader = this->cube_shader;
-                        break;
                     case SurfaceType::Floor:
                         model = this->cube_model.get();
-                        shader = this->cube_shader;
+                        shader = this->solid_surface_shader;
                         break;
                 }
+
+                int i = 0;
 
                 if (is_dm) {
                     // if the DM, override for the 
                     shader = this->dm_cube_shader;
                 }
 
-                if (is_dm && sharedObject->solidSurface->dm_highlight) {
-                    model->overrideSolidColor(glm::vec3(1.0f, 0.0f, 0.0f));
-                } else {
-                    model->overrideSolidColor({});
+                if (is_dm) {
+                    if (sharedObject->solidSurface->dm_highlight) {
+                        model->overrideSolidColor(glm::vec3(1.0f, 0.0f, 0.0f));
+                    } else {
+                        model->overrideSolidColor({});
+                    }
                 }
 
                 auto light_sources = this->closest_light_sources;
