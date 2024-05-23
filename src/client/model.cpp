@@ -82,7 +82,7 @@ Mesh::Mesh(
 }
 
 void Mesh::draw(
-    std::shared_ptr<Shader> shader,
+    Shader* shader,
     glm::mat4 viewProj,
     glm::vec3 camPos,
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
@@ -192,7 +192,7 @@ Model::Model(const std::string& filepath) {
     std::cout << "\tDimensions: " << glm::to_string(this->getDimensions()) << std::endl;
 }
 
-void Model::draw(std::shared_ptr<Shader> shader,
+void Model::draw(Shader* shader,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,

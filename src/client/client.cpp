@@ -402,6 +402,8 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
+    // auto now = std::chrono::system_clock::now();
+
     if (!this->session->getInfo().client_eid.has_value()) {
         return;
     }
@@ -454,7 +456,7 @@ void Client::draw() {
 
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
-                    this->model_shader,
+                    this->model_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},
@@ -478,7 +480,7 @@ void Client::draw() {
                 this->player_model->setDimensions(sharedObject->physics.dimensions);
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
-                    this->model_shader,
+                    this->model_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},
@@ -490,7 +492,7 @@ void Client::draw() {
                 auto cube = std::make_unique<Cube>(glm::vec3(0.0, 1.0f, 0.0f));
                 cube->scaleAbsolute(sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader,
+                cube->draw(this->cube_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},
@@ -503,33 +505,35 @@ void Client::draw() {
                     break; // just in case this message wasn't received, don't crash
                 }
 
-
                 if (is_dm && sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling) {
                     // don't render ceiling as DM
                     break;
                 }
 
-                Model* model;
-                std::shared_ptr<Shader> shader;
+                Model* model = this->wall_model.get();
+                Shader* shader = this->wall_shader.get();
                 switch (sharedObject->solidSurface->surfaceType) {
                     case SurfaceType::Wall:
                         model = this->wall_model.get();
-                        shader = this->wall_shader;
+                        shader = this->wall_shader.get();
                         break;
                     case SurfaceType::Pillar:
                         model = this->pillar_model.get();
-                        shader = this->wall_shader;
+                        shader = this->wall_shader.get();
                         break;
                     case SurfaceType::Ceiling:
+                        model = this->cube_model.get();
+                        shader = this->solid_surface_shader.get();
+                        break;
                     case SurfaceType::Floor:
                         model = this->cube_model.get();
-                        shader = this->solid_surface_shader;
+                        shader = this->solid_surface_shader.get();
                         break;
                 }
 
                 if (is_dm) {
                     // if the DM, override
-                    shader = this->dm_cube_shader;
+                    shader = this->dm_cube_shader.get();
 
                     if (sharedObject->solidSurface->dm_highlight) {
                         model->overrideSolidColor(glm::vec3(1.0f, 0.0f, 0.0f));
@@ -538,18 +542,21 @@ void Client::draw() {
                     }
                 }
 
-                auto light_sources = this->closest_light_sources;
-                if (is_dm) {
-                    light_sources = {};
-                }
-
                 model->setDimensions(sharedObject->physics.dimensions);
                 model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                model->draw(shader,
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    light_sources,
-                    true);
+                if (is_dm) { // 
+                    model->draw(shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        {},
+                        true);
+                } else {
+                    model->draw(shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        this->closest_light_sources,
+                        true);
+                }
                 break;
             }
             case ObjectType::FakeWall: {
@@ -564,7 +571,7 @@ void Client::draw() {
                 auto cube = std::make_unique<Cube>(color);
                 cube->scaleAbsolute(sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader,
+                cube->draw(this->cube_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},
@@ -575,7 +582,7 @@ void Client::draw() {
                 auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader,
+                cube->draw(this->cube_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {}, 
@@ -591,7 +598,7 @@ void Client::draw() {
                 if (!this->session->getInfo().is_dungeon_master.value()) {
                     this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                     this->torchlight_model->draw(
-                        this->light_source_shader,
+                        this->light_source_shader.get(),
                         this->cam->getViewProj(),
                         this->cam->getPos(),
                         {},
@@ -603,7 +610,7 @@ void Client::draw() {
                 auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 0.5f, 0.5f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader,
+                cube->draw(this->cube_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},
@@ -614,7 +621,7 @@ void Client::draw() {
                 auto cube = std::make_unique<Cube>(glm::vec3(0.5f, 0.3f, 0.2f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader,
+                cube->draw(this->cube_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},
@@ -626,7 +633,7 @@ void Client::draw() {
                 auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader,
+                cube->draw(this->cube_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},
@@ -637,7 +644,7 @@ void Client::draw() {
                 auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.0f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader,
+                cube->draw(this->cube_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},
@@ -650,7 +657,7 @@ void Client::draw() {
                     auto cube = std::make_unique<Cube>(color);
                     cube->scaleAbsolute(sharedObject->physics.dimensions);
                     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader,
+                    cube->draw(this->cube_shader.get(),
                         this->cam->getViewProj(),
                         this->cam->getPos(),
                         {},
@@ -672,7 +679,7 @@ void Client::draw() {
                     auto cube = std::make_unique<Cube>(color);
                     cube->scaleAbsolute(sharedObject->physics.dimensions);
                     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader,
+                    cube->draw(this->cube_shader.get(),
                         this->cam->getViewProj(),
                         this->cam->getPos(),
                         {},
@@ -696,7 +703,7 @@ void Client::draw() {
                     auto cube = std::make_unique<Cube>(color);
                     cube->scaleAbsolute(sharedObject->physics.dimensions);
                     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader,
+                    cube->draw(this->cube_shader.get(),
                         this->cam->getViewProj(),
                         this->cam->getPos(),
                         {},
@@ -708,7 +715,7 @@ void Client::draw() {
                 auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 1.0f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader,
+                cube->draw(this->cube_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},
@@ -719,7 +726,7 @@ void Client::draw() {
                 auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 0.0f, 0.0f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader,
+                cube->draw(this->cube_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},
@@ -731,7 +738,7 @@ void Client::draw() {
                     auto cube = std::make_unique<Cube>(glm::vec3(0.5f));
                     cube->scaleAbsolute(sharedObject->physics.dimensions);
                     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader,
+                    cube->draw(this->cube_shader.get(),
                         this->cam->getViewProj(),
                         this->cam->getPos(),
                         {},
@@ -745,7 +752,7 @@ void Client::draw() {
                     auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
                     cube->scaleAbsolute(sharedObject->physics.dimensions);
                     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader,
+                    cube->draw(this->cube_shader.get(),
                         this->cam->getViewProj(),
                         this->cam->getPos(),
                         {},
@@ -757,6 +764,9 @@ void Client::draw() {
                 break;
         }
     }
+
+    // auto end = std::chrono::system_clock::now();
+    // std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - now).count() << "\n";
 }
 
 void Client::drawBbox(boost::optional<SharedObject> object) {
@@ -770,7 +780,7 @@ void Client::drawBbox(boost::optional<SharedObject> object) {
         auto object_bbox = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 1.0f));
         object_bbox->scaleAbsolute(object->physics.dimensions);
         object_bbox->translateAbsolute(bbox_pos);
-        object_bbox->draw(this->cube_shader,
+        object_bbox->draw(this->cube_shader.get(),
             this->cam->getViewProj(),
             this->cam->getPos(),
             {},

@@ -1504,8 +1504,15 @@ void ServerGameState::loadMaze(const Grid& grid) {
 	// Create Floor
 	for (int c = 0; c < this->grid.getColumns(); c++) {
 		for (int r = 0; r < this->grid.getRows(); r++) {
-			if(this->grid.getCell(c, r)->type == CellType::OutsideTheMaze) 
+			if(this->grid.getCell(c, r)->type == CellType::OutsideTheMaze ||
+			   this->grid.getCell(c, r)->type == CellType::Wall ||
+			   this->grid.getCell(c, r)->type == CellType::TorchRight ||
+			   this->grid.getCell(c, r)->type == CellType::TorchLeft || 
+			   this->grid.getCell(c, r)->type == CellType::TorchDown || 
+			   this->grid.getCell(c, r)->type == CellType::TorchUp)
+			{
 				continue;
+			}
 
 			glm::vec3 corner = glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width);
 
