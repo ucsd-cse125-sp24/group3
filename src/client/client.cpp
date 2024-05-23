@@ -758,7 +758,28 @@ void Client::draw() {
                 break;
             }
             case ObjectType::WeaponCollider: {
-                if (sharedObject->weaponInfo->attacked) {
+                if (sharedObject->weaponInfo->lightning) {
+                    if (!sharedObject->weaponInfo->attacked) {
+                        auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.0f));
+                        cube->scaleAbsolute(sharedObject->physics.dimensions);
+                        cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        cube->draw(this->cube_shader.get(),
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            {},
+                            false);
+                    } else {
+                        auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.0f));
+                        cube->scaleAbsolute(sharedObject->physics.dimensions);
+                        cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        cube->draw(this->cube_shader.get(),
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            {},
+                            true);
+                    }
+                }
+                else {
                     auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
                     cube->scaleAbsolute(sharedObject->physics.dimensions);
                     cube->translateAbsolute(sharedObject->physics.getCenterPosition());

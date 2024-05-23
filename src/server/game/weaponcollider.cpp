@@ -14,6 +14,10 @@ WeaponCollider::WeaponCollider(Player* usedPlayer, glm::vec3 corner, glm::vec3 f
     this->preparing_time = std::chrono::system_clock::now();
     this->usedPlayer = usedPlayer;
     this->info.attacked = false;
+
+    if(!this->opt.followPlayer) { 
+        this->info.attacked = true; 
+    }
 }
 
 void WeaponCollider::doCollision(Object* other, ServerGameState& state) {

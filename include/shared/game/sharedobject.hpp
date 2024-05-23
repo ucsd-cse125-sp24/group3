@@ -142,9 +142,10 @@ struct SharedItemInfo {
 
 struct SharedWeaponInfo {
 	bool attacked;
+	bool lightning;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& attacked;
+		ar& attacked& lightning;
 	}
 };
 
