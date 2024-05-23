@@ -160,8 +160,7 @@ bool Client::init() {
     auto cube_frag_path = shaders_dir / "cube.frag";
     this->cube_shader = std::make_shared<Shader>(cube_vert_path.string(), cube_frag_path.string());    
     
-    auto dm_cube_frag_path = shaders_dir / "dm_cube.frag";
-    this->dm_cube_shader = std::make_shared<Shader>(cube_vert_path.string(), dm_cube_frag_path.string());
+
 
     auto model_vert_path = shaders_dir / "model.vert";
     auto model_frag_path = shaders_dir / "model.frag";
@@ -196,6 +195,9 @@ bool Client::init() {
     auto wall_vert_path = shaders_dir / "wall.vert";
     auto wall_frag_path = shaders_dir / "wall.frag";
     this->wall_shader = std::make_shared<Shader>(wall_vert_path.string(), wall_frag_path.string());
+
+    auto dm_cube_frag_path = shaders_dir / "dm_cube.frag";
+    this->dm_cube_shader = std::make_shared<Shader>(wall_vert_path.string(), dm_cube_frag_path.string());
 
     auto pillar_model_path = graphics_assets_dir / "pillar.obj";
     this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
@@ -535,7 +537,12 @@ void Client::draw() {
 
                 if (is_dm) {
                     // if the DM, override
-                    shader = this->dm_cube_shader.get();
+                    if (sharedObject->solidSurface->surfaceType != SurfaceType::Floor) {
+                        shader = this->dm_cube_shader.get();
+                    }
+                    else {
+                        shader = this->solid_surface_shader.get();
+                    }
 
                     if (sharedObject->solidSurface->dm_highlight) {
                         model->overrideSolidColor(glm::vec3(1.0f, 0.0f, 0.0f));
