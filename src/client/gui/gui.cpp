@@ -531,7 +531,7 @@ void GUI::_layoutGameHUD() {
         std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
         font::Font::MENU,
         font::Size::MEDIUM,
-        font::Color::WHITE,
+        font::Color::RED,
         fonts,
         font::getRelativePixels(90)
     );

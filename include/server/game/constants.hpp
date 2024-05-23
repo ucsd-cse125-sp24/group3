@@ -47,21 +47,21 @@
 #define INVINCIBLITY_DUR		15
 
 /*	Weapon Stats	*/
-#define	SWORD_DMG				20
+#define	SWORD_DMG				15
 #define DAGGER_DMG				10
 #define HAMMER_DMG				30
 
-#define	SWORD_PREP				250
+#define	SWORD_PREP				200
 #define	SWORD_DUR				300
-#define	SWORD_TOTAL				550
+#define	SWORD_TOTAL				500
 
 #define	DAGGER_PREP				150
 #define	DAGGER_DUR				150
 #define	DAGGER_TOTAL			300
 
 #define	HAMMER_PREP				400
-#define	HAMMER_DUR				500
-#define	HAMMER_TOTAL			900
+#define	HAMMER_DUR				350
+#define	HAMMER_TOTAL			750
 
 /*	Game	*/
 #define	GRAVITY					0.03f

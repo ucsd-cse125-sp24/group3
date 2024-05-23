@@ -670,7 +670,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_TAB:
             this->gui.setCaptureKeystrokes(true);
             break;
-        
+
         case GLFW_KEY_BACKSPACE:
             this->gui.captureBackspace();
             Client::time_of_last_keystroke = getMsSinceEpoch();
@@ -803,6 +803,28 @@ void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int
             is_left_mouse_down = true;
         } else if (action == GLFW_RELEASE) {
             is_left_mouse_down = false;
+        }
+    }
+
+    std::optional<EntityID> eid;
+
+    if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
+        eid = this->session->getInfo().client_eid.value();
+    }
+
+    if (this->gameState.phase == GamePhase::GAME && this->gui_state == GUIState::GAME_HUD) {
+        if (action == GLFW_PRESS) {
+            switch (button) {
+            case GLFW_MOUSE_BUTTON_RIGHT:
+                // Currently nothing mapped
+                break;
+
+            case GLFW_MOUSE_BUTTON_LEFT:
+                if (eid.has_value()) {
+                    this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
+                }
+                break;
+            }
         }
     }
 }
