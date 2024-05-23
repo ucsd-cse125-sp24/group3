@@ -28,9 +28,10 @@
 #include "shared/game/event.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/network/constants.hpp"
+#include "shared/utilities/rng.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
-#include "client/audiomanager.hpp"
+#include "client/audio/audiomanager.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 #include "shared/utilities/timer.hpp"
@@ -198,6 +199,7 @@ bool Client::init() {
     this->gui_state = GUIState::TITLE_SCREEN;
 
     this->audioManager->init();
+    this->audioManager->playMusic(ClientMusic::TitleTheme);
 
     return true;
 }
@@ -314,6 +316,17 @@ void Client::processServerInput(boost::asio::io_context& context) {
             // Change the UI to the game hud UI whenever we change into the GAME game phase
             if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
                 this->gui_state = GUIState::GAME_HUD;
+
+                audioManager->stopMusic(ClientMusic::TitleTheme);
+                audioManager->playMusic(ClientMusic::GameTheme);
+            }
+        } else if (event.type == EventType::LoadSoundCommands) {
+            auto self_eid = this->session->getInfo().client_eid;
+            if (self_eid.has_value()) {
+                auto self = this->gameState.objects.at(*self_eid);
+                this->audioManager->doTick(self->physics.getCenterPosition(),
+                    boost::get<LoadSoundCommandsEvent>(event.data),
+                    this->closest_light_sources);
             }
         } else if (event.type == EventType::UpdateLightSources) {
             const auto& updated_light_source = boost::get<UpdateLightSourcesEvent>(event.data);
@@ -359,6 +372,10 @@ void Client::draw() {
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
+
+                    // update listener position & facing
+                    sf::Listener::setPosition(pos.x, pos.y, pos.z);
+                    sf::Listener::setDirection(sharedObject->physics.facing.x, sharedObject->physics.facing.y, sharedObject->physics.facing.z);
 
                     // reset back to game mode if this is the first frame in which you are respawned
                     if (this->gui_state == GUIState::DEAD_SCREEN && sharedObject->playerInfo->is_alive) {

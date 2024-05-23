@@ -117,6 +117,12 @@ public:
 	std::vector<glm::ivec2> gridCellPositions;
 
 	/**
+	 * @brief Distance moved, for use in deciding when to play footsteps
+	 * IMPORTANT: reset every time a footstep sound is performed for objects that play foosteps
+	 */
+	float distance_moved;
+
+	/**
 	 * @param type Type of the object
 	 * @param Physics position/physics info for the object
 	 * @param modelType What kind of model to render for this object

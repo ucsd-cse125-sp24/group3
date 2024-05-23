@@ -30,6 +30,8 @@ set(FILES
     game/spell.cpp
     game/exit.cpp
     game/orb.cpp
+
+    audio/soundtable.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

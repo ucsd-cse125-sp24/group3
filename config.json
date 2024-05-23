@@ -11,7 +11,7 @@
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "The Orb of Orbos",
+        "lobby_name": "Hope you're doing well!",
         "lobby_broadcast": true,
         "max_players": 1
     },

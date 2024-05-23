@@ -205,6 +205,27 @@ std::chrono::milliseconds Server::doTick() {
         sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
     }
 
+    // TODO: send sound effects to DM?
+    auto players = this->state.objects.getPlayers();
+    auto audio_commands_per_player = this->state.soundTable().getCommandsPerPlayer(players);
+
+    for (auto& session_entry : this->sessions) {
+        if (!audio_commands_per_player.contains(session_entry.id)) {
+            continue; // no sounds to send to that player
+        }
+
+        auto session = session_entry.session.lock();
+        if (session == nullptr) {
+            continue; // lost connection with this session, so can't send audio updates to it
+        }
+
+        session->sendEventAsync(Event(this->world_eid, EventType::LoadSoundCommands, LoadSoundCommandsEvent(
+            audio_commands_per_player.at(session_entry.id)
+        )));
+    }
+
+    this->state.soundTable().tickSounds();
+
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(

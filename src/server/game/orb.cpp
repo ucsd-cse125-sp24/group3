@@ -22,9 +22,6 @@ void Orb::doCollision(Object* other, ServerGameState& state) {
 		//	update match phase to MatchPhase::RelayRace
 		state.transitionToRelayRace();
 	}
-
-	std::cout << "Object type: " << ((this->type) == ObjectType::Orb ? "Orb" : "not Orb!") << std::endl;
-	std::cout << "Model type: " << ((this->modelType) == ModelType::Orb ? "Orb" : "not Orb!") << std::endl;
 }
 
 // TODO: MAY NOT BE NEEDED AT ALL

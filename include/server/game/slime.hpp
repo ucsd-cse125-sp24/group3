@@ -24,4 +24,6 @@ private:
     void increaseJumpIndex();
     std::size_t jump_index;
     int size;
+
+    bool landed;
 };
