@@ -825,9 +825,6 @@ void GUI::_layoutResultsScreen() {
         won = !(client->gameState.playerVictory);
     }
 
-    //std::cout << "playerVictory: " << client->gameState.playerVictory << std::endl;
-    //std::cout << "won: " << won << std::endl;
-
     std::string result_string = won ? "Victory" : "Defeat";
 
     this->addWidget(widget::CenterText::make(

@@ -358,7 +358,6 @@ void ServerGameState::update(const EventList& events) {
 				int trapsPlaced = dm->getPlacedTraps();
 
 				if (trapsPlaced == MAX_TRAPS) {
-					std::cout << "CAN'T PLACE ANYMORE TRAPS!" << std::endl;
 					break;
 				}
 
@@ -367,7 +366,6 @@ void ServerGameState::update(const EventList& events) {
 				// in cooldown and haven't elapsed enough time yet
 				if (it != dm->sharedTrapInventory.trapsInCooldown.end() && 
 					std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(it->second)) < std::chrono::seconds(TRAP_COOL_DOWN)) {
-					std::cout << "cant place trap because of cooldown\n";// trap is in cooldown
 					break;
 				}
 
@@ -376,7 +374,6 @@ void ServerGameState::update(const EventList& events) {
 				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
 				if (trap == nullptr) { 
-					std::cout << "cant place trap: placeTrapInCell returned nullptr\n";
 					break;
 				}
 
@@ -425,10 +422,6 @@ void ServerGameState::update(const EventList& events) {
 			this->phase = GamePhase::RESULTS;
 		}
 	}
-
-	//	DEBUG
-	//std::cout << "playerVictory: " << this->playerVictory << std::endl;
-	//	DEBUG
 }
 
 void ServerGameState::markForDeletion(EntityID id) {
@@ -1108,16 +1101,13 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 
 		FloorSpike::Orientation orientation;
 		if (type == CellType::FloorSpikeFull) {
-			std::cout << "PLACING FLOOR SPIKE FULL" << std::endl;
 			orientation = FloorSpike::Orientation::Full;
 		}
 		else if (type == CellType::FloorSpikeHorizontal) {
-			std::cout << "PLACING FLOOR SPIKE HORIZONTAL" << std::endl;
 			orientation = FloorSpike::Orientation::Horizontal;
 			corner.z += Grid::grid_cell_width * 0.25f;
 		}
 		else {
-			std::cout << "PLACING FLOOR SPIKE VERTICAL" << std::endl;
 			orientation = FloorSpike::Orientation::Vertical;
 			corner.x += Grid::grid_cell_width * 0.25f;
 		}
@@ -1177,7 +1167,7 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 		return teleporterTrap;
 	}
 	default: {
-		std::cout << "i have no idea what trap you want" << std::endl;
+		std::cerr << "WARNING: tried to place an unknown trap of type " << static_cast<int>(type) << "\n";
 		return nullptr;
 	}
 	}
@@ -1223,8 +1213,6 @@ void ServerGameState::loadMaze(const Grid& grid) {
 			}
 		}
 	}
-
-	std::cout << "num internal walls: " << internal_walls.size() << "\n";
 
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
 

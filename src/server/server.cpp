@@ -171,9 +171,6 @@ std::chrono::milliseconds Server::doTick() {
                 this->state.setPhase(GamePhase::GAME);
                 // TODO: figure out how to selectively broadcast to only the players that were already in the lobby
                 // this->lobby_broadcaster.stopBroadcasting();
-            } else {
-                std::cout << "Only have " << this->state.getLobby().players.size()
-                    << "/" << this->state.getLobby().max_players << "\n";
             }
 
             this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
@@ -246,7 +243,6 @@ void Server::_doAccept() {
                 }
 
                 new_session->startListen();
-                std::cout << "about to send server assign id packet" <<std::endl;
                 new_session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                     ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value(), 
                                             .is_dungeon_master = new_session->getInfo().is_dungeon_master.value()}));
@@ -294,7 +290,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         }
     }
 
-    static bool first_player = false;
+    static bool first_player = true;
 
     // first player is Dungeon Master
     if (first_player) {

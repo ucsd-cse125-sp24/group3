@@ -250,10 +250,6 @@ void Client::displayCallback() {
     /* Poll for and process events */
     glfwPollEvents();
     glfwSwapBuffers(window);
-
-    //  DEBUG
-    //std::cout << "playerVictory: " << this->gameState.playerVictory << std::endl;
-    //  DEBUG
 }
 
 // Handle any updates 
@@ -368,7 +364,6 @@ void Client::processServerInput(boost::asio::io_context& context) {
             if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
                 // set to Dungeon Master POV if DM
                 if (this->session->getInfo().is_dungeon_master) {
-                    std::cout << "DUNGEON MASTER CAM!" << std::endl;
                     this->cam = std::make_unique<DungeonMasterCamera>();
                 }
 
@@ -402,7 +397,7 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
-    auto start = std::chrono::system_clock::now();
+    // auto start = std::chrono::system_clock::now();
 
     if (!this->session->getInfo().client_eid.has_value()) {
         return;
@@ -751,7 +746,6 @@ void Client::draw() {
                 break;
             }
             case ObjectType::WeaponCollider: {
-                //std::cout << sharedObject->weaponInfo->attacked << "\n";
                 if (sharedObject->weaponInfo->attacked) {
                     auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
                     cube->scaleAbsolute(sharedObject->physics.dimensions);
@@ -768,9 +762,6 @@ void Client::draw() {
                 break;
         }
     }
-
-    auto end = std::chrono::system_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "\n";
 }
 
 void Client::drawBbox(boost::optional<SharedObject> object) {

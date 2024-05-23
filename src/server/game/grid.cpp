@@ -135,9 +135,6 @@ std::vector<glm::ivec2> Grid::getCellsFromPositionRange(glm::vec3 p1, glm::vec3 
 	glm::ivec2 gridCellStart = Grid::getGridCellFromPosition(p1);
 	glm::ivec2 gridCellEnd = Grid::getGridCellFromPosition(p2);
 
-	/*std::cout << "First grid cell: " << glm::to_string(gridCellStart) << " ";
-	std::cout << "Second grid cell: " << glm::to_string(gridCellEnd) << std::endl;*/
-
 	if (gridCellStart.x > gridCellEnd.x || gridCellStart.y > gridCellEnd.y) {
 		return std::vector<glm::ivec2>();
 	}

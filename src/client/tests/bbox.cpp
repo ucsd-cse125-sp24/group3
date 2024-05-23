@@ -123,7 +123,6 @@ TEST(Bbox, BboxCombine) {
     }};
 
     for (const auto &tc : testCases) {
-        // std::cout << "test " << tc.name << std::endl;
         Bbox combined = combineBboxes(tc.bbox1, tc.bbox2);
         // checking string equality because it's easier to see the differences 
         EXPECT_EQ(glm::to_string(combined.corners.first), glm::to_string(tc.expectedCombined.corners.first));

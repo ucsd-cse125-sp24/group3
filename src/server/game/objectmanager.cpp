@@ -112,7 +112,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 
 	if (object == nullptr) {
 		//	Object with the given index doesn't exist
-		std::cout << "obj doesn't exist?" << std::endl;
+		std::cout << "obj doesn't exist? in ObjectManager::removeObject" << std::endl;
 		return false;
 	}
 
