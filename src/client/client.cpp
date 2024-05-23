@@ -760,7 +760,7 @@ void Client::draw() {
             case ObjectType::WeaponCollider: {
                 if (sharedObject->weaponInfo->lightning) {
                     if (!sharedObject->weaponInfo->attacked) {
-                        auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.0f));
+                        auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 1.0f, 0.0f));
                         cube->scaleAbsolute(sharedObject->physics.dimensions);
                         cube->translateAbsolute(sharedObject->physics.getCenterPosition());
                         cube->draw(this->cube_shader.get(),
@@ -769,7 +769,7 @@ void Client::draw() {
                             {},
                             false);
                     } else {
-                        auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.0f));
+                        auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 1.0f, 0.0f));
                         cube->scaleAbsolute(sharedObject->physics.dimensions);
                         cube->translateAbsolute(sharedObject->physics.getCenterPosition());
                         cube->draw(this->cube_shader.get(),
@@ -1068,8 +1068,6 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 }
 
 void Client::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-    std::cout << xoffset << " " << yoffset << std::endl;
-
     std::optional<EntityID> eid;
 
     if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
@@ -1084,13 +1082,13 @@ void Client::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) 
 
     if (yoffset >= 1) {
         if (eid.has_value()) {
-            this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
+            this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), -1)));
         }
     }
 
     if (yoffset <= -1) {
         if (eid.has_value()) {
-            this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), -1)));
+            this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
         }
     }
 }
