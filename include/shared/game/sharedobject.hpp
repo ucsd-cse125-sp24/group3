@@ -33,7 +33,9 @@ enum class ObjectType {
 	Slime,
 	Item,
 	Exit,
-	Orb
+	Orb,
+	Weapon,
+	WeaponCollider,
 };
 
 /**
@@ -100,8 +102,9 @@ struct SharedInventory {
 	// need to share itemtype data...
 	int selected;
 	int inventory_size;
-	std::vector<ModelType> inventory;
-	UsedItemsMap usedItems;
+	std::vector<ModelType> inventory;	// For GUI model
+	std::vector<int> usesRemaining;		// For GUI text description
+	UsedItemsMap usedItems;				// For GUI effect duration
 
 	/**
 	 * @brief Denotes whether this player is carrying the Orb in their inventory
@@ -109,7 +112,7 @@ struct SharedInventory {
 	bool hasOrb;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& selected& inventory_size& inventory & hasOrb & usedItems;
+		ar& selected& inventory_size& inventory& usedItems & hasOrb& usesRemaining;
 	}
 }; 
 
@@ -120,6 +123,14 @@ struct SharedItemInfo {
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
 		ar& used& held& remaining_time;
+	}
+};
+
+struct SharedWeaponInfo {
+	bool attacked;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& attacked;
 	}
 };
 
@@ -240,12 +251,13 @@ public:
     boost::optional<SharedPointLightInfo> pointLightInfo;
 	boost::optional<SharedStatuses> statuses;
 	boost::optional<SharedExit> exit;
+	boost::optional<SharedWeaponInfo> weaponInfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & pointLightInfo & statuses & exit;
+		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & pointLightInfo & statuses & exit & weaponInfo;
 	}
 private:
 };

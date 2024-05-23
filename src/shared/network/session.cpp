@@ -93,7 +93,6 @@ void Session::_receivePacketAsync() {
     boost::asio::async_read(socket, boost::asio::buffer(&buf.get()[0], BUF_SIZE),
         boost::asio::transfer_exactly(sizeof(PacketHeader)),
         [this, buf, self](boost::system::error_code ec, std::size_t length) {
-
             switch (_classifySocketError(ec, "receiving header")) {
             case SocketError::NONE:
                 break;

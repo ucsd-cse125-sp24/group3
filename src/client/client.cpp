@@ -594,6 +594,9 @@ void Client::draw() {
                     else if (sharedObject->modelType == ModelType::HealSpell) {
                         color = glm::vec3(1.0f, 1.0f, 0.0f);
                     }
+                    else {
+                        color = glm::vec3(0.8f, 0.7f, 0.6f);
+                    }
 
                     auto cube = std::make_unique<Cube>(color);
                     cube->scaleAbsolute(sharedObject->physics.dimensions);
@@ -626,6 +629,33 @@ void Client::draw() {
                     this->cam->getPos(),
                     {},
                     true);
+                break;
+            }
+            case ObjectType::Weapon: {
+                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+                    auto cube = std::make_unique<Cube>(glm::vec3(0.5f));
+                    cube->scaleAbsolute(sharedObject->physics.dimensions);
+                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    cube->draw(this->cube_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        {},
+                        true);
+                }
+                break;
+            }
+            case ObjectType::WeaponCollider: {
+                //std::cout << sharedObject->weaponInfo->attacked << "\n";
+                if (sharedObject->weaponInfo->attacked) {
+                    auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
+                    cube->scaleAbsolute(sharedObject->physics.dimensions);
+                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    cube->draw(this->cube_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        {},
+                        false);
+                }
                 break;
             }
             default:
@@ -688,7 +718,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_TAB:
             this->gui.setCaptureKeystrokes(true);
             break;
-        
+
         case GLFW_KEY_BACKSPACE:
             this->gui.captureBackspace();
             Client::time_of_last_keystroke = getMsSinceEpoch();
@@ -821,6 +851,28 @@ void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int
             is_left_mouse_down = true;
         } else if (action == GLFW_RELEASE) {
             is_left_mouse_down = false;
+        }
+    }
+
+    std::optional<EntityID> eid;
+
+    if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
+        eid = this->session->getInfo().client_eid.value();
+    }
+
+    if (this->gameState.phase == GamePhase::GAME && this->gui_state == GUIState::GAME_HUD) {
+        if (action == GLFW_PRESS) {
+            switch (button) {
+            case GLFW_MOUSE_BUTTON_RIGHT:
+                // Currently nothing mapped
+                break;
+
+            case GLFW_MOUSE_BUTTON_LEFT:
+                if (eid.has_value()) {
+                    this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
+                }
+                break;
+            }
         }
     }
 }

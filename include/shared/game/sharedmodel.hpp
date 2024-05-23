@@ -14,6 +14,10 @@ enum class ModelType {
 	InvincibilityPotion,
 	FireSpell,
 	HealSpell,
+	TeleportSpell,
 	Frame,
 	Orb,
+	Dagger,
+	Sword,
+	Hammer,
 };
