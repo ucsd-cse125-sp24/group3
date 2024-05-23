@@ -290,10 +290,14 @@ void Client::idleCallback(boost::asio::io_context& context) {
         }
 
         if (this->session->getInfo().is_dungeon_master.value()) {
-            if(is_held_i)
+            if (is_held_i) {
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
                 this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, -1.0f, 0.0f), ActionType::Zoom)));
-            if(is_held_o)
+            }
+            if (is_held_o) {
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
                 this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Zoom)));
+            }
             if (is_held_right)
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
             if (is_held_left)
@@ -861,14 +865,17 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             is_held_o = true;
             break;
         case GLFW_KEY_P: // to place or not to place
+            is_pressed_p = !is_pressed_p;
             if (is_pressed_p) {
                 // unhighlight hover
                 if (eid.has_value()) {
                     // nothing being placed, so the CellType we pass shouldn't matter!
-                    this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, false, false)));
+                    this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
                 }
             }
-            is_pressed_p = !is_pressed_p;
+            else {
+                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, false, false)));
+            }
             break;
         /* Send an event to start 'shift' movement (i.e. sprint) */
         case GLFW_KEY_LEFT_SHIFT:
@@ -887,18 +894,30 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         switch (key) {
         case GLFW_KEY_S:
             is_held_down = false;
+            if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+            }
             break;
 
         case GLFW_KEY_W:
             is_held_up = false;
+            if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+            }
             break;
 
         case GLFW_KEY_A:
             is_held_left = false;
+            if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+            }
             break;
 
         case GLFW_KEY_D:
             is_held_right = false;
+            if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+            }
             break;
             
         case GLFW_KEY_SPACE:
@@ -915,8 +934,14 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
         case GLFW_KEY_O: // zoom out
             is_held_o = false;
+            if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+            }
             break;
         case GLFW_KEY_I: // zoom out
+            if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+            }
             is_held_i = false;
             break;
         default:
