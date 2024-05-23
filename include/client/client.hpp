@@ -113,6 +113,8 @@ public:
      */
     void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
+    void scrollCallback(GLFWwindow* window, double xposIn, double yposIn);
+
     /**
      * @brief Callback which handles mouse button presses.
      * 

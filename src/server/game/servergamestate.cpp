@@ -270,7 +270,13 @@ void ServerGameState::update(const EventList& events) {
 				this->updated_entities.insert(dm->globalID);
 			}
 			else {
-				player->sharedInventory.selected = selectItemEvent.itemNum;
+				if (player->sharedInventory.selected + selectItemEvent.itemNum == 0)
+					player->sharedInventory.selected = INVENTORY_SIZE;
+				else if (player->sharedInventory.selected + selectItemEvent.itemNum == INVENTORY_SIZE + 1)
+					player->sharedInventory.selected = 1;
+				else
+					player->sharedInventory.selected = player->sharedInventory.selected + selectItemEvent.itemNum;
+
 				this->updated_entities.insert(player->globalID);
 			}
 			break;

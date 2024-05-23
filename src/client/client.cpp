@@ -1044,6 +1044,34 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     }
 }
 
+void Client::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    std::cout << xoffset << " " << yoffset << std::endl;
+
+    std::optional<EntityID> eid;
+
+    if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
+        eid = this->session->getInfo().client_eid.value();
+    }
+
+    std::optional<bool> is_dm;
+
+    if (this->session != nullptr && this->session->getInfo().is_dungeon_master.has_value()) {
+        is_dm = this->session->getInfo().is_dungeon_master.value();
+    }
+
+    if (yoffset >= 1) {
+        if (eid.has_value()) {
+            this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
+        }
+    }
+
+    if (yoffset <= -1) {
+        if (eid.has_value()) {
+            this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), -1)));
+        }
+    }
+}
+
 void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { // cppcheck-suppress constParameterPointer
     auto new_mouse_xpos = static_cast<float>(xposIn);
     auto new_mouse_ypos = static_cast<float>(yposIn);
