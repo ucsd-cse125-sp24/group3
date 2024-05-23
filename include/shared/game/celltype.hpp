@@ -37,5 +37,6 @@ enum class CellType {
 	OutsideTheMaze,
 	TeleporterTrap,
 	Exit,
+	Lightning,
 	Unknown
 };

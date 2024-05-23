@@ -459,6 +459,10 @@ void GUI::_sharedGameHUD() {
                     itemString = "Ceiling Spike Trap";
                     break;
                 }
+                case ModelType::Lightning: {
+                    itemString = "Lightning Bolt";
+                    break;
+                }
             }
         }
     }
@@ -550,6 +554,10 @@ void GUI::_sharedGameHUD() {
                     break;
                 }
                 case ModelType::SpikeTrap: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::Lightning: {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }

@@ -331,6 +331,8 @@ void Client::idleCallback(boost::asio::io_context& context) {
                 break;
             case ModelType::SpikeTrap:
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, false, true)));
+            case ModelType::Lightning:
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::Lightning, false, true)));
                 break;
             }
         }

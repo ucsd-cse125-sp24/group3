@@ -18,6 +18,13 @@ SpikeTrap::SpikeTrap(glm::vec3 corner, glm::vec3 dimensions):
     this->physics.feels_gravity = false;
 }
 
+SpikeTrap::SpikeTrap(glm::vec3 corner, glm::vec3 dimensions, bool instant_fall) : 
+    Trap(ObjectType::SpikeTrap, true, corner, Collider::Box, ModelType::Cube, dimensions)
+{
+    this->dropped_time = std::chrono::system_clock::now();
+    this->physics.feels_gravity = instant_fall;
+}
+
 bool SpikeTrap::shouldTrigger(ServerGameState& state) {
     if (this->info.triggered) {
         return false;
@@ -60,7 +67,7 @@ void SpikeTrap::trigger(ServerGameState& state) {
     this->reset_dimensions = this->physics.shared.dimensions;
 
     this->physics.feels_gravity = true;
-    this->physics.velocity.y = -50.0f * GRAVITY;
+    this->physics.velocity.y = -100.0f * GRAVITY;
 
     this->dropped_time = std::chrono::system_clock::now();
 }
