@@ -1,6 +1,7 @@
 #include "shared/game/sharedobject.hpp"
 #include "shared/game/status.hpp"
 
+
 std::string objectTypeString(ObjectType type) {
 	switch (type) {
 	case ObjectType::Object:
@@ -16,7 +17,7 @@ std::string objectTypeString(ObjectType type) {
 	}
 }
 
-glm::vec3 SharedPhysics::getCenterPosition() {
+glm::vec3 SharedPhysics::getCenterPosition() const {
     return this->corner + (this->dimensions / 2.0f);
 }
 

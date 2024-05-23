@@ -1,5 +1,6 @@
 #include "server/game/object.hpp"
 #include "server/game/constants.hpp"
+#include "shared/game/sharedmodel.hpp"
 #include "shared/game/sharedobject.hpp"
 
 /*	Constructors and Destructors	*/
@@ -38,7 +39,8 @@ std::unordered_map<ModelType, glm::vec3> Object::models ({
     // by tucking in the player's arms since right now they're 
     // spread out in the model
 	{ModelType::Player, (FIRE_PLAYER_DIMENSIONS / 4.0f)},
-	{ModelType::WarrenBear, (BEAR_DIMENSIONS / 4.0f)}
+	{ModelType::WarrenBear, (BEAR_DIMENSIONS / 4.0f)},
+    {ModelType::Torchlight, glm::vec3(1.0f)}
 });
 
 /*	SharedGameState generation	*/

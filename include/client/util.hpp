@@ -4,6 +4,8 @@
 #include "assimp/types.h"
 #include <glm/glm.hpp>
 
+#include "shared/game/sharedobject.hpp"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/quaternion.hpp>
 
@@ -44,5 +46,6 @@ Bbox aiBboxToGLM(const aiAABB& bbox);
  * of the provided bounding boxes
  */
 Bbox combineBboxes(const Bbox& bbox1, const Bbox& bbox2);
+
 
 glm::quat getGLMQuat(const aiQuaternion& pOrientation);

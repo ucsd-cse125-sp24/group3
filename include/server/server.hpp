@@ -39,6 +39,8 @@ public:
 
     void sendUpdateToAllClients(Event event);
 
+    void sendLightSourceUpdates(EntityID playerID);
+
 private:
     /// @brief EID that is reserved for the Server / World itself.
     EntityID world_eid;
