@@ -84,6 +84,7 @@ std::optional<Grid> MazeGenerator::generate() {
         this->frontier.pop();
 
         if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 2) {
+            std::cout << "placing exit\n";
             // optimize the placing of the exit and orb to make the exit as far away from the entrance as possible
             // essentially go through the frontier and throw out everything but the farthest away
             // from the spawn
@@ -111,6 +112,7 @@ std::optional<Grid> MazeGenerator::generate() {
         }
 
         if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 1) {
+            std::cout << "placing orb\n";
             // go through frontier, and get coord and required entry to be as far from exit_coord as possible
             int size = this->frontier.size();
             int count = 0;

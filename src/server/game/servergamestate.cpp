@@ -1031,6 +1031,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				case CellType::Wall:
+				case CellType::Pillar:
 				case CellType::FakeWall: {
                     this->spawnWall(cell);
 					break;
@@ -1147,7 +1148,10 @@ void ServerGameState::spawnWall(GridCell* cell) {
         cell->type == CellType::TorchDown ||
         cell->type == CellType::TorchLeft ||
         cell->type == CellType::TorchRight) {
+
         this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
+    } else if(cell->type == CellType::Pillar) {
+        this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Pillar, corner, dimensions));
     }
 }
 
