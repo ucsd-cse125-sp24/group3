@@ -57,7 +57,6 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::ArrowTrap:
 		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
-			std::cout << "DM PLACED A TRAP! " << "global ID: " << object->globalID << " specific ID: " << object->typeID << std::endl;
 			break;
 		case ObjectType::Weapon:
 			object->typeID = this->items.push(dynamic_cast<Weapon*>(object));
