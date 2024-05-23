@@ -10,6 +10,8 @@ CellType charToCellType(char c) {
 		return CellType::Empty;
 	case '#':
 		return CellType::Wall;
+    case '!':
+		return CellType::Pillar;
 	case '@':
 		return CellType::Spawn;
 	case 'E':
@@ -78,6 +80,8 @@ char cellTypeToChar(CellType type) {
 		return '.';
 	case CellType::Wall:
 		return '#';
+	case CellType::Pillar:
+		return '!';
 	case CellType::Spawn:
 		return '@';
 	case CellType::Enemy:
