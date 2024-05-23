@@ -418,10 +418,6 @@ void Client::draw() {
         if (!is_dm && !is_ceiling && dist > RENDER_DISTANCE) {
             continue;
         }
-        if (!is_dm && sharedObject->type == ObjectType::SolidSurface && sharedObject->solidSurface->is_internal) {
-            // don't render walls you will never see as normal player (internal walls)
-            continue;
-        }
 
         switch (sharedObject->type) {
             case ObjectType::Player: {
@@ -499,13 +495,12 @@ void Client::draw() {
                 break;
             }
             case ObjectType::SolidSurface: {
-                // do not render ceiling if dungeon master
-                if (!this->session->getInfo().is_dungeon_master.has_value()) {
-                    break; // just in case this message wasn't received, don't crash
-                }
-
                 if (is_dm && sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling) {
                     // don't render ceiling as DM
+                    break;
+                }
+                if (!is_dm && sharedObject->solidSurface->is_internal) {
+                    // dont render internal walls as non DM
                     break;
                 }
 
@@ -762,6 +757,9 @@ void Client::draw() {
                 break;
         }
     }
+
+    // auto stop = std::chrono::system_clock::now();
+    // std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << "\n";
 }
 
 void Client::drawBbox(boost::optional<SharedObject> object) {

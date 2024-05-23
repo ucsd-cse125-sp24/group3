@@ -1526,7 +1526,8 @@ void ServerGameState::loadMaze(const Grid& grid) {
 	// Create Floor
 	for (int c = 0; c < this->grid.getColumns(); c++) {
 		for (int r = 0; r < this->grid.getRows(); r++) {
-			if (isWallLikeCell(this->grid.getCell(c, r)->type)) {
+			auto type = this->grid.getCell(c, r)->type;
+			if (isWallLikeCell(type) || type == CellType::OutsideTheMaze) {
 				continue;
 			}
 
@@ -1540,8 +1541,9 @@ void ServerGameState::loadMaze(const Grid& grid) {
 
 			this->objects.createObject(floor);
 
-			if(freeSpots[r][c])
-				solidSurfaceInGridCells.insert(std::make_pair<std::pair<int, int>, std::vector<SolidSurface*>>({c, r}, {floor}));
+			if(freeSpots[r][c]) {
+				solidSurfaceInGridCells.insert({{c, r}, {floor}});
+			}
 		}
 	}
 
