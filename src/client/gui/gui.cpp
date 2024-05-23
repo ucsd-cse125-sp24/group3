@@ -383,61 +383,82 @@ void GUI::_sharedGameHUD() {
     auto inventory_size = !is_dm.value() ? self->inventoryInfo->inventory_size : self->trapInventoryInfo->inventory_size;
     auto selected = !is_dm.value() ? self->inventoryInfo->selected - 1 : self->trapInventoryInfo->selected - 1;
 
-    auto itemString = "";
+    std::string itemString = "";
     if (!is_dm.value()) {
+        auto limit = self->inventoryInfo->usesRemaining[selected];
+        std::string limittxt = "";
+        if (limit != 0) {
+            limittxt = " (" + std::to_string(limit) + ")";
+        }
+
         if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
             switch (self->inventoryInfo->inventory[selected]) {
-            case ModelType::HealthPotion: {
-                itemString = "Health Potion";
-                break;
-            }
-            case ModelType::NauseaPotion:
-            case ModelType::InvincibilityPotion: {
-                itemString = "??? Potion";
-                break;
-            }
-            case ModelType::InvisibilityPotion: {
-                itemString = "Invisibility Potion";
-                break;
-            }
-            case ModelType::FireSpell: {
-                itemString = "Fireball Wand";
-                break;
-            }
-            case ModelType::HealSpell: {
-                itemString = "Healing Wand";
-                break;
-            }
-            case ModelType::Orb: {
-                itemString = "Orb";
-                break;
-            }
+                case ModelType::HealthPotion: {
+                    itemString = "Health Potion";
+                    break;
+                }
+                case ModelType::NauseaPotion:
+                case ModelType::InvincibilityPotion: {
+                    itemString = "??? Potion";
+                    break;
+                }
+                case ModelType::InvisibilityPotion: {
+                    itemString = "Invisibility Potion";
+                    break;
+                }
+                case ModelType::FireSpell: {
+                    itemString = "Fireball Wand" + limittxt;
+                    break;
+                }
+                case ModelType::HealSpell: {
+                    itemString = "Healing Wand" + limittxt;
+                    break;
+                }
+                case ModelType::TeleportSpell: {
+                    itemString = "Teleport" + limittxt;
+                    break;
+                }
+                case ModelType::Orb: {
+                    itemString = "Orb";
+                    break;
+                }
+                case ModelType::Dagger: {
+                    itemString = "Dagger";
+                    break;
+                }
+                case ModelType::Sword: {
+                    itemString = "Sword";
+                    break;
+                }
+                case ModelType::Hammer: {
+                    itemString = "Hammer";
+                    break;
+                }
             }
         }
-    }
-    else { // DM hotbar
+    } else { // DM hotbar
         if (self->trapInventoryInfo->inventory[selected] != ModelType::Frame) {
             switch (self->trapInventoryInfo->inventory[selected]) {
-            case ModelType::FloorSpikeFull: {
-                itemString = "Floor Spike Full";
-                break;
-            }
-            case ModelType::FloorSpikeHorizontal: {
-                itemString = "Floor Spike Horizontal";
-                break;
-            }
-            case ModelType::FloorSpikeVertical: {
-                itemString = "Floor Spike Vertical";
-                break;
-            }
-            case ModelType::FireballTrap: {
-                itemString = "Fireball Trap";
-                break;
-            }
-            case ModelType::SpikeTrap: {
-                itemString = "Ceiling Spike Trap";
-                break;
-            }
+                case ModelType::FloorSpikeFull: {
+                    itemString = "Floor Spike Full";
+                    break;
+                }
+                case ModelType::FloorSpikeHorizontal: {
+                    itemString = "Floor Spike Horizontal";
+                    break;
+                }
+                case ModelType::FloorSpikeVertical: {
+                    itemString = "Floor Spike Vertical";
+                    break;
+                }
+                case ModelType::FireballTrap: {
+                    itemString = "Fireball Trap";
+                    break;
+                }
+                case ModelType::SpikeTrap: {
+                    itemString = "Ceiling Spike Trap";
+                    break;
+                }
             }
         }
     }
@@ -447,7 +468,7 @@ void GUI::_sharedGameHUD() {
         itemString,
         font::Font::TEXT,
         font::Size::SMALL,
-        font::Color::BLACK,
+        font::Color::WHITE,
         fonts,
         font::getRelativePixels(70)
     );
@@ -464,41 +485,53 @@ void GUI::_sharedGameHUD() {
         if (!is_dm.value()) {
             if (self->inventoryInfo->inventory[i] != ModelType::Frame) {
                 switch (self->inventoryInfo->inventory[i]) {
-                case ModelType::HealthPotion: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion), 2));
-                    break;
-                }
-                case ModelType::NauseaPotion:
-                case ModelType::InvincibilityPotion: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::UnknownPotion), 2));
-                    break;
-                }
-                case ModelType::InvisibilityPotion: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion), 2));
-                    break;
-                }
-                case ModelType::FireSpell: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FireSpell), 2));
-                    break;
-                }
-                case ModelType::HealSpell: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell), 2));
-                    break;
-                }
-                case ModelType::Orb: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
-                    break;
-                }
+                    case ModelType::HealthPotion: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion), 2));
+                        break;
+                    }
+                    case ModelType::NauseaPotion:
+                    case ModelType::InvincibilityPotion: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::UnknownPotion), 2));
+                        break;
+                    }
+                    case ModelType::InvisibilityPotion: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion), 2));
+                        break;
+                    }
+                    case ModelType::FireSpell: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FireSpell), 2));
+                        break;
+                    }
+                    case ModelType::HealSpell: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell), 2));
+                        break;
+                    }
+                    case ModelType::TeleportSpell: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Scroll), 2));
+                        break;
+                    }
+                    case ModelType::Orb: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                        break;
+                    }
+                    case ModelType::Dagger: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Dagger), 2));
+                        break;
+                    }
+                    case ModelType::Sword: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Sword), 2));
+                        break;
+                    }
+                    case ModelType::Hammer: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Hammer), 2));
+                        break;
+                    }
                 }
             }
-            else {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
-            }
-        }
-        else {
+        } else {
             if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
                 switch (self->trapInventoryInfo->inventory[i]) {
-                case ModelType::FloorSpikeFull: { // CHANGE
+                case ModelType::FloorSpikeFull: { // TODO: CHANGE images
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }
@@ -591,7 +624,7 @@ void GUI::_layoutGameHUD() {
         status_flex->push(widget::DynText::make(
             status,
             fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
         ));
     }
 
@@ -622,7 +655,7 @@ void GUI::_layoutGameHUD() {
         durationFlex->push(widget::DynText::make(
             name + std::to_string((int)self->inventoryInfo->usedItems[id].second),
             fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::RED)));
+            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::WHITE)));
 
         ++it;
     }

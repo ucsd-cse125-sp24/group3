@@ -10,16 +10,15 @@
         "server_ip": "localhost",
         "server_port": 2355
     },
-  "server": {
-    "lobby_name": "The Orb of Orbos",
-    "lobby_broadcast": true,
-    "max_players": 1,
-    "is_dungeon_master": true
-  },
+    "server": {
+        "lobby_name": "Hope you're doing well!",
+        "lobby_broadcast": true,
+        "max_players": 1
+    },
     "client": {
         "default_name": "Conan O'Brien",
         "lobby_discovery": true,
-        "window_width": 2000,
+        "window_width": 1500,
         "draw_bboxes": false
     }
 }

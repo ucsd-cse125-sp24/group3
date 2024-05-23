@@ -14,6 +14,7 @@ enum class ModelType {
 	InvincibilityPotion,
 	FireSpell,
 	HealSpell,
+	TeleportSpell,
 	Frame,
 	Orb,
 	FloorSpikeHorizontal,
@@ -25,5 +26,8 @@ enum class ModelType {
 	ArrowTrapRight,
 	SpikeTrap,
 	FireballTrap,
-	TeleporterTrap
+	TeleporterTrap,
+	Dagger,
+	Sword,
+	Hammer,
 };

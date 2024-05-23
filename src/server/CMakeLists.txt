@@ -31,6 +31,10 @@ set(FILES
     game/spell.cpp
     game/exit.cpp
     game/orb.cpp
+    game/weapon.cpp
+    game/weaponcollider.cpp
+
+    audio/soundtable.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

@@ -19,7 +19,7 @@
 #include "client/lobbyfinder.hpp"
 #include "client/gui/gui.hpp"
 #include "client/camera.hpp"
-#include "client/audiomanager.hpp"
+#include "client/audio/audiomanager.hpp"
 #include "client/constants.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
@@ -192,6 +192,7 @@ private:
     std::shared_ptr<Shader> model_shader;
     std::shared_ptr<Shader> light_source_shader;
     std::shared_ptr<Shader> solid_surface_shader;
+    std::shared_ptr<Shader> wall_shader;
 
     /* Character models and lighting objects, might need to move to different classes later */
     std::unique_ptr<Model> cube_model;
@@ -199,6 +200,8 @@ private:
     std::unique_ptr<Model> bear_model;
     std::unique_ptr<LightSource> light_source;
     std::unique_ptr<Model> torchlight_model;
+    std::unique_ptr<Model> wall_model;
+    std::unique_ptr<Model> pillar_model;
 
     GLFWwindow *window;
 

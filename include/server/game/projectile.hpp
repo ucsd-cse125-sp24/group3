@@ -61,7 +61,7 @@ public:
      */
     Projectile(glm::vec3 corner, glm::vec3 facing, 
         glm::vec3 dimensions, ModelType model,
-        Options&& options);
+        std::optional<ServerSFX> destroy_sound, Options&& options);
 
     void doCollision(Object* other, ServerGameState& state) override;
 
@@ -74,6 +74,7 @@ public:
 
 private:
     Options opt;
+    std::optional<ServerSFX> destroy_sound;
 };
 
 class HomingFireball : public Projectile {
@@ -84,7 +85,7 @@ public:
     inline static const float HOMING_STRENGTH = 0.1f;
 
     HomingFireball(glm::vec3 corner, glm::vec3 facing, std::optional<EntityID> target):
-        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube,
+        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube, ServerSFX::FireballImpact,
             Options(false, DAMAGE, H_MULT, V_MULT, true, HOMING_STRENGTH, target))
     {}
 };
@@ -101,7 +102,7 @@ public:
     inline static const float V_MULT = 0.0f; // not affected by gravity
 
     Arrow(glm::vec3 corner, glm::vec3 facing, ArrowTrap::Direction dir):
-        Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Cube,
+        Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Cube, ServerSFX::ArrowImpact,
             Options(false, DAMAGE, H_MULT, V_MULT, false, 0.0f, {}))
     {
         // temp hack to get the correct direction until we load in a model and can rotate it
@@ -140,7 +141,7 @@ public:
     SpellType sType;
 
     SpellOrb(glm::vec3 corner, glm::vec3 facing, SpellType type) :
-        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube,
+        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube, ServerSFX::FireballImpact,
             Options(true, DAMAGE, H_MULT, V_MULT, false, 0.0f, {}))
     {
         this->sType = type;
