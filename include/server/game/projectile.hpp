@@ -79,7 +79,7 @@ private:
 
 class HomingFireball : public Projectile {
 public:
-    inline static const int DAMAGE = 25;
+    inline static const int DAMAGE = 15;
     inline static const float H_MULT = 0.4;
     inline static const float V_MULT = 0.0; // not affected by gravity
     inline static const float HOMING_STRENGTH = 0.1f;

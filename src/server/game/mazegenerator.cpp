@@ -605,9 +605,22 @@ std::shared_ptr<Room> MazeGenerator::_pullRoomByPolicy() {
 }
 
 std::shared_ptr<Room> MazeGenerator::_pullRoomByType(RoomType type) {
-    int random_index = randomInt(0, this->rooms_by_type.at(type).size() - 1);
+    std::shared_ptr<Room> room = nullptr;
+    while (true) {
+        int random_index = randomInt(0, this->rooms_by_type.at(type).size() - 1);
+        room = this->rooms_by_type.at(type).at(random_index);
+        if (!this->used_room_ids.contains(room->id)) {
+            // keep going until we find a new room we haven't placed yet
+            break;
+        }
+    }
 
-    return this->rooms_by_type.at(type).at(random_index);
+    if (room->rclass.size == RoomSize::_20x20 || room->rclass.size == RoomSize::_40x40) {
+        // don't place the same 20x20 or 40x40 rooms in the same maze twice
+        this->used_room_ids.insert(room->id);
+    }
+
+    return room;
 }
 
 std::vector<glm::ivec2> MazeGenerator::_getRoomCoordsTakenBy(RoomSize size, glm::ivec2 top_left) {
