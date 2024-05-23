@@ -522,6 +522,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 					otherObj->type == ObjectType::Potion || 
 					otherObj->type == ObjectType::Spell ||
 					otherObj->type == ObjectType::Weapon ||
+					otherObj->type == ObjectType::Orb ||
 					otherObj->type == ObjectType::WeaponCollider ||
 					otherObj->type == ObjectType::Slime) {
 					continue;

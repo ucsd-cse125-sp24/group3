@@ -101,18 +101,22 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
 }
 
 void Spell::doCollision(Object* other, ServerGameState& state) {
-
     auto player = dynamic_cast<Player*>(other);
-    if (player == nullptr) return;
+    if (player == nullptr) return; // only allow players to pick up items
 
+    bool pickedUp = false;
     for (int i = 0; i < player->inventory.size(); i++) {
         if (player->inventory[i] != -1) { continue; }
 
         player->inventory[i] = this->typeID;
         player->sharedInventory.inventory[i] = this->modelType;
         player->sharedInventory.usesRemaining[i] = this->castLimit;
+        pickedUp = true;
         break;
     }
-    this->iteminfo.held = true;
-    this->physics.collider = Collider::None;
+
+    if (pickedUp) {
+        this->iteminfo.held = true;
+        this->physics.collider = Collider::None;
+    }
 }
