@@ -9,8 +9,20 @@ std::string getImgFilepath(ImgID img) {
     switch (img) {
         default:
         case ImgID::Yoshi: return (img_root / "Yoshi.png").string();
-        case ImgID::Pikachu: return (img_root / "awesomeface.png").string();
-
+        case ImgID::AwesomeSauce: return (img_root / "awesomeface.png").string();
+        case ImgID::ItemFrame: return (img_root / "frame.png").string();
+        case ImgID::SelectedFrame: return (img_root / "selected_frame.png").string();
+        case ImgID::HealthPotion: return (img_root / "pot_health.png").string();
+        case ImgID::UnknownPotion: return (img_root / "pot_unknown.png").string();
+        case ImgID::InvisPotion: return (img_root / "pot_invisibility.png").string();
+        case ImgID::FireSpell: return (img_root / "fire_wand.png").string();
+        case ImgID::HealSpell: return (img_root / "heal_wand.png").string();
+        case ImgID::Orb: return (img_root / "orb.png").string();
+        case ImgID::Scroll: return (img_root / "scroll.png").string();
+        case ImgID::Crosshair: return (img_root / "crosshair046.png").string();
+        case ImgID::Dagger: return (img_root / "weapon_dagger.png").string();
+        case ImgID::Sword: return (img_root / "weapon_sword.png").string();
+        case ImgID::Hammer: return (img_root / "weapon_hammer.png").string();
     }
 }
 

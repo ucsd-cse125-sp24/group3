@@ -7,6 +7,8 @@
 #include "shared/utilities/rng.hpp"
 #include "shared/utilities/config.hpp"
 
+#include "server/game/mazegenerator.hpp"
+
 using namespace std::chrono_literals;
 
 int main(int argc, char** argv) {
@@ -18,9 +20,12 @@ int main(int argc, char** argv) {
         // Do one tick of updates
         auto wait_time = server.doTick();
 
-        // Wait until next tick
-        context.run_for(wait_time);
-
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
+        if (wait_time <= 0ms) {
+            std::cerr << "WARNING: did not meet tick rate!\n";
+            context.run_for(5ms);
+        } else {
+            // Wait until next tick
+            context.run_for(wait_time);
+        }
     }
 }

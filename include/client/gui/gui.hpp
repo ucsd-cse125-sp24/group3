@@ -34,7 +34,9 @@ enum class GUIState {
     LOBBY_BROWSER,
     LOBBY,
     GAME_HUD,
-    GAME_ESC_MENU
+    GAME_ESC_MENU,
+    DEAD_SCREEN,
+    RESULTS_SCREEN
 };
 
 #define GUI_PROJECTION_MATRIX() glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT);
@@ -345,6 +347,12 @@ private:
      * TODO: this is not implemented yet
      */
     void _layoutGameHUD();
+
+    /**
+    * @brief Displays the Game HUD for both gameHUD and EscMenu layout
+    */
+    void _sharedGameHUD();
+
     /**
      * @brief Displays the menu which appears when the player presses Escape while playing
      * 
@@ -353,6 +361,17 @@ private:
      * BUG: Mouse movement is still tracked causing disorienting reorientation upon resuming
      */
     void _layoutGameEscMenu();
+    /**
+     * @brief Displays the screen which appears when the player fucking DIES
+     */
+    void _layoutDeadScreen();
+
+    /**
+     * @brief Displays the screen which appears when either player group wins
+     * the game.
+     */
+    void _layoutResultsScreen();
+
     /// =============================================================================
 };
 

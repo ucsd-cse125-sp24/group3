@@ -1,8 +1,22 @@
-## Game Name Here
+## Wrath of Zeus
 
 ![Docs](https://github.com/ucsd-cse125-sp24/group3/actions/workflows/docs.yml/badge.svg)
 
 TODO: Game description here, with screenshots.
+
+## Attributions
+
+TomMusic's [Free Fantasy 200 SFX Pack](https://tommusic.itch.io/free-fantasy-200-sfx-pack).
+
+## Documentation
+
+View deployed documentation [here](https://cse125.ucsd.edu/2024/cse125g3/docs/html/)
+
+### Build Docs Locally 
+
+1. We are using Doxygen which you can install locally from [here](https://www.doxygen.nl/download.html)
+2. Run `doxygen` from the root of the directory
+3. Open the `html` files in the `docs` directory of the repo
 
 ## Setup
 
@@ -136,15 +150,6 @@ Depending on where you need to link the library (client, server, shared), you wi
 
 You can download models from our Google Drive folder [here](https://drive.google.com/drive/folders/1N7a5cDgMcXbPO0RtgznnEo-1XUfdMScM?usp=sharing) and place them in `src/client/models`. Alternatively, you can install [gdown](https://github.com/wkentaro/gdown) and run `make pull_models` to automatically pull them.
 
-## Documentation
-
-View deployed documentation [here](https://cse125.ucsd.edu/2024/cse125g3/site/docs/html/)
-
-### Build Docs Locally 
-
-1. We are using Doxygen which you can install locally from [here](https://www.doxygen.nl/download.html)
-2. Run `doxygen` from the root of the directory
-3. Open the `html` files in the `docs` directory of the repo
 
 
 ## Testing

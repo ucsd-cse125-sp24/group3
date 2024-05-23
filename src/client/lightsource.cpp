@@ -26,6 +26,7 @@ void LightSource::draw(std::shared_ptr<Shader> shader,
 
     // draw the light cube object
     glBindVertexArray(VAO);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glBindVertexArray(0);

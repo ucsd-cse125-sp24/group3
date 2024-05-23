@@ -1,11 +1,22 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/enemy.hpp"
+#include "server/game/torchlight.hpp"
+#include "server/game/spiketrap.hpp"
+#include "server/game/fireballtrap.hpp"
+#include "server/game/projectile.hpp"
+#include "server/game/potion.hpp"
+#include "server/game/exit.hpp"
+#include "server/game/orb.hpp"
+#include "server/game/spell.hpp"
+#include "server/game/weaponcollider.hpp"
+#include "server/game/weapon.hpp"
+#include "shared/utilities/rng.hpp"
 
 #include <memory>
 
 /*	Constructors and Destructors	*/
 
-ObjectManager::ObjectManager() {
+ObjectManager::ObjectManager() { // cppcheck-suppress uninitMemberVar
 	////	Initialize global SmartVector
 	//this->objects = SmartVector<Object*>();
 
@@ -20,112 +31,79 @@ ObjectManager::~ObjectManager() {
 
 /*	Object CRUD methods	*/
 
-SpecificID ObjectManager::createObject(ObjectType type) {
+SpecificID ObjectManager::createObject(Object* object) {
 	//	Create a new object with the given type
-	EntityID globalID;
-	SpecificID typeID;
+	EntityID globalID = this->objects.push(object);
+	object->globalID = globalID;
 
-	switch (type) {
-		case ObjectType::Item: {
-			//	Create a new object of type Item
-			Item* item = new Item();
-
-			//	Push to type-specific items vector
-			typeID = (SpecificID)this->items.push(item);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(item);
-
-			//	Set items' type and global IDs
-			item->typeID = typeID;
-			item->globalID = globalID;
-			break;
+	object->gridCellPositions = this->objectGridCells(object);
+	for (auto pos : object->gridCellPositions) {
+		if (!this->cellToObjects.contains(pos)) {
+			this->cellToObjects.insert({pos, std::vector<Object*>()});
 		}
-		case ObjectType::SolidSurface: {
-			//	Create a new object of type SolidSurface
-			SolidSurface* solidSurface = new SolidSurface();
-
-			//	Push to type-specific solid_surfaces vector
-			typeID = (SpecificID)this->solid_surfaces.push(solidSurface);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(solidSurface);
-
-			//	Set solidSurface's type and global IDs
-			solidSurface->typeID = typeID;
-			solidSurface->globalID = globalID;
-			break;
-		}
-		case ObjectType::Player: {
-			//	Create a new object of type Player
-			Player* player = new Player();
-
-			//	Push to type-specific players vector
-			typeID = (SpecificID)this->players.push(player);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(player);
-
-			//	Set object's type and global IDs
-			player->typeID = typeID;
-			player->globalID = globalID;
-			break;
-		}
-        case ObjectType::Enemy: {
-            //	Create a new object of type Enemy
-            Enemy* enemy = new Enemy();
-
-			//	Push to type-specific enemies vector
-            typeID = (SpecificID)this->enemies.push(enemy);
-
-            //	Push to global objects vector
-            globalID = (EntityID)this->objects.push(enemy);
-
-            //	Set object's type and global IDs
-            enemy->typeID = typeID;
-            enemy->globalID = globalID;
-            break;
-        }
-		case ObjectType::Object: {
-			//	Create a new object of type Object
-			Object* object = new Object(ObjectType::Object);
-
-			//	TODO: Maybe change SmartVector's index return value? size_t is
-			//	larger than uint32 (which is what SpecificID and EntityID are
-			//	defined as)
-			//	Push to type-specific base_objects vector
-			typeID = (SpecificID)this->base_objects.push(object);
-
-			//	Push to global objects vector
-			globalID = (EntityID)this->objects.push(object);
-
-            //	Set object's type and global IDs
-            object->typeID = typeID;
-            object->globalID = globalID;
-            break;
-        }
-        default: {
-            //	Create a new object of type Object
-            Object* object = new Object(ObjectType::Object);
-
-            //	TODO: Maybe change SmartVector's index return value? size_t is
-            //	larger than uint32 (which is what SpecificID and EntityID are
-            //	defined as)
-            //	Push to type-specific base_objects vector
-            typeID = (SpecificID)this->base_objects.push(object);
-
-            //	Push to global objects vector
-            globalID = (EntityID)this->objects.push(object);
-
-            //	Set object's type and global IDs
-            object->typeID = typeID;
-            object->globalID = globalID;
-            break;
-        }
 	}
 
-	//	Return new object's specificID
-	return typeID;
+	switch (object->type) {
+		case ObjectType::Projectile:
+			object->typeID = this->projectiles.push(dynamic_cast<Projectile*>(object));
+			break;
+		case ObjectType::WeaponCollider:
+			object->typeID = this->weaponColliders.push(dynamic_cast<WeaponCollider*>(object));
+			break;
+		case ObjectType::FireballTrap:
+		case ObjectType::FakeWall:
+		case ObjectType::SpikeTrap:
+		case ObjectType::FloorSpike:
+		case ObjectType::ArrowTrap:
+		case ObjectType::TeleporterTrap:
+			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
+			break;
+		case ObjectType::Weapon:
+			object->typeID = this->items.push(dynamic_cast<Weapon*>(object));
+			break;
+		case ObjectType::Spell:
+			object->typeID = this->items.push(dynamic_cast<Spell*>(object));
+			break;
+		case ObjectType::Potion:
+			object->typeID = this->items.push(dynamic_cast<Potion*>(object));
+			break;
+		case ObjectType::SolidSurface:
+			object->typeID = this->solid_surfaces.push(dynamic_cast<SolidSurface*>(object));
+			break;
+        case ObjectType::Torchlight:
+            object->typeID = this->torchlights.push(dynamic_cast<Torchlight*>(object));
+            break;
+		case ObjectType::DungeonMaster: { // has no type ID
+			this->dm = dynamic_cast<DungeonMaster*>(object);
+			break;
+		}
+		case ObjectType::Player:
+			object->typeID = this->players.push(dynamic_cast<Player*>(object));
+			break;
+        case ObjectType::Slime:
+			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
+			break;
+		case ObjectType::Exit:
+			object->typeID = this->exits.push(dynamic_cast<Exit*>(object));
+			break;
+		case ObjectType::Orb:
+			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
+			break;
+        default:
+			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << 
+				"\nDid you remember to add a new switch statement to ObjectManager::createObject?\n";
+			std::exit(1);
+	}
+
+	if (object->physics.movable) {
+		auto movableID = movableObjects.push(object);
+		object->movableID = movableID;
+	}
+
+	//	Move object to its given position
+	moveObject(object, object->physics.shared.corner);
+
+	return object->typeID;
 }
 
 bool ObjectManager::removeObject(EntityID globalID) {
@@ -134,6 +112,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 
 	if (object == nullptr) {
 		//	Object with the given index doesn't exist
+		std::cout << "obj doesn't exist? in ObjectManager::removeObject" << std::endl;
 		return false;
 	}
 
@@ -147,6 +126,65 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		//	SmartVector
 		this->base_objects.remove(object->typeID);
 		break;
+	case ObjectType::FireballTrap:
+	case ObjectType::FakeWall:
+	case ObjectType::SpikeTrap:
+	case ObjectType::FloorSpike:
+	case ObjectType::ArrowTrap:
+	case ObjectType::TeleporterTrap:
+		this->traps.remove(object->typeID);
+		break;
+	case ObjectType::Item:
+		this->items.remove(object->typeID);
+		break;
+	case ObjectType::Player:
+		this->players.remove(object->typeID);
+		break;
+	case ObjectType::Projectile:
+		this->projectiles.remove(object->typeID);
+		break;
+	case ObjectType::Slime:
+		this->enemies.remove(object->typeID);
+		break;
+	case ObjectType::WeaponCollider:
+		this->weaponColliders.remove(object->typeID);
+		break;
+	case ObjectType::Weapon:
+	case ObjectType::Spell:
+	case ObjectType::Potion:
+	case ObjectType::Orb:
+		this->items.remove(object->typeID);
+		break;
+	case ObjectType::Exit:
+		this->exits.remove(object->typeID);
+		break;
+	case ObjectType::SolidSurface:
+		this->solid_surfaces.remove(object->typeID);
+		break;
+	case ObjectType::Torchlight:
+		this->torchlights.remove(object->typeID);
+		break;
+	default:
+		std::cerr << "WARN: Cannot delete object! Did you forget to add a switch statement to \n"
+			<< "ObjectManager::removeObject? Continuing, but there may be deallocated memory still accessible!";
+	}
+
+	if (object->physics.movable) {
+		movableObjects.remove(object->movableID);
+	}
+
+	//	Remove object from cellToObjects hashmap
+	for (glm::vec2 cellPosition : object->gridCellPositions) {
+		std::vector<Object*>& objectsInCell =
+			this->cellToObjects[cellPosition];
+
+		//	Remove object from Object * vector of objects in this cell
+		for (int i = 0; i < objectsInCell.size(); i++) {
+			if (objectsInCell.at(i)->globalID == object->globalID) {
+				objectsInCell.erase(objectsInCell.begin() + i);
+				break;
+			}
+		}
 	}
 
 	//	Delete object
@@ -185,9 +223,17 @@ SmartVector<Object*> ObjectManager::getObjects() {
 	return this->objects;
 }
 
+SmartVector<Object*> ObjectManager::getMovableObjects() {
+	return this->movableObjects;
+}
+
 /*	SpecificID object getters by type	*/
 Object* ObjectManager::getBaseObject(SpecificID base_objectID) {
 	return this->base_objects.get(base_objectID);
+}
+
+DungeonMaster* ObjectManager::getDM() {
+	return this->dm;
 }
 
 Item* ObjectManager::getItem(SpecificID itemID) {
@@ -206,6 +252,14 @@ Enemy* ObjectManager::getEnemy(SpecificID enemyID) {
 	return this->enemies.get(enemyID);
 }
 
+Torchlight* ObjectManager::getTorchlight(SpecificID torchlightID) {
+	return this->torchlights.get(torchlightID);
+}
+
+Trap* ObjectManager::getTrap(SpecificID trapID) {
+	return this->traps.get(trapID);
+}
+
 SmartVector<Item*> ObjectManager::getItems() {
 	return this->items;
 }
@@ -222,23 +276,77 @@ SmartVector<Enemy*> ObjectManager::getEnemies() {
 	return this->enemies;
 }
 
+SmartVector<Trap*> ObjectManager::getTraps() {
+	return this->traps;
+}
+
+SmartVector<Projectile*> ObjectManager::getProjectiles() {
+	return this->projectiles;
+}
+
+SmartVector<WeaponCollider*> ObjectManager::getWeaponColliders() {
+	return this->weaponColliders;
+}
+
+SmartVector<Torchlight*> ObjectManager::getTorchlights() {
+	return this->torchlights;
+}
+
+SmartVector<Exit*> ObjectManager::getExits() {
+	return this->exits;
+}
+
+/*	Object Movement	*/
+bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
+	if (object == nullptr) {
+		return false;
+	}
+
+	object->distance_moved += glm::distance(object->physics.shared.corner, newCornerPosition);
+
+	//	Remove the object from the cellToObjects hashmap
+	for (auto cellPosition : object->gridCellPositions) {
+		std::vector<Object*>& objectsInCell = this->cellToObjects.at(cellPosition);
+
+		//	Remove object from Object * vector of objects in this cell
+		for (int i = 0; i < objectsInCell.size(); i++) {
+			if (objectsInCell.at(i)->globalID == object->globalID) {
+				objectsInCell.erase(objectsInCell.begin() + i);
+				break;
+			}
+		}
+	}
+
+	//	Update object's corner position
+	object->physics.shared.corner = newCornerPosition;
+
+	//	Get the object's new occupied GridCell position vector
+	object->gridCellPositions = objectGridCells(object);
+
+	for (int i = 0; i < object->gridCellPositions.size(); i++) {
+		this->cellToObjects[object->gridCellPositions[i]].push_back(object);
+	}
+
+    return true;
+}
+
+std::vector<glm::ivec2> ObjectManager::objectGridCells(Object* object) {
+	return Grid::getCellsFromPositionRange(object->physics.shared.corner,
+		object->physics.shared.corner + object->physics.shared.dimensions);
+}
+
 /*	SharedGameState generation	*/
 
-std::vector<std::shared_ptr<SharedObject>> ObjectManager::toShared() {
-	std::vector<std::shared_ptr<SharedObject>> shared;
+std::vector<boost::optional<SharedObject>> ObjectManager::toShared() {
+	std::vector<boost::optional<SharedObject>> shared;
 
-	//	Fill shared SmartVector of SharedObjects
 	for (int i = 0; i < this->objects.size(); i++) {
 		Object* object = this->objects.get(i);
 
 		if (object == nullptr) {
-			//	Push empty object to SharedObject SmartVector
-			shared.push_back(nullptr);
-		}
-		else {
-			//	Create a SharedObject representation for this object and push it
-			//	to the SharedObject SmartVector
-			shared.push_back(std::make_shared<SharedObject>(object->toShared()));
+			shared.push_back({});
+		} else {
+			shared.push_back(object->toShared());
 		}
 	}
 

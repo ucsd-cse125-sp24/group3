@@ -6,6 +6,8 @@
 #include "shared/utilities/rng.hpp"
 #include "client/client.hpp"
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/game/sharedobject.hpp"
+#include "shared/utilities/time.hpp"
 
 namespace gui {
 
@@ -138,6 +140,7 @@ void GUI::layoutFrame(GUIState state) {
             break;
         case GUIState::GAME_ESC_MENU:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            this->_sharedGameHUD();
             this->_layoutGameEscMenu();
             break;
         case GUIState::LOBBY_BROWSER:
@@ -146,14 +149,28 @@ void GUI::layoutFrame(GUIState state) {
             break;
         case GUIState::GAME_HUD:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+            this->_sharedGameHUD();
             this->_layoutGameHUD();
             break;
         case GUIState::LOBBY:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             this->_layoutLobby();
             break;
+        case GUIState::DEAD_SCREEN:
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            this->_layoutDeadScreen();
+            break;
+        case GUIState::RESULTS_SCREEN:
+            //  TODO: fill results screen logic here
+            this->_layoutResultsScreen();
+            break;
         case GUIState::NONE:
             break;
+    }
+
+    for (auto& [_handle, widget] : this->widgets) {
+        widget->lock();
     }
 }
 
@@ -195,7 +212,7 @@ void GUI::_layoutTitleScreen() {
     ));
 
     auto start_text = widget::DynText::make(
-        "Start Game",
+        "(Start Game)",
         fonts,
         widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
     );
@@ -209,7 +226,7 @@ void GUI::_layoutTitleScreen() {
     auto start_flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
     );
 
     start_flex->push(std::move(start_text));
@@ -229,19 +246,21 @@ void GUI::_layoutLobbyBrowser() {
     auto lobbies_flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 10.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 10.0f)
     );
 
     for (const auto& [ip, packet]: client->lobby_finder.getFoundLobbies()) {
         std::stringstream ss;
-        ss << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken;
+        ss << "(" << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken << ")";
 
         auto entry = widget::DynText::make(ss.str(), this->fonts,
             widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK));
         entry->addOnClick([ip, this](widget::Handle handle){
             std::cout << "Connecting to " << ip.address() << " ...\n";
-            this->client->connectAndListen(ip.address().to_string());
-            this->client->gui_state = GUIState::LOBBY;
+            if (this->client->connectAndListen(ip.address().to_string())) {
+                this->client->gui_state = GUIState::LOBBY;
+                this->clearCapturedKeyboardInput();
+            }
         });
         entry->addOnHover([this](widget::Handle handle){
             auto widget = this->borrowWidget<widget::DynText>(handle);
@@ -254,19 +273,52 @@ void GUI::_layoutLobbyBrowser() {
         lobbies_flex->push(widget::DynText::make(
             "No lobbies found...",
             this->fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
         ));
     }
 
     this->addWidget(std::move(lobbies_flex));
 
-    this->addWidget(widget::TextInput::make(
-        glm::vec2(FRAC_WINDOW_WIDTH(2, 5), FRAC_WINDOW_HEIGHT(1, 6)),
-        "Enter a name",
+    auto input_flex = widget::Flexbox::make(
+        glm::vec2(0.0f, font::getRelativePixels(30) + 2 * font::getFontSizePx(font::Size::MEDIUM)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, font::getRelativePixels(20))
+    );
+    input_flex->push(widget::TextInput::make(
+        glm::vec2(0.0f, 0.0f),
+        "Manual IP",
         this,
         fonts,
         widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
     ));
+    this->addWidget(std::move(input_flex));
+
+    auto connect_flex = widget::Flexbox::make(
+        glm::vec2(0.0f, font::getRelativePixels(30)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, font::getRelativePixels(20))
+    );
+
+    std::stringstream ss;
+    ss << "(Connect to \"" << this->getCapturedKeyboardInput() << "\")";
+    auto connect_btn = widget::DynText::make(
+        ss.str(),
+        fonts,
+        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+    );
+    connect_btn->addOnHover([this](widget::Handle handle) {
+        auto btn = this->borrowWidget<widget::DynText>(handle);
+        btn->changeColor(font::Color::RED);
+    });
+    connect_btn->addOnClick([this](widget::Handle handle) {
+        auto input = this->getCapturedKeyboardInput();
+        if (client->connectAndListen(input)) {
+            client->gui_state = GUIState::LOBBY;
+            this->clearCapturedKeyboardInput();
+        }
+    });
+    connect_flex->push(std::move(connect_btn));
+    this->addWidget(std::move(connect_flex));
 }
 
 void GUI::_layoutLobby() {
@@ -294,7 +346,7 @@ void GUI::_layoutLobby() {
     auto players_flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 5)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 10.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 10.0f)
     );
     for (const auto& [_eid, player_name] : this->client->gameState.lobby.players) {
         players_flex->push(widget::DynText::make(
@@ -316,13 +368,405 @@ void GUI::_layoutLobby() {
     this->addWidget(std::move(waiting_msg));
 }
 
-void GUI::_layoutGameHUD() {
+void GUI::_sharedGameHUD() {
+    auto self_eid = client->session->getInfo().client_eid;
+    auto is_dm = client->session->getInfo().is_dungeon_master;
 
+    // if one doesn't have, the other shouldn't
+    // but just to be safe check both
+    if (!self_eid.has_value() || !is_dm.has_value()) {
+        return;
+    }
+
+    auto self = client->gameState.objects.at(*self_eid);
+
+    auto inventory_size = !is_dm.value() ? self->inventoryInfo->inventory_size : self->trapInventoryInfo->inventory_size;
+    auto selected = !is_dm.value() ? self->inventoryInfo->selected - 1 : self->trapInventoryInfo->selected - 1;
+
+    std::string itemString = "";
+    if (!is_dm.value()) {
+        auto limit = self->inventoryInfo->usesRemaining[selected];
+        std::string limittxt = "";
+        if (limit != 0) {
+            limittxt = " (" + std::to_string(limit) + ")";
+        }
+
+        if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
+            switch (self->inventoryInfo->inventory[selected]) {
+                case ModelType::HealthPotion: {
+                    itemString = "Health Potion";
+                    break;
+                }
+                case ModelType::NauseaPotion:
+                case ModelType::InvincibilityPotion: {
+                    itemString = "??? Potion";
+                    break;
+                }
+                case ModelType::InvisibilityPotion: {
+                    itemString = "Invisibility Potion";
+                    break;
+                }
+                case ModelType::FireSpell: {
+                    itemString = "Fireball Wand" + limittxt;
+                    break;
+                }
+                case ModelType::HealSpell: {
+                    itemString = "Healing Wand" + limittxt;
+                    break;
+                }
+                case ModelType::TeleportSpell: {
+                    itemString = "Teleport" + limittxt;
+                    break;
+                }
+                case ModelType::Orb: {
+                    itemString = "Orb";
+                    break;
+                }
+                case ModelType::Dagger: {
+                    itemString = "Dagger";
+                    break;
+                }
+                case ModelType::Sword: {
+                    itemString = "Sword";
+                    break;
+                }
+                case ModelType::Hammer: {
+                    itemString = "Hammer";
+                    break;
+                }
+            }
+        }
+    } else { // DM hotbar
+        if (self->trapInventoryInfo->inventory[selected] != ModelType::Frame) {
+            switch (self->trapInventoryInfo->inventory[selected]) {
+                case ModelType::FloorSpikeFull: {
+                    itemString = "Floor Spike Full";
+                    break;
+                }
+                case ModelType::FloorSpikeHorizontal: {
+                    itemString = "Floor Spike Horizontal";
+                    break;
+                }
+                case ModelType::FloorSpikeVertical: {
+                    itemString = "Floor Spike Vertical";
+                    break;
+                }
+                case ModelType::FireballTrap: {
+                    itemString = "Fireball Trap";
+                    break;
+                }
+                case ModelType::SpikeTrap: {
+                    itemString = "Ceiling Spike Trap";
+                    break;
+                }
+            }
+        }
+    }
+
+    // Text for item description
+    auto item_txt = widget::CenterText::make(
+        itemString,
+        font::Font::TEXT,
+        font::Size::SMALL,
+        font::Color::WHITE,
+        fonts,
+        font::getRelativePixels(70)
+    );
+    this->addWidget(std::move(item_txt));
+
+    // Flexbox for the items 
+    // Loading itemframe again if no item
+    auto itemflex = widget::Flexbox::make(
+        glm::vec2(0.0f, 0.0f),         
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+    );
+    for (int i = 0; i < inventory_size; i++) {
+        if (!is_dm.value()) {
+            if (self->inventoryInfo->inventory[i] != ModelType::Frame) {
+                switch (self->inventoryInfo->inventory[i]) {
+                    case ModelType::HealthPotion: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion), 2));
+                        break;
+                    }
+                    case ModelType::NauseaPotion:
+                    case ModelType::InvincibilityPotion: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::UnknownPotion), 2));
+                        break;
+                    }
+                    case ModelType::InvisibilityPotion: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion), 2));
+                        break;
+                    }
+                    case ModelType::FireSpell: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FireSpell), 2));
+                        break;
+                    }
+                    case ModelType::HealSpell: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell), 2));
+                        break;
+                    }
+                    case ModelType::TeleportSpell: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Scroll), 2));
+                        break;
+                    }
+                    case ModelType::Orb: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                        break;
+                    }
+                    case ModelType::Dagger: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Dagger), 2));
+                        break;
+                    }
+                    case ModelType::Sword: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Sword), 2));
+                        break;
+                    }
+                    case ModelType::Hammer: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Hammer), 2));
+                        break;
+                    }
+                }
+            } else {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+            }
+        } else {
+            if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
+                switch (self->trapInventoryInfo->inventory[i]) {
+                case ModelType::FloorSpikeFull: { // TODO: CHANGE images
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::FloorSpikeHorizontal: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::FloorSpikeVertical: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::FireballTrap: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::SpikeTrap: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                }
+            }
+            else {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+            }
+        }
+    }
+
+    this->addWidget(std::move(itemflex));
+
+    // Flexbox for the item frames
+    auto frameflex = widget::Flexbox::make(
+        glm::vec2(0.0f, 0.0f),          //position relative to screen
+        glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
+    );
+
+    for (int i = 0; i < inventory_size; i++) {
+        if (selected == i) {
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame), 2));
+        }
+        else {
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+        }
+    }
+
+    this->addWidget(std::move(frameflex));
+
+}
+
+void GUI::_layoutGameHUD() {
+    auto self_eid = client->session->getInfo().client_eid;
+    auto is_dm = client->session->getInfo().is_dungeon_master;
+
+    // display crosshair
+    auto crosshair = this->images.getImg(img::ImgID::Crosshair);
+
+    this->addWidget(widget::StaticImg::make(
+        glm::vec2((WINDOW_WIDTH / 2.0f) - (crosshair.width / 2.0f),
+            (WINDOW_HEIGHT / 2.0f) - (crosshair.height / 2.0f)),
+        this->images.getImg(img::ImgID::Crosshair)
+    ));
+
+    if (!self_eid.has_value()) {
+        return;
+    }
+    auto self = client->gameState.objects.at(*self_eid);
+
+    auto matchPhaseFlex = widget::Flexbox::make(
+        glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(150))),
+        glm::vec2(0, 0),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+    );
+
+    std::string orbStateString;
+    if (client->gameState.matchPhase == MatchPhase::MazeExploration) {
+        orbStateString = "The Orb is hidden somewhere in the Labyrinth...";
+    }
+    else {
+        bool orbIsCarried = false;
+        for (auto [id, name] : client->gameState.lobby.players) {
+            auto player = client->gameState.objects.at(id);
+
+            if (!player.has_value())    continue;
+
+            SharedObject playerObj = player.get();
+
+            if (playerObj.inventoryInfo.get().hasOrb) {
+                orbIsCarried = true;
+                orbStateString = name + " has the Orb!";
+                break;
+            }
+        }
+
+        if (!orbIsCarried) {
+            orbStateString = "The Orb has been dropped!";
+        }
+
+        std::optional<glm::vec3> orb_pos;
+
+        for (const auto& [eid, obj] : client->gameState.objects) {
+            if (obj->type == ObjectType::Player && obj->inventoryInfo->hasOrb) {
+                orb_pos = obj->physics.corner;
+                orb_pos->y = 0;
+                break;
+            }
+        }
+
+        if (!orb_pos.has_value()) {
+            for (const auto& [eid, obj] : client->gameState.objects) {
+                if (obj->type == ObjectType::Orb) {
+                    orb_pos = obj->physics.corner;
+                    orb_pos->y = 0;
+                    break;
+                }
+            }
+        }
+
+        if (!orb_pos.has_value()) {
+            std::cerr << "WARNING: orb pos does not have value... Bruh.\n";
+        }
+        else {
+            auto player_pos_ground = self->physics.corner;
+            player_pos_ground.y = 0;
+
+            auto distance = glm::distance(orb_pos.value(), player_pos_ground);
+
+            std::stringstream ss;
+            ss << distance << "m to Orb.";
+
+            matchPhaseFlex->push(widget::DynText::make(ss.str(), fonts, widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)));
+        }
+    }
+
+
+    matchPhaseFlex->push(widget::DynText::make(
+        orbStateString,
+        fonts,
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
+    ));
+
+    //  Add timer string
+    if (client->gameState.matchPhase == MatchPhase::RelayRace) {
+        std::string timerString = "Time Left: ";
+        int timerSeconds = client->gameState.timesteps_left * ((float)TIMESTEP_LEN.count()) / 1000;
+        timerString += std::to_string(timerSeconds);
+
+        timerString += (timerSeconds > 1) ? " seconds" : " second";
+
+        matchPhaseFlex->push(widget::DynText::make(
+            timerString,
+            fonts,
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
+        ));
+    }
+
+    //  Add player deaths string
+    std::string playerDeathsString = std::to_string(client->gameState.numPlayerDeaths)
+        + " / " + std::to_string(PLAYER_DEATHS_TO_RELAY_RACE)
+        + " Player Deaths";
+
+    matchPhaseFlex->push(widget::DynText::make(
+        playerDeathsString,
+        fonts,
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
+    ));
+
+    this->addWidget(std::move(matchPhaseFlex));
+
+    if (is_dm.has_value() && is_dm.value()) {
+        return;
+    }
+
+    auto health_txt = widget::CenterText::make(
+        std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
+        font::Font::MENU,
+        font::Size::MEDIUM,
+        font::Color::RED,
+        fonts,
+        font::getRelativePixels(90)
+    );
+    this->addWidget(std::move(health_txt));
+
+    auto status_flex = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(20), font::getRelativePixels(20)),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
+    );
+
+    for (const std::string& status: self->statuses->getStatusStrings()) {
+        status_flex->push(widget::DynText::make(
+            status,
+            fonts,
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
+        ));
+    }
+
+    this->addWidget(std::move(status_flex));
+    // Flexbox for item durations
+    auto durationFlex = widget::Flexbox::make(
+        glm::vec2(10.0f, FRAC_WINDOW_HEIGHT(1, 2)),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+    );
+
+    std::unordered_map<SpecificID, std::pair<ModelType, double>>::iterator it = self->inventoryInfo->usedItems.begin();
+
+    while (it != self->inventoryInfo->usedItems.end()) {
+        auto id = it->first;
+        auto type = self->inventoryInfo->usedItems[id].first;
+        auto name = "";
+        if (type == ModelType::InvisibilityPotion) {
+            name = "Invisibility: ";
+        }
+        else if (type == ModelType::InvincibilityPotion) {
+            name = "INVINCIBILITY: ";
+        }
+        else if (type == ModelType::NauseaPotion) {
+            name = "Nauseous: ";
+        }
+
+        durationFlex->push(widget::DynText::make(
+            name + std::to_string((int)self->inventoryInfo->usedItems[id].second),
+            fonts,
+            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::WHITE)));
+
+        ++it;
+    }
+    this->addWidget(std::move(durationFlex));
 }
 
 void GUI::_layoutGameEscMenu() {
     auto exit_game_txt = widget::DynText::make(
-        "Exit Game",
+        "(Exit Game)",
         fonts,
         widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
     );
@@ -336,11 +780,67 @@ void GUI::_layoutGameEscMenu() {
     auto flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 2)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Justify::VERTICAL, widget::Align::CENTER, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
     );
     flex->push(std::move(exit_game_txt));
 
     this->addWidget(std::move(flex));
+}
+
+void GUI::_layoutDeadScreen() {
+    auto self_eid = client->session->getInfo().client_eid;
+    if (!self_eid.has_value()) {
+        return;
+    }
+    auto self = client->gameState.objects.at(*self_eid);
+
+    auto time_until_respawn = (self->playerInfo->respawn_time - getMsSinceEpoch()) / 1000;
+
+    this->addWidget(widget::CenterText::make(
+        "You died...",
+        font::Font::MENU,
+        font::Size::LARGE,
+        font::Color::RED,
+        fonts,
+        FRAC_WINDOW_HEIGHT(1, 2)
+    ));
+    this->addWidget(widget::CenterText::make(
+        "Respawning in " + std::to_string(time_until_respawn),
+        font::Font::TEXT,
+        font::Size::MEDIUM,
+        font::Color::BLACK,
+        fonts,
+        FRAC_WINDOW_HEIGHT(1, 3)
+    ));
+}
+
+void GUI::_layoutResultsScreen() {
+    auto self_eid = client->session->getInfo().client_eid;
+    if (!self_eid.has_value()) {
+        return;
+    }
+
+    auto self = client->gameState.objects.at(*self_eid);
+
+    //  Add widget based on whether the player won or lost
+    bool won;
+    if (self->type == ObjectType::Player) {
+        won = client->gameState.playerVictory;
+    }
+    else {
+        won = !(client->gameState.playerVictory);
+    }
+
+    std::string result_string = won ? "Victory" : "Defeat";
+
+    this->addWidget(widget::CenterText::make(
+        result_string,
+        font::Font::MENU,
+        font::Size::LARGE,
+        won ? font::Color::BLUE : font::Color::RED,
+        fonts,
+        FRAC_WINDOW_HEIGHT(1, 2)
+    ));
 }
 
 void GUI::_handleClick(float x, float y) {

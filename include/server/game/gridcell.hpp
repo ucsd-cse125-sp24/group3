@@ -1,12 +1,8 @@
 #pragma once
 
-enum class CellType {
-	Empty,
-	Wall,
-	Spawn,
-	Enemy,
-	Unknown
-};
+#include "shared/game/celltype.hpp"
+
+bool isWallLikeCell(CellType type);
 
 /**
  * @brief Returns CellType given a character (maps character representation to
@@ -16,6 +12,13 @@ enum class CellType {
  * the character doesn't map to a known CellType.
  */
 CellType charToCellType(char c);
+
+/**
+ * TODO: write this
+ */
+char cellTypeToChar(CellType type);
+
+bool isCellTypeAllowedInEntryWay(CellType type);
 
 class GridCell {
 public:

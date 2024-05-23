@@ -37,9 +37,9 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
     try {
         return GameConfig {
             .game = {
-                .timestep_length_ms = std::chrono::milliseconds(json.at("game").at("timestep_length_ms")),
                 .maze = {
                     .directory = json.at("game").at("maze").at("directory"),
+                    .procedural = json.at("game").at("maze").at("procedural"),
                     .maze_file = json.at("game").at("maze").at("maze_file")
                 }
             },
@@ -50,12 +50,13 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
             .server = {
                 .lobby_name = json.at("server").at("lobby_name"),
                 .lobby_broadcast = json.at("server").at("lobby_broadcast"),
-                .max_players = json.at("server").at("max_players")
+                .max_players = json.at("server").at("max_players"),
             },
             .client = {
                 .default_name = json.at("client").at("default_name"),
                 .lobby_discovery = json.at("client").at("lobby_discovery"),
-                .window_width = json.at("client").at("window_width")
+                .window_width = json.at("client").at("window_width"),
+                .draw_bboxes = json.at("client").at("draw_bboxes")
             }
         };
     } catch (nlohmann::json::exception& ex) {
@@ -65,11 +66,11 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
 }
 
 GameConfig getDefaultConfig() {
-    return GameConfig {
+    return GameConfig{
         .game = {
-            .timestep_length_ms = std::chrono::milliseconds(30),
             .maze = {
                 .directory = "maps",
+                .procedural = true,
                 .maze_file = "default_maze.maze"
             }
         },
@@ -80,7 +81,7 @@ GameConfig getDefaultConfig() {
         .server = {
             .lobby_name = "My Test Lobby",
             .lobby_broadcast = false,
-            .max_players = 1
+            .max_players = 1,
         },
         .client = {
             .default_name = "Player",

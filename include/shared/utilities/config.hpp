@@ -12,7 +12,6 @@
 struct GameConfig {
     /// @brief Game config options
     struct {
-        std::chrono::milliseconds timestep_length_ms;
         struct {
             /**
              * @brief Path of the directory (contained in the repository
@@ -21,10 +20,16 @@ struct GameConfig {
             std::string directory;
 
             /**
+             * @brief whether or not to generate and use a procedurally generated maze
+             */
+            bool procedural;
+
+            /**
              * @brief Name of the maze file within the maze maps directory that
              * the server should load.
              */
             std::string maze_file;
+
         } maze;
     } game;
     /// @brief Shared config settings for the network
@@ -51,6 +56,7 @@ struct GameConfig {
         /// @brief Whether or not the client should listen for server lobby broadcasts
         bool lobby_discovery;
         int window_width;
+        bool draw_bboxes;
     } client;
 
     /**

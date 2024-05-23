@@ -7,6 +7,9 @@
 #include "shared/utilities/serialize.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/game/celltype.hpp"
+#include "shared/audio/soundcommand.hpp"
+#include "shared/utilities/constants.hpp"
 
 
 /****************************************************
@@ -29,17 +32,24 @@ enum class EventType {
     ChangeFacing,
     LobbyAction,
     LoadGameState,
+    LoadSoundCommands,
     StartAction,
     StopAction, 
     MoveRelative,
     MoveAbsolute,
     SpawnEntity,
+    SelectItem,
+    UseItem,
+    DropItem,
+    UpdateLightSources,
+    TrapPlacement
 };
 
 enum class ActionType {
     MoveCam,
     Jump,
     Sprint,
+    Zoom
 };
 
 /**
@@ -84,8 +94,7 @@ struct LobbyActionEvent {
 };
 
 /**
- * Event sent by the server to a client, telling the client to update their SharedGameState
- * to this new SharedGameState
+ * Event sent by the server to a client, giving a partial update to the SharedGameState
  */
 struct LoadGameStateEvent {
     // Dummy value doesn't matter because will be overridden with whatever you deserialize
@@ -96,6 +105,21 @@ struct LoadGameStateEvent {
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar& state;
+    }
+};
+
+/**
+ * Event sent by the server to a client, giving a partial update to the AudioTable
+ */
+struct LoadSoundCommandsEvent {
+    // Dummy value doesn't matter because will be overridden with whatever you deserialize
+    LoadSoundCommandsEvent() = default;
+    explicit LoadSoundCommandsEvent(const std::vector<SoundCommand>& commands) : commands(commands) {}
+
+    std::vector<SoundCommand> commands;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & commands;
     }
 };
 
@@ -112,6 +136,23 @@ struct StartActionEvent {
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar& entity_to_act& movement& action;
+    }
+};
+
+/**
+ * Event for placing a trap
+ */
+struct TrapPlacementEvent {
+    TrapPlacementEvent() {}
+    TrapPlacementEvent(EntityID entity_to_act, glm::vec3 world_pos, CellType cell, bool hover, bool place) : entity_to_act(entity_to_act), world_pos(world_pos), cell(cell), hover(hover), place(place) { }
+
+    EntityID entity_to_act;
+    CellType cell;
+    glm::vec3 world_pos;
+    bool hover, place;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& entity_to_act & cell & world_pos & hover & place;
     }
 };
 
@@ -180,8 +221,68 @@ struct SpawnEntityEvent {
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         // TODO:
     }
+};
+
+/**
+ * Event for selecting which item to use 
+ */
+struct SelectItemEvent {
+    SelectItemEvent() {}
+    explicit SelectItemEvent(EntityID playerEID, int itemNum) : playerEID(playerEID), itemNum(itemNum) {}
+
+    EntityID playerEID;
+    int itemNum;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& playerEID& itemNum;
+    }
 
 };
+
+/**
+ * Event for entity to use item
+ */
+struct UseItemEvent {
+    UseItemEvent() {}
+    explicit UseItemEvent(EntityID playerEID) : playerEID(playerEID) {}
+
+    EntityID playerEID;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& playerEID;
+    }
+};
+
+/**
+ * Event for dropping item in inventory
+ */
+struct DropItemEvent {
+    DropItemEvent() {}
+    explicit DropItemEvent(EntityID playerEID) : playerEID(playerEID){}
+
+    EntityID playerEID;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& playerEID;
+    }
+
+};
+
+struct UpdateLightSourcesEvent {
+    struct UpdatedLightSource {
+        EntityID eid;
+        float intensity;
+        DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+            ar & eid & intensity;
+        }
+    };
+    std::array<boost::optional<UpdatedLightSource>, MAX_POINT_LIGHTS> lightSources;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & lightSources;
+    }
+};
+
 
 /**
  * All of the different kinds of events in a tagged union, so we can
@@ -191,11 +292,17 @@ using EventData = boost::variant<
     ChangeFacingEvent,
     LobbyActionEvent,
     LoadGameStateEvent,
+    LoadSoundCommandsEvent,
     StartActionEvent,
     StopActionEvent,
     MoveRelativeEvent,
     MoveAbsoluteEvent,
-    SpawnEntityEvent
+    SpawnEntityEvent,
+    SelectItemEvent,
+    UseItemEvent,
+    UpdateLightSourcesEvent,
+    DropItemEvent,
+    TrapPlacementEvent
 >;
 
 /**

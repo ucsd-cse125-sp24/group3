@@ -1,9 +1,9 @@
 {
     "game": {
-      "timestep_length_ms": 40,
       "maze": {
         "directory": "maps",
-        "maze_file": "maze5.maze"
+        "procedural": true,
+        "maze_file": "test/itemRoom.maze"
       }
     },
     "network": {
@@ -11,13 +11,14 @@
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "Unnamed Lobby",
+        "lobby_name": "Hope you're doing well!",
         "lobby_broadcast": true,
-        "max_players": 1
+        "max_players": 6
     },
     "client": {
-        "default_name": "John Doe",
+        "default_name": "Conan O'Brien",
         "lobby_discovery": true,
-        "window_width": 1500
+        "window_width": 2000,
+        "draw_bboxes": false
     }
 }

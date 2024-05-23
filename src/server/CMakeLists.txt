@@ -4,8 +4,7 @@ set(LIB_NAME game_server_lib)
 set(FILES
     lobbybroadcaster.cpp
     server.cpp
-    game/boxcollider.cpp
-    game/spherecollider.cpp
+    game/collider.cpp
     game/creature.cpp
     game/item.cpp
     game/solidsurface.cpp
@@ -14,8 +13,28 @@ set(FILES
     game/objectmanager.cpp
     game/player.cpp
     game/enemy.cpp
+    game/torchlight.cpp
     game/gridcell.cpp
     game/grid.cpp
+    game/trap.cpp
+    game/spiketrap.cpp
+    game/fireballtrap.cpp
+    game/arrowtrap.cpp
+    game/projectile.cpp
+    game/floorspike.cpp
+    game/fakewall.cpp
+    game/dungeonmaster.cpp
+    game/potion.cpp
+    game/mazegenerator.cpp
+    game/teleportertrap.cpp
+    game/slime.cpp
+    game/spell.cpp
+    game/exit.cpp
+    game/orb.cpp
+    game/weapon.cpp
+    game/weaponcollider.cpp
+
+    audio/soundtable.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})

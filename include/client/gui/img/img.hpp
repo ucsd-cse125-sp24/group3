@@ -16,10 +16,25 @@ namespace gui::img {
  */
 enum class ImgID {
     Yoshi,
-    Pikachu
+    AwesomeSauce,
+    ItemFrame,
+    SelectedFrame,
+    HealthPotion,
+    UnknownPotion,
+    InvisPotion,
+    FireSpell,
+    HealSpell,
+    Orb,
+    Crosshair,
+    Scroll,
+    Dagger,
+    Sword,
+    Hammer,
 };
 #define GET_ALL_IMG_IDS() \
-    {ImgID::Yoshi, ImgID::Pikachu}
+    {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::ItemFrame, ImgID::SelectedFrame, ImgID::HealthPotion, \
+        ImgID::UnknownPotion, ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
+        ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer}
 
 /**
  * Representation of a loaded image

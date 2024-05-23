@@ -1,4 +1,5 @@
 #include "client/cube.hpp"
+#include "shared/game/sharedobject.hpp"
 
 Cube::Cube(glm::vec3 newColor) {
     // create a vertex buffer for positions and normals
@@ -135,10 +136,10 @@ Cube::~Cube() {
     glDeleteVertexArrays(1, &VAO);
 }
 
-void Cube::draw(std::shared_ptr<Shader> shader,
+void Cube::draw(Shader* shader,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
-    glm::vec3 lightPos,
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
     bool fill) {
 
     // actiavte the shader program

@@ -2,13 +2,26 @@
 
 #include <memory>
 
+#define	GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/hash.hpp"
+
 #include "server/game/object.hpp"
-#include "server/game/item.hpp"
 #include "server/game/player.hpp"
 #include "server/game/enemy.hpp"
+#include "server/game/dungeonmaster.hpp"
 #include "server/game/solidsurface.hpp"
-
+#include "server/game/torchlight.hpp"
+//#include "server/game/grid.hpp"
 #include "shared/utilities/smartvector.hpp"
+
+// forward declarations to use pointers
+class Trap; 
+class Projectile;
+class Item;
+class Exit;
+class Orb;
+class WeaponCollider;
+
 
 class ObjectManager {
 public:
@@ -27,7 +40,7 @@ public:
 	 * @param type the type of object to create
 	 * @return the SpecificID of the newly created object
 	 */
-	SpecificID createObject(ObjectType type);
+	SpecificID createObject(Object* object);
 
 	/**
 	 * @brief Attempts to remove an object with the given EntityID.
@@ -90,11 +103,31 @@ public:
 	Player* getPlayer(SpecificID playerID);
 
 	/**
+	 * @brief Get the Dungeon Master pointer
+	 * @return A pointer to the Dungeon Master
+	 */
+	DungeonMaster* getDM();
+
+	/**
 	 * @brief Attempts to retrieve the Enemy with the given SpecificID.
 	 * @param enemyID SpecificID of the Enemy to retrieve
 	 * @return A pointer 
 	 */
 	Enemy* getEnemy(SpecificID enemyID);
+
+	/**
+	 * @brief Attempts to retrieve the Torchlight with the given SpecificID.
+	 * @param torchlightID SpecificID of the Torchlight to retrieve
+	 * @return A pointer 
+	 */
+	Torchlight* getTorchlight(SpecificID torchlightID);
+
+    /**
+	 * @brief Attempts to retrieve the Trap with the given SpecificID.
+	 * @param trapID lSpecificID of the Trap to retrieve
+	 * @return A pointer 
+	 */
+	Trap* getTrap(SpecificID trapID);
 
 	/**
 	 * @brief Get a list of all objects in this game instance at the current
@@ -103,6 +136,14 @@ public:
 	 * instance.
 	 */
 	SmartVector<Object*> getObjects();
+
+	/**
+	 * @brief Get a list of all objects in this game instance at the current
+	 * timestep that are MOVABLE.
+	 * @return SmartVector of Object pointers of all objects in the game
+	 * instance that are MOVABLE.
+	 */
+	SmartVector<Object*> getMovableObjects();
 
 	/**
 	 * @brief Get a list of all items in this game instance at the current
@@ -136,6 +177,77 @@ public:
 	 */
 	SmartVector<Enemy*> getEnemies();
 
+	/**
+	 * @brief Get a list of all Traps in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Trap pointers of all Trap objects in the game
+	 * instance.
+	 */
+	SmartVector<Trap*> getTraps();
+
+	/**
+	 * @brief Get a list of all Projectiles in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Projectile pointers of all Projectile objects in the game
+	 * instance.
+	 */
+	SmartVector<Projectile*> getProjectiles();
+
+	/**
+	 * @brief Get a list of all Projectiles in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Projectile pointers of all Projectile objects in the game
+	 * instance
+	 */
+	SmartVector<Torchlight*> getTorchlights();
+
+    /**
+	 * @brief Get a list of all WeaponCollider in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of WeaponCollider pointers of all WeaponCollider objects in the game
+	 * instance.
+	 */
+	SmartVector<WeaponCollider*> getWeaponColliders();
+
+	/**
+	 * @brief Get a list of all Exits in this game instance at the current
+	 * timestep.
+	 * @return SmartVector of Exit pointers of all Exit objects in the game
+	 * instance.
+	 */
+	SmartVector<Exit*> getExits();
+
+	/*	Object Movement	*/
+	
+	/**
+	 * @brief Attempts to move the given Object to the given corner position,
+	 * updating its GridCell position vector and the cellToObjects hashmap.
+	 * @param object Pointer to the Object to move.
+	 * @param newCornerPosition The new corner position the Object to which the
+	 * Object will be moved.
+	 * @note This function does NOT perform collision detection!
+	 * @return true if sccessfully moved the object to the new corner position
+	 * and false if the object pointer is nullptr.
+	 */
+	bool moveObject(Object* object, glm::vec3 newCornerPosition);
+
+	/**
+	 * @brief Given an object, his function will return a vector of positions of
+	 * GridCells that are currently occupied by this object.
+	 * @param object Pointer to the Object whose occupied GridCell position
+	 * vector will be calculated.
+	 * @return A vector of positions of GridCells currently occupied by this
+	 * object. If the object pointer is nullptr, an empty vector will be
+	 * returned.
+	 */
+	std::vector<glm::ivec2> objectGridCells(Object* object);
+
+	/**
+	 * @brief Hashmap that maps GridCell (x, y) positions to a vector of Objects
+	 * that occupy / overlap that GridCell.
+	 */
+	std::unordered_map<glm::ivec2, std::vector<Object*>> cellToObjects;
+
 	/*	SharedGameState generation	*/
 	
 	/**
@@ -144,7 +256,7 @@ public:
 	 * @return Returns a std::vector<SharedObject> that corresponds to all
 	 * objects in the game instance.
 	 */
-	std::vector<std::shared_ptr<SharedObject>> toShared();
+	std::vector<boost::optional<SharedObject>> toShared();
 
 private:
 	/*
@@ -184,6 +296,16 @@ private:
 	 */
 	SmartVector<Object *> objects;
 
+	/**
+	 * @brief SmartVector of Object pointers to all objects in the current
+	 * timestep of this game instance that are MOVABLE.
+	 *
+	 * The objects smart vector is indexed by each Object's global EntityID;
+	 * that is, the Object pointer at index x points to the Object with global
+	 * EntityID x.
+	 */
+	SmartVector<Object*> movableObjects;
+
 	/*	Type-specific object smart vectors	*/
 	
 	/**
@@ -213,4 +335,39 @@ private:
 	 * ObjectType::Enemy.
 	 */
 	SmartVector<Enemy *> enemies;
+
+	/**
+	 * @brief SmartVector of TorchLight pointers to all objects whose ObjectType is
+	 * ObjectType::Enemy.
+	 */
+	SmartVector<Torchlight *> torchlights;
+
+    /**
+	 * @brief SmartVector of Trap pointers to all objects whose ObjectType is
+	 * ObjectType::Trap.
+	 */
+	SmartVector<Trap *> traps;
+
+	/**
+	 * @brief SmartVector of projectile pointers to all objects whose ObjectType is
+	 * ObjectType::Projectile.
+	 */
+	SmartVector<Projectile *> projectiles;
+
+	/**
+	 * @brief SmartVector of weapon colliders that spawn upon weapon use
+	 * ObjectType::WeaponCollider.
+	 */
+	SmartVector<WeaponCollider*> weaponColliders;
+
+	/**
+	 * @brief SmartVector of Exit pointers to all objects whose ObjectType is
+	 * ObjectType::Exit.
+	 */
+	SmartVector<Exit*> exits;
+
+	/**
+	 * @brief The Dungeon Master
+	 */
+	DungeonMaster * dm; 
 };

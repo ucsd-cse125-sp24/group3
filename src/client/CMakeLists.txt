@@ -14,7 +14,7 @@ add_subdirectory(../../dependencies/stb ${CMAKE_BINARY_DIR}/stb)
 add_subdirectory(gui)
 
 set(FILES
-    sound.cpp
+    audio/audiomanager.cpp
     camera.cpp
     client.cpp
     cube.cpp
@@ -59,6 +59,7 @@ target_link_libraries(${LIB_NAME}
     libglew_static
     assimp
     freetype
+    sfml-audio
 )
 
 add_executable(${TARGET_NAME} main.cpp)
@@ -88,9 +89,8 @@ target_link_libraries(${TARGET_NAME}
     libglew_static
     assimp
     freetype
+    sfml-audio
 )
-
-target_link_libraries(${TARGET_NAME} PRIVATE sfml-audio)
 
 add_subdirectory(tests) # define client unit tests
 

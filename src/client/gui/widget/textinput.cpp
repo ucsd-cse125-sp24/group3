@@ -36,7 +36,7 @@ TextInput::TextInput(glm::vec2 origin,
     }
 
     this->dyntext = DynText::make(origin, text_to_display, fonts, options);
-    this->dyntext->addOnClick([gui](widget::Handle handle) {
+    this->addOnClick([gui](widget::Handle handle) {
         gui->setCaptureKeystrokes(true);
     });
 
@@ -46,6 +46,7 @@ TextInput::TextInput(glm::vec2 origin,
 }
 
 void TextInput::render() {
+    this->dyntext->setOrigin(this->origin);
     this->dyntext->render();
 }
 
@@ -71,11 +72,17 @@ Widget* TextInput::borrow(Handle handle) {
 
 void TextInput::doClick(float x, float y) {
     Widget::doClick(x, y);
+    // hack to make sure dyntext is 100% positioned correctly internally
+    // when using flexboxes
+    this->dyntext->setOrigin(this->origin);
     this->dyntext->doClick(x, y);
 }
 
 void TextInput::doHover(float x, float y) {
     Widget::doHover(x, y);
+    // hack to make sure dyntext is 100% positioned correctly internally 
+    // when using flexboxes
+    this->dyntext->setOrigin(this->origin);
     this->dyntext->doHover(x, y);
 }
 

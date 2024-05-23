@@ -4,16 +4,18 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include <set>
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
 #include "assimp/material.h"
+
 #include "client/renderable.hpp"
 #include "client/shader.hpp"
+#include "client/util.hpp"
 
 /**
  * Stores position, normal vector, and coordinates 
@@ -85,16 +87,19 @@ class Mesh : public Renderable {
      * @param modelView determines the scaling/rotation/translation of the 
      * mesh
      */
-    void draw(std::shared_ptr<Shader> shader,
+    void draw(Shader* shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            glm::vec3 lightPos,
+            std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
             bool fill) override;
+
+
+    std::optional<glm::vec3> solidColor;
+    Material material;
  private:
      std::vector<Vertex>       vertices;
      std::vector<unsigned int> indices;
      std::vector<Texture>      textures;
-     Material material;
 
     //  render data opengl needs
     GLuint VAO, VBO, EBO;
@@ -118,10 +123,10 @@ class Model : public Renderable {
      * @param Shader to use while drawing all the
      * meshes of the model
      */
-    void draw(std::shared_ptr<Shader> shader,
+    void draw(Shader* shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            glm::vec3 lightPos,
+            std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
             bool fill) override;
 
     /**
@@ -143,28 +148,90 @@ class Model : public Renderable {
 
     /**
      * Scale the Model across all axes (x,y,z)
-     * by a factor
+     * by a factor. This will not stack up on top of any 
+     * previous scaling.
      *
      * @param new_factor describes how much to scale the model by.
      * Ex: setting it to 0.5 will cut the model's rendered size  
      * in half.
      */
-    void scale(const float& new_factor) override;
+    virtual void scaleAbsolute(const float& new_factor) override;
 
     /**
-     * Scale the model across all axes (x,y,z)
-     * by the scale factor in each axis.
+     * Scale the item across all axes (x,y,z)
+     * by the scale factor in each axis. This will not stack 
+     * up on top of any previous scaling.
+     *
+     * @param the scale vector describes how much to independently scale 
+     * the item in each axis (x, y, z)
+     */
+    virtual void scaleAbsolute(const glm::vec3& scale) override;
+
+    /**
+     * Scale the Model across all axes (x,y,z)
+     * by a factor. This will stack 
+     * up on top of any previous scaling.
+     *
+     * @param new_factor describes how much to scale the model by.
+     * Ex: setting it to 0.5 will cut the model's rendered size  
+     * in half.
+     */
+    void scaleRelative(const float& new_factor) override;
+
+    /**
+     * Scale the item across all axes (x,y,z)
+     * by the scale factor in each axis. This 
+     * will stack up on top of any previous scaling.
      *
      * @param the scale vector describes how much to independently scale 
      * the model in each axis (x, y, z)
      */
-    void scale(const glm::vec3& scale) override;
+    void scaleRelative(const glm::vec3& scale) override;
+
+    /**
+     * Clear transformations and reset the model matrix 
+     * to the identity.
+     */
+    void clear() override;
+
+    /**
+     * Reset scale factors in each dimension to 1.0
+     */
+    void clearScale() override;
+
+    /**
+     * Reset translation to position (0, 0, 0)
+     */
+    void clearPosition() override;
+
+    /**
+     * Queries the dimensions of a bounding box around 
+     * the model.
+     *
+     * @return a vec3 where each dimension represents the size
+     * in that dimension
+     */
+    glm::vec3 getDimensions();
+
+    /**
+     * Set dimensions by scaling the model accordingly
+     *
+     * @param a vec3 where each dimension represents the size
+     * in that dimension
+     */
+    void setDimensions(const glm::vec3& dimensions);
+
+    void overrideSolidColor(std::optional<glm::vec3> color);
+
  private:
     std::vector<Mesh> meshes;
+    Bbox bbox;
+    glm::vec3 dimensions;
 
     void processNode(aiNode* node, const aiScene* scene);
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, const aiTextureType& type);
+
 
     // store the directory of the model file so that textures can be
     // loaded relative to the model file
