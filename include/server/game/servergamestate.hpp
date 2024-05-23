@@ -6,6 +6,7 @@
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/smartvector.hpp"
 #include "shared/utilities/custom_hash.hpp"
+#include "server/audio/soundtable.hpp"
 #include "server/game/object.hpp"
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"
@@ -133,6 +134,9 @@ public:
 	 * of the SharedGameState instance
 	 */
 	std::vector<SharedGameState> generateSharedGameState(bool send_all);
+
+	/* Audio Information */
+	SoundTable& soundTable();
 
 	/*	Other getters and setters	*/
 
@@ -307,6 +311,10 @@ private:
 
     std::unordered_map<EntityID, std::array<std::optional<EntityID>, MAX_POINT_LIGHTS>> lightSourcesPerPlayer;
 
+	/**
+	 * @brief table of all currently playing sounds
+	 */
+	SoundTable sound_table;
 	/**
 	 * @brief number of enemies currently in the maze
 	 */

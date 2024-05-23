@@ -138,6 +138,7 @@ enum class SurfaceType {
 	Wall,
 	Floor,
 	Ceiling,
+    Pillar,
 };
 
 struct SharedSolidSurface {

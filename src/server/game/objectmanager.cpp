@@ -10,6 +10,7 @@
 #include "server/game/spell.hpp"
 #include "server/game/weaponcollider.hpp"
 #include "server/game/weapon.hpp"
+#include "shared/utilities/rng.hpp"
 
 #include <memory>
 
@@ -274,6 +275,8 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 	if (object == nullptr) {
 		return false;
 	}
+
+	object->distance_moved += glm::distance(object->physics.shared.corner, newCornerPosition);
 
 	//	Remove the object from the cellToObjects hashmap
 	for (auto cellPosition : object->gridCellPositions) {

@@ -4,6 +4,7 @@
 #include "server/game/objectmanager.hpp"
 #include "server/game/projectile.hpp"
 #include "server/game/collider.hpp"
+#include "shared/audio/constants.hpp"
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -36,7 +37,32 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
         return false;
     }
 
-    return (randomInt(1, 2) == 1);
+    std::vector<glm::ivec2> player_grid_positions;
+    for (int i = 0; i < state.objects.getPlayers().size(); i++) {
+        Player* player = state.objects.getPlayers().get(i);
+        if (player == nullptr) continue;
+        player_grid_positions.push_back(state.getGrid().getGridCellFromPosition(player->physics.shared.getCenterPosition()));
+    }
+    glm::ivec2 curr_grid_pos = state.getGrid().getGridCellFromPosition(this->physics.shared.getCenterPosition());
+    int dist = 0;
+    while (dist < 10) { // max sightline
+        if (state.getGrid().getCell(curr_grid_pos.x, curr_grid_pos.y)->type == CellType::Wall) {
+            return false; // didnt find a player before a wall
+        }
+
+        for (const auto& curr_player_pos : player_grid_positions) {
+            if (curr_grid_pos == curr_player_pos) { // cppcheck-suppress useStlAlgorithm
+                return randomInt(1, 4) == 1;
+            }
+        } 
+
+        curr_grid_pos.x += this->physics.shared.facing.x;
+        curr_grid_pos.y += this->physics.shared.facing.z;
+
+        dist++;
+    }
+
+    return false;
 }
 
 void ArrowTrap::trigger(ServerGameState& state) {
@@ -68,6 +94,14 @@ void ArrowTrap::trigger(ServerGameState& state) {
         this->physics.shared.facing, this->dir));
 
     this->shoot_time = std::chrono::system_clock::now();
+
+    state.soundTable().addNewSoundSource(SoundSource(
+        ServerSFX::ArrowShoot,
+        this->physics.shared.getCenterPosition(),
+        DEFAULT_VOLUME,
+        MEDIUM_DIST,
+        MEDIUM_ATTEN
+    ));
 }
 
 bool ArrowTrap::shouldReset(ServerGameState& state) {

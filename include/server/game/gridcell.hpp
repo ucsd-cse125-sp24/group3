@@ -3,6 +3,7 @@
 enum class CellType {
 	Empty,
 	Wall,
+    Pillar,
 	Spawn,
 	Enemy,
 	SpikeTrap,

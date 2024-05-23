@@ -4,6 +4,10 @@
 
 TODO: Game description here, with screenshots.
 
+## Attributions
+
+TomMusic's [Free Fantasy 200 SFX Pack](https://tommusic.itch.io/free-fantasy-200-sfx-pack).
+
 ## Documentation
 
 View deployed documentation [here](https://cse125.ucsd.edu/2024/cse125g3/docs/html/)

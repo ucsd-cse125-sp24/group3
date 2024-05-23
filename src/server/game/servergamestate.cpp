@@ -19,6 +19,8 @@
 #include "server/game/weaponcollider.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/audio/constants.hpp"
+#include "shared/audio/utilities.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -148,6 +150,10 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 	return partial_updates;
 }
 
+SoundTable& ServerGameState::soundTable() {
+	return this->sound_table;
+}
+
 /*	Update methods	*/
 
 void ServerGameState::update(const EventList& events) {
@@ -185,6 +191,13 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::Jump: {
 				if (obj->physics.velocity.y != 0) { break; }
 				obj->physics.velocity.y += (startAction.movement * JUMP_SPEED / 2.0f).y;
+				this->sound_table.addNewSoundSource(SoundSource(
+					ServerSFX::PlayerJump,
+					obj->physics.shared.corner,
+					DEFAULT_VOLUME,
+					MEDIUM_DIST,
+					MEDIUM_ATTEN
+				));
 				break;
 			}
 			case ActionType::Sprint: {
@@ -337,6 +350,8 @@ void ServerGameState::updateMovement() {
 		if (object == nullptr || !(object->physics.movable))
 			continue;
 
+		glm::vec3 starting_corner_pos = object->physics.shared.corner;
+
 		//	Object is movable - for now, add to updated entities set
 		this->updated_entities.insert(object->globalID);
 
@@ -443,9 +458,46 @@ void ServerGameState::updateMovement() {
 		}
 
 		//	Vertical movement
-		//	Clamp object to floor if corner's y position is lower than the floor
 		if (object->physics.shared.corner.y < 0) {
+			//	Clamp object to floor if corner's y position is lower than the floor
 			object->physics.shared.corner.y = 0;
+
+			// Play relevant landing sounds
+			if (starting_corner_pos.y != 0.0f) {
+				if (object->type == ObjectType::Player) {
+					this->sound_table.addNewSoundSource(SoundSource(
+						ServerSFX::PlayerLand,
+						object->physics.shared.corner,
+						DEFAULT_VOLUME,
+						MEDIUM_DIST,
+						MEDIUM_ATTEN
+					));
+				} else if (object->type == ObjectType::SpikeTrap) {
+					this->sound_table.addNewSoundSource(SoundSource(
+						ServerSFX::CeilingSpikeImpact,
+						object->physics.shared.corner,
+						FULL_VOLUME,
+						FAR_DIST,
+						FAR_ATTEN
+					));
+				}
+			}
+		}
+
+		// Play relevant footstep sounds
+
+		// Footstep audio for players
+		if (object->type == ObjectType::Player) {
+			if (object->distance_moved > 3.0f && object->physics.shared.corner.y == 0.0f) {
+				object->distance_moved = 0.0f; // reset so we only play footsteps every so often
+				this->sound_table.addNewSoundSource(SoundSource(
+					getNextPlayerFootstep(object->globalID),
+					object->physics.shared.getCenterPosition(),
+					DEFAULT_VOLUME,
+					SHORT_DIST,
+					SHORT_ATTEN	
+				));
+			}
 		}
 
 		//	Update object's gravity velocity if the object is in the air or
@@ -1052,6 +1104,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				case CellType::Wall:
+				case CellType::Pillar:
 				case CellType::FakeWall: {
                     this->spawnWall(cell);
 					break;
@@ -1168,7 +1221,10 @@ void ServerGameState::spawnWall(GridCell* cell) {
         cell->type == CellType::TorchDown ||
         cell->type == CellType::TorchLeft ||
         cell->type == CellType::TorchRight) {
+
         this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
+    } else if(cell->type == CellType::Pillar) {
+        this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Pillar, corner, dimensions));
     }
 }
 
@@ -1205,6 +1261,17 @@ void ServerGameState::spawnTorch(GridCell *cell) {
             std::cout << "Invalid Torch cell type when spawning torch\n";
         }
     }
+
+	// Add an entry in the sound table for this
+	this->sound_table.addStaticSoundSource(SoundSource(
+		ServerSFX::TorchLoop,
+		corner,
+		MIDDLE_VOLUME,
+		SHORT_DIST,
+		SHORT_ATTEN,
+		true
+	));
+
     this->objects.createObject(new Torchlight(corner));
 }
 

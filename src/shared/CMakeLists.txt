@@ -12,6 +12,10 @@ set(FILES
     utilities/rng.cpp
     utilities/root_path.cpp
     utilities/time.cpp
+
+    audio/soundtype.cpp
+    audio/soundsource.cpp
+    audio/utilities.cpp
 )
 
 add_library(${LIB_NAME} STATIC ${FILES})
