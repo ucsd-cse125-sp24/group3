@@ -2,6 +2,7 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/utilities/rng.hpp"
 #include "server/game/objectmanager.hpp"
+#include "shared/audio/constants.hpp"
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -45,6 +46,14 @@ bool SpikeTrap::shouldTrigger(ServerGameState& state) {
 
 void SpikeTrap::trigger(ServerGameState& state) {
     Trap::trigger(state);
+
+    state.soundTable().addNewSoundSource(SoundSource(
+        ServerSFX::CeilingSpikeTrigger,
+        this->physics.shared.corner,
+        DEFAULT_VOLUME,
+        MEDIUM_DIST,
+        MEDIUM_ATTEN
+    ));
 
     this->reset_corner = this->physics.shared.corner;
     this->reset_dimensions = this->physics.shared.dimensions;

@@ -2,12 +2,14 @@
 #include "server/game/creature.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/spell.hpp"
+#include "shared/audio/constants.hpp"
 
 #include <iostream>
 
-Projectile::Projectile(glm::vec3 corner, glm::vec3 facing, glm::vec3 dimensions, ModelType model, Options&& options):
+Projectile::Projectile(glm::vec3 corner, glm::vec3 facing, 
+    glm::vec3 dimensions, ModelType model, std::optional<ServerSFX> destroy_sound, Options&& options):
     Object(ObjectType::Projectile, Physics(true, Collider::Box, corner, facing, dimensions), model),
-    opt(options)
+    opt(options), destroy_sound(destroy_sound)
 {
     this->physics.velocityMultiplier = glm::vec3(this->opt.h_mult, this->opt.v_mult, this->opt.h_mult);
     this->physics.velocity = glm::normalize(facing);
@@ -34,6 +36,15 @@ void Projectile::doCollision(Object* other, ServerGameState& state) {
     this->physics.collider = Collider::None;
 
     state.markForDeletion(this->globalID);
+    if (this->destroy_sound.has_value()) {
+        state.soundTable().addNewSoundSource(SoundSource(
+            this->destroy_sound.value(),
+            this->physics.shared.getCenterPosition(),
+            DEFAULT_VOLUME,
+            MEDIUM_DIST,
+            MEDIUM_ATTEN
+        ));
+    }
 
     if (!this->opt.isSpell) {
         // do damage if creature

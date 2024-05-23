@@ -28,9 +28,10 @@
 #include "shared/game/event.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/network/constants.hpp"
+#include "shared/utilities/rng.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/utilities/config.hpp"
-#include "client/audiomanager.hpp"
+#include "client/audio/audiomanager.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
 #include "shared/utilities/timer.hpp"
@@ -208,9 +209,19 @@ bool Client::init() {
     auto solid_surface_frag_path = shaders_dir / "solidsurface.frag";
     this->solid_surface_shader = std::make_shared<Shader>(solid_surface_vert_path.string(), solid_surface_frag_path.string());
 
+    auto wall_model_path = graphics_assets_dir / "wall.obj";
+    this->wall_model = std::make_unique<Model>(wall_model_path.string());
+    auto wall_vert_path = shaders_dir / "wall.vert";
+    auto wall_frag_path = shaders_dir / "wall.frag";
+    this->wall_shader = std::make_shared<Shader>(wall_vert_path.string(), wall_frag_path.string());
+
+    auto pillar_model_path = graphics_assets_dir / "pillar.obj";
+    this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
+
     this->gui_state = GUIState::TITLE_SCREEN;
 
     this->audioManager->init();
+    this->audioManager->playMusic(ClientMusic::TitleTheme);
 
     return true;
 }
@@ -327,6 +338,17 @@ void Client::processServerInput(boost::asio::io_context& context) {
             // Change the UI to the game hud UI whenever we change into the GAME game phase
             if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
                 this->gui_state = GUIState::GAME_HUD;
+
+                audioManager->stopMusic(ClientMusic::TitleTheme);
+                audioManager->playMusic(ClientMusic::GameTheme);
+            }
+        } else if (event.type == EventType::LoadSoundCommands) {
+            auto self_eid = this->session->getInfo().client_eid;
+            if (self_eid.has_value()) {
+                auto self = this->gameState.objects.at(*self_eid);
+                this->audioManager->doTick(self->physics.getCenterPosition(),
+                    boost::get<LoadSoundCommandsEvent>(event.data),
+                    this->closest_light_sources);
             }
         } else if (event.type == EventType::UpdateLightSources) {
             const auto& updated_light_source = boost::get<UpdateLightSourcesEvent>(event.data);
@@ -418,6 +440,10 @@ void Client::draw() {
                     pos.z += 4.0f;
                     cam->updatePos(pos);
 
+                    // update listener position & facing
+                    sf::Listener::setPosition(pos.x, pos.y, pos.z);
+                    sf::Listener::setDirection(sharedObject->physics.facing.x, sharedObject->physics.facing.y, sharedObject->physics.facing.z);
+
                     // reset back to game mode if this is the first frame in which you are respawned
                     if (this->gui_state == GUIState::DEAD_SCREEN && sharedObject->playerInfo->is_alive) {
                         this->gui_state = GUIState::GAME_HUD;
@@ -480,13 +506,35 @@ void Client::draw() {
                 break;
             }
             case ObjectType::SolidSurface: {
-                this->cube_model->setDimensions(sharedObject->physics.dimensions);
-                this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->cube_model->draw(this->solid_surface_shader,
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    this->closest_light_sources, 
-                    true);
+                switch (sharedObject->solidSurface->surfaceType) {
+                    case SurfaceType::Wall:
+                        this->wall_model->setDimensions(sharedObject->physics.dimensions);
+                        this->wall_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        this->wall_model->draw(this->wall_shader,
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            this->closest_light_sources, 
+                            true);
+                        break;
+                    case SurfaceType::Pillar:
+                        this->pillar_model->setDimensions(sharedObject->physics.dimensions);
+                        this->pillar_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        this->pillar_model->draw(this->wall_shader,
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            this->closest_light_sources, 
+                            true);
+                        break;
+                    default:
+                        this->cube_model->setDimensions(sharedObject->physics.dimensions);
+                        this->cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        this->cube_model->draw(this->solid_surface_shader,
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            this->closest_light_sources, 
+                            true);
+                        break;
+                }
                 break;
             }
             case ObjectType::FakeWall: {
@@ -619,6 +667,9 @@ void Client::draw() {
                     else if (sharedObject->modelType == ModelType::HealSpell) {
                         color = glm::vec3(1.0f, 1.0f, 0.0f);
                     }
+                    else {
+                        color = glm::vec3(0.8f, 0.7f, 0.6f);
+                    }
 
                     auto cube = std::make_unique<Cube>(color);
                     cube->scaleAbsolute(sharedObject->physics.dimensions);
@@ -651,6 +702,33 @@ void Client::draw() {
                     this->cam->getPos(),
                     {},
                     true);
+                break;
+            }
+            case ObjectType::Weapon: {
+                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+                    auto cube = std::make_unique<Cube>(glm::vec3(0.5f));
+                    cube->scaleAbsolute(sharedObject->physics.dimensions);
+                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    cube->draw(this->cube_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        {},
+                        true);
+                }
+                break;
+            }
+            case ObjectType::WeaponCollider: {
+                //std::cout << sharedObject->weaponInfo->attacked << "\n";
+                if (sharedObject->weaponInfo->attacked) {
+                    auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
+                    cube->scaleAbsolute(sharedObject->physics.dimensions);
+                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    cube->draw(this->cube_shader,
+                        this->cam->getViewProj(),
+                        this->cam->getPos(),
+                        {},
+                        false);
+                }
                 break;
             }
             default:
@@ -713,7 +791,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_TAB:
             this->gui.setCaptureKeystrokes(true);
             break;
-        
+
         case GLFW_KEY_BACKSPACE:
             this->gui.captureBackspace();
             Client::time_of_last_keystroke = getMsSinceEpoch();
@@ -846,6 +924,28 @@ void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int
             is_left_mouse_down = true;
         } else if (action == GLFW_RELEASE) {
             is_left_mouse_down = false;
+        }
+    }
+
+    std::optional<EntityID> eid;
+
+    if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
+        eid = this->session->getInfo().client_eid.value();
+    }
+
+    if (this->gameState.phase == GamePhase::GAME && this->gui_state == GUIState::GAME_HUD) {
+        if (action == GLFW_PRESS) {
+            switch (button) {
+            case GLFW_MOUSE_BUTTON_RIGHT:
+                // Currently nothing mapped
+                break;
+
+            case GLFW_MOUSE_BUTTON_LEFT:
+                if (eid.has_value()) {
+                    this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
+                }
+                break;
+            }
         }
     }
 }

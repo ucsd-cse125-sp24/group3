@@ -10,6 +10,8 @@ CellType charToCellType(char c) {
 		return CellType::Empty;
 	case '#':
 		return CellType::Wall;
+    case '!':
+		return CellType::Pillar;
 	case '@':
 		return CellType::Spawn;
 	case 'E':
@@ -54,6 +56,16 @@ CellType charToCellType(char c) {
 		return CellType::FireSpell;
 	case 'e':
 		return CellType::HealSpell;
+	case 't':
+		return CellType::TeleportSpell;
+	case 'd':
+		return CellType::Dagger;
+	case 'r':
+		return CellType::Sword;
+	case 'm':
+		return CellType::Hammer;
+	case 'w':
+		return CellType::RandomWeapon;
 	case 'p':
 		return CellType::RandomPotion;
 	case 's':
@@ -78,6 +90,8 @@ char cellTypeToChar(CellType type) {
 		return '.';
 	case CellType::Wall:
 		return '#';
+	case CellType::Pillar:
+		return '!';
 	case CellType::Spawn:
 		return '@';
 	case CellType::Enemy:
@@ -122,6 +136,16 @@ char cellTypeToChar(CellType type) {
 		return 'f';
 	case CellType::HealSpell:
 		return 'e';
+	case CellType::TeleportSpell:
+		return 't';
+	case CellType::Dagger:
+		return 'd';
+	case CellType::Sword:
+		return 'r';
+	case CellType::Hammer:
+		return 'm';
+	case CellType::RandomWeapon:
+		return 'w';
 	case CellType::RandomPotion:
 		return 'p';
 	case CellType::RandomSpell:

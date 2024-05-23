@@ -8,6 +8,9 @@
 #include "server/game/exit.hpp"
 #include "server/game/orb.hpp"
 #include "server/game/spell.hpp"
+#include "server/game/weaponcollider.hpp"
+#include "server/game/weapon.hpp"
+#include "shared/utilities/rng.hpp"
 
 #include <memory>
 
@@ -44,6 +47,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::Projectile:
 			object->typeID = this->projectiles.push(dynamic_cast<Projectile*>(object));
 			break;
+		case ObjectType::WeaponCollider:
+			object->typeID = this->weaponColliders.push(dynamic_cast<WeaponCollider*>(object));
+			break;
 		case ObjectType::FireballTrap:
 		case ObjectType::FakeWall:
 		case ObjectType::SpikeTrap:
@@ -51,6 +57,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::ArrowTrap:
 		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
+			break;
+		case ObjectType::Weapon:
+			object->typeID = this->items.push(dynamic_cast<Weapon*>(object));
 			break;
 		case ObjectType::Spell:
 			object->typeID = this->items.push(dynamic_cast<Spell*>(object));
@@ -123,6 +132,10 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Slime:
 		this->enemies.remove(object->typeID);
 		break;
+	case ObjectType::WeaponCollider:
+		this->weaponColliders.remove(object->typeID);
+		break;
+	case ObjectType::Weapon:
 	case ObjectType::Spell:
 	case ObjectType::Potion:
 	case ObjectType::Orb:
@@ -245,6 +258,10 @@ SmartVector<Projectile*> ObjectManager::getProjectiles() {
 	return this->projectiles;
 }
 
+SmartVector<WeaponCollider*> ObjectManager::getWeaponColliders() {
+	return this->weaponColliders;
+}
+
 SmartVector<Torchlight*> ObjectManager::getTorchlights() {
 	return this->torchlights;
 }
@@ -258,6 +275,8 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 	if (object == nullptr) {
 		return false;
 	}
+
+	object->distance_moved += glm::distance(object->physics.shared.corner, newCornerPosition);
 
 	//	Remove the object from the cellToObjects hashmap
 	for (auto cellPosition : object->gridCellPositions) {

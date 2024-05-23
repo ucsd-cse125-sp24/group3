@@ -7,7 +7,7 @@
 #include "client/client.hpp"
 #include "shared/utilities/rng.hpp"
 #include "shared/utilities/config.hpp"
-#include "client/audiomanager.hpp"
+#include "client/audio/audiomanager.hpp"
 #include "shared/utilities/root_path.hpp"
 
 #include "shared/utilities/root_path.hpp"
@@ -87,12 +87,6 @@ int main(int argc, char* argv[])
     set_callbacks(window);
     // Setup OpenGL settings.
     set_opengl_settings(window);
-
-    AudioManager* clientAudioManager = client->getAudioManager();
-
-    clientAudioManager->playAudio(SoundType::Background);
-
-    clientAudioManager->loop(SoundType::Background);
 
     // Loop while GLFW window should stay open.
     while (!glfwWindowShouldClose(window)) {

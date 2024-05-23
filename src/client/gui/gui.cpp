@@ -376,8 +376,13 @@ void GUI::_sharedGameHUD() {
     auto self = client->gameState.objects.at(*self_eid);
     auto inventory_size = self->inventoryInfo->inventory_size;
     auto selected = self->inventoryInfo->selected - 1;
+    auto limit = self->inventoryInfo->usesRemaining[selected];
+    std::string limittxt = "";
+    if (limit != 0) {
+        limittxt = " (" + std::to_string(limit) + ")";
+    }
 
-    auto itemString = "";
+    std::string itemString = "";
     if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
         switch (self->inventoryInfo->inventory[selected]) {
         case ModelType::HealthPotion: {
@@ -394,15 +399,31 @@ void GUI::_sharedGameHUD() {
             break;
         }
         case ModelType::FireSpell: {
-            itemString = "Fireball Wand";
+            itemString = "Fireball Wand" + limittxt;
             break;
         }
         case ModelType::HealSpell: {
-            itemString = "Healing Wand";
+            itemString = "Healing Wand" + limittxt;
+            break;
+        }
+        case ModelType::TeleportSpell: {
+            itemString = "Teleport" + limittxt;
             break;
         }
         case ModelType::Orb: {
             itemString = "Orb";
+            break;
+        }
+        case ModelType::Dagger: {
+            itemString = "Dagger";
+            break;
+        }
+        case ModelType::Sword: {
+            itemString = "Sword";
+            break;
+        }
+        case ModelType::Hammer: {
+            itemString = "Hammer";
             break;
         }
         }
@@ -412,7 +433,7 @@ void GUI::_sharedGameHUD() {
         itemString,
         font::Font::TEXT,
         font::Size::SMALL,
-        font::Color::BLACK,
+        font::Color::WHITE,
         fonts,
         font::getRelativePixels(70)
     );
@@ -449,9 +470,25 @@ void GUI::_sharedGameHUD() {
                 itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell), 2));
                 break;
             }
+            case ModelType::TeleportSpell: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Scroll), 2));
+                break;
+            }
             case ModelType::Orb: {
                 itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                 break;
+            }
+            case ModelType::Dagger: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Dagger), 2));
+                break;
+            }
+            case ModelType::Sword: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Sword), 2));
+                break;
+            case ModelType::Hammer: {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Hammer), 2));
+                break;
+            }
             }
             }
         }
@@ -510,7 +547,7 @@ void GUI::_layoutGameHUD() {
         status_flex->push(widget::DynText::make(
             status,
             fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
         ));
     }
 
@@ -541,7 +578,7 @@ void GUI::_layoutGameHUD() {
         durationFlex->push(widget::DynText::make(
             name + std::to_string((int)self->inventoryInfo->usedItems[id].second),
             fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::RED)));
+            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::WHITE)));
 
         ++it;
     }

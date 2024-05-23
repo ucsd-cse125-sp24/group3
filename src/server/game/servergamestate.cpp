@@ -15,8 +15,12 @@
 #include "server/game/constants.hpp"
 #include "server/game/exit.hpp"
 #include "server/game/orb.hpp"
+#include "server/game/weapon.hpp"
+#include "server/game/weaponcollider.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/audio/constants.hpp"
+#include "shared/audio/utilities.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -146,6 +150,10 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 	return partial_updates;
 }
 
+SoundTable& ServerGameState::soundTable() {
+	return this->sound_table;
+}
+
 /*	Update methods	*/
 
 void ServerGameState::update(const EventList& events) {
@@ -185,6 +193,13 @@ void ServerGameState::update(const EventList& events) {
 				if (obj->physics.velocity.y != 0) { break; }
 				obj->physics.velocity.y += (startAction.movement * JUMP_SPEED / 2.0f).y;
 				obj->animState = AnimState::JumpAnim;
+				this->sound_table.addNewSoundSource(SoundSource(
+					ServerSFX::PlayerJump,
+					obj->physics.shared.corner,
+					DEFAULT_VOLUME,
+					MEDIUM_DIST,
+					MEDIUM_ATTEN
+				));
 				break;
 			}
 			case ActionType::Sprint: {
@@ -272,6 +287,7 @@ void ServerGameState::update(const EventList& events) {
 	doProjectileTicks();
     doTorchlightTicks();
 	updateMovement();
+	updateAttacks();
 	updateEnemies();
 	updateItems();
 	updateTraps();
@@ -335,6 +351,8 @@ void ServerGameState::updateMovement() {
 		//	If the object is a nullptr or isn't movable, skip
 		if (object == nullptr || !(object->physics.movable))
 			continue;
+
+		glm::vec3 starting_corner_pos = object->physics.shared.corner;
 
 		//	Object is movable - for now, add to updated entities set
 		this->updated_entities.insert(object->globalID);
@@ -442,12 +460,49 @@ void ServerGameState::updateMovement() {
 		}
 
 		//	Vertical movement
-		//	Clamp object to floor if corner's y position is lower than the floor
 		if (object->physics.shared.corner.y < 0) {
+			//	Clamp object to floor if corner's y position is lower than the floor
 			object->physics.shared.corner.y = 0;
 
 			// After landing, set object's animation to non-jump (idle)
 			object->animState = AnimState::WalkAnim;
+
+			// Play relevant landing sounds
+			if (starting_corner_pos.y != 0.0f) {
+				if (object->type == ObjectType::Player) {
+					this->sound_table.addNewSoundSource(SoundSource(
+						ServerSFX::PlayerLand,
+						object->physics.shared.corner,
+						DEFAULT_VOLUME,
+						MEDIUM_DIST,
+						MEDIUM_ATTEN
+					));
+				} else if (object->type == ObjectType::SpikeTrap) {
+					this->sound_table.addNewSoundSource(SoundSource(
+						ServerSFX::CeilingSpikeImpact,
+						object->physics.shared.corner,
+						FULL_VOLUME,
+						FAR_DIST,
+						FAR_ATTEN
+					));
+				}
+			}
+		}
+
+		// Play relevant footstep sounds
+
+		// Footstep audio for players
+		if (object->type == ObjectType::Player) {
+			if (object->distance_moved > 3.0f && object->physics.shared.corner.y == 0.0f) {
+				object->distance_moved = 0.0f; // reset so we only play footsteps every so often
+				this->sound_table.addNewSoundSource(SoundSource(
+					getNextPlayerFootstep(object->globalID),
+					object->physics.shared.getCenterPosition(),
+					DEFAULT_VOLUME,
+					SHORT_DIST,
+					SHORT_ATTEN	
+				));
+			}
 		}
 
 		//	Update object's gravity velocity if the object is in the air or
@@ -523,6 +578,9 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				if (otherObj->type == ObjectType::FloorSpike || 
 					otherObj->type == ObjectType::Potion || 
 					otherObj->type == ObjectType::Spell ||
+					otherObj->type == ObjectType::Weapon ||
+					otherObj->type == ObjectType::Orb ||
+					otherObj->type == ObjectType::WeaponCollider ||
 					otherObj->type == ObjectType::Slime) {
 					continue;
 				}
@@ -531,7 +589,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 			}
 		}
 	}
-
+	
 	return false;
 }
 
@@ -583,6 +641,11 @@ void ServerGameState::updateItems() {
 				}
 			}
 		}
+
+		if (item->type == ObjectType::Weapon) {
+			Weapon* weapon = dynamic_cast<Weapon*>(item);
+			weapon->reset(*this);
+		}
 	}
 }
 
@@ -599,20 +662,6 @@ void ServerGameState::updateEnemies() {
 	}
 }
 
-//void ServerGameState::useItem() {
-//	// Update whatever is necesssary for item
-//	// This method may need to be broken down for different types
-//	// of item types
-//
-//	SmartVector<Item*> items = this->objects.getItems();
-//	for (int i = 0; i < items.size(); i++) {
-//		const Item* item = items.get(i);
-//
-//		if (item == nullptr)
-//			continue;
-//	}
-//}
-
 void ServerGameState::doProjectileTicks() {
 	auto projectiles = this->objects.getProjectiles();
 	for (int p = 0; p < projectiles.size(); p++) {
@@ -622,6 +671,25 @@ void ServerGameState::doProjectileTicks() {
 		if (projectile->doTick(*this)) {
 			this->updated_entities.insert(projectile->globalID);
 		}
+	}
+}
+
+void ServerGameState::updateAttacks() {
+	auto weaponColliders = this->objects.getWeaponColliders();
+	for (int i = 0; i < weaponColliders.size(); i++) {
+		auto weaponCollider = weaponColliders.get(i);
+		if (weaponCollider == nullptr) { continue; }
+		weaponCollider->updateMovement(*this);
+		if(weaponCollider->readyTime()){
+			if (weaponCollider->timeOut(*this)) {
+				this->markForDeletion(weaponCollider->globalID);
+			}
+			else {
+				this->updated_entities.insert(weaponCollider->globalID);
+				continue;
+			}
+		}
+		this->updated_entities.insert(weaponCollider->globalID);
 	}
 }
 
@@ -863,11 +931,24 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					cell->type = CellType::NauseaPotion;
 				}
 			} else if (cell->type == CellType::RandomSpell) {
-				int r = randomInt(1, 2);
+				int r = randomInt(1, 3);
 				if (r == 1) {
 					cell->type = CellType::FireSpell;
-				} else {
+				} else if (r == 2) {
 					cell->type = CellType::HealSpell;
+				} else {
+					cell->type = CellType::TeleportSpell;
+				}
+			} else if (cell->type == CellType::RandomWeapon) {
+				int r = randomInt(1, 3);
+				if (r == 1) {
+					cell->type = CellType::Dagger;
+				}
+				else if (r == 2) {
+					cell->type = CellType::Sword;
+				}
+				else {
+					cell->type = CellType::Hammer;
 				}
 			}
 
@@ -895,6 +976,50 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						cell->y * Grid::grid_cell_width
 					);
 					this->objects.createObject(new FireballTrap(corner, dimensions));
+					break;
+				}
+				case CellType::Dagger: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Dagger));
+					break;
+				}
+				case CellType::Sword: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Sword));
+					break;
+				}
+				case CellType::Hammer: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Hammer));
+					break;
+				}
+				case CellType::TeleportSpell: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Spell(corner, dimensions, SpellType::Teleport));
 					break;
 				}
 				case CellType::FireSpell: {
@@ -984,6 +1109,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				case CellType::Wall:
+				case CellType::Pillar:
 				case CellType::FakeWall: {
                     this->spawnWall(cell);
 					break;
@@ -1100,7 +1226,10 @@ void ServerGameState::spawnWall(GridCell* cell) {
         cell->type == CellType::TorchDown ||
         cell->type == CellType::TorchLeft ||
         cell->type == CellType::TorchRight) {
+
         this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
+    } else if(cell->type == CellType::Pillar) {
+        this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Pillar, corner, dimensions));
     }
 }
 
@@ -1137,6 +1266,17 @@ void ServerGameState::spawnTorch(GridCell *cell) {
             std::cout << "Invalid Torch cell type when spawning torch\n";
         }
     }
+
+	// Add an entry in the sound table for this
+	this->sound_table.addStaticSoundSource(SoundSource(
+		ServerSFX::TorchLoop,
+		corner,
+		MIDDLE_VOLUME,
+		SHORT_DIST,
+		SHORT_ATTEN,
+		true
+	));
+
     this->objects.createObject(new Torchlight(corner));
 }
 

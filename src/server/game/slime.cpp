@@ -3,6 +3,7 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/utilities/rng.hpp"
 #include "shared/game/status.hpp"
+#include "shared/audio/constants.hpp"
 
 #include <chrono>
 
@@ -30,12 +31,25 @@ Slime::Slime(glm::vec3 corner, glm::vec3 facing, int size):
     }
 
     this->jump_index = jump_intervals.size() - 1;
+    this->landed = true;
 }
 
 bool Slime::doBehavior(ServerGameState& state) {
     bool mutated = false;
     
     if (this->physics.shared.corner.y == 0) {
+        // only play land sound on first time this triggers per jump
+        if (!this->landed) {
+            this->landed = true;
+            state.soundTable().addNewSoundSource(SoundSource(
+                ServerSFX::SlimeLand,
+                this->physics.shared.getCenterPosition(),
+                DEFAULT_VOLUME,
+                MEDIUM_DIST,
+                MEDIUM_ATTEN
+            ));
+        }
+
         // when it lands again reset its lateral velocity
         this->physics.velocity.x = 0;
         this->physics.velocity.z = 0;
@@ -44,6 +58,15 @@ bool Slime::doBehavior(ServerGameState& state) {
 
     auto now = std::chrono::system_clock::now();
     if (now - this->last_jump_time > this->jump_intervals.at(this->jump_index)) {
+        this->landed = false;
+        state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::SlimeJump,
+            this->physics.shared.getCenterPosition(),
+            DEFAULT_VOLUME,
+            MEDIUM_DIST,
+            MEDIUM_ATTEN
+        ));
+
         this->increaseJumpIndex();
         this->physics.velocity.y += JUMP_SPEED * 1.75;
 

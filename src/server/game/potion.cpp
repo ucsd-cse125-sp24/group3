@@ -48,6 +48,26 @@ void Potion::useItem(Object* other, ServerGameState& state, int itemSelected) {
     std::chrono::duration<double> elapsed_seconds{ this->used_time - now };
     this->iteminfo.remaining_time = (double)this->duration - elapsed_seconds.count();
 
+    // add onto current effect if it exists
+    for (const auto& [id, value] : player->sharedInventory.usedItems) {
+        if (value.first != this->modelType) {
+            continue;
+        }
+        auto currentPotion = dynamic_cast<Potion*>(state.objects.getItem(id));
+
+        currentPotion->duration += this->duration;
+        currentPotion->iteminfo.remaining_time += this->duration;
+
+        this->iteminfo.used = true;
+        this->iteminfo.held = false;
+
+        Item::useItem(other, state, itemSelected);
+        state.markForDeletion(this->globalID);
+        return;
+    }
+
+
+    // if new potion effect
     switch (this->potType) {
     case PotionType::Health: {
         player->stats.health.increase(this->effectScalar);
@@ -81,7 +101,9 @@ bool Potion::timeOut() {
     std::chrono::duration<double> elapsed_seconds{ now - this->used_time };
     this->iteminfo.remaining_time = (double)this->duration - elapsed_seconds.count();
 
-    this->usedPlayer->sharedInventory.usedItems[this->typeID].second = this->iteminfo.remaining_time;
+    if (this->usedPlayer->sharedInventory.usedItems.find(this->typeID) != this->usedPlayer->sharedInventory.usedItems.end()) {
+        this->usedPlayer->sharedInventory.usedItems[this->typeID].second = this->iteminfo.remaining_time;
+    }
     return (now - this->used_time) > std::chrono::seconds(this->duration);
 }
 
@@ -104,6 +126,8 @@ UsedItemsMap::iterator Potion::revertEffect(ServerGameState& state) {
     state.markForDeletion(this->globalID);
 
     auto it = this->usedPlayer->sharedInventory.usedItems.find(this->typeID);
-    it = this->usedPlayer->sharedInventory.usedItems.erase(it);
+    if (it != this->usedPlayer->sharedInventory.usedItems.end()) {
+        it = this->usedPlayer->sharedInventory.usedItems.erase(it);
+    }
     return it;
 }

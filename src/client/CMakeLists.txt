@@ -14,7 +14,7 @@ add_subdirectory(../../dependencies/stb ${CMAKE_BINARY_DIR}/stb)
 add_subdirectory(gui)
 
 set(FILES
-    audiomanager.cpp
+    audio/audiomanager.cpp
     camera.cpp
     client.cpp
     cube.cpp

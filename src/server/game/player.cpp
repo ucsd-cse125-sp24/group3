@@ -17,7 +17,9 @@ Player::Player(glm::vec3 corner, glm::vec3 facing):
         Stat(0, 100, 100),
         Stat(0, 10, 5)
     )),
-    sharedInventory(SharedInventory { .selected = 1, .inventory_size = INVENTORY_SIZE, .inventory = std::vector<ModelType>(INVENTORY_SIZE, ModelType::Frame) })
+    sharedInventory(SharedInventory { .selected = 1, .inventory_size = INVENTORY_SIZE, 
+        .inventory = std::vector<ModelType>(INVENTORY_SIZE, ModelType::Frame),
+        .usesRemaining = std::vector<int>(INVENTORY_SIZE, 0) })
 {
     this->info.is_alive = true;
     this->info.respawn_time = NULL;
