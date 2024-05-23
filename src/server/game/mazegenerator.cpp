@@ -170,10 +170,31 @@ std::optional<Grid> MazeGenerator::generate() {
             }
 
             _placeRoom(room, origin_coord.value());
+
+            // stupid extra complicated logic about keeping track of the "number" of rooms
+            // could refactor this or just keep slapping bandaids on everything
+            if (_num_rooms_placed >= REQUIRED_NUM_ROOMS - 2) {
+                _num_rooms_placed++; // always transition to placing orb , which is
+                // signified by _num_rooms_placed being at REQUIRED_NUM_ROOMS - 1
+            } else {
+                if (room->rclass.size == RoomSize::_10x10) {
+                    _num_rooms_placed++;
+                } else if (room->rclass.size == RoomSize::_20x20) {
+                    _num_rooms_placed += 4;
+                } else if (room->rclass.size == RoomSize::_40x40) {
+                    _num_rooms_placed += 16;
+                }
+
+                if (_num_rooms_placed > REQUIRED_NUM_ROOMS - 2) {
+                    // mark ready to place exit, since we met the quota
+                    _num_rooms_placed = REQUIRED_NUM_ROOMS - 2;
+                }
+            }
+
+
             break;
         }
 
-        _num_rooms_placed++;
     }
 
     std::cout << "Done: created " << _num_rooms_placed << " rooms.\n";
