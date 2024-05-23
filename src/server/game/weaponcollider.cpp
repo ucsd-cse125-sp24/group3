@@ -29,6 +29,7 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
 }
 
 void WeaponCollider::updateMovement(ServerGameState& state) {
+    if(!this->opt.followPlayer) { return; }
 
     glm::vec3 attack_origin(
         this->usedPlayer->physics.shared.getCenterPosition().x,

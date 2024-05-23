@@ -51,6 +51,7 @@
 #define	SWORD_DMG				15
 #define DAGGER_DMG				10
 #define HAMMER_DMG				30
+#define	LIGHTNING_DMG			99
 
 #define	SWORD_PREP				200
 #define	SWORD_DUR				300
@@ -63,6 +64,10 @@
 #define	HAMMER_PREP				400
 #define	HAMMER_DUR				350
 #define	HAMMER_TOTAL			750
+
+#define	LIGHTNING_PREP			1000
+#define	LIGHTNING_DUR		    400
+#define	LIGHTNING_TOTAL			1400
 
 /*	Game	*/
 #define	GRAVITY					0.03f

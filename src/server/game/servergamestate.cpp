@@ -366,6 +366,17 @@ void ServerGameState::update(const EventList& events) {
 				if (trapsPlaced == MAX_TRAPS) {
 					break;
 				}
+				
+				if(trapPlacementEvent.cell == CellType::Lightning){
+					Weapon* lightning = dm->lightning;
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width,
+						0.0f,
+						cell->y * Grid::grid_cell_width
+					);
+					lightning->useLightning(dm, *this, corner);
+					break;
+				}
 
 				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
 

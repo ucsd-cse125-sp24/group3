@@ -26,6 +26,10 @@ Weapon::Weapon(glm::vec3 corner, glm::vec3 dimensions, WeaponType weaponType):
         this->modelType = ModelType::Hammer;
         this->delay = HAMMER_TOTAL;
         break;
+    case WeaponType::Lightning:
+        this->modelType = ModelType::Lightning;
+        this->delay = LIGHTNING_TOTAL;
+        break;
     }
 }
 
@@ -49,12 +53,22 @@ void Weapon::useItem(Object* other, ServerGameState& state, int itemSelected) {
         case WeaponType::Hammer:
             state.objects.createObject(new BigAttack(player, attack_origin, player->physics.shared.facing));
             break;
+        default: 
+            break;
         }
         this->attacked_time = std::chrono::system_clock::now();
         this->resetAttack = false;
     }
 
     // Item::useItem(other, state, itemSelected);
+}
+
+void Weapon::useLightning(Object* other, ServerGameState& state, glm::vec3 corner) {
+    DungeonMaster* dm = dynamic_cast<DungeonMaster*>(other);
+    state.objects.createObject(new Lightning(corner, dm->physics.shared.facing));
+
+    this->attacked_time = std::chrono::system_clock::now();
+    this->resetAttack = false;
 }
 
 void Weapon::reset(ServerGameState& state) {
