@@ -340,8 +340,6 @@ void ServerGameState::update(const EventList& events) {
 				}
 			}
 			else if(trapPlacementEvent.place) {
-				DungeonMaster* dm = this->objects.getDM();
-
 				int trapsPlaced = dm->getPlacedTraps();
 
 				if (trapsPlaced == MAX_TRAPS) {
@@ -362,8 +360,7 @@ void ServerGameState::update(const EventList& events) {
 
 				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
-				// trap can't be placed, break out
-				if (trap == nullptr) {
+				if (trap == nullptr) { 
 					std::cout << "cant place trap: placeTrapInCell returned nullptr\n";
 					break;
 				}
@@ -787,12 +784,6 @@ void ServerGameState::updateTraps() {
 				continue;
 			}
 		}
-
-		if (trap == nullptr)
-			std::cout << "TRAP IS NULLPTR?" << std::endl;
-		
-		if (this == nullptr)
-			std::cout << "THIS IS NULLPTR??" << std::endl;
 
 		if (trap->shouldTrigger(*this)) {
 			trap->trigger(*this);
