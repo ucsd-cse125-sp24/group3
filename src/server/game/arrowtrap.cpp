@@ -32,9 +32,6 @@ ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, ArrowTrap::Directio
 }
 
 bool ArrowTrap::shouldTrigger(ServerGameState& state) {
-    if (this == nullptr)
-        std::cout << "ARROW TRAP NULLPTR??" << std::endl;
-
     if (this->info.triggered) {
         return false;
     }

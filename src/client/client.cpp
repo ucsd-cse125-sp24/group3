@@ -298,7 +298,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
             }
 
             // send one event
-            if(is_held_down || is_held_i || is_held_left || is_held_right || is_held_up || is_held_o)
+            if ((is_held_down || is_held_i || is_held_left || is_held_right || is_held_up || is_held_o) && is_pressed_p)
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
         }
 
