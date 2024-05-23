@@ -39,7 +39,7 @@ struct Physics {
 		glm::vec3 corner, glm::vec3 facing,
 		glm::vec3 dimensions = glm::vec3(1.0f)):
 		shared{.corner=corner, .facing=facing, .dimensions=dimensions},
-		movable(movable), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)), nauseous(1.0f),
+		movable(movable), feels_gravity(true), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)), nauseous(1.0f),
 		collider(collider)
 	{}
 
@@ -54,6 +54,13 @@ struct Physics {
 	 * false otherwise
 	 */
 	bool movable;
+
+
+	/**
+	 * @brief true if the object that contains this Physics struct feels gravity and
+	 * false otherwise
+	 */
+	bool feels_gravity;
 
 	/**
 	 * @brief 3-D vector that denotes this object's current velocity.
@@ -95,6 +102,12 @@ public:
 	SpecificID typeID {};
 
 	/**
+	 * @brief Movable ID (used to index into the movable
+	 * objects vector in ServerGameState)
+	 */
+	MovableID movableID{};
+
+	/**
 	 * @brief Identifies this object's type (derived class)
 	 */
 	ObjectType type;
@@ -115,6 +128,12 @@ public:
 	 * object
 	 */
 	std::vector<glm::ivec2> gridCellPositions;
+
+	/**
+	 * @brief Distance moved, for use in deciding when to play footsteps
+	 * IMPORTANT: reset every time a footstep sound is performed for objects that play foosteps
+	 */
+	float distance_moved;
 
 	/**
 	 * @param type Type of the object

@@ -15,8 +15,12 @@
 #include "server/game/constants.hpp"
 #include "server/game/exit.hpp"
 #include "server/game/orb.hpp"
+#include "server/game/weapon.hpp"
+#include "server/game/weaponcollider.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/audio/constants.hpp"
+#include "shared/audio/utilities.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -146,6 +150,10 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 	return partial_updates;
 }
 
+SoundTable& ServerGameState::soundTable() {
+	return this->sound_table;
+}
+
 /*	Update methods	*/
 
 void ServerGameState::update(const EventList& events) {
@@ -181,12 +189,27 @@ void ServerGameState::update(const EventList& events) {
 				break;
 			}
 			case ActionType::Jump: {
-				if (obj->physics.velocity.y != 0) { break; }
+				if (!obj->physics.feels_gravity || obj->physics.velocity.y != 0) { break; }
 				obj->physics.velocity.y += (startAction.movement * JUMP_SPEED / 2.0f).y;
+				this->sound_table.addNewSoundSource(SoundSource(
+					ServerSFX::PlayerJump,
+					obj->physics.shared.corner,
+					DEFAULT_VOLUME,
+					MEDIUM_DIST,
+					MEDIUM_ATTEN
+				));
 				break;
 			}
 			case ActionType::Sprint: {
 				obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
+				break;
+			}
+			case ActionType::Zoom: { // only for DM
+				DungeonMaster * dm = this->objects.getDM();
+
+				if ((dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f))
+					dm->physics.shared.corner += startAction.movement;
+
 				break;
 			}
 			default: {}
@@ -227,8 +250,29 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::SelectItem:
 		{
 			auto selectItemEvent = boost::get<SelectItemEvent>(event.data);
-			player->sharedInventory.selected = selectItemEvent.itemNum;
-			this->updated_entities.insert(player->globalID);
+			obj = this->objects.getObject(selectItemEvent.playerEID);
+
+			if (obj == nullptr) {
+				std::cerr << "Certified Bruh Moment... " << __LINE__ << "\n";
+				std::exit(1);
+			}
+
+			if (obj->type == ObjectType::DungeonMaster) {
+				DungeonMaster* dm = this->objects.getDM();
+
+				if (dm->sharedTrapInventory.selected + selectItemEvent.itemNum == 0)
+					dm->sharedTrapInventory.selected = TRAP_INVENTORY_SIZE;
+				else if (dm->sharedTrapInventory.selected + selectItemEvent.itemNum == TRAP_INVENTORY_SIZE + 1)
+					dm->sharedTrapInventory.selected = 1;
+				else
+					dm->sharedTrapInventory.selected = dm->sharedTrapInventory.selected + selectItemEvent.itemNum;
+
+				this->updated_entities.insert(dm->globalID);
+			}
+			else {
+				player->sharedInventory.selected = selectItemEvent.itemNum;
+				this->updated_entities.insert(player->globalID);
+			}
 			break;
 		}
 		case EventType::UseItem:
@@ -259,6 +303,91 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
+		case EventType::TrapPlacement: 
+		{
+			auto trapPlacementEvent = boost::get<TrapPlacementEvent>(event.data);
+
+			Grid& currGrid = this->getGrid();
+
+			float cellWidth = currGrid.grid_cell_width;
+
+			DungeonMaster* dm = this->objects.getDM();
+
+			glm::vec3 dir = glm::normalize(trapPlacementEvent.world_pos-dm->physics.shared.corner);
+
+			//if (trapPlacementEvent.world_pos.z < glm::floor(trapPlacementEvent.world_pos.z) + 0.5) {
+			//	trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z) - DM_Z_DISCOUNT;
+			//} else {
+			//	trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z + DM_Z_DISCOUNT);
+			//}
+
+			//if (trapPlacementEvent.world_pos.x > glm::floor(trapPlacementEvent.world_pos.x) + 0.5) {
+			//	trapPlacementEvent.world_pos.x = glm::ceil(trapPlacementEvent.world_pos.x) + DM_Z_DISCOUNT;
+			//}
+			//else {
+			//	trapPlacementEvent.world_pos.x = glm::ceil(trapPlacementEvent.world_pos.x - DM_Z_DISCOUNT);
+			//}
+
+			trapPlacementEvent.world_pos += (dir*(float)DM_Z_DISCOUNT);
+
+			glm::ivec2 gridCellPos = currGrid.getGridCellFromPosition(trapPlacementEvent.world_pos);
+
+			GridCell* cell = currGrid.getCell(gridCellPos.x, gridCellPos.y);
+
+			if (cell == nullptr)
+				break;
+
+
+			// unhighlight if highlighted
+			for (SolidSurface* surface : this->previouslyHighlighted) {
+				this->updated_entities.insert(surface->globalID);
+				surface->setDMHighlight(false);
+			}
+
+			// std::vector<SolidSurface*> surfaces = solidSurfaceInGridCells[{cell->x, cell->y}];
+
+			// this->previouslyHighlighted = surfaces;
+
+			if (trapPlacementEvent.hover) {
+				/*for (SolidSurface* surface : surfaces) {
+					this->updated_entities.insert(surface->globalID);
+					surface->setDMHighlight(true);
+				}*/
+			}
+			else if(trapPlacementEvent.place) {
+				int trapsPlaced = dm->getPlacedTraps();
+
+				if (trapsPlaced == MAX_TRAPS) {
+					break;
+				}
+
+				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
+
+				// in cooldown and haven't elapsed enough time yet
+				if (it != dm->sharedTrapInventory.trapsInCooldown.end() && 
+					std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(it->second)) < std::chrono::seconds(TRAP_COOL_DOWN)) {
+					break;
+				}
+
+				auto curr_time = std::chrono::system_clock::now();
+
+				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
+
+				if (trap == nullptr) { 
+					break;
+				}
+
+				trap->setIsDMTrap(true);
+				trap->setExpiration(curr_time + std::chrono::seconds(10));
+
+				this->updated_entities.insert(trap->globalID);
+
+				dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
+
+				dm->setPlacedTraps(trapsPlaced + 1);
+			}
+			break;
+		}
 
 		// default:
 		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
@@ -270,6 +399,7 @@ void ServerGameState::update(const EventList& events) {
 	doProjectileTicks();
     doTorchlightTicks();
 	updateMovement();
+	updateAttacks();
 	updateEnemies();
 	updateItems();
 	updateTraps();
@@ -292,10 +422,6 @@ void ServerGameState::update(const EventList& events) {
 			this->phase = GamePhase::RESULTS;
 		}
 	}
-
-	//	DEBUG
-	//std::cout << "playerVictory: " << this->playerVictory << std::endl;
-	//	DEBUG
 }
 
 void ServerGameState::markForDeletion(EntityID id) {
@@ -325,7 +451,8 @@ void ServerGameState::updateMovement() {
 	const float INCREMENTAL_MOVE_RATIO = 1.0f / NUM_INCREMENTAL_STEPS;
 
 	//	Iterate through all game objects
-	SmartVector<Object*> gameObjects = this->objects.getObjects();
+	SmartVector<Object*> gameObjects = this->objects.getMovableObjects();
+
 	for (int i = 0; i < gameObjects.size(); i++) {
 		//	Get iterating game object
 		Object* object = gameObjects.get(i);
@@ -333,6 +460,8 @@ void ServerGameState::updateMovement() {
 		//	If the object is a nullptr or isn't movable, skip
 		if (object == nullptr || !(object->physics.movable))
 			continue;
+
+		glm::vec3 starting_corner_pos = object->physics.shared.corner;
 
 		//	Object is movable - for now, add to updated entities set
 		this->updated_entities.insert(object->globalID);
@@ -342,6 +471,26 @@ void ServerGameState::updateMovement() {
 			object->physics.velocity * object->physics.velocityMultiplier;
 		totalMovementStep.x *= object->physics.nauseous;
 		totalMovementStep.z *= object->physics.nauseous;
+
+		if (object->type == ObjectType::DungeonMaster) {
+			object->physics.shared.corner += totalMovementStep;
+
+			// Rows * grid cell width = z length and columns * grid cell width = x length
+			// check z length
+			bool zInBounds = (object->physics.shared.corner.z <= this->grid.getRows() * this->grid.grid_cell_width) && (object->physics.shared.corner.z >= 0);
+
+			bool xInBounds = (object->physics.shared.corner.x <= this->grid.getColumns() * this->grid.grid_cell_width) && (object->physics.shared.corner.x >= 0);
+
+			if (!zInBounds) {
+				object->physics.shared.corner.z -= totalMovementStep.z;
+			}
+
+			if (!xInBounds) {
+				object->physics.shared.corner.x -= totalMovementStep.x;
+			}
+
+			continue;
+		}
 
 		auto creature = dynamic_cast<Creature*>(object);
 		if (creature != nullptr) {
@@ -360,18 +509,11 @@ void ServerGameState::updateMovement() {
 			continue;
 		}
 
-		//	Object does have a collider - determine whether incremental steps
-		//	are necessary (if object moves too fast)
 		glm::vec3 movementStep;
 		int numSteps = 0;
 		if (glm::length(totalMovementStep) > SINGLE_MOVE_THRESHOLD) {
-			//	Object moves too quickly in one timestep - separate movement
-			//	step into multiple sub-steps
 			movementStep = INCREMENTAL_MOVE_RATIO * totalMovementStep;
-		}
-		else {
-			//	Object moves sufficiently slow to compute collision detection 
-			//	using a single movement step
+		} else {
 			movementStep = totalMovementStep;
 			numSteps = NUM_INCREMENTAL_STEPS - 1;
 		}
@@ -440,18 +582,58 @@ void ServerGameState::updateMovement() {
 		}
 
 		//	Vertical movement
-		//	Clamp object to floor if corner's y position is lower than the floor
 		if (object->physics.shared.corner.y < 0) {
+			//	Clamp object to floor if corner's y position is lower than the floor
 			object->physics.shared.corner.y = 0;
+
+			// Play relevant landing sounds
+			if (starting_corner_pos.y != 0.0f) {
+				if (object->type == ObjectType::Player) {
+					this->sound_table.addNewSoundSource(SoundSource(
+						ServerSFX::PlayerLand,
+						object->physics.shared.corner,
+						DEFAULT_VOLUME,
+						MEDIUM_DIST,
+						MEDIUM_ATTEN
+					));
+				} else if (object->type == ObjectType::SpikeTrap) {
+					this->sound_table.addNewSoundSource(SoundSource(
+						ServerSFX::CeilingSpikeImpact,
+						object->physics.shared.corner,
+						FULL_VOLUME,
+						FAR_DIST,
+						FAR_ATTEN
+					));
+				}
+			}
+		}
+
+		// Play relevant footstep sounds
+
+		// Footstep audio for players
+		if (object->type == ObjectType::Player) {
+			if (object->distance_moved > 3.0f && object->physics.shared.corner.y == 0.0f) {
+				object->distance_moved = 0.0f; // reset so we only play footsteps every so often
+				this->sound_table.addNewSoundSource(SoundSource(
+					getNextPlayerFootstep(object->globalID),
+					object->physics.shared.getCenterPosition(),
+					DEFAULT_VOLUME,
+					SHORT_DIST,
+					SHORT_ATTEN	
+				));
+			}
 		}
 
 		//	Update object's gravity velocity if the object is in the air or
 		//	has just landed
-		if (object->physics.shared.corner.y > 0) {
-			object->physics.velocity.y -= GRAVITY;
-		}
-		else {
-			object->physics.velocity.y = 0.0f;
+		// update gravity factor
+		if (object->physics.feels_gravity) {
+			if ((object->physics.shared.corner).y > 0) {
+				object->physics.velocity.y -= GRAVITY;
+			}
+			else {
+				object->physics.velocity.y = 0.0f;
+			}
 		}
 	}
 
@@ -492,7 +674,8 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 			//	Skip other object if it's the current object or if the object
 			//	doesn't have a collider
 			if (object->globalID == otherObj->globalID
-				|| otherObj->physics.collider == Collider::None) {
+				|| otherObj->physics.collider == Collider::None
+				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Player)) {
 				continue;
 			}
 
@@ -518,6 +701,9 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				if (otherObj->type == ObjectType::FloorSpike || 
 					otherObj->type == ObjectType::Potion || 
 					otherObj->type == ObjectType::Spell ||
+					otherObj->type == ObjectType::Weapon ||
+					otherObj->type == ObjectType::Orb ||
+					otherObj->type == ObjectType::WeaponCollider ||
 					otherObj->type == ObjectType::Slime) {
 					continue;
 				}
@@ -526,7 +712,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 			}
 		}
 	}
-
+	
 	return false;
 }
 
@@ -578,6 +764,11 @@ void ServerGameState::updateItems() {
 				}
 			}
 		}
+
+		if (item->type == ObjectType::Weapon) {
+			Weapon* weapon = dynamic_cast<Weapon*>(item);
+			weapon->reset(*this);
+		}
 	}
 }
 
@@ -594,20 +785,6 @@ void ServerGameState::updateEnemies() {
 	}
 }
 
-//void ServerGameState::useItem() {
-//	// Update whatever is necesssary for item
-//	// This method may need to be broken down for different types
-//	// of item types
-//
-//	SmartVector<Item*> items = this->objects.getItems();
-//	for (int i = 0; i < items.size(); i++) {
-//		const Item* item = items.get(i);
-//
-//		if (item == nullptr)
-//			continue;
-//	}
-//}
-
 void ServerGameState::doProjectileTicks() {
 	auto projectiles = this->objects.getProjectiles();
 	for (int p = 0; p < projectiles.size(); p++) {
@@ -617,6 +794,25 @@ void ServerGameState::doProjectileTicks() {
 		if (projectile->doTick(*this)) {
 			this->updated_entities.insert(projectile->globalID);
 		}
+	}
+}
+
+void ServerGameState::updateAttacks() {
+	auto weaponColliders = this->objects.getWeaponColliders();
+	for (int i = 0; i < weaponColliders.size(); i++) {
+		auto weaponCollider = weaponColliders.get(i);
+		if (weaponCollider == nullptr) { continue; }
+		weaponCollider->updateMovement(*this);
+		if(weaponCollider->readyTime()){
+			if (weaponCollider->timeOut(*this)) {
+				this->markForDeletion(weaponCollider->globalID);
+			}
+			else {
+				this->updated_entities.insert(weaponCollider->globalID);
+				continue;
+			}
+		}
+		this->updated_entities.insert(weaponCollider->globalID);
 	}
 }
 
@@ -638,6 +834,19 @@ void ServerGameState::updateTraps() {
 	for (int i = 0; i < traps.size(); i++) {
 		auto trap = traps.get(i);
 		if (trap == nullptr) { continue; } // unsure if i need this?
+		if (trap->getIsDMTrap()) {
+			auto current_time = std::chrono::system_clock::now();
+			
+			if (current_time >= trap->getExpiration()) {
+				DungeonMaster* dm = this->objects.getDM();
+				int trapsPlaced = dm->getPlacedTraps();
+
+				this->markForDeletion(trap->globalID);
+				dm->setPlacedTraps(trapsPlaced - 1);
+				continue;
+			}
+		}
+
 		if (trap->shouldTrigger(*this)) {
 			trap->trigger(*this);
 			this->updated_entities.insert(trap->globalID);
@@ -676,7 +885,7 @@ void ServerGameState::handleDeaths() {
 			for (int i = 0; i < player->sharedInventory.inventory_size; i++) {
 				if (player->inventory[i] != -1) {
             		auto item = dynamic_cast<Item*>(this->objects.getItem(player->inventory[i]));
-					item->dropItem(player, *this, i, 2.0f);
+					item->dropItem(player, *this, i, 0.0f);
 					this->updated_entities.insert(item->globalID);
 				}
 				// hardcode "random" drops
@@ -814,6 +1023,156 @@ const Lobby& ServerGameState::getLobby() const {
 	return this->lobby;
 }
 
+Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
+	switch (type) {
+	case CellType::FireballTrap: {
+		if (cell->type != CellType::Empty)
+			return nullptr;
+
+		glm::vec3 dimensions(
+			Grid::grid_cell_width / 2,
+			0.5f,
+			Grid::grid_cell_width / 2
+		);
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			1.0f,
+			cell->y * Grid::grid_cell_width
+		);
+
+		FireballTrap* fireBallTrap = new FireballTrap(corner, dimensions);
+		this->objects.createObject(fireBallTrap);
+		return fireBallTrap;
+	}
+	case CellType::SpikeTrap: {
+		if (cell->type != CellType::Empty)
+			return nullptr;
+
+		const float HEIGHT_SHOWING = 0.5;
+		glm::vec3 dimensions(
+			Grid::grid_cell_width,
+			MAZE_CEILING_HEIGHT,
+			Grid::grid_cell_width
+		);
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			MAZE_CEILING_HEIGHT - HEIGHT_SHOWING,
+			cell->y * Grid::grid_cell_width
+		);
+		
+		SpikeTrap* spikeTrap = new SpikeTrap(corner, dimensions);
+		this->objects.createObject(spikeTrap);
+		return spikeTrap;
+	}
+	/*
+	* TODO: ADD BACK FAKEWALL
+	case CellType::FakeWall: {
+		glm::vec3 dimensions(
+			Grid::grid_cell_width,
+			MAZE_CEILING_HEIGHT,
+			Grid::grid_cell_width
+		);
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			0.0f,
+			cell->y * Grid::grid_cell_width
+		);
+
+		if (cell->type == CellType::FakeWall) {
+			this->objects.createObject(new FakeWall(corner, dimensions));
+		}
+		break;
+	}*/
+	case CellType::FloorSpikeFull:
+	case CellType::FloorSpikeHorizontal:
+	case CellType::FloorSpikeVertical: {
+		if (cell->type != CellType::Empty) {
+
+			std::cout << "trying to place in non empty cell\n";
+			return nullptr;
+
+		}
+
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			0.0f,
+			cell->y * Grid::grid_cell_width
+		);
+
+		FloorSpike::Orientation orientation;
+		if (type == CellType::FloorSpikeFull) {
+			orientation = FloorSpike::Orientation::Full;
+		}
+		else if (type == CellType::FloorSpikeHorizontal) {
+			orientation = FloorSpike::Orientation::Horizontal;
+			corner.z += Grid::grid_cell_width * 0.25f;
+		}
+		else {
+			orientation = FloorSpike::Orientation::Vertical;
+			corner.x += Grid::grid_cell_width * 0.25f;
+		}
+
+		FloorSpike* floorSpike = new FloorSpike(corner, orientation, Grid::grid_cell_width);
+		this->objects.createObject(floorSpike);
+		return floorSpike;
+	}
+	/*
+	TODO: ADD BACK ARROWS!
+
+	case CellType::ArrowTrapDown:
+	case CellType::ArrowTrapLeft:
+	case CellType::ArrowTrapRight:
+	case CellType::ArrowTrapUp: {
+		ArrowTrap::Direction dir;
+		if (cell->type == CellType::ArrowTrapDown) {
+			dir = ArrowTrap::Direction::DOWN;
+		}
+		else if (cell->type == CellType::ArrowTrapUp) {
+
+		}
+		else if (cell->type == CellType::ArrowTrapLeft) {
+			dir = ArrowTrap::Direction::LEFT;
+		}
+		else {
+			dir = ArrowTrap::Direction::RIGHT;
+		}
+
+		glm::vec3 dimensions(
+			Grid::grid_cell_width,
+			MAZE_CEILING_HEIGHT,
+			Grid::grid_cell_width
+		);
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			0.0f,
+			cell->y * Grid::grid_cell_width
+		);
+
+		this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
+		break;
+	}*/
+
+	case CellType::TeleporterTrap: {
+		if (cell->type != CellType::Empty)
+			return nullptr;
+
+		glm::vec3 corner(
+			cell->x * Grid::grid_cell_width,
+			0.0f,
+			cell->y * Grid::grid_cell_width
+		);
+
+		TeleporterTrap* teleporterTrap = new TeleporterTrap(corner);
+		this->objects.createObject(teleporterTrap);
+		return teleporterTrap;
+	}
+	default: {
+		std::cerr << "WARNING: tried to place an unknown trap of type " << static_cast<int>(type) << "\n";
+		return nullptr;
+	}
+	}
+}
+
 /*	Maze initialization	*/
 
 void ServerGameState::loadMaze(const Grid& grid) {
@@ -823,14 +1182,39 @@ void ServerGameState::loadMaze(const Grid& grid) {
 	size_t num_spawn_points = this->grid.getSpawnPoints().size();
 	assert(num_spawn_points > 0);
 
-	//	Step 5:	Add floor and ceiling SolidSurfaces.
+	// mark internal walls in this set, so we can mark them appropriately later on
+	std::unordered_set<glm::ivec2> internal_walls;
+	for (int c = 0; c < this->grid.getColumns(); c++) {
+		for (int r = 0; r < this->grid.getRows(); r++) {
+            int num_neighbor_walls = 0;            
 
-	// Create Floor
-	this->objects.createObject(new SolidSurface(false, Collider::None, SurfaceType::Floor, 
-		glm::vec3(0.0f, -0.1f, 0.0f),
-		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
-			this->grid.getRows() * Grid::grid_cell_width)
-	));
+            for (int offset_row = -1; offset_row <= 1; offset_row++) {
+                for (int offset_col = -1; offset_col <= 1; offset_col++) {
+                    if (offset_row == 0 && offset_col == 0) continue;
+
+                    int n_row = r + offset_row;
+                    int n_col = c + offset_col;
+
+                    bool is_wall;
+                    if (n_row < 0 || n_row >= this->grid.getRows() || n_col < 0 || n_col >= this->grid.getColumns()) {
+                        is_wall = true; // outside, but for the purposes of the algorithm still consider wall
+                    } else {
+                        is_wall = isWallLikeCell(this->grid.getCell(n_col, n_row)->type);
+                    }
+
+                    if (is_wall) {
+                        num_neighbor_walls++;
+                    }
+                }
+            }
+
+			if (num_neighbor_walls == 8) {
+				internal_walls.insert(glm::ivec2(c, r));
+			}
+		}
+	}
+
+	//	Step 5:	Add floor and ceiling SolidSurfaces.
 
 	// Create Ceiling
 	this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Ceiling, 
@@ -838,6 +1222,20 @@ void ServerGameState::loadMaze(const Grid& grid) {
 		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
 			this->grid.getRows() * Grid::grid_cell_width)
 	));
+
+	// create floor
+	glm::vec3 corner = glm::vec3(0.0f, -0.1f, 0.0f);
+
+	SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
+		corner,
+		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
+			this->grid.getRows() * Grid::grid_cell_width)
+	);
+
+	this->objects.createObject(floor);
+
+	// this is for floor highlighting
+	std::vector<std::vector<bool>> freeSpots(grid.getRows(), std::vector<bool>(grid.getColumns(), false));
 
 	//	Step 6:	For each GridCell, add an object (if not empty) at the 
 	//	GridCell's position.
@@ -858,11 +1256,24 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					cell->type = CellType::NauseaPotion;
 				}
 			} else if (cell->type == CellType::RandomSpell) {
-				int r = randomInt(1, 2);
+				int r = randomInt(1, 3);
 				if (r == 1) {
 					cell->type = CellType::FireSpell;
-				} else {
+				} else if (r == 2) {
 					cell->type = CellType::HealSpell;
+				} else {
+					cell->type = CellType::TeleportSpell;
+				}
+			} else if (cell->type == CellType::RandomWeapon) {
+				int r = randomInt(1, 3);
+				if (r == 1) {
+					cell->type = CellType::Dagger;
+				}
+				else if (r == 2) {
+					cell->type = CellType::Sword;
+				}
+				else {
+					cell->type = CellType::Hammer;
 				}
 			}
 
@@ -890,6 +1301,50 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						cell->y * Grid::grid_cell_width
 					);
 					this->objects.createObject(new FireballTrap(corner, dimensions));
+					break;
+				}
+				case CellType::Dagger: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Dagger));
+					break;
+				}
+				case CellType::Sword: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Sword));
+					break;
+				}
+				case CellType::Hammer: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Hammer));
+					break;
+				}
+				case CellType::TeleportSpell: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width + 1,
+						0,
+						cell->y * Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Spell(corner, dimensions, SpellType::Teleport));
 					break;
 				}
 				case CellType::FireSpell: {
@@ -981,7 +1436,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				case CellType::Wall:
 				case CellType::Pillar:
 				case CellType::FakeWall: {
-                    this->spawnWall(cell);
+                    this->spawnWall(cell, col, row, internal_walls.contains(glm::ivec2(col, row)));
 					break;
 				}
                 case CellType::TorchUp:
@@ -989,7 +1444,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
                 case CellType::TorchRight:
                 case CellType::TorchLeft: {
                     this->spawnTorch(cell);
-                    this->spawnWall(cell);
+                    this->spawnWall(cell, col, row, internal_walls.contains(glm::ivec2(col, row)));
                     break;
                 }
 				case CellType::FloorSpikeFull:
@@ -1072,12 +1527,40 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					this->objects.createObject(new Exit(false, corner, dimensions));
 					break;
 				}
+				default: {
+					freeSpots[row][col] = true;
+				}
 			}
 		}
 	}
+
+	// Create Floor
+	//for (int c = 0; c < this->grid.getColumns(); c++) {
+	//	for (int r = 0; r < this->grid.getRows(); r++) {
+	//		auto type = this->grid.getCell(c, r)->type;
+	//		if (isWallLikeCell(type) || type == CellType::OutsideTheMaze) {
+	//			continue;
+	//		}
+
+	//		glm::vec3 corner = glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width);
+
+	//		SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
+	//			corner,
+	//			glm::vec3(Grid::grid_cell_width, 0.1,
+	//				Grid::grid_cell_width)
+	//		);
+
+	//		this->objects.createObject(floor);
+
+	//		if(freeSpots[r][c]) {
+	//			solidSurfaceInGridCells.insert({{c, r}, {floor}});
+	//		}
+	//	}
+	//}
+
 }
 
-void ServerGameState::spawnWall(GridCell* cell) {
+void ServerGameState::spawnWall(GridCell* cell, int col, int row, bool is_internal) {
     glm::vec3 dimensions(
         this->grid.grid_cell_width,
         MAZE_CEILING_HEIGHT,
@@ -1095,11 +1578,17 @@ void ServerGameState::spawnWall(GridCell* cell) {
         cell->type == CellType::TorchUp ||
         cell->type == CellType::TorchDown ||
         cell->type == CellType::TorchLeft ||
-        cell->type == CellType::TorchRight) {
+        cell->type == CellType::TorchRight ||
+		cell->type == CellType::Pillar) {
 
-        this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Wall, corner, dimensions));
-    } else if(cell->type == CellType::Pillar) {
-        this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Pillar, corner, dimensions));
+		SurfaceType surface_type = (cell->type == CellType::Pillar) ? SurfaceType::Pillar : SurfaceType::Wall;
+		SolidSurface* wall = new SolidSurface(false, Collider::Box, surface_type, corner, dimensions);
+		wall->shared.is_internal = is_internal;
+        this->objects.createObject(wall);
+		if (cell->type == CellType::Wall || cell->type == CellType::Pillar) {
+			// don't let the DM select walls with torches
+			solidSurfaceInGridCells.insert({{col, row}, { wall }});
+		}	
     }
 }
 
@@ -1136,6 +1625,17 @@ void ServerGameState::spawnTorch(GridCell *cell) {
             std::cout << "Invalid Torch cell type when spawning torch\n";
         }
     }
+
+	// Add an entry in the sound table for this
+	this->sound_table.addStaticSoundSource(SoundSource(
+		ServerSFX::TorchLoop,
+		corner,
+		MIDDLE_VOLUME,
+		SHORT_DIST,
+		SHORT_ATTEN,
+		true
+	));
+
     this->objects.createObject(new Torchlight(corner));
 }
 

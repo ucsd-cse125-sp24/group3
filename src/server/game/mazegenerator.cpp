@@ -400,7 +400,6 @@ void MazeGenerator::_loadRoom(boost::filesystem::path path, bool procedural) {
     rclass.type = this->_getRoomType(path);
     rclass.size = size;
 
-
     if (procedural) {
         this->_validateRoom(grid, rclass);
     }

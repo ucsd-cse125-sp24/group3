@@ -49,7 +49,7 @@ public:
      * @param xpos New x-coordinate for the cursor.
      * @param ypos New y-coordinate for the cursor.
      */
-    void update(float xpos, float ypos);
+    virtual void update(float xpos, float ypos);
 
     /**
      * @brief Moves the camera based on the axis, direction, and speed. Factors in the current 
@@ -85,7 +85,11 @@ public:
 
     glm::vec3 getPos();
 
-private:
+    glm::mat4 getProjection();
+
+    glm::mat4 getView();
+
+protected:
     // Perspective controls
     float FOV;       // Field of View Angle (degrees)
     float aspect;    // Aspect Ratio
@@ -110,5 +114,16 @@ private:
     float speed;
 
     glm::mat4 viewProjMat;
+
+    glm::mat4 projection;
+    glm::mat4 view;
+};
+
+class DungeonMasterCamera : public Camera {
+public:
+    DungeonMasterCamera();
+    ~DungeonMasterCamera();
+
+    void update(float xpos, float ypos) override;
 };
 

@@ -7,6 +7,8 @@
 #include "shared/utilities/serialize.hpp"
 #include "shared/utilities/serialize_macro.hpp"
 #include "shared/game/sharedgamestate.hpp"
+#include "shared/game/celltype.hpp"
+#include "shared/audio/soundcommand.hpp"
 #include "shared/utilities/constants.hpp"
 
 
@@ -30,6 +32,7 @@ enum class EventType {
     ChangeFacing,
     LobbyAction,
     LoadGameState,
+    LoadSoundCommands,
     StartAction,
     StopAction, 
     MoveRelative,
@@ -39,12 +42,14 @@ enum class EventType {
     UseItem,
     DropItem,
     UpdateLightSources,
+    TrapPlacement
 };
 
 enum class ActionType {
     MoveCam,
     Jump,
     Sprint,
+    Zoom
 };
 
 /**
@@ -89,8 +94,7 @@ struct LobbyActionEvent {
 };
 
 /**
- * Event sent by the server to a client, telling the client to update their SharedGameState
- * to this new SharedGameState
+ * Event sent by the server to a client, giving a partial update to the SharedGameState
  */
 struct LoadGameStateEvent {
     // Dummy value doesn't matter because will be overridden with whatever you deserialize
@@ -101,6 +105,21 @@ struct LoadGameStateEvent {
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar& state;
+    }
+};
+
+/**
+ * Event sent by the server to a client, giving a partial update to the AudioTable
+ */
+struct LoadSoundCommandsEvent {
+    // Dummy value doesn't matter because will be overridden with whatever you deserialize
+    LoadSoundCommandsEvent() = default;
+    explicit LoadSoundCommandsEvent(const std::vector<SoundCommand>& commands) : commands(commands) {}
+
+    std::vector<SoundCommand> commands;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & commands;
     }
 };
 
@@ -117,6 +136,23 @@ struct StartActionEvent {
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
         ar& entity_to_act& movement& action;
+    }
+};
+
+/**
+ * Event for placing a trap
+ */
+struct TrapPlacementEvent {
+    TrapPlacementEvent() {}
+    TrapPlacementEvent(EntityID entity_to_act, glm::vec3 world_pos, CellType cell, bool hover, bool place) : entity_to_act(entity_to_act), world_pos(world_pos), cell(cell), hover(hover), place(place) { }
+
+    EntityID entity_to_act;
+    CellType cell;
+    glm::vec3 world_pos;
+    bool hover, place;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar& entity_to_act & cell & world_pos & hover & place;
     }
 };
 
@@ -256,6 +292,7 @@ using EventData = boost::variant<
     ChangeFacingEvent,
     LobbyActionEvent,
     LoadGameStateEvent,
+    LoadSoundCommandsEvent,
     StartActionEvent,
     StopActionEvent,
     MoveRelativeEvent,
@@ -263,8 +300,9 @@ using EventData = boost::variant<
     SpawnEntityEvent,
     SelectItemEvent,
     UseItemEvent,
+    UpdateLightSourcesEvent,
     DropItemEvent,
-    UpdateLightSourcesEvent
+    TrapPlacementEvent
 >;
 
 /**

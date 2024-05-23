@@ -8,12 +8,15 @@
 #include "server/game/exit.hpp"
 #include "server/game/orb.hpp"
 #include "server/game/spell.hpp"
+#include "server/game/weaponcollider.hpp"
+#include "server/game/weapon.hpp"
+#include "shared/utilities/rng.hpp"
 
 #include <memory>
 
 /*	Constructors and Destructors	*/
 
-ObjectManager::ObjectManager() {
+ObjectManager::ObjectManager() { // cppcheck-suppress uninitMemberVar
 	////	Initialize global SmartVector
 	//this->objects = SmartVector<Object*>();
 
@@ -44,6 +47,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::Projectile:
 			object->typeID = this->projectiles.push(dynamic_cast<Projectile*>(object));
 			break;
+		case ObjectType::WeaponCollider:
+			object->typeID = this->weaponColliders.push(dynamic_cast<WeaponCollider*>(object));
+			break;
 		case ObjectType::FireballTrap:
 		case ObjectType::FakeWall:
 		case ObjectType::SpikeTrap:
@@ -51,6 +57,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::ArrowTrap:
 		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
+			break;
+		case ObjectType::Weapon:
+			object->typeID = this->items.push(dynamic_cast<Weapon*>(object));
 			break;
 		case ObjectType::Spell:
 			object->typeID = this->items.push(dynamic_cast<Spell*>(object));
@@ -64,6 +73,10 @@ SpecificID ObjectManager::createObject(Object* object) {
         case ObjectType::Torchlight:
             object->typeID = this->torchlights.push(dynamic_cast<Torchlight*>(object));
             break;
+		case ObjectType::DungeonMaster: { // has no type ID
+			this->dm = dynamic_cast<DungeonMaster*>(object);
+			break;
+		}
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
 			break;
@@ -82,6 +95,11 @@ SpecificID ObjectManager::createObject(Object* object) {
 			std::exit(1);
 	}
 
+	if (object->physics.movable) {
+		auto movableID = movableObjects.push(object);
+		object->movableID = movableID;
+	}
+
 	//	Move object to its given position
 	moveObject(object, object->physics.shared.corner);
 
@@ -94,6 +112,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 
 	if (object == nullptr) {
 		//	Object with the given index doesn't exist
+		std::cout << "obj doesn't exist? in ObjectManager::removeObject" << std::endl;
 		return false;
 	}
 
@@ -108,7 +127,11 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		this->base_objects.remove(object->typeID);
 		break;
 	case ObjectType::FireballTrap:
+	case ObjectType::FakeWall:
 	case ObjectType::SpikeTrap:
+	case ObjectType::FloorSpike:
+	case ObjectType::ArrowTrap:
+	case ObjectType::TeleporterTrap:
 		this->traps.remove(object->typeID);
 		break;
 	case ObjectType::Item:
@@ -123,6 +146,10 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Slime:
 		this->enemies.remove(object->typeID);
 		break;
+	case ObjectType::WeaponCollider:
+		this->weaponColliders.remove(object->typeID);
+		break;
+	case ObjectType::Weapon:
 	case ObjectType::Spell:
 	case ObjectType::Potion:
 	case ObjectType::Orb:
@@ -140,6 +167,10 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	default:
 		std::cerr << "WARN: Cannot delete object! Did you forget to add a switch statement to \n"
 			<< "ObjectManager::removeObject? Continuing, but there may be deallocated memory still accessible!";
+	}
+
+	if (object->physics.movable) {
+		movableObjects.remove(object->movableID);
 	}
 
 	//	Remove object from cellToObjects hashmap
@@ -192,9 +223,17 @@ SmartVector<Object*> ObjectManager::getObjects() {
 	return this->objects;
 }
 
+SmartVector<Object*> ObjectManager::getMovableObjects() {
+	return this->movableObjects;
+}
+
 /*	SpecificID object getters by type	*/
 Object* ObjectManager::getBaseObject(SpecificID base_objectID) {
 	return this->base_objects.get(base_objectID);
+}
+
+DungeonMaster* ObjectManager::getDM() {
+	return this->dm;
 }
 
 Item* ObjectManager::getItem(SpecificID itemID) {
@@ -245,6 +284,10 @@ SmartVector<Projectile*> ObjectManager::getProjectiles() {
 	return this->projectiles;
 }
 
+SmartVector<WeaponCollider*> ObjectManager::getWeaponColliders() {
+	return this->weaponColliders;
+}
+
 SmartVector<Torchlight*> ObjectManager::getTorchlights() {
 	return this->torchlights;
 }
@@ -259,6 +302,8 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 		return false;
 	}
 
+	object->distance_moved += glm::distance(object->physics.shared.corner, newCornerPosition);
+
 	//	Remove the object from the cellToObjects hashmap
 	for (auto cellPosition : object->gridCellPositions) {
 		std::vector<Object*>& objectsInCell = this->cellToObjects.at(cellPosition);
@@ -271,7 +316,6 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 			}
 		}
 	}
-
 
 	//	Update object's corner position
 	object->physics.shared.corner = newCornerPosition;

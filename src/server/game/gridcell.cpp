@@ -1,6 +1,7 @@
 #include "server/game/gridcell.hpp"
 #include <iostream>
 
+
 /*	Constructors and Destructors	*/
 GridCell::GridCell(int x, int y, CellType type) : x(x), y(y), type(type) {}
 
@@ -56,6 +57,16 @@ CellType charToCellType(char c) {
 		return CellType::FireSpell;
 	case 'e':
 		return CellType::HealSpell;
+	case 't':
+		return CellType::TeleportSpell;
+	case 'd':
+		return CellType::Dagger;
+	case 'r':
+		return CellType::Sword;
+	case 'm':
+		return CellType::Hammer;
+	case 'w':
+		return CellType::RandomWeapon;
 	case 'p':
 		return CellType::RandomPotion;
 	case 's':
@@ -126,6 +137,16 @@ char cellTypeToChar(CellType type) {
 		return 'f';
 	case CellType::HealSpell:
 		return 'e';
+	case CellType::TeleportSpell:
+		return 't';
+	case CellType::Dagger:
+		return 'd';
+	case CellType::Sword:
+		return 'r';
+	case CellType::Hammer:
+		return 'm';
+	case CellType::RandomWeapon:
+		return 'w';
 	case CellType::RandomPotion:
 		return 'p';
 	case CellType::RandomSpell:
@@ -145,4 +166,16 @@ char cellTypeToChar(CellType type) {
 
 bool isCellTypeAllowedInEntryWay(CellType type) {
 	return (type == CellType::Empty || type == CellType::FakeWall);
+}
+
+bool isWallLikeCell(CellType type) {
+	return (
+		// not fake wall, because we still want to place a floor under it
+		type == CellType::Wall ||
+		type == CellType::TorchDown ||
+		type == CellType::TorchUp ||
+		type == CellType::TorchRight ||
+		type == CellType::TorchLeft ||
+		type == CellType::Pillar
+	);
 }

@@ -122,9 +122,10 @@ struct ClientDeclareInfoPacket {
 struct ServerAssignEIDPacket {
     /// @brief ID that the server is assigning to the client.
     EntityID eid;
+    bool is_dungeon_master;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & eid;
+        ar & eid & is_dungeon_master;
     }
 };
 

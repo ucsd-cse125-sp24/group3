@@ -37,7 +37,6 @@ TextInput::TextInput(glm::vec2 origin,
 
     this->dyntext = DynText::make(origin, text_to_display, fonts, options);
     this->addOnClick([gui](widget::Handle handle) {
-        std::cout << "click\n";
         gui->setCaptureKeystrokes(true);
     });
 

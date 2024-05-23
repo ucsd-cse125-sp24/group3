@@ -2,6 +2,7 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/utilities/rng.hpp"
 #include "server/game/objectmanager.hpp"
+#include "shared/audio/constants.hpp"
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -11,9 +12,10 @@ const std::chrono::seconds SpikeTrap::ACTIVE_TIME = 4s;
 const std::chrono::seconds SpikeTrap::TIME_UNTIL_RESET = 10s;
 
 SpikeTrap::SpikeTrap(glm::vec3 corner, glm::vec3 dimensions):
-    Trap(ObjectType::SpikeTrap, false, corner, Collider::Box, ModelType::Cube, dimensions) 
+    Trap(ObjectType::SpikeTrap, true, corner, Collider::Box, ModelType::Cube, dimensions) 
 {
     this->dropped_time = std::chrono::system_clock::now();
+    this->physics.feels_gravity = false;
 }
 
 bool SpikeTrap::shouldTrigger(ServerGameState& state) {
@@ -46,10 +48,18 @@ bool SpikeTrap::shouldTrigger(ServerGameState& state) {
 void SpikeTrap::trigger(ServerGameState& state) {
     Trap::trigger(state);
 
+    state.soundTable().addNewSoundSource(SoundSource(
+        ServerSFX::CeilingSpikeTrigger,
+        this->physics.shared.corner,
+        DEFAULT_VOLUME,
+        MEDIUM_DIST,
+        MEDIUM_ATTEN
+    ));
+
     this->reset_corner = this->physics.shared.corner;
     this->reset_dimensions = this->physics.shared.dimensions;
 
-    this->physics.movable = true;
+    this->physics.feels_gravity = true;
     this->physics.velocity.y = -50.0f * GRAVITY;
 
     this->dropped_time = std::chrono::system_clock::now();
@@ -61,7 +71,7 @@ bool SpikeTrap::shouldReset(ServerGameState& state) {
 }
 
 void SpikeTrap::reset(ServerGameState& state) {
-    this->physics.movable = false;
+    this->physics.feels_gravity = false;
     this->physics.shared.corner.y += 0.1;
 
     if (this->physics.shared.corner.y >= this->reset_corner.y) {

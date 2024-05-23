@@ -69,7 +69,7 @@ EventList Server::getAllClientEvents() {
     EventList allEvents;
 
     // Loop through each session
-    for (const auto& [eid, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
+    for (const auto& [eid, is_dm, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
         if (auto s = session.lock()) {
             // Get events from the current session
             std::vector<Event> sessionEvents = s->getEvents();
@@ -87,7 +87,7 @@ EventList Server::getAllClientEvents() {
 }
 
 void Server::sendUpdateToAllClients(Event event) {
-    for (const auto& [_eid, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
+    for (const auto& [_eid, is_dm, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
         if (auto s = session.lock()) {
             s->sendEventAsync(event);
         }
@@ -159,7 +159,7 @@ std::chrono::milliseconds Server::doTick() {
         case GamePhase::LOBBY:
             // Go through sessions and update GameState lobby info
             // TODO: move this into updateGameState or something else
-            for (const auto& [eid, ip, session]: this->sessions) {
+            for (const auto& [eid, is_dm, ip, session]: this->sessions) {
                 if (auto s = session.lock()) {
                     this->state.addPlayerToLobby(eid, s->getInfo().client_name.value_or("UNKNOWN NAME"));
                 } else {
@@ -171,9 +171,6 @@ std::chrono::milliseconds Server::doTick() {
                 this->state.setPhase(GamePhase::GAME);
                 // TODO: figure out how to selectively broadcast to only the players that were already in the lobby
                 // this->lobby_broadcaster.stopBroadcasting();
-            } else {
-                std::cout << "Only have " << this->state.getLobby().players.size()
-                    << "/" << this->state.getLobby().max_players << "\n";
             }
 
             this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
@@ -205,6 +202,27 @@ std::chrono::milliseconds Server::doTick() {
         sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
     }
 
+    // TODO: send sound effects to DM?
+    auto players = this->state.objects.getPlayers();
+    auto audio_commands_per_player = this->state.soundTable().getCommandsPerPlayer(players);
+
+    for (auto& session_entry : this->sessions) {
+        if (!audio_commands_per_player.contains(session_entry.id)) {
+            continue; // no sounds to send to that player
+        }
+
+        auto session = session_entry.session.lock();
+        if (session == nullptr) {
+            continue; // lost connection with this session, so can't send audio updates to it
+        }
+
+        session->sendEventAsync(Event(this->world_eid, EventType::LoadSoundCommands, LoadSoundCommandsEvent(
+            audio_commands_per_player.at(session_entry.id)
+        )));
+    }
+
+    this->state.soundTable().tickSounds();
+
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -225,9 +243,12 @@ void Server::_doAccept() {
                 }
 
                 new_session->startListen();
-                std::cout << "about to send server assign id packet" <<std::endl;
+                std::cout << "sending assign eid\n";
+                std::cout << new_session->getInfo().is_dungeon_master.value() << "\n";
+                std::cout << new_session->getInfo().client_eid.value() << "\n";
                 new_session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
-                    ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value() }));
+                    ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value(), 
+                                            .is_dungeon_master = new_session->getInfo().is_dungeon_master.value()}));
             } else {
                 std::cerr << "Error accepting tcp connection: " << ec << std::endl;
 
@@ -249,9 +270,10 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
             EntityID old_id = old_session->id;
 
             // The old session is expired, so create new one
+
             auto new_session = std::make_shared<Session>(std::move(this->socket),
-                SessionInfo({}, old_id));
-            by_ip.replace(old_session, SessionEntry(old_id, addr, new_session));
+                SessionInfo({}, old_id, old_session->is_dungeon_master));
+            by_ip.replace(old_session, SessionEntry(old_id, old_session->is_dungeon_master, addr, new_session));
 
             std::cout << "Reestablished connection with " << addr 
                 << ", which was previously assigned eid " << old_id << std::endl;
@@ -268,15 +290,42 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         }
     }
 
+    static bool first_player = true;
+
+    // first player is Dungeon Master
+    if (first_player) {
+        this->state.objects.createObject(new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
+        DungeonMaster* dm = this->state.objects.getDM();
+
+        //  Spawn player in random spawn point
+
+        //  TODO: Possibly replace this random spawn point with player assignments?
+        //  I.e., assign each player a spawn point to avoid multiple players getting
+        //  the same spawn point?
+
+        auto session = std::make_shared<Session>(std::move(this->socket),
+            SessionInfo({}, dm->globalID, true));
+
+
+        this->sessions.insert(SessionEntry(dm->globalID, true, addr, session));
+
+        std::cout << "Established new connection with " << addr << ", which was assigned eid "
+            << dm->globalID << std::endl;
+
+        first_player = false;
+
+        return session;
+    } 
+
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase
     Player* player = new Player(this->state.getGrid().getRandomSpawnPoint(), glm::vec3(0.0f));
     this->state.objects.createObject(player);
 
     auto session = std::make_shared<Session>(std::move(this->socket),
-        SessionInfo({}, player->globalID));
+        SessionInfo({}, player->globalID, false));
 
-    this->sessions.insert(SessionEntry(player->globalID, addr, session));
+    this->sessions.insert(SessionEntry(player->globalID, false, addr, session));
 
     std::cout << "Established new connection with " << addr << ", which was assigned eid "
         << player->globalID << std::endl;

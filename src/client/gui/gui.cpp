@@ -149,6 +149,7 @@ void GUI::layoutFrame(GUIState state) {
             break;
         case GUIState::GAME_HUD:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
             this->_sharedGameHUD();
             this->_layoutGameHUD();
             break;
@@ -369,50 +370,105 @@ void GUI::_layoutLobby() {
 
 void GUI::_sharedGameHUD() {
     auto self_eid = client->session->getInfo().client_eid;
-    if (!self_eid.has_value()) {
+    auto is_dm = client->session->getInfo().is_dungeon_master;
+
+    // if one doesn't have, the other shouldn't
+    // but just to be safe check both
+    if (!self_eid.has_value() || !is_dm.has_value()) {
         return;
     }
 
     auto self = client->gameState.objects.at(*self_eid);
-    auto inventory_size = self->inventoryInfo->inventory_size;
-    auto selected = self->inventoryInfo->selected - 1;
 
-    auto itemString = "";
-    if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
-        switch (self->inventoryInfo->inventory[selected]) {
-        case ModelType::HealthPotion: {
-            itemString = "Health Potion";
-            break;
+    auto inventory_size = !is_dm.value() ? self->inventoryInfo->inventory_size : self->trapInventoryInfo->inventory_size;
+    auto selected = !is_dm.value() ? self->inventoryInfo->selected - 1 : self->trapInventoryInfo->selected - 1;
+
+    std::string itemString = "";
+    if (!is_dm.value()) {
+        auto limit = self->inventoryInfo->usesRemaining[selected];
+        std::string limittxt = "";
+        if (limit != 0) {
+            limittxt = " (" + std::to_string(limit) + ")";
         }
-        case ModelType::NauseaPotion:
-        case ModelType::InvincibilityPotion: {
-            itemString = "??? Potion";
-            break;
+
+        if (self->inventoryInfo->inventory[selected] != ModelType::Frame) {
+            switch (self->inventoryInfo->inventory[selected]) {
+                case ModelType::HealthPotion: {
+                    itemString = "Health Potion";
+                    break;
+                }
+                case ModelType::NauseaPotion:
+                case ModelType::InvincibilityPotion: {
+                    itemString = "??? Potion";
+                    break;
+                }
+                case ModelType::InvisibilityPotion: {
+                    itemString = "Invisibility Potion";
+                    break;
+                }
+                case ModelType::FireSpell: {
+                    itemString = "Fireball Wand" + limittxt;
+                    break;
+                }
+                case ModelType::HealSpell: {
+                    itemString = "Healing Wand" + limittxt;
+                    break;
+                }
+                case ModelType::TeleportSpell: {
+                    itemString = "Teleport" + limittxt;
+                    break;
+                }
+                case ModelType::Orb: {
+                    itemString = "Orb";
+                    break;
+                }
+                case ModelType::Dagger: {
+                    itemString = "Dagger";
+                    break;
+                }
+                case ModelType::Sword: {
+                    itemString = "Sword";
+                    break;
+                }
+                case ModelType::Hammer: {
+                    itemString = "Hammer";
+                    break;
+                }
+            }
         }
-        case ModelType::InvisibilityPotion: {
-            itemString = "Invisibility Potion";
-            break;
-        }
-        case ModelType::FireSpell: {
-            itemString = "Fireball Wand";
-            break;
-        }
-        case ModelType::HealSpell: {
-            itemString = "Healing Wand";
-            break;
-        }
-        case ModelType::Orb: {
-            itemString = "Orb";
-            break;
-        }
+    } else { // DM hotbar
+        if (self->trapInventoryInfo->inventory[selected] != ModelType::Frame) {
+            switch (self->trapInventoryInfo->inventory[selected]) {
+                case ModelType::FloorSpikeFull: {
+                    itemString = "Floor Spike Full";
+                    break;
+                }
+                case ModelType::FloorSpikeHorizontal: {
+                    itemString = "Floor Spike Horizontal";
+                    break;
+                }
+                case ModelType::FloorSpikeVertical: {
+                    itemString = "Floor Spike Vertical";
+                    break;
+                }
+                case ModelType::FireballTrap: {
+                    itemString = "Fireball Trap";
+                    break;
+                }
+                case ModelType::SpikeTrap: {
+                    itemString = "Ceiling Spike Trap";
+                    break;
+                }
+            }
         }
     }
+
     // Text for item description
     auto item_txt = widget::CenterText::make(
         itemString,
         font::Font::TEXT,
         font::Size::SMALL,
-        font::Color::BLACK,
+        font::Color::WHITE,
         fonts,
         font::getRelativePixels(70)
     );
@@ -426,37 +482,82 @@ void GUI::_sharedGameHUD() {
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
     );
     for (int i = 0; i < inventory_size; i++) {
-        if (self->inventoryInfo->inventory[i] != ModelType::Frame) {
-            switch (self->inventoryInfo->inventory[i]) {
-            case ModelType::HealthPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion), 2));
-                break;
+        if (!is_dm.value()) {
+            if (self->inventoryInfo->inventory[i] != ModelType::Frame) {
+                switch (self->inventoryInfo->inventory[i]) {
+                    case ModelType::HealthPotion: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthPotion), 2));
+                        break;
+                    }
+                    case ModelType::NauseaPotion:
+                    case ModelType::InvincibilityPotion: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::UnknownPotion), 2));
+                        break;
+                    }
+                    case ModelType::InvisibilityPotion: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion), 2));
+                        break;
+                    }
+                    case ModelType::FireSpell: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FireSpell), 2));
+                        break;
+                    }
+                    case ModelType::HealSpell: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell), 2));
+                        break;
+                    }
+                    case ModelType::TeleportSpell: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Scroll), 2));
+                        break;
+                    }
+                    case ModelType::Orb: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                        break;
+                    }
+                    case ModelType::Dagger: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Dagger), 2));
+                        break;
+                    }
+                    case ModelType::Sword: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Sword), 2));
+                        break;
+                    }
+                    case ModelType::Hammer: {
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Hammer), 2));
+                        break;
+                    }
+                }
+            } else {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
             }
-            case ModelType::NauseaPotion:
-            case ModelType::InvincibilityPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::UnknownPotion), 2));
-                break;
+        } else {
+            if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
+                switch (self->trapInventoryInfo->inventory[i]) {
+                case ModelType::FloorSpikeFull: { // TODO: CHANGE images
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::FloorSpikeHorizontal: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::FloorSpikeVertical: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::FireballTrap: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::SpikeTrap: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                }
             }
-            case ModelType::InvisibilityPotion: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::InvisPotion), 2));
-                break;
+            else {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
             }
-            case ModelType::FireSpell: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FireSpell), 2));
-                break;
-            }
-            case ModelType::HealSpell: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealSpell), 2));
-                break;
-            }
-            case ModelType::Orb: {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
-                break;
-            }
-            }
-        }
-        else {
-            itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
         }
     }
 
@@ -484,11 +585,126 @@ void GUI::_sharedGameHUD() {
 
 void GUI::_layoutGameHUD() {
     auto self_eid = client->session->getInfo().client_eid;
+    auto is_dm = client->session->getInfo().is_dungeon_master;
+
+    // display crosshair
+    auto crosshair = this->images.getImg(img::ImgID::Crosshair);
+
+    this->addWidget(widget::StaticImg::make(
+        glm::vec2((WINDOW_WIDTH / 2.0f) - (crosshair.width / 2.0f),
+            (WINDOW_HEIGHT / 2.0f) - (crosshair.height / 2.0f)),
+        this->images.getImg(img::ImgID::Crosshair)
+    ));
+
     if (!self_eid.has_value()) {
         return;
     }
-
     auto self = client->gameState.objects.at(*self_eid);
+
+    auto matchPhaseFlex = widget::Flexbox::make(
+        glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(150))),
+        glm::vec2(0, 0),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+    );
+
+    std::string orbStateString;
+    if (client->gameState.matchPhase == MatchPhase::MazeExploration) {
+        orbStateString = "The Orb is hidden somewhere in the Labyrinth...";
+    }
+    else {
+        bool orbIsCarried = false;
+        for (auto [id, name] : client->gameState.lobby.players) {
+            auto player = client->gameState.objects.at(id);
+
+            if (!player.has_value())    continue;
+
+            SharedObject playerObj = player.get();
+
+            if (playerObj.inventoryInfo.get().hasOrb) {
+                orbIsCarried = true;
+                orbStateString = name + " has the Orb!";
+                break;
+            }
+        }
+
+        if (!orbIsCarried) {
+            orbStateString = "The Orb has been dropped!";
+        }
+
+        std::optional<glm::vec3> orb_pos;
+
+        for (const auto& [eid, obj] : client->gameState.objects) {
+            if (obj->type == ObjectType::Player && obj->inventoryInfo->hasOrb) {
+                orb_pos = obj->physics.corner;
+                orb_pos->y = 0;
+                break;
+            }
+        }
+
+        if (!orb_pos.has_value()) {
+            for (const auto& [eid, obj] : client->gameState.objects) {
+                if (obj->type == ObjectType::Orb) {
+                    orb_pos = obj->physics.corner;
+                    orb_pos->y = 0;
+                    break;
+                }
+            }
+        }
+
+        if (!orb_pos.has_value()) {
+            std::cerr << "WARNING: orb pos does not have value... Bruh.\n";
+        }
+        else {
+            auto player_pos_ground = self->physics.corner;
+            player_pos_ground.y = 0;
+
+            auto distance = glm::distance(orb_pos.value(), player_pos_ground);
+
+            std::stringstream ss;
+            ss << distance << "m to Orb.";
+
+            matchPhaseFlex->push(widget::DynText::make(ss.str(), fonts, widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)));
+        }
+    }
+
+
+    matchPhaseFlex->push(widget::DynText::make(
+        orbStateString,
+        fonts,
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
+    ));
+
+    //  Add timer string
+    if (client->gameState.matchPhase == MatchPhase::RelayRace) {
+        std::string timerString = "Time Left: ";
+        int timerSeconds = client->gameState.timesteps_left * ((float)TIMESTEP_LEN.count()) / 1000;
+        timerString += std::to_string(timerSeconds);
+
+        timerString += (timerSeconds > 1) ? " seconds" : " second";
+
+        matchPhaseFlex->push(widget::DynText::make(
+            timerString,
+            fonts,
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
+        ));
+    }
+
+    //  Add player deaths string
+    std::string playerDeathsString = std::to_string(client->gameState.numPlayerDeaths)
+        + " / " + std::to_string(PLAYER_DEATHS_TO_RELAY_RACE)
+        + " Player Deaths";
+
+    matchPhaseFlex->push(widget::DynText::make(
+        playerDeathsString,
+        fonts,
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
+    ));
+
+    this->addWidget(std::move(matchPhaseFlex));
+
+    if (is_dm.has_value() && is_dm.value()) {
+        return;
+    }
 
     auto health_txt = widget::CenterText::make(
         std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
@@ -510,7 +726,7 @@ void GUI::_layoutGameHUD() {
         status_flex->push(widget::DynText::make(
             status,
             fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
         ));
     }
 
@@ -541,113 +757,11 @@ void GUI::_layoutGameHUD() {
         durationFlex->push(widget::DynText::make(
             name + std::to_string((int)self->inventoryInfo->usedItems[id].second),
             fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::RED)));
+            widget::DynText::Options(font::Font::MENU, font::Size::SMALL, font::Color::WHITE)));
 
         ++it;
     }
     this->addWidget(std::move(durationFlex));
-
-    // display crosshair
-    auto crosshair = this->images.getImg(img::ImgID::Crosshair);
-
-    this->addWidget(widget::StaticImg::make(
-        glm::vec2((WINDOW_WIDTH / 2.0f) - (crosshair.width / 2.0f),
-            (WINDOW_HEIGHT / 2.0f) - (crosshair.height / 2.0f)),
-        this->images.getImg(img::ImgID::Crosshair)
-    ));
-    //  Display orb state here?
-
-    //  Orb state breakdown:
-    //  if match phase is MatchPhase::MazeExploration
-    //      --> orb hasn't been found yet
-    //  if match phase is MatchPhase::RelayRace
-    //      --> orb has been found at least once!
-    //          if the orb is currently being carried, print which player name
-    //              is carrying it
-    //          otherwise, "the orb is lost"
-    std::string orbStateString;
-    if (client->gameState.matchPhase == MatchPhase::MazeExploration) {
-        orbStateString = "The Orb is hidden somewhere in the Labyrinth...";
-    }
-    else {
-        bool orbIsCarried = false;
-        for (auto [id, name] : client->gameState.lobby.players) {
-            auto player = client->gameState.objects.at(id);
-
-            if (!player.has_value())    continue;
-
-            SharedObject playerObj = player.get();
-            
-            if (playerObj.inventoryInfo.get().hasOrb) {
-                orbIsCarried = true;
-                orbStateString = name + " has the Orb!";
-                break;
-            }
-        }
-
-        if (!orbIsCarried) {
-            orbStateString = "The Orb has been dropped!";
-        }
-    }
-
-    auto matchPhaseFlex = widget::Flexbox::make(
-        glm::vec2(10, 900),
-        glm::vec2(0, 0),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
-    );
-
-    matchPhaseFlex->push(widget::DynText::make(
-        orbStateString,
-        fonts,
-        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
-    ));
-
-    //  Add timer string
-    if (client->gameState.matchPhase == MatchPhase::RelayRace) {
-        std::string timerString = "Time Left: ";
-        int timerSeconds = client->gameState.timesteps_left * ((float) TIMESTEP_LEN.count()) / 1000;
-        timerString += std::to_string(timerSeconds);
-
-        timerString += (timerSeconds > 1) ? " seconds" : " second";
-
-        matchPhaseFlex->push(widget::DynText::make(
-            timerString,
-            fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
-        ));
-    }
-
-    //  Add player deaths string
-    std::string playerDeathsString = std::to_string(client->gameState.numPlayerDeaths)
-        + " / " + std::to_string(PLAYER_DEATHS_TO_RELAY_RACE) 
-        + " Player Deaths";
-
-    matchPhaseFlex->push(widget::DynText::make(
-        playerDeathsString,
-        fonts,
-        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
-    ));
-
-    this->addWidget(std::move(matchPhaseFlex));
-
-    /*auto orbStateText = widget::CenterText::make(
-        orbStateString,
-        font::Font::TEXT,
-        font::Size::MEDIUM,
-        font::Color::WHITE,
-        fonts,
-        font::getRelativePixels(900)
-    );*/
-
-    /*auto matchPhaseFlex = widget::Flexbox::make(
-        glm::vec2(10, FRAC_WINDOW_HEIGHT(2, 3)),
-        glm::vec2(0, 0),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
-    );
-
-    matchPhaseFlex->push(orbStateText);*/
-
-    //this->addWidget(std::move(orbStateText));
 }
 
 void GUI::_layoutGameEscMenu() {
@@ -716,9 +830,6 @@ void GUI::_layoutResultsScreen() {
     else {
         won = !(client->gameState.playerVictory);
     }
-
-    //std::cout << "playerVictory: " << client->gameState.playerVictory << std::endl;
-    //std::cout << "won: " << won << std::endl;
 
     std::string result_string = won ? "Victory" : "Defeat";
 

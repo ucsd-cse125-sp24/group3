@@ -46,12 +46,14 @@ void Session::_handleReceivedPacket(PacketType type, const std::string& data) {
         this->received_events.push_back(event);
     } else if (type == PacketType::ServerAssignEID) {
         this->info.client_eid = deserialize<ServerAssignEIDPacket>(data).eid;
+        this->info.is_dungeon_master = deserialize<ServerAssignEIDPacket>(data).is_dungeon_master;
         std::cout << "Handling ServerAssignEID of " << *this->info.client_eid << "...\n";
+        std::cout << "Is Dungeon Master? " << (*this->info.is_dungeon_master ? "true" : "false") << "...\n";
     } else if (type == PacketType::ClientDeclareInfo) {
         this->info.client_name = deserialize<ClientDeclareInfoPacket>(data).player_name;
         std::cout << "Handling ClientDeclareInfo from " << *this->info.client_name << "...\n";
     } else {
-        std::cerr << "Unknown packet type received in Session::_addReceivedPacket" << std::endl;
+        std::cerr << "Unknown packet type received in Session::_addReceivedPacket" << (int) type << std::endl;
     }
 }
 
@@ -93,7 +95,6 @@ void Session::_receivePacketAsync() {
     boost::asio::async_read(socket, boost::asio::buffer(&buf.get()[0], BUF_SIZE),
         boost::asio::transfer_exactly(sizeof(PacketHeader)),
         [this, buf, self](boost::system::error_code ec, std::size_t length) {
-
             switch (_classifySocketError(ec, "receiving header")) {
             case SocketError::NONE:
                 break;
@@ -105,7 +106,7 @@ void Session::_receivePacketAsync() {
 
             boost::asio::async_read(socket, boost::asio::buffer(buf.get(), BUF_SIZE),
                 boost::asio::transfer_exactly(hdr.size),
-                [this, hdr, buf, self](boost::system::error_code ec,
+                [this, buf, hdr, self](boost::system::error_code ec,
                     std::size_t length)
                 {
                     switch (_classifySocketError(ec, "receiving data")) {
