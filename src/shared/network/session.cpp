@@ -53,7 +53,7 @@ void Session::_handleReceivedPacket(PacketType type, const std::string& data) {
         this->info.client_name = deserialize<ClientDeclareInfoPacket>(data).player_name;
         std::cout << "Handling ClientDeclareInfo from " << *this->info.client_name << "...\n";
     } else {
-        std::cerr << "Unknown packet type received in Session::_addReceivedPacket" << std::endl;
+        std::cerr << "Unknown packet type received in Session::_addReceivedPacket" << (int) type << std::endl;
     }
 }
 
@@ -90,11 +90,11 @@ void Session::sendEventAsync(Event event) {
 void Session::_receivePacketAsync() {
     auto self(shared_from_this());
     const std::size_t BUF_SIZE = NETWORK_BUFFER_SIZE;
-    static auto buf = std::array<char, BUF_SIZE>();
+    auto buf = std::make_shared<std::array<char, BUF_SIZE>>();
 
-    boost::asio::async_read(socket, boost::asio::buffer(&buf[0], BUF_SIZE),
+    boost::asio::async_read(socket, boost::asio::buffer(&buf.get()[0], BUF_SIZE),
         boost::asio::transfer_exactly(sizeof(PacketHeader)),
-        [this, self](boost::system::error_code ec, std::size_t length) {
+        [this, buf, self](boost::system::error_code ec, std::size_t length) {
             switch (_classifySocketError(ec, "receiving header")) {
             case SocketError::NONE:
                 break;
@@ -102,11 +102,11 @@ void Session::_receivePacketAsync() {
                 return;
             }
 
-            PacketHeader hdr(static_cast<void*>(&buf[0]));
+            PacketHeader hdr(static_cast<void*>(&buf.get()[0]));
 
-            boost::asio::async_read(socket, boost::asio::buffer(buf, BUF_SIZE),
+            boost::asio::async_read(socket, boost::asio::buffer(buf.get(), BUF_SIZE),
                 boost::asio::transfer_exactly(hdr.size),
-                [this, hdr, self](boost::system::error_code ec,
+                [this, buf, hdr, self](boost::system::error_code ec,
                     std::size_t length)
                 {
                     switch (_classifySocketError(ec, "receiving data")) {
@@ -116,7 +116,7 @@ void Session::_receivePacketAsync() {
                         return;
                     }
 
-                    std::string data(buf.begin(), buf.begin() + hdr.size);
+                    std::string data(buf->begin(), buf->begin() + hdr.size);
                     self->_handleReceivedPacket(hdr.type, data);
                     _receivePacketAsync();
                 });

@@ -18,7 +18,7 @@
     "client": {
         "default_name": "Conan O'Brien",
         "lobby_discovery": true,
-        "window_width": 1500,
+        "window_width": 2000,
         "draw_bboxes": false
     }
 }
