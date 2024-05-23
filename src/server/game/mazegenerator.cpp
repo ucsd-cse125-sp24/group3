@@ -103,7 +103,7 @@ std::optional<Grid> MazeGenerator::generate() {
                     coord = other_coord;
                     required_entryway = other_req_entry;
                 } else {
-                    this->frontier.push({other_coord, required_entryway});
+                    this->frontier.push({other_coord, other_req_entry});
                 }
             }
             exit_coord_f = coord;
@@ -129,7 +129,7 @@ std::optional<Grid> MazeGenerator::generate() {
                     coord = other_coord;
                     required_entryway = other_req_entry;
                 } else {
-                    this->frontier.push({other_coord, required_entryway});
+                    this->frontier.push({other_coord, other_req_entry});
                 }
             }
         }
@@ -657,12 +657,12 @@ std::vector<std::pair<glm::ivec2, RoomEntry>> MazeGenerator::_getAdjRoomCoords(s
     if ((room->rclass.entries & RoomEntry::T) != 0) {
         adj_coords.push_back({origin_coord + glm::ivec2(0, -1), RoomEntry::B}); // need bottom entry for whatever would be placed here
         if (room->rclass.size == RoomSize::_20x20) {
-            adj_coords.push_back({origin_coord + glm::ivec2(1, 1), RoomEntry::B});
+            adj_coords.push_back({origin_coord + glm::ivec2(1, -1), RoomEntry::B});
         } else if (room->rclass.size == RoomSize::_40x40) {
-            adj_coords.push_back({origin_coord + glm::ivec2(1, 1), RoomEntry::B});
+            adj_coords.push_back({origin_coord + glm::ivec2(1, -1), RoomEntry::B});
 
-            adj_coords.push_back({origin_coord + glm::ivec2(2, 1), RoomEntry::B});
-            adj_coords.push_back({origin_coord + glm::ivec2(3, 1), RoomEntry::B});
+            adj_coords.push_back({origin_coord + glm::ivec2(2, -1), RoomEntry::B});
+            adj_coords.push_back({origin_coord + glm::ivec2(3, -1), RoomEntry::B});
         }
     }
 
