@@ -527,6 +527,8 @@ void GUI::_sharedGameHUD() {
                         break;
                     }
                 }
+            } else {
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
             }
         } else {
             if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {

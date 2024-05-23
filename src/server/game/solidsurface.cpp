@@ -10,6 +10,7 @@ SolidSurface::SolidSurface(
 {
 	this->shared.surfaceType = type;
 	this->shared.dm_highlight = false;
+	this->shared.is_internal = false;
 }
 
 SolidSurface::~SolidSurface() {}

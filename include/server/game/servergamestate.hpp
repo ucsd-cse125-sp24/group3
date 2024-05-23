@@ -317,8 +317,9 @@ private:
      * @brief helper function to spawn a wall at a specified cell
      * @param cell is a single cell of the maze's grid where a wall
      * should be placed
+	 * @param is_internal whether or not the wall should be marked as internal (i.e. fully surrounded by other walls)
      */
-    void spawnWall(GridCell* cell, int col, int row);
+    void spawnWall(GridCell* cell, int col, int row, bool is_internal);
 
     /**
      * @brief helper function to spawn a wall with a torch at a specified 

@@ -402,7 +402,7 @@ void Client::processServerInput(boost::asio::io_context& context) {
 }
 
 void Client::draw() {
-    // auto now = std::chrono::system_clock::now();
+    auto start = std::chrono::system_clock::now();
 
     if (!this->session->getInfo().client_eid.has_value()) {
         return;
@@ -421,6 +421,10 @@ void Client::draw() {
         auto dist = glm::distance(sharedObject->physics.corner, my_pos);
 
         if (!is_dm && !is_ceiling && dist > RENDER_DISTANCE) {
+            continue;
+        }
+        if (!is_dm && sharedObject->type == ObjectType::SolidSurface && sharedObject->solidSurface->is_internal) {
+            // don't render walls you will never see as normal player (internal walls)
             continue;
         }
 
@@ -765,8 +769,8 @@ void Client::draw() {
         }
     }
 
-    // auto end = std::chrono::system_clock::now();
-    // std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - now).count() << "\n";
+    auto end = std::chrono::system_clock::now();
+    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "\n";
 }
 
 void Client::drawBbox(boost::optional<SharedObject> object) {

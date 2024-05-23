@@ -1192,6 +1192,40 @@ void ServerGameState::loadMaze(const Grid& grid) {
 	size_t num_spawn_points = this->grid.getSpawnPoints().size();
 	assert(num_spawn_points > 0);
 
+	// mark internal walls in this set, so we can mark them appropriately later on
+	std::unordered_set<glm::ivec2> internal_walls;
+	for (int c = 0; c < this->grid.getColumns(); c++) {
+		for (int r = 0; r < this->grid.getRows(); r++) {
+            int num_neighbor_walls = 0;            
+
+            for (int offset_row = -1; offset_row <= 1; offset_row++) {
+                for (int offset_col = -1; offset_col <= 1; offset_col++) {
+                    if (offset_row == 0 && offset_col == 0) continue;
+
+                    int n_row = r + offset_row;
+                    int n_col = c + offset_col;
+
+                    bool is_wall;
+                    if (n_row < 0 || n_row >= this->grid.getRows() || n_col < 0 || n_col >= this->grid.getColumns()) {
+                        is_wall = true; // outside, but for the purposes of the algorithm still consider wall
+                    } else {
+                        is_wall = isWallLikeCell(this->grid.getCell(n_col, n_row)->type);
+                    }
+
+                    if (is_wall) {
+                        num_neighbor_walls++;
+                    }
+                }
+            }
+
+			if (num_neighbor_walls == 8) {
+				internal_walls.insert(glm::ivec2(c, r));
+			}
+		}
+	}
+
+	std::cout << "num internal walls: " << internal_walls.size() << "\n";
+
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
 
 	// Create Ceiling
@@ -1403,7 +1437,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				case CellType::Wall:
 				case CellType::Pillar:
 				case CellType::FakeWall: {
-                    this->spawnWall(cell, col, row);
+                    this->spawnWall(cell, col, row, internal_walls.contains(glm::ivec2(col, row)));
 					break;
 				}
                 case CellType::TorchUp:
@@ -1411,7 +1445,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
                 case CellType::TorchRight:
                 case CellType::TorchLeft: {
                     this->spawnTorch(cell);
-                    this->spawnWall(cell, col, row);
+                    this->spawnWall(cell, col, row, internal_walls.contains(glm::ivec2(col, row)));
                     break;
                 }
 				case CellType::FloorSpikeFull:
@@ -1504,13 +1538,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 	// Create Floor
 	for (int c = 0; c < this->grid.getColumns(); c++) {
 		for (int r = 0; r < this->grid.getRows(); r++) {
-			if(this->grid.getCell(c, r)->type == CellType::OutsideTheMaze ||
-			   this->grid.getCell(c, r)->type == CellType::Wall ||
-			   this->grid.getCell(c, r)->type == CellType::TorchRight ||
-			   this->grid.getCell(c, r)->type == CellType::TorchLeft || 
-			   this->grid.getCell(c, r)->type == CellType::TorchDown || 
-			   this->grid.getCell(c, r)->type == CellType::TorchUp)
-			{
+			if (isWallLikeCell(this->grid.getCell(c, r)->type)) {
 				continue;
 			}
 
@@ -1528,9 +1556,10 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				solidSurfaceInGridCells.insert(std::make_pair<std::pair<int, int>, std::vector<SolidSurface*>>({c, r}, {floor}));
 		}
 	}
+
 }
 
-void ServerGameState::spawnWall(GridCell* cell, int col, int row) {
+void ServerGameState::spawnWall(GridCell* cell, int col, int row, bool is_internal) {
     glm::vec3 dimensions(
         this->grid.grid_cell_width,
         MAZE_CEILING_HEIGHT,
@@ -1553,6 +1582,7 @@ void ServerGameState::spawnWall(GridCell* cell, int col, int row) {
 
 		SurfaceType surface_type = (cell->type == CellType::Pillar) ? SurfaceType::Pillar : SurfaceType::Wall;
 		SolidSurface* wall = new SolidSurface(false, Collider::Box, surface_type, corner, dimensions);
+		wall->shared.is_internal = is_internal;
         this->objects.createObject(wall);
 		if (cell->type == CellType::Wall || cell->type == CellType::Pillar) {
 			// don't let the DM select walls with torches

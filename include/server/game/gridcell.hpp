@@ -2,6 +2,8 @@
 
 #include "shared/game/celltype.hpp"
 
+bool isWallLikeCell(CellType type);
+
 /**
  * @brief Returns CellType given a character (maps character representation to
  * CellType).

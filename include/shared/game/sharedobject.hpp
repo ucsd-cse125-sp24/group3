@@ -163,9 +163,10 @@ struct SharedSolidSurface {
 	SurfaceType surfaceType;
 
 	bool dm_highlight;
+	bool is_internal;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & surfaceType & dm_highlight;
+		ar & surfaceType & dm_highlight & is_internal;
 	}
 };
 
