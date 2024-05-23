@@ -1106,7 +1106,8 @@ void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int
                 break;
 
             case GLFW_MOUSE_BUTTON_LEFT:
-                if (eid.has_value()) {
+                if (eid.has_value() && this->session->getInfo().is_dungeon_master.has_value() &&
+                    !this->session->getInfo().is_dungeon_master.value()) {
                     this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
                 }
                 break;
