@@ -527,14 +527,10 @@ void Client::draw() {
                         break;
                 }
 
-                int i = 0;
-
                 if (is_dm) {
-                    // if the DM, override for the 
+                    // if the DM, override
                     shader = this->dm_cube_shader;
-                }
 
-                if (is_dm) {
                     if (sharedObject->solidSurface->dm_highlight) {
                         model->overrideSolidColor(glm::vec3(1.0f, 0.0f, 0.0f));
                     } else {
