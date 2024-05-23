@@ -4,6 +4,7 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "server/game/servergamestate.hpp"
+#include <chrono>
 
 class Trap : public Object {
 public:
@@ -59,6 +60,15 @@ public:
 
     SharedObject toShared() override;
 
+    void setIsDMTrap(bool is_dm_trap);
+
+    void setExpiration(std::chrono::time_point<std::chrono::system_clock> expiration);
+
+    bool getIsDMTrap();
+
+    std::chrono::time_point<std::chrono::system_clock> getExpiration();
 protected:
+    bool is_dm_trap;
+    std::chrono::time_point<std::chrono::system_clock> expiration;
     SharedTrapInfo info;
 };

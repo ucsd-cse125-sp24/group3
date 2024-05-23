@@ -41,6 +41,4 @@ void Orb::dropItem(Object* other, ServerGameState& state, int itemSelected, floa
 	Player* player = state.objects.getPlayer(other->typeID);
 
 	player->sharedInventory.hasOrb = false;
-
-	std::cout << "Player has dropped the Orb!" << std::endl;
 }

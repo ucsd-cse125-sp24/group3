@@ -1,44 +1,8 @@
 #pragma once
 
-enum class CellType {
-	Empty,
-	Wall,
-    Pillar,
-	Spawn,
-	Enemy,
-	SpikeTrap,
-	FireballTrap,
-	FloorSpikeHorizontal,
-	FloorSpikeVertical,
-	FloorSpikeFull,
-	FakeWall,
-	ArrowTrapUp,
-	ArrowTrapDown,
-	ArrowTrapLeft,
-	ArrowTrapRight,
-	HealthPotion,
-	NauseaPotion,
-	InvisibilityPotion,
-    TorchDown,
-    TorchUp,
-    TorchLeft,
-    TorchRight,
-	InvincibilityPotion,
-	FireSpell,
-	HealSpell,
-	TeleportSpell,
-	Dagger,
-	Sword,
-	Hammer,
-	RandomWeapon,
-	RandomPotion,
-	RandomSpell,
-	Orb,
-	OutsideTheMaze,
-	TeleporterTrap,
-	Exit,
-	Unknown
-};
+#include "shared/game/celltype.hpp"
+
+bool isWallLikeCell(CellType type);
 
 /**
  * @brief Returns CellType given a character (maps character representation to

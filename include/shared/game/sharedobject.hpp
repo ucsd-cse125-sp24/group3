@@ -8,6 +8,7 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/stat.hpp"
 #include "shared/game/sharedmodel.hpp"
+#include "shared/game/celltype.hpp"
 #include "shared/game/status.hpp"
 #include <chrono>
 
@@ -23,6 +24,7 @@ enum class ObjectType {
 	Enemy,
     Torchlight,
 	SpikeTrap,
+	DungeonMaster,
 	FireballTrap,
 	Projectile,
 	FloorSpike,
@@ -116,6 +118,18 @@ struct SharedInventory {
 	}
 }; 
 
+struct SharedTrapInventory {
+	// need to share itemtype data...
+	int selected;
+	int inventory_size;
+	std::vector<ModelType> inventory;
+	std::unordered_map<CellType, std::time_t> trapsInCooldown;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& selected& inventory_size& inventory& trapsInCooldown;
+	}
+};
+
 struct SharedItemInfo {
 	bool held; // for rendering
 	bool used; // for rendering
@@ -148,8 +162,11 @@ struct SharedSolidSurface {
 	 */
 	SurfaceType surfaceType;
 
+	bool dm_highlight;
+	bool is_internal;
+
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & surfaceType;
+		ar & surfaceType & dm_highlight & is_internal;
 	}
 };
 
@@ -248,6 +265,7 @@ public:
 	boost::optional<SharedTrapInfo> trapInfo;
 	boost::optional<SharedPlayerInfo> playerInfo;
 	boost::optional<SharedInventory> inventoryInfo;
+	boost::optional<SharedTrapInventory> trapInventoryInfo;
     boost::optional<SharedPointLightInfo> pointLightInfo;
 	boost::optional<SharedStatuses> statuses;
 	boost::optional<SharedExit> exit;
@@ -257,7 +275,10 @@ public:
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & iteminfo & solidSurface & trapInfo & playerInfo & inventoryInfo & pointLightInfo & statuses & exit & weaponInfo;
+		ar & globalID & type & physics & modelType & stats & 
+			 iteminfo & solidSurface & trapInfo & playerInfo & 
+			 inventoryInfo & statuses & trapInventoryInfo & pointLightInfo &
+             exit & weaponInfo;
 	}
 private:
 };

@@ -17,9 +17,21 @@
 #include <chrono>
 #include <unordered_map>
 #include <queue>
+#include <boost/container_hash/hash.hpp>
 
 /// Represents a list of events from a certain client with a specified ID
 using EventList = std::vector<std::pair<EntityID, Event>>;
+
+struct IntPairHash {
+	size_t operator()(const std::pair<int, int>& pair) const {
+		std::size_t c = 0;
+
+		boost::hash_combine(c, pair.first);
+		boost::hash_combine(c, pair.second);
+
+		return c;
+	}
+};
 
 /**
  * @brief The ServerGameState class contains all abstract game state data and
@@ -191,6 +203,8 @@ public:
 
 	const Lobby& getLobby() const;
 
+	Trap* placeTrapInCell(GridCell* cell, CellType type);
+
 	/*	Maze initialization	*/
 	
 	/**
@@ -214,6 +228,8 @@ public:
 	 * @return A string representation of this ServerGameState object.
 	 */
 	std::string to_string();
+
+	Trap* createTrap(CellType type, glm::vec3 corner);
 
 private:
 	/**
@@ -291,12 +307,19 @@ private:
 	 */
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
 
+
+	std::unordered_map<std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
+
+	std::vector<SolidSurface*> previouslyHighlighted;
+
+	/**
     /**
      * @brief helper function to spawn a wall at a specified cell
      * @param cell is a single cell of the maze's grid where a wall
      * should be placed
+	 * @param is_internal whether or not the wall should be marked as internal (i.e. fully surrounded by other walls)
      */
-    void spawnWall(GridCell* cell);
+    void spawnWall(GridCell* cell, int col, int row, bool is_internal);
 
     /**
      * @brief helper function to spawn a wall with a torch at a specified 

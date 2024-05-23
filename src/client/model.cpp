@@ -82,7 +82,7 @@ Mesh::Mesh(
 }
 
 void Mesh::draw(
-    std::shared_ptr<Shader> shader,
+    Shader* shader,
     glm::mat4 viewProj,
     glm::vec3 camPos,
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
@@ -95,9 +95,16 @@ void Mesh::draw(
     auto model = this->getModelMat();
     shader->setMat4("model", model);
 
+    if (this->solidColor.has_value()) {
+        shader->setVec3("material.ambient", this->solidColor.value());
+    }
+    else {
+        shader->setVec3("material.ambient", this->material.ambient);
+    }
+
+
     // fragment shader uniforms
     shader->setVec3("material.diffuse", this->material.diffuse);
-    shader->setVec3("material.ambient", this->material.ambient);
     shader->setVec3("material.specular", this->material.specular);
     shader->setFloat("material.shininess", this->material.shininess);
 
@@ -185,7 +192,7 @@ Model::Model(const std::string& filepath) {
     std::cout << "\tDimensions: " << glm::to_string(this->getDimensions()) << std::endl;
 }
 
-void Model::draw(std::shared_ptr<Shader> shader,
+void Model::draw(Shader* shader,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
@@ -382,6 +389,11 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, const aiTextur
     return textures;
 }
 
+void Model::overrideSolidColor(std::optional<glm::vec3> color) {
+    for (auto &mesh : this->meshes) {
+        mesh.solidColor = color;
+    }
+}
 
 Texture::Texture(const std::string& filepath, const aiTextureType& type) {
     switch (type) {

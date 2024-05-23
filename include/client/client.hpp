@@ -162,6 +162,8 @@ public:
 
     AudioManager* getAudioManager();
 
+    void setWorldPos();
+
 private:
     /**
      * @brief Processes all data received from the server and updates the SharedGameState.
@@ -185,7 +187,8 @@ private:
     SharedGameState gameState;
 
     /* Shader objects for various */
-    std::shared_ptr<Shader> cube_shader; 
+    std::shared_ptr<Shader> cube_shader;
+    std::shared_ptr<Shader> dm_cube_shader;
     std::shared_ptr<Shader> model_shader;
     std::shared_ptr<Shader> light_source_shader;
     std::shared_ptr<Shader> solid_surface_shader;
@@ -225,6 +228,11 @@ private:
     bool is_held_left = false;
     bool is_held_space = false;
 
+    bool is_held_i = false;
+    bool is_held_o = false;
+
+    bool is_pressed_p = false;
+
     bool is_left_mouse_down = false;
 
     /* Mouse position coordinates */
@@ -240,6 +248,8 @@ private:
     /// @brief Generate endpoints the client can connect to
     basic_resolver_results<class boost::asio::ip::tcp> endpoints;
     std::shared_ptr<Session> session;
+
+    glm::vec3 world_pos; // stored world pause, calculated before the GUI is rendered
 
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> closest_light_sources;
 };

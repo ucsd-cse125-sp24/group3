@@ -23,6 +23,7 @@ set(FILES
     game/projectile.cpp
     game/floorspike.cpp
     game/fakewall.cpp
+    game/dungeonmaster.cpp
     game/potion.cpp
     game/mazegenerator.cpp
     game/teleportertrap.cpp

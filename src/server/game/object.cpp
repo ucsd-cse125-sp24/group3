@@ -85,6 +85,7 @@ std::string Physics::to_string(unsigned int tab_offset) {
 
 	std::string representation = tabs + "{\n";
 	representation += tabs + "\tmovable:\t\t" + (this->movable ? "true" : "false") + '\n';
+	representation += tabs + "\feels_gravity:\t\t" + (this->feels_gravity ? "true" : "false") + '\n';
 	representation += tabs + "\tvelocity:\t\t" + glm::to_string(this->velocity) + '\n';
 	representation += tabs + "\velocityMultiplier:\t\t" + glm::to_string(this->velocityMultiplier) + '\n';
 	representation += tabs + "\tfacing:\t\t\t" + glm::to_string(this->shared.facing) + '\n';

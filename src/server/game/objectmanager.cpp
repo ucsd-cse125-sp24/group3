@@ -16,7 +16,7 @@
 
 /*	Constructors and Destructors	*/
 
-ObjectManager::ObjectManager() {
+ObjectManager::ObjectManager() { // cppcheck-suppress uninitMemberVar
 	////	Initialize global SmartVector
 	//this->objects = SmartVector<Object*>();
 
@@ -73,6 +73,10 @@ SpecificID ObjectManager::createObject(Object* object) {
         case ObjectType::Torchlight:
             object->typeID = this->torchlights.push(dynamic_cast<Torchlight*>(object));
             break;
+		case ObjectType::DungeonMaster: { // has no type ID
+			this->dm = dynamic_cast<DungeonMaster*>(object);
+			break;
+		}
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
 			break;
@@ -91,6 +95,11 @@ SpecificID ObjectManager::createObject(Object* object) {
 			std::exit(1);
 	}
 
+	if (object->physics.movable) {
+		auto movableID = movableObjects.push(object);
+		object->movableID = movableID;
+	}
+
 	//	Move object to its given position
 	moveObject(object, object->physics.shared.corner);
 
@@ -103,6 +112,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 
 	if (object == nullptr) {
 		//	Object with the given index doesn't exist
+		std::cout << "obj doesn't exist? in ObjectManager::removeObject" << std::endl;
 		return false;
 	}
 
@@ -117,7 +127,11 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		this->base_objects.remove(object->typeID);
 		break;
 	case ObjectType::FireballTrap:
+	case ObjectType::FakeWall:
 	case ObjectType::SpikeTrap:
+	case ObjectType::FloorSpike:
+	case ObjectType::ArrowTrap:
+	case ObjectType::TeleporterTrap:
 		this->traps.remove(object->typeID);
 		break;
 	case ObjectType::Item:
@@ -153,6 +167,10 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	default:
 		std::cerr << "WARN: Cannot delete object! Did you forget to add a switch statement to \n"
 			<< "ObjectManager::removeObject? Continuing, but there may be deallocated memory still accessible!";
+	}
+
+	if (object->physics.movable) {
+		movableObjects.remove(object->movableID);
 	}
 
 	//	Remove object from cellToObjects hashmap
@@ -205,9 +223,17 @@ SmartVector<Object*> ObjectManager::getObjects() {
 	return this->objects;
 }
 
+SmartVector<Object*> ObjectManager::getMovableObjects() {
+	return this->movableObjects;
+}
+
 /*	SpecificID object getters by type	*/
 Object* ObjectManager::getBaseObject(SpecificID base_objectID) {
 	return this->base_objects.get(base_objectID);
+}
+
+DungeonMaster* ObjectManager::getDM() {
+	return this->dm;
 }
 
 Item* ObjectManager::getItem(SpecificID itemID) {
@@ -290,7 +316,6 @@ bool ObjectManager::moveObject(Object* object, glm::vec3 newCornerPosition) {
 			}
 		}
 	}
-
 
 	//	Update object's corner position
 	object->physics.shared.corner = newCornerPosition;
