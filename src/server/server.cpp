@@ -290,7 +290,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         }
     }
 
-    static bool first_player = true;
+    static bool first_player = false;
 
     // first player is Dungeon Master
     if (first_player) {
