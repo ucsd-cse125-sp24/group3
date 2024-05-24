@@ -136,7 +136,7 @@ Cube::~Cube() {
     glDeleteVertexArrays(1, &VAO);
 }
 
-void Cube::draw(std::shared_ptr<Shader> shader,
+void Cube::draw(Shader* shader,
     glm::mat4 viewProj,
     glm::vec3 camPos, 
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,

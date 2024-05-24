@@ -21,6 +21,7 @@
 
 /*	GridCell Constants	*/
 #define DEFAULT_GRIDCELL_WIDTH	3
+#define DM_Z_DISCOUNT 0.2
 
 // Player Stat Constants
 #define INITIAL_HEALTH 100
@@ -71,3 +72,9 @@
 /* Default model sizes */
 #define BEAR_DIMENSIONS         glm::vec3(14.163582, 17.914591, 10.655818)
 #define FIRE_PLAYER_DIMENSIONS  glm::vec3(8.008834, 10.069769, 2.198592)
+
+/* DM Constants */
+#define MAX_TRAPS 10
+#define TRAP_INVENTORY_SIZE 10
+#define TRAP_TIME 10
+#define TRAP_COOL_DOWN 5

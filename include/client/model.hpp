@@ -103,16 +103,19 @@ class Mesh : public Renderable {
      * @param modelView determines the scaling/rotation/translation of the 
      * mesh
      */
-    void draw(std::shared_ptr<Shader> shader,
+    void draw(Shader* shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
             std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
             bool fill) override;
+
+
+    std::optional<glm::vec3> solidColor;
+    Material material;
  private:
      std::vector<Vertex>       vertices;
      std::vector<unsigned int> indices;
      std::vector<Texture>      textures;
-     Material material;
 
     //  render data opengl needs
     GLuint VAO, VBO, EBO;
@@ -136,7 +139,7 @@ class Model : public Renderable {
      * @param Shader to use while drawing all the
      * meshes of the model
      */
-    void draw(std::shared_ptr<Shader> shader,
+    void draw(Shader* shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
             std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
@@ -254,6 +257,9 @@ class Model : public Renderable {
      * in that dimension
      */
     void setDimensions(const glm::vec3& dimensions);
+
+    void overrideSolidColor(std::optional<glm::vec3> color);
+
 
 	auto& getBoneInfoMap() { return m_boneInfoMap; }
 	int& getBoneCount() { return m_boneCounter; }

@@ -1,6 +1,7 @@
 #include "server/game/gridcell.hpp"
 #include <iostream>
 
+
 /*	Constructors and Destructors	*/
 GridCell::GridCell(int x, int y, CellType type) : x(x), y(y), type(type) {}
 
@@ -165,4 +166,16 @@ char cellTypeToChar(CellType type) {
 
 bool isCellTypeAllowedInEntryWay(CellType type) {
 	return (type == CellType::Empty || type == CellType::FakeWall);
+}
+
+bool isWallLikeCell(CellType type) {
+	return (
+		// not fake wall, because we still want to place a floor under it
+		type == CellType::Wall ||
+		type == CellType::TorchDown ||
+		type == CellType::TorchUp ||
+		type == CellType::TorchRight ||
+		type == CellType::TorchLeft ||
+		type == CellType::Pillar
+	);
 }

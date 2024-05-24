@@ -14,7 +14,11 @@ public:
 	SolidSurface(bool movable, Collider collider, SurfaceType type, glm::vec3 corner, glm::vec3 dimensions);
 	~SolidSurface();
 
+	void setSurfaceType(SurfaceType type);
+
 	SharedSolidSurface shared{};
 
 	virtual SharedObject toShared() override;
+
+	void setDMHighlight(bool highlight);
 };

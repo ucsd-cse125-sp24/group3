@@ -46,9 +46,11 @@ GridCell* Grid::getCell(int x, int y) {
 	//	Attempt to retrieve a GridCell at coordinates (x, y)
 
 	//	Assert that input coordinates are within the Grid's dimensions
-	assert(x >= 0 && x < columns && y >= 0 && y < rows);
-
-	return this->grid.at(y).at(x);
+	if (x >= 0 && x < columns && y >= 0 && y < rows) {
+		return this->grid.at(y).at(x);
+	} else {
+		return nullptr;
+	}
 }
 
 /*	Getters and Setters	*/
@@ -132,9 +134,6 @@ std::vector<glm::ivec2> Grid::getCellsFromPositionRange(glm::vec3 p1, glm::vec3 
 	//	Get GridCell positions for p1 and p2
 	glm::ivec2 gridCellStart = Grid::getGridCellFromPosition(p1);
 	glm::ivec2 gridCellEnd = Grid::getGridCellFromPosition(p2);
-
-	/*std::cout << "First grid cell: " << glm::to_string(gridCellStart) << " ";
-	std::cout << "Second grid cell: " << glm::to_string(gridCellEnd) << std::endl;*/
 
 	if (gridCellStart.x > gridCellEnd.x || gridCellStart.y > gridCellEnd.y) {
 		return std::vector<glm::ivec2>();

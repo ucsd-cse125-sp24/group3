@@ -50,7 +50,7 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
             .server = {
                 .lobby_name = json.at("server").at("lobby_name"),
                 .lobby_broadcast = json.at("server").at("lobby_broadcast"),
-                .max_players = json.at("server").at("max_players")
+                .max_players = json.at("server").at("max_players"),
             },
             .client = {
                 .default_name = json.at("client").at("default_name"),
@@ -66,7 +66,7 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
 }
 
 GameConfig getDefaultConfig() {
-    return GameConfig {
+    return GameConfig{
         .game = {
             .maze = {
                 .directory = "maps",
@@ -81,7 +81,7 @@ GameConfig getDefaultConfig() {
         .server = {
             .lobby_name = "My Test Lobby",
             .lobby_broadcast = false,
-            .max_players = 1
+            .max_players = 1,
         },
         .client = {
             .default_name = "Player",

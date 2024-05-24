@@ -39,7 +39,7 @@ struct Physics {
 		glm::vec3 corner, glm::vec3 facing,
 		glm::vec3 dimensions = glm::vec3(1.0f)):
 		shared{.corner=corner, .facing=facing, .dimensions=dimensions},
-		movable(movable), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)), nauseous(1.0f),
+		movable(movable), feels_gravity(true), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)), nauseous(1.0f),
 		collider(collider)
 	{}
 
@@ -54,6 +54,13 @@ struct Physics {
 	 * false otherwise
 	 */
 	bool movable;
+
+
+	/**
+	 * @brief true if the object that contains this Physics struct feels gravity and
+	 * false otherwise
+	 */
+	bool feels_gravity;
 
 	/**
 	 * @brief 3-D vector that denotes this object's current velocity.
@@ -93,6 +100,12 @@ public:
 	 * objects vector in ServerGameState)
 	 */
 	SpecificID typeID {};
+
+	/**
+	 * @brief Movable ID (used to index into the movable
+	 * objects vector in ServerGameState)
+	 */
+	MovableID movableID{};
 
 	/**
 	 * @brief Identifies this object's type (derived class)
