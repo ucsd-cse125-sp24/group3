@@ -1,4 +1,5 @@
 #include "server/game/fireballtrap.hpp"
+#include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 #include "shared/utilities/rng.hpp"
 #include "server/game/objectmanager.hpp"
@@ -12,11 +13,11 @@ using namespace std::chrono_literals;
 const std::chrono::seconds FireballTrap::TIME_UNTIL_RESET = 4s;
 const int FireballTrap::SHOOT_DIST = 15;
 
-FireballTrap::FireballTrap(glm::vec3 corner, glm::vec3 dimensions):
+FireballTrap::FireballTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir):
     Trap(ObjectType::FireballTrap, false, corner, Collider::None, ModelType::Cube, dimensions) 
 {
     this->shoot_time = std::chrono::system_clock::now();
-    this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
+    this->physics.shared.facing = directionToFacing(dir);
     this->target = 0; // wont be accessed until set elsewhere, so safe to set to 0
 }
 

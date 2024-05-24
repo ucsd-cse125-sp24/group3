@@ -1,4 +1,5 @@
 #include "server/game/arrowtrap.hpp"
+#include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 #include "shared/utilities/rng.hpp"
 #include "server/game/objectmanager.hpp"
@@ -11,25 +12,12 @@ using namespace std::chrono_literals;
 
 const std::chrono::seconds ArrowTrap::TIME_UNTIL_RESET = 4s;
 
-ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, ArrowTrap::Direction dir):
+ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir):
     Trap(ObjectType::ArrowTrap, false, corner, Collider::Box, ModelType::Cube, dimensions) 
 {
     this->dir = dir;
     this->shoot_time = std::chrono::system_clock::now();
-    switch (dir) {
-        case ArrowTrap::Direction::LEFT:
-            this->physics.shared.facing = glm::vec3(-1.0f, 0.0f, 0.0f);
-            break;
-        case ArrowTrap::Direction::RIGHT:
-            this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
-            break;
-        case ArrowTrap::Direction::UP:
-            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, -1.0f);
-            break;
-        case ArrowTrap::Direction::DOWN:
-            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, 1.0f);
-            break;
-    }
+    this->physics.shared.facing = directionToFacing(dir);
 }
 
 bool ArrowTrap::shouldTrigger(ServerGameState& state) {
@@ -76,16 +64,16 @@ void ArrowTrap::trigger(ServerGameState& state) {
 
     // TODO scale with grid size?
     switch (this->dir) {
-        case ArrowTrap::Direction::UP:
+        case Direction::UP:
             arrow_origin.z -= 3.0f;
             break;
-        case ArrowTrap::Direction::DOWN:
+        case Direction::DOWN:
             arrow_origin.z += 2.0f;
             break;
-        case ArrowTrap::Direction::LEFT:
+        case Direction::LEFT:
             arrow_origin.x -= 3.0f;
             break;
-        case ArrowTrap::Direction::RIGHT:
+        case Direction::RIGHT:
             arrow_origin.x += 2.0f;
             break;
     }

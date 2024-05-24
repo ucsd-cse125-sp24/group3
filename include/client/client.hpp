@@ -203,6 +203,7 @@ private:
     std::unique_ptr<Model> torchlight_model;
     std::unique_ptr<Model> wall_model;
     std::unique_ptr<Model> pillar_model;
+    std::unique_ptr<Model> sungod_model;
 
     GLFWwindow *window;
 

@@ -14,8 +14,9 @@ public:
     /**
      * @param corner Corner position of the fireball trap
      * @param dimensions dimensions of the fireball trap (probably will change once we use a non cube model to not have this)
+     * @param dir is the direction the fireball trap is pointing at
      */
-    FireballTrap(glm::vec3 corner, glm::vec3 dimensions);
+    FireballTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir);
 
     const static std::chrono::seconds TIME_UNTIL_RESET; // how long from initial activation until it can activate again
     const static int SHOOT_DIST; // how many grid cells away it can shoot you from

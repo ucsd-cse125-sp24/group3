@@ -332,6 +332,17 @@ private:
      */
     void spawnTorch(GridCell *cell);
 
+    /**
+     * @brief helper function to spawn a fireball trap 
+     * @param cell is a single cell of the maze's grid where the fireball
+     * trap should be placed
+     * @param cellType determines which direction the trap should face. 
+     * This means that only FireballTrapUp, FireballTrapDown, FireballTrapRight, and FireballTrapLeft
+     * are acceptable values of cellType 
+     * @return a pointer to the fireball trap that was spawned
+     */
+    Trap* spawnFireballTrap(GridCell *cell);
+
     std::unordered_map<EntityID, std::array<std::optional<EntityID>, MAX_POINT_LIGHTS>> lightSourcesPerPlayer;
 
 	/**

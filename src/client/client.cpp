@@ -202,6 +202,9 @@ bool Client::init() {
     auto pillar_model_path = graphics_assets_dir / "pillar.obj";
     this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
 
+    auto sungod_model_path = graphics_assets_dir / "sungod.obj";
+    this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
+
     this->gui_state = GUIState::TITLE_SCREEN;
 
     this->audioManager->init();
@@ -327,7 +330,8 @@ void Client::idleCallback(boost::asio::io_context& context) {
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeHorizontal, false, true)));
                 break;
             case ModelType::FireballTrap:
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrap, false, true)));
+                // TODO: allow for direction selection
+                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrapLeft, false, true)));
                 break;
             case ModelType::SpikeTrap:
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, false, true)));
