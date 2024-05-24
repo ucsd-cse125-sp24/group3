@@ -55,6 +55,8 @@ ServerGameState::ServerGameState(GameConfig config) {
 	//	No player died yet
 	this->numPlayerDeaths = 0;
 
+	this->currentGhostTrap = nullptr;
+
     MazeGenerator generator(config);
     int attempts = 1;
     auto grid = generator.generate();
@@ -321,19 +323,6 @@ void ServerGameState::update(const EventList& events) {
 
 			glm::vec3 dir = glm::normalize(trapPlacementEvent.world_pos-dm->physics.shared.corner);
 
-			//if (trapPlacementEvent.world_pos.z < glm::floor(trapPlacementEvent.world_pos.z) + 0.5) {
-			//	trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z) - DM_Z_DISCOUNT;
-			//} else {
-			//	trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z + DM_Z_DISCOUNT);
-			//}
-
-			//if (trapPlacementEvent.world_pos.x > glm::floor(trapPlacementEvent.world_pos.x) + 0.5) {
-			//	trapPlacementEvent.world_pos.x = glm::ceil(trapPlacementEvent.world_pos.x) + DM_Z_DISCOUNT;
-			//}
-			//else {
-			//	trapPlacementEvent.world_pos.x = glm::ceil(trapPlacementEvent.world_pos.x - DM_Z_DISCOUNT);
-			//}
-
 			trapPlacementEvent.world_pos += (dir*(float)DM_Z_DISCOUNT);
 
 			glm::ivec2 gridCellPos = currGrid.getGridCellFromPosition(trapPlacementEvent.world_pos);
@@ -342,23 +331,28 @@ void ServerGameState::update(const EventList& events) {
 
 			if (cell == nullptr)
 				break;
-
-
-			// unhighlight if highlighted
-			for (SolidSurface* surface : this->previouslyHighlighted) {
-				this->updated_entities.insert(surface->globalID);
-				surface->setDMHighlight(false);
+			
+			// mark previous ghost trap for deletion, if exists
+			if (this->currentGhostTrap != nullptr) {
+				markForDeletion(this->currentGhostTrap->globalID);
+				this->currentGhostTrap = nullptr; // reset ghost trap variable
 			}
 
-			// std::vector<SolidSurface*> surfaces = solidSurfaceInGridCells[{cell->x, cell->y}];
-
-			// this->previouslyHighlighted = surfaces;
-
 			if (trapPlacementEvent.hover) {
-				/*for (SolidSurface* surface : surfaces) {
-					this->updated_entities.insert(surface->globalID);
-					surface->setDMHighlight(true);
-				}*/
+				// only for traps, not lightning
+				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
+
+				if (trap == nullptr)
+					break;
+
+				this->currentGhostTrap = trap;
+
+				// cast to solid surface
+				SolidSurface* trapSF = (SolidSurface*)this->currentGhostTrap;
+
+				trapSF->setDMHighlight(true);
+
+				this->updated_entities.insert(trap->globalID);
 			}
 			else if(trapPlacementEvent.place) {
 				int trapsPlaced = dm->getPlacedTraps();
@@ -1104,10 +1098,7 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 	case CellType::FloorSpikeHorizontal:
 	case CellType::FloorSpikeVertical: {
 		if (cell->type != CellType::Empty) {
-
-			std::cout << "trying to place in non empty cell\n";
 			return nullptr;
-
 		}
 
 		glm::vec3 corner(

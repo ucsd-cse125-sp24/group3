@@ -310,7 +310,7 @@ private:
 
 	std::unordered_map<std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
 
-	std::vector<SolidSurface*> previouslyHighlighted;
+	Trap* currentGhostTrap;
 
 	/**
     /**
@@ -338,6 +338,7 @@ private:
 	 * @brief table of all currently playing sounds
 	 */
 	SoundTable sound_table;
+
 	/**
 	 * @brief number of enemies currently in the maze
 	 */
