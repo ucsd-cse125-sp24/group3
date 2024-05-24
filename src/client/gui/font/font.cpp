@@ -32,6 +32,8 @@ glm::vec3 getRGB(Color color) {
             return {1.0f, 0.0f, 0.0f};
         case Color::BLUE:
             return {0.0f, 0.0f, 1.0f};
+        case Color::GREEN:
+            return {0.0f, 1.0f, 0.0f};
         case Color::GRAY:
             return {0.5f, 0.5f, 0.5f};
         case Color::WHITE:

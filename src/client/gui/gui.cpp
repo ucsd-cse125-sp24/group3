@@ -675,9 +675,21 @@ void GUI::_layoutGameHUD() {
             auto distance = glm::distance(orb_pos.value(), player_pos_ground);
 
             std::stringstream ss;
-            ss << distance << "m to Orb.";
 
-            matchPhaseFlex->push(widget::DynText::make(ss.str(), fonts, widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)));
+            // bruh
+            ss << std::fixed << std::setprecision(1) << distance << "m to Orb.";
+
+            const float MAX_DIST = 150.0f;
+            float dist_frac = std::max(std::min(distance / MAX_DIST, 1.0f), 0.0f);
+
+            glm::vec3 close_color = font::getRGB(font::Color::GREEN);
+            glm::vec3 far_color = font::getRGB(font::Color::RED);
+
+            glm::vec3 color = (dist_frac * far_color) + ((1 - dist_frac) * close_color);
+
+            matchPhaseFlex->push(widget::DynText::make(ss.str(), fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, color))
+            );
         }
     }
 

@@ -23,7 +23,7 @@ TextInput::TextInput(glm::vec2 origin,
     std::string captured_input = gui->getCapturedKeyboardInput();
     if (captured_input.size() == 0) {
         text_to_display = placeholder;
-        options.color = font::Color::GRAY;
+        options.color = font::getRGB(font::Color::GRAY);
     } else {
         text_to_display = captured_input;
     }
