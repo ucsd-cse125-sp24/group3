@@ -15,5 +15,5 @@
 #define MEDIUM_DIST 20.0f
 
 // Sound values fitting for something that should be heard from pretty far (large room)
-#define FAR_ATTEN 3.0f
-#define FAR_DIST 35.0f
+#define FAR_ATTEN 1.0f
+#define FAR_DIST 50.0f
