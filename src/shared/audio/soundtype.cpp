@@ -50,6 +50,8 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "ceiling_spike_impact_short_mono.wav").string();
         case ServerSFX::CeilingSpikeTrigger:
             return (dir / "ceiling_spike_trigger_mono.wav").string();
+        case ServerSFX::Thunder:
+            return (dir / "thunder.wav").string();
         case ServerSFX::TorchLoop:
             return (dir / "torch_loop_mono.wav").string();
         

@@ -6,6 +6,7 @@
 #include "server/game/constants.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
+#include "shared/audio/constants.hpp"
 
 Weapon::Weapon(glm::vec3 corner, glm::vec3 dimensions, WeaponType weaponType):
     Item(ObjectType::Weapon, false, corner, ModelType::Cube, dimensions)
@@ -67,6 +68,14 @@ void Weapon::useLightning(Object* other, ServerGameState& state, glm::vec3 corne
     if (this->resetAttack) {
         DungeonMaster* dm = dynamic_cast<DungeonMaster*>(other);
         state.objects.createObject(new Lightning(corner, dm->physics.shared.facing));
+
+        state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::SlimeLand,
+            this->physics.shared.getCenterPosition(),
+            DEFAULT_VOLUME,
+            MEDIUM_DIST,
+            MEDIUM_ATTEN
+        ));
 
         this->attacked_time = std::chrono::system_clock::now();
         this->resetAttack = false;
