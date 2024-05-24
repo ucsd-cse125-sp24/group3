@@ -481,7 +481,7 @@ void GUI::_sharedGameHUD() {
     // Flexbox for the items 
     // Loading itemframe again if no item
     auto itemflex = widget::Flexbox::make(
-        glm::vec2(0.0f, 0.0f),         
+        glm::vec2(0.0f, 5.0f),         
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
     );
@@ -573,7 +573,7 @@ void GUI::_sharedGameHUD() {
 
     // Flexbox for the item frames
     auto frameflex = widget::Flexbox::make(
-        glm::vec2(0.0f, 0.0f),          //position relative to screen
+        glm::vec2(0.0f, 5.0f),          //position relative to screen
         glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
     );
@@ -582,7 +582,8 @@ void GUI::_sharedGameHUD() {
         if (selected == i) {
             if (i == 0) {
                 frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LeftSelected), 2));
-            } else if (i == inventory_size - 1) {
+            } 
+            else if (i == inventory_size - 1) {
                 frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightSelected), 2));
             }
             else {

@@ -64,15 +64,18 @@ void WeaponCollider::updateMovement(ServerGameState& state) {
 bool WeaponCollider::readyTime(ServerGameState& state) {
     if (this->info.attacked) { return true; }
 
-    if (!this->playSound) {
+    if (!this->playSound && this->info.lightning) {
         state.soundTable().addNewSoundSource(SoundSource(
             ServerSFX::Thunder,
             this->physics.shared.getCenterPosition(),
             DEFAULT_VOLUME,
-            MEDIUM_DIST,
-            MEDIUM_ATTEN
+            FAR_DIST,
+            FAR_ATTEN
         ));
         this->playSound = true;
+    }
+    else if (!this->playSound) {
+        // add sound for other weapons
     }
 
     auto now = std::chrono::system_clock::now();
