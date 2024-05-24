@@ -322,6 +322,33 @@ void GUI::_layoutLobbyBrowser() {
 }
 
 void GUI::_layoutLobby() {
+    //  The lobby UI has 3 subsections:
+    //  1.  Lobby Name
+    //  2.  Player Status Table
+    //  3.  Start Game Button
+
+    //  GUI Subsection 1: Lobby Name
+    auto lobby_title = widget::CenterText::make(
+        this->client->gameState.lobby.name,
+        font::Font::MENU,
+        font::Size::LARGE,
+        font::Color::BLACK,
+        this->fonts,
+        WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE)
+    );
+
+    this->addWidget(std::move(lobby_title));
+
+    //  GUI Subsection 2: Player Status Table
+
+    //  Create a table with 4 rows
+    auto player_status_table = widget::Flexbox::make(
+
+    );
+
+
+
+    /*
     auto lobby_title = widget::CenterText::make(
         this->client->gameState.lobby.name,
         font::Font::MENU,
@@ -372,6 +399,7 @@ void GUI::_layoutLobby() {
         30.0f
     );
     this->addWidget(std::move(waiting_msg));
+    */
 }
 
 void GUI::_sharedGameHUD() {
