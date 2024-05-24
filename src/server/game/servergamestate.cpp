@@ -741,11 +741,11 @@ void ServerGameState::spawnEnemies() {
 		}
 
 		int size = randomInt(2, 4);
-		// this->objects.createObject(new Slime(
-		// 	glm::vec3(random_cell.x * Grid::grid_cell_width, 0, random_cell.y * Grid::grid_cell_width),
-		// 	glm::vec3(0, 0, 0),
-		// 	size
-		// ));
+		this->objects.createObject(new Slime(
+			glm::vec3(random_cell.x * Grid::grid_cell_width, 0, random_cell.y * Grid::grid_cell_width),
+			glm::vec3(0, 0, 0),
+			size
+		));
 	}
 }
 

@@ -648,7 +648,7 @@ void GUI::_layoutGameHUD() {
         std::optional<glm::vec3> orb_pos;
 
         for (const auto& [eid, obj] : client->gameState.objects) {
-            if (obj->type == ObjectType::Player && obj->inventoryInfo->hasOrb) {
+            if (obj.has_value() && obj->type == ObjectType::Player && obj->inventoryInfo.has_value() && obj->inventoryInfo->hasOrb) {
                 orb_pos = obj->physics.corner;
                 orb_pos->y = 0;
                 break;

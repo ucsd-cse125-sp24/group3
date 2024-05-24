@@ -186,7 +186,7 @@ bool Client::init() {
     // animManager = new AnimationManager(bear);
 
     auto player_model_path = graphics_assets_dir / "testanims/player_model.fbx";
-    auto player_walk_path = graphics_assets_dir / "testanims/Walking-8.fbx";
+    auto player_walk_path = graphics_assets_dir / "testanims/player_walk.fbx";
     auto player_jump_path = graphics_assets_dir / "testanims/Running.fbx";
 
     this->player_model = std::make_unique<Model>(player_model_path.string());
@@ -453,33 +453,33 @@ void Client::draw() {
         
         switch (sharedObject->type) {
             case ObjectType::Player: {
-                AnimState animState = sharedObject->animState;
-                switch (sharedObject->animState) {
-                    case AnimState::WalkAnim:
-                        std::cout << "walk" << std::endl;
-                        break;
-                    case AnimState::JumpAnim:
-                        std::cout << "jump" << std::endl;
-                        break;
-                    case AnimState::IdleAnim:
-                        std::cout << "idle" << std::endl;
-                        break;
-                    case AnimState::LandAnim:
-                        std::cout << "land" << std::endl;
-                        break;
-                    case AnimState::SprintAnim:
-                        std::cout << "sprint" << std::endl;
-                        break;
-                    case AnimState::DeathAnim:
-                        std::cout << "death" << std::endl;
-                        break;
-                    case AnimState::AttackAnim:
-                        std::cout << "attack" << std::endl;
-                        break;
-                    default:
-                        std::cout << "undef" << std::endl;
-                        break;
-                }
+                // AnimState animState = sharedObject->animState;
+                // switch (sharedObject->animState) {
+                //     case AnimState::WalkAnim:
+                //         std::cout << "walk" << std::endl;
+                //         break;
+                //     case AnimState::JumpAnim:
+                //         std::cout << "jump" << std::endl;
+                //         break;
+                //     case AnimState::IdleAnim:
+                //         std::cout << "idle" << std::endl;
+                //         break;
+                //     case AnimState::LandAnim:
+                //         std::cout << "land" << std::endl;
+                //         break;
+                //     case AnimState::SprintAnim:
+                //         std::cout << "sprint" << std::endl;
+                //         break;
+                //     case AnimState::DeathAnim:
+                //         std::cout << "death" << std::endl;
+                //         break;
+                //     case AnimState::AttackAnim:
+                //         std::cout << "attack" << std::endl;
+                //         break;
+                //     default:
+                //         std::cout << "undef" << std::endl;
+                //         break;
+                // }
 
                 animManager->setAnimation(sharedObject->type, sharedObject->animState);
 
@@ -525,7 +525,9 @@ void Client::draw() {
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
 
                 auto player_pos = sharedObject->physics.getCenterPosition();
+                auto player_dir = sharedObject->physics.facing;
 
+                this->player_model->rotateAbsolute(player_dir);
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
                     this->model_shader.get(),
@@ -567,10 +569,40 @@ void Client::draw() {
                 break;
             }
             case ObjectType::Slime: {
-                auto cube = std::make_unique<Cube>(glm::vec3(0.0, 1.0f, 0.0f));
-                cube->scaleAbsolute(sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader.get(),
+                // auto cube = std::make_unique<Cube>(glm::vec3(0.0, 1.0f, 0.0f));
+                // cube->scaleAbsolute(sharedObject->physics.dimensions);
+                // cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                // cube->draw(this->cube_shader.get(),
+                //     this->cam->getViewProj(),
+                //     this->cam->getPos(),
+                //     {},
+                //     true);
+                // break;
+
+                animManager->setAnimation(sharedObject->type, sharedObject->animState);
+
+                /* Update model animation */
+                animManager->updateAnimation(0.025f);
+                auto transforms = animManager->getFinalBoneMatrices();
+                // std::cout << transforms.size() << std::endl;
+                this->model_shader->use();
+
+                for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
+                    // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
+                    model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+                }
+
+                this->model_shader->clear();
+
+                auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
+
+                auto player_pos = sharedObject->physics.getCenterPosition();
+                auto player_dir = sharedObject->physics.facing;
+
+                this->player_model->rotateAbsolute(player_dir);
+                this->player_model->translateAbsolute(player_pos);
+                this->player_model->draw(
+                    this->model_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},

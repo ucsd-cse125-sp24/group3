@@ -2,7 +2,7 @@
   "game": {
     "maze": {
       "directory": "maps",
-      "procedural": true,
+      "procedural": false,
       "maze_file": "test/itemRoom.maze"
     }
   },
@@ -18,8 +18,8 @@
   "client": {
     "default_name": "Conan O'Brien",
     "lobby_discovery": true,
-    "window_width": 2000,
-    "draw_bboxes": false,
+    "window_width": 900,
+    "draw_bboxes": true,
     "fps_counter": true
   }
 }
