@@ -50,6 +50,8 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
             .slots_taken = 0,
             .slots_avail = config.server.max_players});
     }
+
+    this->try_as_dm = config.server.try_as_dm;
 }
 
 //  Note: This method should probably be removed since EntityIDs for objects
@@ -292,10 +294,8 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         }
     }
 
-    static bool first_player = true;
-
-    // first player is Dungeon Master
-    if (first_player) {
+    // either trying as DM, or choose first player
+    if (try_as_dm) { // || this->state.getLobby().players.size() == 0
         this->state.objects.createObject(new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
         DungeonMaster* dm = this->state.objects.getDM();
 
@@ -312,13 +312,10 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         auto session = std::make_shared<Session>(std::move(this->socket),
             SessionInfo({}, dm->globalID, true));
 
-
         this->sessions.insert(SessionEntry(dm->globalID, true, addr, session));
 
         std::cout << "Established new connection with " << addr << ", which was assigned eid "
             << dm->globalID << std::endl;
-
-        first_player = false;
 
         return session;
     } 

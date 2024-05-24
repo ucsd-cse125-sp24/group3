@@ -73,4 +73,7 @@ private:
 
     /// @brief Master copy of the ServerGameState, living on the server
     ServerGameState state;
+
+    // for single player testing
+    bool try_as_dm;
 };
