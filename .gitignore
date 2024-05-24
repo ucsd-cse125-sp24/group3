@@ -9,3 +9,4 @@ docs/*
 
 maps/generated/**
 !maps/generated/.gitkeep
+/config.json
