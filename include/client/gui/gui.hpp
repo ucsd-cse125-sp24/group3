@@ -332,6 +332,12 @@ private:
      * Transitions to the Lobby once a lobby is selected to join.
      */
     void _layoutLobbyBrowser();
+
+    /**
+     * @brief Display fps counter on the top left corner
+     */
+    void _layoutFPSCounter();
+
     /**
      * @brief Displays the lobby layout
      * 
