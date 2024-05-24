@@ -331,6 +331,7 @@ void ServerGameState::update(const EventList& events) {
 
 			if (cell == nullptr)
 				break;
+
 			
 			// mark previous ghost trap for deletion, if exists
 			if (this->currentGhostTrap != nullptr) {
@@ -340,6 +341,10 @@ void ServerGameState::update(const EventList& events) {
 
 			if (trapPlacementEvent.hover) {
 				// only for traps, not lightning
+				if (trapPlacementEvent.cell == CellType::Lightning) {
+					break;
+				}
+
 				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
 				if (trap == nullptr)

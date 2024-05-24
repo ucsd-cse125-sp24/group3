@@ -166,6 +166,8 @@ public:
 
     void setWorldPos();
 
+    void sendTrapEvent(bool hover, bool place);
+
     int curr_fps;
 private:
     /**
