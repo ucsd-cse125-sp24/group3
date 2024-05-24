@@ -25,7 +25,7 @@ public:
 
     void doCollision(Object* other, ServerGameState& state) override;
     void updateMovement(ServerGameState& state);
-    bool readyTime();
+    bool readyTime(ServerGameState& state);
     bool timeOut(ServerGameState& state);
     virtual SharedObject toShared() override;
 
@@ -35,6 +35,7 @@ private:
     Player* usedPlayer;
     SharedWeaponInfo info;
     WeaponOptions opt;
+    bool playSound;
 };
 
 class ShortAttack : public WeaponCollider {

@@ -820,7 +820,7 @@ void ServerGameState::updateAttacks() {
 		auto weaponCollider = weaponColliders.get(i);
 		if (weaponCollider == nullptr) { continue; }
 		weaponCollider->updateMovement(*this);
-		if(weaponCollider->readyTime()){
+		if(weaponCollider->readyTime(*this)){
 			if (weaponCollider->timeOut(*this)) {
 				this->markForDeletion(weaponCollider->globalID);
 			}
