@@ -331,6 +331,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
                 break;
             case ModelType::SpikeTrap:
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, false, true)));
+                break;
             case ModelType::Lightning:
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::Lightning, false, true)));
                 break;
@@ -780,14 +781,16 @@ void Client::draw() {
                     }
                 }
                 else {
-                    auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
-                    cube->scaleAbsolute(sharedObject->physics.dimensions);
-                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader.get(),
-                        this->cam->getViewProj(),
-                        this->cam->getPos(),
-                        {},
-                        false);
+                    if (sharedObject->weaponInfo->attacked) {
+                        auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
+                        cube->scaleAbsolute(sharedObject->physics.dimensions);
+                        cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        cube->draw(this->cube_shader.get(),
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            {},
+                            false);
+                    }
                 }
                 break;
             }
@@ -883,36 +886,11 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
 
         case GLFW_KEY_1:
-            if (eid.has_value()) {
-                if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
-                }
-            }
-            break;
-
         case GLFW_KEY_2:
-            if (eid.has_value()) {
-                if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 2)));
-                }
-            }
-            break;
-
         case GLFW_KEY_3:
-            if (eid.has_value()) {
-                if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 3)));
-                }
-            }
+        case GLFW_KEY_4:
             break;
 
-        case GLFW_KEY_4:
-            if (eid.has_value()) {
-                if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 4)));
-                }
-            }
-            break;
         case GLFW_KEY_RIGHT:
             if (eid.has_value()) {
                 if (is_dm.has_value() && is_dm.value()) {

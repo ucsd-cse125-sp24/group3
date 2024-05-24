@@ -17,6 +17,7 @@
 #include "boost/variant/get.hpp"
 #include "server/game/objectmanager.hpp"
 #include "server/game/potion.hpp"
+#include "server/game/weapon.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/player.hpp"
 #include "shared/game/event.hpp"
@@ -290,12 +291,16 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         }
     }
 
-    static bool first_player = true;
+    static bool first_player = false;
 
     // first player is Dungeon Master
     if (first_player) {
         this->state.objects.createObject(new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
         DungeonMaster* dm = this->state.objects.getDM();
+
+        SpecificID lightningID = this->state.objects.createObject(new Weapon(glm::vec3(-1.0f, 0, -1.0f), glm::vec3(0.0f), WeaponType::Lightning));
+        Weapon* lightning = dynamic_cast<Weapon*>(this->state.objects.getItem(lightningID));
+        dm->lightning = lightning;
 
         //  Spawn player in random spawn point
 

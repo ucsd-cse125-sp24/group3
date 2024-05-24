@@ -1061,26 +1061,6 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 		this->objects.createObject(fireBallTrap);
 		return fireBallTrap;
 	}
-	case CellType::Lightning: {
-		if (cell->type != CellType::Empty)
-			return nullptr;
-
-		const float HEIGHT_SHOWING = 0.5;
-		glm::vec3 dimensions(
-			Grid::grid_cell_width,
-			MAZE_CEILING_HEIGHT,
-			Grid::grid_cell_width
-		);
-		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
-			MAZE_CEILING_HEIGHT - HEIGHT_SHOWING,
-			cell->y * Grid::grid_cell_width
-		);
-		
-		SpikeTrap* spikeTrap = new SpikeTrap(corner, dimensions, true);
-		this->objects.createObject(spikeTrap);
-		return spikeTrap;
-	}
 	case CellType::SpikeTrap: {
 		if (cell->type != CellType::Empty)
 			return nullptr;

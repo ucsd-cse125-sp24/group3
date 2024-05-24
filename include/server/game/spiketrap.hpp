@@ -17,9 +17,6 @@ public:
      */
     SpikeTrap(glm::vec3 corner, glm::vec3 dimensions);
 
-
-    SpikeTrap(glm::vec3 corner, glm::vec3 dimensions, bool instant_fall);
-
     const static int DAMAGE;
     const static std::chrono::seconds ACTIVE_TIME; // how long the spikes are down
     const static std::chrono::seconds TIME_UNTIL_RESET; // how long from initial activation until it can activate again

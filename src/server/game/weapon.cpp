@@ -64,11 +64,13 @@ void Weapon::useItem(Object* other, ServerGameState& state, int itemSelected) {
 }
 
 void Weapon::useLightning(Object* other, ServerGameState& state, glm::vec3 corner) {
-    DungeonMaster* dm = dynamic_cast<DungeonMaster*>(other);
-    state.objects.createObject(new Lightning(corner, dm->physics.shared.facing));
+    if (this->resetAttack) {
+        DungeonMaster* dm = dynamic_cast<DungeonMaster*>(other);
+        state.objects.createObject(new Lightning(corner, dm->physics.shared.facing));
 
-    this->attacked_time = std::chrono::system_clock::now();
-    this->resetAttack = false;
+        this->attacked_time = std::chrono::system_clock::now();
+        this->resetAttack = false;
+    }
 }
 
 void Weapon::reset(ServerGameState& state) {
