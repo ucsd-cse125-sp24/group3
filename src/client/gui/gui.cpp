@@ -481,6 +481,13 @@ void GUI::_sharedGameHUD() {
         }
     }
 
+    auto txtHeight = 95.0;
+    auto flexHeight = 5.0;
+    if (!is_dm.value()) {
+        txtHeight += 37;
+        flexHeight += 37;
+    }
+
     // Text for item description
     auto item_txt = widget::CenterText::make(
         itemString,
@@ -488,14 +495,14 @@ void GUI::_sharedGameHUD() {
         font::Size::SMALL,
         font::Color::WHITE,
         fonts,
-        font::getRelativePixels(95)
+        font::getRelativePixels(txtHeight)
     );
     this->addWidget(std::move(item_txt));
 
     // Flexbox for the items 
     // Loading itemframe again if no item
     auto itemflex = widget::Flexbox::make(
-        glm::vec2(0.0f, 5.0f),         
+        glm::vec2(0.0f, flexHeight),
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
     );
@@ -587,7 +594,7 @@ void GUI::_sharedGameHUD() {
 
     // Flexbox for the item frames
     auto frameflex = widget::Flexbox::make(
-        glm::vec2(0.0f, 5.0f),          //position relative to screen
+        glm::vec2(0.0f, flexHeight),          //position relative to screen
         glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
     );
@@ -619,6 +626,32 @@ void GUI::_sharedGameHUD() {
 
     this->addWidget(std::move(frameflex));
 
+    if (!is_dm.value()) {
+        // Flexbox for the health bar
+        auto healthflex = widget::Flexbox::make(
+            glm::vec2(0.0f, 5.0f),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        healthflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthBar), 2));
+        this->addWidget(std::move(healthflex));
+
+        auto healthtickflex = widget::Flexbox::make(
+            glm::vec2(0.0f, 5.0f),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        for (int i = 1; i <= self->stats->health.max(); i++) {
+            if (i <= self->stats->health.current()) {
+                healthtickflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthTickFull), 2));
+            }
+            else {
+                healthtickflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthTickEmpty), 2));
+            }
+        }
+
+        this->addWidget(std::move(healthtickflex));
+    }
 }
 
 void GUI::_layoutGameHUD() {
@@ -746,11 +779,11 @@ void GUI::_layoutGameHUD() {
 
     auto health_txt = widget::CenterText::make(
         std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
-        font::Font::MENU,
-        font::Size::MEDIUM,
-        font::Color::RED,
+        font::Font::TEXT,
+        font::Size::SMALL,
+        font::Color::WHITE,
         fonts,
-        font::getRelativePixels(120)
+        font::getRelativePixels(13)
     );
     this->addWidget(std::move(health_txt));
 

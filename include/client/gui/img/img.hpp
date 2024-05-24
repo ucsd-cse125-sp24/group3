@@ -34,13 +34,17 @@ enum class ImgID {
     LeftSelected,
     RightSelected,
     MiddleSelected,
+    HealthBar,
+    HealthTickEmpty,
+    HealthTickFull,
 };
 #define GET_ALL_IMG_IDS() \
     {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::HealthPotion, ImgID::UnknownPotion, \
         ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
         ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer, \
         ImgID::LeftHotbar, ImgID::RightHotbar, ImgID::MiddleHotbar, \
-        ImgID::LeftSelected, ImgID::RightSelected, ImgID::MiddleSelected }
+        ImgID::LeftSelected, ImgID::RightSelected, ImgID::MiddleSelected, \
+        ImgID::HealthBar, ImgID::HealthTickEmpty, ImgID::HealthTickFull }
 
 /**
  * Representation of a loaded image
