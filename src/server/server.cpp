@@ -31,6 +31,7 @@
 #include "shared/utilities/constants.hpp"
 #include "shared/utilities/light.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/utilities/config.hpp"
 
 using namespace std::chrono_literals;
 using namespace boost::asio::ip;
@@ -40,7 +41,8 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      acceptor(io_context, tcp::endpoint(tcp::v4(), config.network.server_port)),
      socket(io_context),
      world_eid(0),
-     state(ServerGameState(GamePhase::LOBBY, config))
+     state(ServerGameState(GamePhase::LOBBY, config)),
+     config(config)
 {
     _doAccept(); // start asynchronously accepting
 
@@ -292,8 +294,13 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         }
     }
 
-    // choose first player as DM
-    if (this->state.getLobby().players.size() == 0) {        
+    static bool first_player = true;
+    if (this->config.server.disable_dm) {
+        first_player = false; // don't make the first player the DM
+    }
+
+    // first player is Dungeon Master
+    if (first_player) {
         this->state.objects.createObject(new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
         DungeonMaster* dm = this->state.objects.getDM();
 

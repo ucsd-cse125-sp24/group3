@@ -25,15 +25,16 @@ public:
          * @param v_mult vertical velocity multiplier
          * @param homing whether or not the projectile homes in on a specified target
          * @param homing_strength value from 0-1, where the closer to 1 the more strong the homing is
+         * @param homing_duration how many ticks it should home for
          * @param target Target towards which the projectile homes, if it is homing
          */
         Options(bool isSpell, int damage, float h_mult, float v_mult,
-            bool homing, float homing_strength, 
+            bool homing, float homing_strength, int homing_duration,
             std::optional<EntityID> target
         ):
             isSpell(isSpell), damage(damage), h_mult(h_mult), 
             v_mult(v_mult), homing(homing), homing_strength(homing_strength),
-            target(target)
+            homing_duration(homing_duration), target(target)
         {
             if (homing && !target.has_value()) {
                 std::cerr << "FATAL: homing projectile created without target.\n"
@@ -49,6 +50,7 @@ public:
         int damage;
         bool homing;
         float homing_strength;
+        int homing_duration;
         std::optional<EntityID> target;
     };
 
@@ -83,10 +85,11 @@ public:
     inline static const float H_MULT = 0.4;
     inline static const float V_MULT = 0.0; // not affected by gravity
     inline static const float HOMING_STRENGTH = 0.1f;
+    inline static const int HOMING_DURATION_TICKS = 80; // 2.4s
 
     HomingFireball(glm::vec3 corner, glm::vec3 facing, std::optional<EntityID> target):
         Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube, ServerSFX::FireballImpact,
-            Options(false, DAMAGE, H_MULT, V_MULT, true, HOMING_STRENGTH, target))
+            Options(false, DAMAGE, H_MULT, V_MULT, true, HOMING_STRENGTH, HOMING_DURATION_TICKS, target))
     {}
 };
 
@@ -103,7 +106,7 @@ public:
 
     Arrow(glm::vec3 corner, glm::vec3 facing, ArrowTrap::Direction dir):
         Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Cube, ServerSFX::ArrowImpact,
-            Options(false, DAMAGE, H_MULT, V_MULT, false, 0.0f, {}))
+            Options(false, DAMAGE, H_MULT, V_MULT, false, 0.0f, 0, {}))
     {
         // temp hack to get the correct direction until we load in a model and can rotate it
 
@@ -142,7 +145,7 @@ public:
 
     SpellOrb(glm::vec3 corner, glm::vec3 facing, SpellType type) :
         Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube, ServerSFX::FireballImpact,
-            Options(true, DAMAGE, H_MULT, V_MULT, false, 0.0f, {}))
+            Options(true, DAMAGE, H_MULT, V_MULT, false, 0.0f, 0, {}))
     {
         this->sType = type;
     }
