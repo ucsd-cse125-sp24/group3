@@ -13,6 +13,7 @@
 #include <queue>
 #include <thread>
 #include <chrono>
+#include <memory>
 
 #include "boost/variant/get.hpp"
 #include "server/game/objectmanager.hpp"
@@ -30,6 +31,7 @@
 #include "shared/utilities/constants.hpp"
 #include "shared/utilities/light.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/utilities/rng.hpp"
 
 using namespace std::chrono_literals;
 using namespace boost::asio::ip;
@@ -223,6 +225,60 @@ std::chrono::milliseconds Server::doTick() {
                         //  has desired role set to PlayerRole::DungeonMaster) to be
                         //  the Dungeon Master. Replace that player's Player object in 
                         //  the ObjectManager to be the DungeonMaster
+
+                        //  Determine list of players that want to play as the DM
+                        std::vector<LobbyPlayer> wannabe_dms;
+
+                        for (boost::optional<LobbyPlayer> player : this->state.getLobby().players) {
+                            if (player.get().desired_role == PlayerRole::DungeonMaster) {
+                                wannabe_dms.push_back(player.get());
+                            }
+                        }
+
+                        //  If no player wants to be a DM, then randomly choose one of them
+                        if (wannabe_dms.size() == 0) {
+                            for (boost::optional<LobbyPlayer> player : this->state.getLobby().players) {
+                                wannabe_dms.push_back(player.get());
+                            }
+                        }
+
+                        //  Randomly select a DM
+                        size_t randomPlayerIndex = randomInt(0, wannabe_dms.size() - 1);
+                        LobbyPlayer new_dm = wannabe_dms[randomPlayerIndex];
+
+                        this->state.objects.replaceObject(new_dm.id, new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
+                        DungeonMaster* dm = this->state.objects.getDM();
+
+                        //  Spawn player in random spawn point
+
+                        //  TODO: Possibly replace this random spawn point with player assignments?
+                        //  I.e., assign each player a spawn point to avoid multiple players getting
+                        //  the same spawn point?
+
+                        auto& by_id = this->sessions.get<IndexByID>();
+                        auto session_entry = by_id.find(dm->globalID);
+
+                        if (session_entry != by_id.end()) {
+                            std::weak_ptr<Session> session_ref = session_entry->session;
+                            std::shared_ptr<Session> session = session_ref.lock();
+                            if (session != nullptr) {
+                                session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
+                                    ServerAssignEIDPacket{ .eid = dm->globalID, .is_dungeon_master = true }));
+                            }
+                        }
+
+                        //  Get DM's player index
+                        int index = 1;
+                        for (boost::optional<LobbyPlayer> player : this->state.getLobby().players) {
+                            if (player.get().id == dm->globalID) {
+                                break;
+                            }
+                            index++;
+                        }
+
+                        std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
+                        std::cout << "Starting game!" << std::endl;
+ 
                     }
 
                     break;
@@ -373,33 +429,6 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
             return old_session->session.lock();
         }
     }
-
-    static bool first_player = true;
-
-    // first player is Dungeon Master
-    if (first_player) {
-        this->state.objects.createObject(new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
-        DungeonMaster* dm = this->state.objects.getDM();
-
-        //  Spawn player in random spawn point
-
-        //  TODO: Possibly replace this random spawn point with player assignments?
-        //  I.e., assign each player a spawn point to avoid multiple players getting
-        //  the same spawn point?
-
-        auto session = std::make_shared<Session>(std::move(this->socket),
-            SessionInfo({}, dm->globalID, true));
-
-
-        this->sessions.insert(SessionEntry(dm->globalID, true, addr, session));
-
-        std::cout << "Established new connection with " << addr << ", which was assigned eid "
-            << dm->globalID << std::endl;
-
-        first_player = false;
-
-        return session;
-    } 
 
     // Brand new connection
     // TODO: reject connection if not in LOBBY GamePhase

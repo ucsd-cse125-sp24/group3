@@ -32,8 +32,23 @@ ObjectManager::~ObjectManager() {
 /*	Object CRUD methods	*/
 
 SpecificID ObjectManager::createObject(Object* object) {
+	return this->_createObject(object);
+}
+
+SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID> id) {
 	//	Create a new object with the given type
-	EntityID globalID = this->objects.push(object);
+	EntityID globalID;
+
+	//	If an EntityID is specified, put object at the specific EntityID
+	if (id.has_value()) {
+		std::cout << "OPTIONAL PARAMETER TO _createObject() id has value!" << std::endl;
+		globalID = id.get();
+		this->objects.set(object, globalID);
+	}
+	else {
+		globalID = this->objects.push(object);
+	}
+
 	object->globalID = globalID;
 
 	object->gridCellPositions = this->objectGridCells(object);
@@ -213,6 +228,24 @@ bool ObjectManager::removeObject(Object** object_dbl_ptr) {
 
 	//	Failed to remove object
 	return false;
+}
+
+bool ObjectManager::replaceObject(EntityID id, Object* object) {
+	//	Get current object
+	Object* currentObject = this->getObject(id);
+
+	if (currentObject == nullptr) {
+		//	No object with the given EntityID exists; can't replace
+		return false;
+	}
+
+	//	Remove current object
+	this->removeObject(id);
+
+	//	Add new object at the given EntityID
+	this->_createObject(object, id);
+
+	return true;
 }
 
 Object* ObjectManager::getObject(EntityID globalID) {
