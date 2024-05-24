@@ -265,6 +265,7 @@ void Server::_doAccept() {
 std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr) {
     auto& by_ip = this->sessions.get<IndexByIP>();
     auto old_session = by_ip.find(addr);
+
     if (old_session != by_ip.end()) {
         // We already had a session with this IP
         if (old_session->session.expired()) {

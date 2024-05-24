@@ -79,6 +79,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     if (config.client.lobby_discovery)  {
         lobby_finder.startSearching();
     }
+
+    phase_change = false;
 }
 
 AudioManager* Client::getAudioManager() {
@@ -365,18 +367,28 @@ void Client::processServerInput(boost::asio::io_context& context) {
             GamePhase old_phase = this->gameState.phase;
             this->gameState.update(boost::get<LoadGameStateEvent>(event.data).state);
 
-            // Change the UI to the game hud UI whenever we change into the GAME game phase
-            if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
-                // set to Dungeon Master POV if DM
-                if (this->session->getInfo().is_dungeon_master.has_value() && this->session->getInfo().is_dungeon_master.value()) {
-                    this->cam = std::make_unique<DungeonMasterCamera>();
-                    // TODO: fix race condition where this doesn't get received in time when reconnecting because the server is doing way more stuff and is delayed
+
+            if (!this->session->getInfo().is_dungeon_master.has_value()) {
+                if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
+                    phase_change = true;
                 }
+            }
+            else {
+                if (phase_change || (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME)) {
+                    std::cout << "game phase change!" << std::endl;
+                    // set to Dungeon Master POV if DM
+                    if (this->session->getInfo().is_dungeon_master.value()) {
+                        std::cout << "dungeon master cam!" << std::endl;
+                        this->cam = std::make_unique<DungeonMasterCamera>();
+                        // TODO: fix race condition where this doesn't get received in time when reconnecting because the server is doing way more stuff and is delayed
+                    }
 
-                this->gui_state = GUIState::GAME_HUD;
+                    this->gui_state = GUIState::GAME_HUD;
 
-                audioManager->stopMusic(ClientMusic::TitleTheme);
-                audioManager->playMusic(ClientMusic::GameTheme);
+                    audioManager->stopMusic(ClientMusic::TitleTheme);
+                    audioManager->playMusic(ClientMusic::GameTheme);
+                    phase_change = false;
+                }
             }
         } else if (event.type == EventType::LoadSoundCommands) {
             auto self_eid = this->session->getInfo().client_eid;
