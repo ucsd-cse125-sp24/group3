@@ -67,7 +67,7 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     {ServerSFX::PlayerWalk5,         500ms},
     {ServerSFX::CeilingSpikeTrigger, 380ms},
     {ServerSFX::CeilingSpikeImpact, 1180ms},
-    {ServerSFX::Thunder,            5000ms},
+    {ServerSFX::Thunder,            2500ms},
     {ServerSFX::TorchLoop,          9999ms} // wont actually be used because it loops
     // dont forget macro below!
 };

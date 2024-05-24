@@ -67,7 +67,7 @@
 
 #define	LIGHTNING_PREP			1000
 #define	LIGHTNING_DUR		    400
-#define	LIGHTNING_TOTAL			1400
+#define	LIGHTNING_TOTAL			3000 // 3 second cd
 
 /*	Game	*/
 #define	GRAVITY					0.03f
