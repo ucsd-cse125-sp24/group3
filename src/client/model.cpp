@@ -245,6 +245,20 @@ void Model::scaleRelative(const glm::vec3& scale) {
     }
 }
 
+void Model::rotateAbsolute(const glm::vec3& dir, const glm::vec3& axis) {
+    Renderable::rotateAbsolute(dir, axis);
+    for(Mesh& mesh : this->meshes) {
+        mesh.rotateAbsolute(dir, axis);
+    }
+}
+
+void Model::rotateRelative(const glm::vec3& dir, const glm::vec3& axis) {
+    Renderable::rotateRelative(dir, axis);
+    for(Mesh& mesh : this->meshes) {
+        mesh.rotateRelative(dir, axis);
+    }
+}
+
 void Model::clear() {
     Renderable::clear();
     for(Mesh& mesh : this->meshes) {
