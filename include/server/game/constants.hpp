@@ -48,9 +48,9 @@
 #define INVINCIBLITY_DUR		15
 
 /*	Weapon Stats	*/
-#define	SWORD_DMG				15
-#define DAGGER_DMG				10
-#define HAMMER_DMG				30
+#define	SWORD_DMG				5
+#define DAGGER_DMG				7
+#define HAMMER_DMG				15
 #define	LIGHTNING_DMG			99
 
 #define	SWORD_PREP				200

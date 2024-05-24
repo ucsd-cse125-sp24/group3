@@ -34,6 +34,7 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
     
     // do damage if creature
     creature->stats.health.decrease(this->opt.damage);
+    creature->physics.velocity = -0.5f * glm::normalize(creature->physics.shared.facing);
 }
 
 void WeaponCollider::updateMovement(ServerGameState& state) {
