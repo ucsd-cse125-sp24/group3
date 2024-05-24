@@ -17,8 +17,6 @@ namespace gui::img {
 enum class ImgID {
     Yoshi,
     AwesomeSauce,
-    ItemFrame,
-    SelectedFrame,
     HealthPotion,
     UnknownPotion,
     InvisPotion,
@@ -30,11 +28,19 @@ enum class ImgID {
     Dagger,
     Sword,
     Hammer,
+    LeftHotbar,
+    RightHotbar,
+    MiddleHotbar,
+    LeftSelected,
+    RightSelected,
+    MiddleSelected,
 };
 #define GET_ALL_IMG_IDS() \
-    {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::ItemFrame, ImgID::SelectedFrame, ImgID::HealthPotion, \
-        ImgID::UnknownPotion, ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
-        ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer}
+    {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::HealthPotion, ImgID::UnknownPotion, \
+        ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
+        ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer, \
+        ImgID::LeftHotbar, ImgID::RightHotbar, ImgID::MiddleHotbar, \
+        ImgID::LeftSelected, ImgID::RightSelected, ImgID::MiddleSelected }
 
 /**
  * Representation of a loaded image

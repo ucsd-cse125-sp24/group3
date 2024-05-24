@@ -474,7 +474,7 @@ void GUI::_sharedGameHUD() {
         font::Size::SMALL,
         font::Color::WHITE,
         fonts,
-        font::getRelativePixels(70)
+        font::getRelativePixels(95)
     );
     this->addWidget(std::move(item_txt));
 
@@ -532,7 +532,7 @@ void GUI::_sharedGameHUD() {
                     }
                 }
             } else {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleHotbar), 2));
             }
         } else {
             if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
@@ -564,7 +564,7 @@ void GUI::_sharedGameHUD() {
                 }
             }
             else {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleHotbar), 2));
             }
         }
     }
@@ -580,10 +580,25 @@ void GUI::_sharedGameHUD() {
 
     for (int i = 0; i < inventory_size; i++) {
         if (selected == i) {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame), 2));
+            if (i == 0) {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LeftSelected), 2));
+            } else if (i == inventory_size - 1) {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightSelected), 2));
+            }
+            else {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleSelected), 2));
+            }
         }
         else {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+            if (i == 0) {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LeftHotbar), 2));
+            }
+            else if (i == inventory_size - 1) {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightHotbar), 2));
+            }
+            else {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleHotbar), 2));
+            }
         }
     }
 
@@ -720,7 +735,7 @@ void GUI::_layoutGameHUD() {
         font::Size::MEDIUM,
         font::Color::RED,
         fonts,
-        font::getRelativePixels(90)
+        font::getRelativePixels(120)
     );
     this->addWidget(std::move(health_txt));
 

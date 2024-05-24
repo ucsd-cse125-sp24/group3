@@ -10,8 +10,6 @@ std::string getImgFilepath(ImgID img) {
         default:
         case ImgID::Yoshi: return (img_root / "Yoshi.png").string();
         case ImgID::AwesomeSauce: return (img_root / "awesomeface.png").string();
-        case ImgID::ItemFrame: return (img_root / "frame.png").string();
-        case ImgID::SelectedFrame: return (img_root / "selected_frame.png").string();
         case ImgID::HealthPotion: return (img_root / "pot_health.png").string();
         case ImgID::UnknownPotion: return (img_root / "pot_unknown.png").string();
         case ImgID::InvisPotion: return (img_root / "pot_invisibility.png").string();
@@ -23,6 +21,12 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::Dagger: return (img_root / "weapon_dagger.png").string();
         case ImgID::Sword: return (img_root / "weapon_sword.png").string();
         case ImgID::Hammer: return (img_root / "weapon_hammer.png").string();
+        case ImgID::LeftHotbar: return (img_root / "left.png").string();
+        case ImgID::RightHotbar: return (img_root / "right.png").string();
+        case ImgID::MiddleHotbar: return (img_root / "middle.png").string();
+        case ImgID::LeftSelected: return (img_root / "selected_left.png").string();
+        case ImgID::RightSelected: return (img_root / "selected_right.png").string();
+        case ImgID::MiddleSelected: return (img_root / "selected_middle.png").string();
     }
 }
 
