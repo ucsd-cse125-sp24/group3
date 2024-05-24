@@ -168,6 +168,7 @@ public:
 
     void setWorldPos();
 
+    int curr_fps;
 private:
     /**
      * @brief Processes all data received from the server and updates the SharedGameState.

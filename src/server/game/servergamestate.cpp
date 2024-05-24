@@ -1228,15 +1228,11 @@ void ServerGameState::loadMaze(const Grid& grid) {
 			this->grid.getRows() * Grid::grid_cell_width)
 	));
 
-	// create floor
-	glm::vec3 corner = glm::vec3(0.0f, -0.1f, 0.0f);
-
 	SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
-		corner,
+		glm::vec3(0.0f, -0.1f, 0.0f),
 		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
 			this->grid.getRows() * Grid::grid_cell_width)
 	);
-
 	this->objects.createObject(floor);
 
 	// this is for floor highlighting

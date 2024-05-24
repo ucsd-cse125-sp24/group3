@@ -14,7 +14,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/hash.hpp"
 
-#define REQUIRED_NUM_ROOMS 30
+#define REQUIRED_NUM_ROOMS 70
 
 enum class RoomType {
     EMPTY, // testing
@@ -165,4 +165,9 @@ private:
 
     int _num_rooms_placed;
     std::deque<RoomType> _policy;
+
+    // ids that should not be reused
+    // currently, only ids of 20x20 and 40x40 rooms will be placed in here to prevent them from being placed
+    // twice in the same maze
+    std::unordered_set<int> used_room_ids;
 };
