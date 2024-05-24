@@ -896,7 +896,7 @@ void ServerGameState::handleDeaths() {
 			for (int i = 0; i < player->sharedInventory.inventory_size; i++) {
 				if (player->inventory[i] != -1) {
             		auto item = dynamic_cast<Item*>(this->objects.getItem(player->inventory[i]));
-					item->dropItem(player, *this, i, 2.0f);
+					item->dropItem(player, *this, i, 0.0f);
 					this->updated_entities.insert(item->globalID);
 				}
 				// hardcode "random" drops
@@ -1231,15 +1231,11 @@ void ServerGameState::loadMaze(const Grid& grid) {
 			this->grid.getRows() * Grid::grid_cell_width)
 	));
 
-	// create floor
-	glm::vec3 corner = glm::vec3(0.0f, -0.1f, 0.0f);
-
 	SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
-		corner,
+		glm::vec3(0.0f, -0.1f, 0.0f),
 		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
 			this->grid.getRows() * Grid::grid_cell_width)
 	);
-
 	this->objects.createObject(floor);
 
 	// this is for floor highlighting

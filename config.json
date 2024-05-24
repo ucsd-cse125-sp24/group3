@@ -19,6 +19,7 @@
         "default_name": "Conan O'Brien",
         "lobby_discovery": true,
         "window_width": 1500,
-        "draw_bboxes": false
+        "draw_bboxes": false,
+        "fps_counter": true
     }
 }
