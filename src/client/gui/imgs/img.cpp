@@ -27,6 +27,9 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::LeftSelected: return (img_root / "selected_left.png").string();
         case ImgID::RightSelected: return (img_root / "selected_right.png").string();
         case ImgID::MiddleSelected: return (img_root / "selected_middle.png").string();
+        case ImgID::HealthBar: return (img_root / "healthbar.png").string();
+        case ImgID::HealthTickEmpty: return (img_root / "healthtick_empty.png").string();
+        case ImgID::HealthTickFull: return (img_root / "healthtick_full.png").string();
     }
 }
 
