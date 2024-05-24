@@ -348,9 +348,15 @@ void GUI::_layoutLobby() {
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 10.0f)
     );
-    for (const auto& [_eid, player_name] : this->client->gameState.lobby.players) {
+    for (const auto& player : this->client->gameState.lobby.players) {
+        //  Skip player if one of the player slots is empty (player is in NotConnected state)
+        if (!player.has_value())
+        {
+            continue;
+        }
+        int playerID = player.get().id;
         players_flex->push(widget::DynText::make(
-            player_name,
+            "Player with EID " + std::to_string(playerID),
             this->fonts,
             widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
         ));
@@ -613,8 +619,14 @@ void GUI::_layoutGameHUD() {
     }
     else {
         bool orbIsCarried = false;
-        for (auto [id, name] : client->gameState.lobby.players) {
-            auto player = client->gameState.objects.at(id);
+
+        for (int i = 0; i < client->gameState.lobby.max_players; i++) {
+            auto lobbyPlayer = client->gameState.lobby.players[i];
+
+            if (!lobbyPlayer.has_value())
+                continue;
+
+            auto player = client->gameState.objects.at(lobbyPlayer.get().id);
 
             if (!player.has_value())    continue;
 
@@ -622,7 +634,7 @@ void GUI::_layoutGameHUD() {
 
             if (playerObj.inventoryInfo.get().hasOrb) {
                 orbIsCarried = true;
-                orbStateString = name + " has the Orb!";
+                orbStateString = "Player " + std::to_string(i + 1) + " has the Orb!";
                 break;
             }
         }

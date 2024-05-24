@@ -15,3 +15,27 @@ void SharedGameState::update(const SharedGameState& other) {
         this->objects[id] = updated_obj;
     }
 }
+
+const boost::optional<LobbyPlayer>& Lobby::getPlayer(int playerIndex) const {
+    return this->players[playerIndex - 1];
+}
+
+const boost::optional<LobbyPlayer>& Lobby::getPlayer(EntityID id) const {
+    for (auto& player : this->players) {
+        if (player.has_value() && player.get().id == id)
+            return player;
+    }
+
+    return boost::none;
+}
+
+int Lobby::numPlayersInLobby() const {
+    int numPlayers = 0;
+    for (auto& player : this->players) {
+        if (player.has_value()) {
+            numPlayers++;
+        }
+    }
+
+    return numPlayers;
+}

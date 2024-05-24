@@ -195,7 +195,19 @@ public:
 	 * player is already in the mapping, as nothing will happen. If a player's name
 	 * has changed, then this will update their name as well.
 	 */
-	void addPlayerToLobby(EntityID id, const std::string& name);
+
+	/**
+	 * @brief Adds a new LobbyPlayer to this ServerGameState's Lobby struct.
+	 * This method will assign the new player's LobbyPlayer to the first free
+	 * index in the Lobby.players vector.
+	 * Note: this method will CAUSE THE SERVER TO CRASH if all LobbyPlayer indices
+	 * are currently in use (i.e., if Lobby.max_players players have already
+	 * connected to this server's lobby).
+	 * @param player LobbyPlayer struct of the new player to add to this
+	 * ServerGameState instance's Lobby.
+	 */
+	void addPlayerToLobby(LobbyPlayer player);
+
 	/**
 	 * Removes a player from the lobby with the specified id.
 	 */

@@ -156,7 +156,85 @@ std::chrono::milliseconds Server::doTick() {
     auto start = std::chrono::high_resolution_clock::now();
 
     switch (this->state.getPhase()) {
-        case GamePhase::LOBBY:
+        case GamePhase::LOBBY: {
+            //  Go through sessions and update GameState lobby info
+            for (const auto& [eid, is_dm, ip, session] : this->sessions) {
+                if (auto s = session.lock()) {
+                    this->state.addPlayerToLobby(LobbyPlayer(eid, PlayerRole::Unknown, false));
+                }
+                else {
+                    this->state.removePlayerFromLobby(eid);
+                }
+            }
+
+            if (this->state.getLobby().numPlayersInLobby() >= this->state.getLobby().max_players) {
+                //  Selectively broadcast only to players that were already in the lobby?
+                //  Note: This is currently marked as a TODO in the dungeon master branch
+            }
+
+            //  Handle ready and start game events
+            EventList clientEvents = getAllClientEvents();
+
+            for (const auto& [src_eid, event] : clientEvents) {
+                //  Skip non-lobby action events
+                if (event.type != EventType::LobbyAction) {
+                    continue;
+                }
+
+                LobbyActionEvent lobbyEvent = boost::get<LobbyActionEvent>(event.data);
+
+                switch (lobbyEvent.action) {
+                case LobbyActionEvent::Action::Ready: {
+                    //  Client player declares themselves ready
+                    boost::optional<LobbyPlayer> player = this->state.getLobby().getPlayer(src_eid);
+
+                    if (!player.has_value()) {
+                        //  Client's src EntityID doesn't match any players
+                        //  in the lobby! Crash the server
+                        std::cerr << "Client's src eid doesn't match any players!" << std::endl;
+                        std::exit(1);
+                    }
+
+                    if (lobbyEvent.role != PlayerRole::Unknown) {
+                        //  Update player's role from lobby event if
+                        //  player chose a role
+                        player.get().desired_role = lobbyEvent.role;
+                        player.get().ready = true;
+                    }
+                    break;
+                }
+                case LobbyActionEvent::Action::StartGame: {
+                    //  Client tries to start the game
+                    //  Verify that all players are indeed ready
+                    bool allReady = true;
+                    for (boost::optional<LobbyPlayer> player : this->state.getLobby().players) {
+                        if (!player.has_value() || !player.get().ready) {
+                            //  Either there aren't enough players or at least
+                            //  one player isn't ready
+                            allReady = false;
+                            break;
+                        }
+                    }
+
+                    if (allReady) {
+                        //  TODO:
+                        //  Randomly select a player from those whose desired role is
+                        //  PlayerRole::DungeonMaster (or from all players if no player
+                        //  has desired role set to PlayerRole::DungeonMaster) to be
+                        //  the Dungeon Master. Replace that player's Player object in 
+                        //  the ObjectManager to be the DungeonMaster
+                    }
+
+                    break;
+                }
+                }
+            }
+
+            this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
+            break;
+        }
+
+            /*
             // Go through sessions and update GameState lobby info
             // TODO: move this into updateGameState or something else
             for (const auto& [eid, is_dm, ip, session]: this->sessions) {
@@ -175,12 +253,18 @@ std::chrono::milliseconds Server::doTick() {
 
             this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
             break;
+            */
         case GamePhase::GAME: {
             EventList allClientEvents = getAllClientEvents();
 
             updateGameState(allClientEvents);
 
-            for (auto& [playerID, name] : this->state.getLobby().players) {
+            for (auto& player : this->state.getLobby().players) {
+                //  Note: this assumes the lobby's player vector is full!
+                //  Also note that it assumes that the length of the vector
+                //  equals max_players!
+                EntityID playerID = player.get().id;
+
                 sendLightSourceUpdates(playerID);
             }
 

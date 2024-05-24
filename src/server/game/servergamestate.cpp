@@ -1011,12 +1011,39 @@ void ServerGameState::setPlayerVictory(bool playerVictory) {
 	this->playerVictory = playerVictory;
 }
 
-void ServerGameState::addPlayerToLobby(EntityID id, const std::string& name) {
-	this->lobby.players[id] = name;
+void ServerGameState::addPlayerToLobby(LobbyPlayer player) {
+	//this->lobby.players[id] = name;
+	bool freeIndex = false;
+
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (!this->lobby.players[i].has_value()) {
+			//	Found a free index! Adding player here
+			freeIndex = true;
+			this->lobby.players[i] = player;
+			break;
+		}
+	}
+
+	//	Crash server if no free index was found
+	assert(freeIndex);
 }
 
 void ServerGameState::removePlayerFromLobby(EntityID id) {
-	this->lobby.players.erase(id);
+	//	Iterate through the players vector and remove the player with the given
+	//	EntityID
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (!this->lobby.players[i].has_value())
+			continue;
+
+		if (this->lobby.players[i].get().id == id) {
+			//	Remove player
+			this->lobby.players[i] = boost::none;
+		}
+	}
+
+	//	Note: this method doesn't check that the removal was successful. It's
+	//	possible that an EntityID was passed in that no player in the lobby has
+	//	and so the removal had no effect
 }
 
 const Lobby& ServerGameState::getLobby() const {

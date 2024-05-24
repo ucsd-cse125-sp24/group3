@@ -73,23 +73,38 @@ struct ChangeFacingEvent {
     }
 };
 
+
 /**
- * Event representing an action a player can take during the lobby screen
+ *  Enum representing a player's desired role (as selected with the radio buttons
+ *  in the client lobby screen (in GUIState::Lobby)
+ */
+enum class PlayerRole {
+    Player,
+    DungeonMaster,
+    Unknown
+};
+
+/**
+ * Event representing an action a player can take during the Lobby GUI
+ * screen.
+ * (Only handle this event in the server while the game phase is set to
+ * GamePhase::LOBBY)
  */
 struct LobbyActionEvent {
     enum class Action {
-        LEAVE,
-        READY_UP,
-        UNREADY
+        Ready,
+        StartGame
     };
 
     LobbyActionEvent() {}
-    explicit LobbyActionEvent(Action action) : action(action) {}
+    explicit LobbyActionEvent(Action action, PlayerRole role) : action(action),
+        role(role) {}
 
     Action action;
+    PlayerRole role;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& action;
+        ar& action & role;
     }
 };
 
