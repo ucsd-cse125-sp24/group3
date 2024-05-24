@@ -50,8 +50,6 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
             .slots_taken = 0,
             .slots_avail = config.server.max_players});
     }
-
-    this->try_as_dm = config.server.try_as_dm;
 }
 
 //  Note: This method should probably be removed since EntityIDs for objects
@@ -294,8 +292,8 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         }
     }
 
-    // either trying as DM, or choose first player
-    if (try_as_dm) { // || this->state.getLobby().players.size() == 0
+    // choose first player as DM
+    if (this->state.getLobby().players.size() == 0) {        
         this->state.objects.createObject(new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
         DungeonMaster* dm = this->state.objects.getDM();
 

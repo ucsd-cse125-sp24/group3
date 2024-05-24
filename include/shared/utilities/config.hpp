@@ -48,7 +48,6 @@ struct GameConfig {
         bool lobby_broadcast;
         /// @brief max number of players this server allows
         int max_players;
-        bool try_as_dm;
     } server;
     /// @brief Config settings for the client
     struct {

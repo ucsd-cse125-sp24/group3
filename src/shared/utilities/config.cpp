@@ -50,8 +50,7 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
             .server = {
                 .lobby_name = json.at("server").at("lobby_name"),
                 .lobby_broadcast = json.at("server").at("lobby_broadcast"),
-                .max_players = json.at("server").at("max_players"),
-                .try_as_dm = json.at("server").at("try_as_dm")
+                .max_players = json.at("server").at("max_players")
             },
             .client = {
                 .default_name = json.at("client").at("default_name"),

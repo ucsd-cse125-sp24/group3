@@ -166,7 +166,7 @@ public:
 
     void setWorldPos();
 
-    void sendTrapEvent(bool hover, bool place);
+    void sendTrapEvent(bool hover, bool place, ModelType trapType);
 
     int curr_fps;
 private:
