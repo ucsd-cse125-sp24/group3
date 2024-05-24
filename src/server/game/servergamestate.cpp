@@ -907,6 +907,7 @@ void ServerGameState::handleDeaths() {
 			}
 
 			this->updated_entities.insert(player->globalID);
+			player->physics.velocity = glm::vec3(0.0f);
 			player->info.is_alive = false;
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
 		}

@@ -17,6 +17,9 @@ Projectile::Projectile(glm::vec3 corner, glm::vec3 facing,
 
 bool Projectile::doTick(ServerGameState& state) {
     if (!this->opt.homing) return false;
+    this->opt.homing_duration--;
+    if (this->opt.homing_duration <= 0) return false;
+
     Object* target = state.objects.getObject(*this->opt.target);
     if (target == nullptr) return false;
 

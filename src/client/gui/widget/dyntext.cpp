@@ -53,7 +53,7 @@ void DynText::render() {
 
     auto projection = GUI_PROJECTION_MATRIX();
     DynText::shader->setMat4("projection", projection);
-    auto color = font::getRGB(this->options.color);
+    auto color = this->options.color;
     DynText::shader->setVec3("textColor", color);
     glBindVertexArray(VAO);
 
@@ -100,7 +100,7 @@ void DynText::render() {
 }
 
 void DynText::changeColor(font::Color new_color) {
-    this->options.color = new_color;
+    this->options.color = font::getRGB(new_color);
 }
 
 }

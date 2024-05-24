@@ -9,8 +9,6 @@
 
 using namespace std::chrono_literals;
 
-const std::chrono::seconds ArrowTrap::TIME_UNTIL_RESET = 4s;
-
 ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, ArrowTrap::Direction dir):
     Trap(ObjectType::ArrowTrap, false, corner, Collider::Box, ModelType::Cube, dimensions) 
 {
@@ -41,11 +39,12 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
     for (int i = 0; i < state.objects.getPlayers().size(); i++) {
         Player* player = state.objects.getPlayers().get(i);
         if (player == nullptr) continue;
+        if (!player->canBeTargetted()) continue;
         player_grid_positions.push_back(state.getGrid().getGridCellFromPosition(player->physics.shared.getCenterPosition()));
     }
     glm::ivec2 curr_grid_pos = state.getGrid().getGridCellFromPosition(this->physics.shared.getCenterPosition());
     int dist = 0;
-    while (dist < 10) { // max sightline
+    while (dist < ArrowTrap::SIGHTLINE_M) { // max sightline
         if (state.getGrid().getCell(curr_grid_pos.x, curr_grid_pos.y)->type == CellType::Wall) {
             return false; // didnt find a player before a wall
         }
