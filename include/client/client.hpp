@@ -194,6 +194,7 @@ private:
     std::shared_ptr<Shader> light_source_shader;
     std::shared_ptr<Shader> solid_surface_shader;
     std::shared_ptr<Shader> wall_shader;
+    std::shared_ptr<Shader> sungod_shader;
 
     /* Character models and lighting objects, might need to move to different classes later */
     std::unique_ptr<Model> cube_model;

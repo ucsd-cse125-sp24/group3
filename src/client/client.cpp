@@ -205,6 +205,10 @@ bool Client::init() {
     auto sungod_model_path = graphics_assets_dir / "sungod.obj";
     this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
 
+    auto sungod_vert_path = shaders_dir / "sungod.vert";
+    auto sungod_frag_path = shaders_dir / "sungod.frag";
+    this->sungod_shader = std::make_shared<Shader>(sungod_vert_path.string(), sungod_frag_path.string());
+
     this->gui_state = GUIState::TITLE_SCREEN;
 
     this->audioManager->init();
@@ -620,13 +624,12 @@ void Client::draw() {
                 break;
             }
             case ObjectType::FireballTrap: {
-                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 0.5f, 0.5f));
-                cube->scaleAbsolute( sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader.get(),
+                // sungod_model->scaleAbsolute( sharedObject->physics.dimensions);
+                sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                sungod_model->draw(this->sungod_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    {},
+                    this->closest_light_sources,
                     true);
                 break;
             }
