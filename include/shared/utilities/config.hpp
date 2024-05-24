@@ -57,6 +57,7 @@ struct GameConfig {
         bool lobby_discovery;
         int window_width;
         bool draw_bboxes;
+        bool fps_counter;
     } client;
 
     /**

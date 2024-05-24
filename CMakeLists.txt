@@ -29,8 +29,9 @@ ENDIF()
 # Add google test to CMake
 add_subdirectory(dependencies/google-test) 
 
+
 # If we need any compiler / linker flags, add them here
-SET(GCC_COMPILE_FLAGS "")
+  SET(GCC_COMPILE_FLAGS "")
 SET(GCC_LINK_FLAGS    "")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")

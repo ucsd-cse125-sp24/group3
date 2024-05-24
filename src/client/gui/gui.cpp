@@ -3,6 +3,8 @@
 #include <memory>
 #include <iostream>
 #include <vector>
+#include "client/gui/font/font.hpp"
+#include "client/gui/widget/dyntext.hpp"
 #include "shared/utilities/rng.hpp"
 #include "client/client.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -129,6 +131,9 @@ std::shared_ptr<font::Loader> GUI::getFonts() {
 }
 
 void GUI::layoutFrame(GUIState state) {
+    if (client->config.client.fps_counter) {
+        _layoutFPSCounter();
+    }
     switch (state) {
         case GUIState::TITLE_SCREEN:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -172,6 +177,15 @@ void GUI::layoutFrame(GUIState state) {
     for (auto& [_handle, widget] : this->widgets) {
         widget->lock();
     }
+}
+
+void GUI::_layoutFPSCounter() {
+    this->addWidget(widget::DynText::make(
+        glm::vec2(10, WINDOW_HEIGHT-30),
+        std::to_string(client->curr_fps),
+        fonts,
+        widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::WHITE)
+    ));
 }
 
 void GUI::_layoutLoadingScreen() {
