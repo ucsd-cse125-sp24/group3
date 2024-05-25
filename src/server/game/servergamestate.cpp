@@ -17,7 +17,6 @@
 #include "server/game/orb.hpp"
 #include "server/game/weapon.hpp"
 #include "server/game/weaponcollider.hpp"
-#include "server/game/spawner.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/audio/constants.hpp"
@@ -57,7 +56,6 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->numPlayerDeaths = 0;
 
 	this->currentGhostTrap = nullptr;
-	this->spawner = new Spawner();
 
     MazeGenerator generator(config);
     int attempts = 1;
@@ -717,8 +715,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 					otherObj->type == ObjectType::Weapon ||
 					otherObj->type == ObjectType::Orb ||
 					otherObj->type == ObjectType::WeaponCollider ||
-					otherObj->type == ObjectType::Slime ||
-					otherObj->type == ObjectType::Torchlight) {
+					otherObj->type == ObjectType::Slime) {
 					continue;
 				}
 
@@ -731,7 +728,31 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 }
 
 void ServerGameState::spawnEnemies() {
-	this->spawner->spawn(*this);
+	// temp numbers, to tune later...
+	// 1/300 chance every 30ms -> expected spawn every 9s 
+	// TODO 1: small slimes are weighted the same as large slimes
+	// TODO 2: check that no collision in the cell you are spawning in
+	if (randomInt(1, 300) == 1 && this->objects.getEnemies().numElements() < MAX_ALIVE_ENEMIES) {
+		int cols = this->grid.getColumns();
+		int rows = this->grid.getRows();
+
+		glm::ivec2 random_cell;
+		while (true) {
+			random_cell.x = randomInt(0, cols - 1);
+			random_cell.y = randomInt(0, rows - 1); // corresponds to z in the world
+
+			if (this->grid.getCell(random_cell.x, random_cell.y)->type == CellType::Empty) {
+				break;
+			}
+		}
+
+		int size = randomInt(2, 4);
+		this->objects.createObject(new Slime(
+			glm::vec3(random_cell.x * Grid::grid_cell_width, 0, random_cell.y * Grid::grid_cell_width),
+			glm::vec3(0, 0, 0),
+			size
+		));
+	}
 }
 
 void ServerGameState::updateItems() {
@@ -911,6 +932,7 @@ void ServerGameState::handleDeaths() {
 			this->updated_entities.insert(enemy->globalID);
 			if (enemy->doDeath(*this)) {
 				this->entities_to_delete.insert(enemy->globalID);
+				this->alive_enemy_weight--;
 			}
 		}
 	}
@@ -1623,10 +1645,6 @@ void ServerGameState::spawnTorch(GridCell *cell) {
 
 Grid& ServerGameState::getGrid() {
 	return this->grid;
-}
-
-Spawner* ServerGameState::getSpawner() {
-	return this->spawner;
 }
 
 /*	Debugger Methods	*/

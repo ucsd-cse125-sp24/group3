@@ -25,7 +25,7 @@ public:
 	/**
 	 * @return true if the enemy should be deleted, false otherwise
 	 */
-	virtual bool doDeath(ServerGameState& state);
+	virtual bool doDeath(ServerGameState& state) {return true; };
 
 	virtual SharedObject toShared() override;
 private:

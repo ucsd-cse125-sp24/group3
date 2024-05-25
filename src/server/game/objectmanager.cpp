@@ -80,8 +80,6 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
 			break;
-		case ObjectType::Python:
-		case ObjectType::Minotaur:
         case ObjectType::Slime:
 			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
 			break;
@@ -145,8 +143,6 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Projectile:
 		this->projectiles.remove(object->typeID);
 		break;
-	case ObjectType::Python:
-	case ObjectType::Minotaur:
 	case ObjectType::Slime:
 		this->enemies.remove(object->typeID);
 		break;

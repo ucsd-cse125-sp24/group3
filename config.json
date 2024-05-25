@@ -3,7 +3,7 @@
       "maze": {
         "directory": "maps",
         "procedural": true,
-        "maze_file": "test/itemRoom.maze"
+        "maze_file": "test/big_maze.maze"
       }
     },
     "network": {
