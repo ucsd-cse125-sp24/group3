@@ -30,6 +30,10 @@ const SessionInfo& Session::getInfo() const {
 }
 
 std::vector<Event> Session::handleAllReceivedPackets() {
+    if (!this->isOkay()) {
+        return {};
+    }
+
     std::vector<Event> events;
 
     while (true) {
@@ -113,6 +117,10 @@ std::optional<Event> Session::_handleReceivedPacket(PacketType type, const std::
 }
 
 void Session::sendPacket(std::shared_ptr<PackagedPacket> packet) {
+    if (!this->isOkay()) {
+        return;
+    }
+
     boost::system::error_code ec;
     boost::asio::write(this->socket, packet->toBuffer(), ec);
 
