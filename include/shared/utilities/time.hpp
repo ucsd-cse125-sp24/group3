@@ -1,3 +1,3 @@
 #pragma once
 
-long getMsSinceEpoch();
+long long getMsSinceEpoch();
