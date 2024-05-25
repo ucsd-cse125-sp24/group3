@@ -15,18 +15,71 @@ Session::Session(tcp::socket socket, SessionInfo info):
     socket(std::move(socket)),
     info(info)
 {
+    this->okay = true;
 }
 
 Session::~Session() {
+}
+
+bool Session::isOkay() const {
+    return this->okay;
 }
 
 const SessionInfo& Session::getInfo() const {
     return this->info;
 }
 
-void Session::startListen() {
-    // This starts a chain that will continue on and on
-    _receivePacketAsync();
+std::vector<Event> Session::handleAllReceivedPackets() {
+    std::vector<Event> events;
+
+    while (true) {
+        if (!prev_hdr.has_value()) {
+            // we haven't already pulled in a header, see if there is a header waiting for us
+            if (!socketHasEnoughBytes(sizeof(PacketHeader))) {
+                return events;
+            }
+
+            boost::system::error_code ec;
+            boost::asio::read(this->socket, boost::asio::buffer(this->buffer), 
+                boost::asio::transfer_exactly(sizeof(PacketHeader)), ec);
+            switch (_classifySocketError(ec, "receiving header")) {
+                case SocketError::NONE: break;
+                case SocketError::FATAL: 
+                    this->okay = false;
+                    return events;
+            }
+
+            this->prev_hdr = PacketHeader(static_cast<void*>(&this->buffer[0]));
+        }
+
+        // if (!socketHasEnoughBytes(this->prev_hdr->size)) {
+        //     std::cout << "dont have enough bytes for " << this->prev_hdr->size << "\n";
+        //     return events;
+        // }
+
+        boost::system::error_code ec;
+        boost::asio::read(this->socket, boost::asio::buffer(this->buffer),
+            boost::asio::transfer_exactly(this->prev_hdr->size), ec);
+
+        switch (_classifySocketError(ec, "receiving data")) {
+            case SocketError::NONE: break;
+            case SocketError::FATAL:
+                this->okay = false;
+                std::cout << "setting ok to bad" << std::endl;
+                return events;
+        }
+
+        std::string data(this->buffer.begin(), this->buffer.begin() + this->prev_hdr->size);
+        auto event = _handleReceivedPacket(this->prev_hdr->type, data);
+        if (event.has_value()) {
+            events.push_back(event.value());
+        }
+
+        this->prev_hdr = {};
+    }
+
+    // shouldnt get here but for safety
+    return events;
 }
 
 bool Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpoints) {
@@ -36,14 +89,15 @@ bool Session::connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpo
         std::cerr << "ERROR Connecting: " << ec.what() << std::endl;
         return false;
     }
+    std::cout << "connected\n";
     return true;
 }
 
-void Session::_handleReceivedPacket(PacketType type, const std::string& data) {
+std::optional<Event> Session::_handleReceivedPacket(PacketType type, const std::string& data) {
     // First figure out if packet is event or non-event
     if (type == PacketType::Event) {
         auto event = deserialize<EventPacket>(data).event;
-        this->received_events.push_back(event);
+        return event;
     } else if (type == PacketType::ServerAssignEID) {
         this->info.client_eid = deserialize<ServerAssignEIDPacket>(data).eid;
         this->info.is_dungeon_master = deserialize<ServerAssignEIDPacket>(data).is_dungeon_master;
@@ -53,75 +107,26 @@ void Session::_handleReceivedPacket(PacketType type, const std::string& data) {
         this->info.client_name = deserialize<ClientDeclareInfoPacket>(data).player_name;
         std::cout << "Handling ClientDeclareInfo from " << *this->info.client_name << "...\n";
     } else {
-        std::cerr << "Unknown packet type received in Session::_addReceivedPacket" << (int) type << std::endl;
+        std::cerr << "Unknown packet type received in Session::_addReceivedPacket " << (int) type << std::endl;
+    }
+    return {};
+}
+
+void Session::sendPacket(std::shared_ptr<PackagedPacket> packet) {
+    boost::system::error_code ec;
+    boost::asio::write(this->socket, packet->toBuffer(), ec);
+
+    switch (_classifySocketError(ec, "sending packet")) {
+        case SocketError::NONE: break;
+        // not currently handling retry
+        case SocketError::FATAL: 
+            this->okay = false;
+            return;
     }
 }
 
-std::vector<Event> Session::getEvents() {
-    std::vector<Event> vec;
-
-    std::swap(vec, this->received_events);
-
-    return vec;
-}
-
-void Session::sendPacketAsync(std::shared_ptr<PackagedPacket> packet) {
-    auto self = shared_from_this();
-
-    // pass packet shared ptr into closure capture list to keep it alive until written to buffer
-    boost::asio::async_write(socket, packet->toBuffer(),
-        [this, packet, self](boost::system::error_code ec, std::size_t /*length*/) {
-            switch (_classifySocketError(ec, "sending packet")) {
-            case SocketError::NONE:
-                break;
-            case SocketError::FATAL:
-                return;
-            case SocketError::RETRY:
-                sendPacketAsync(packet);
-                return;
-            }
-        });
-}
-
-void Session::sendEventAsync(Event event) {
-    this->sendPacketAsync(PackagedPacket::make_shared(PacketType::Event, EventPacket(event)));
-}
-
-void Session::_receivePacketAsync() {
-    auto self(shared_from_this());
-    const std::size_t BUF_SIZE = NETWORK_BUFFER_SIZE;
-    auto buf = std::make_shared<std::array<char, BUF_SIZE>>();
-
-    boost::asio::async_read(socket, boost::asio::buffer(&buf.get()[0], BUF_SIZE),
-        boost::asio::transfer_exactly(sizeof(PacketHeader)),
-        [this, buf, self](boost::system::error_code ec, std::size_t length) {
-            switch (_classifySocketError(ec, "receiving header")) {
-            case SocketError::NONE:
-                break;
-            case SocketError::FATAL:
-                return;
-            }
-
-            PacketHeader hdr(static_cast<void*>(&buf.get()[0]));
-
-            boost::asio::async_read(socket, boost::asio::buffer(buf.get(), BUF_SIZE),
-                boost::asio::transfer_exactly(hdr.size),
-                [this, buf, hdr, self](boost::system::error_code ec,
-                    std::size_t length)
-                {
-                    switch (_classifySocketError(ec, "receiving data")) {
-                    case SocketError::NONE:
-                        break;
-                    case SocketError::FATAL:
-                        return;
-                    }
-
-                    std::string data(buf->begin(), buf->begin() + hdr.size);
-                    self->_handleReceivedPacket(hdr.type, data);
-                    _receivePacketAsync();
-                });
-
-        });
+void Session::sendEvent(Event event) {
+    this->sendPacket(PackagedPacket::make_shared(PacketType::Event, EventPacket(event)));
 }
 
 SocketError Session::_classifySocketError(boost::system::error_code ec, const char* where) {
@@ -135,7 +140,6 @@ SocketError Session::_classifySocketError(boost::system::error_code ec, const ch
     // all fatal right now
     return SocketError::FATAL;
 
-
     // if (ec == boost::asio::error::connection_reset ||
     //     ec == boost::asio::error::eof ||
     //     ec == boost::asio::error::access_denied ||
@@ -145,4 +149,12 @@ SocketError Session::_classifySocketError(boost::system::error_code ec, const ch
     // } else {
     //     return SocketError::RETRY;
     // }
+}
+
+bool Session::socketHasEnoughBytes(std::size_t bytes) {
+    boost::asio::socket_base::bytes_readable command(true);
+    socket.io_control(command);
+    std::size_t bytes_readable = command.get();
+
+    return bytes_readable >= bytes;
 }
