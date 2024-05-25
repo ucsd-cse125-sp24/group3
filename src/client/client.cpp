@@ -354,7 +354,21 @@ void Client::processServerInput() {
     // But this is a demo of how you could use the client session to get information from
     // the game state
 
-    for (Event event : this->session->handleAllReceivedPackets()) {
+    const static std::chrono::milliseconds MIN_DEFER_TIME = 5ms;
+    static std::chrono::milliseconds defer_time = MIN_DEFER_TIME;
+    bool had_to_defer = false;
+
+    auto start = std::chrono::system_clock::now();
+
+    auto events = this->session->handleAllReceivedPackets();
+
+    for (const auto& event : events) {
+        this->events_received.push_back(event);
+    }
+
+    while (!this->events_received.empty()) {
+        const Event& event = this->events_received.front();            
+
         if (event.type == EventType::LoadGameState) {
             GamePhase old_phase = this->gameState.phase;
             this->gameState.update(boost::get<LoadGameStateEvent>(event.data).state);
@@ -393,6 +407,23 @@ void Client::processServerInput() {
                 this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
             }
         }
+
+        this->events_received.pop_front();
+
+        auto now = std::chrono::system_clock::now();
+        if (now - start > defer_time) {
+            defer_time = defer_time * 2;
+            had_to_defer = true;
+            std::cout << defer_time.count() << "\n";
+            break;
+        }
+    }
+    if (!had_to_defer) {
+        defer_time -=1ms;
+        if (defer_time < MIN_DEFER_TIME) {
+            defer_time = MIN_DEFER_TIME;
+        }
+        std::cout << defer_time.count() << "\n";
     }
 }
 

@@ -256,5 +256,7 @@ private:
     glm::vec3 world_pos; // stored world pause, calculated before the GUI is rendered
 
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> closest_light_sources;
+
+    std::deque<Event> events_received;
 };
 
