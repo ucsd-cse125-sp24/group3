@@ -1029,7 +1029,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
         case GLFW_KEY_LEFT_SHIFT:
             if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
-
+                this->session->sendEventAsync(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
             is_held_i = false;
             break;
