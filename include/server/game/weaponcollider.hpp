@@ -10,7 +10,7 @@ class WeaponCollider : public Object {
 public:
 
     struct WeaponOptions {
-        WeaponOptions(int damage, float timeUntilAttack, int attackDuration, bool followPlayer) :
+        WeaponOptions(int damage, int timeUntilAttack, int attackDuration, bool followPlayer) :
             damage(damage), timeUntilAttack(timeUntilAttack), attackDuration(attackDuration), followPlayer(followPlayer)
         {}
 

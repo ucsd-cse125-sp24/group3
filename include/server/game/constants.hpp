@@ -13,7 +13,7 @@
 
 
 /* ServerGameState Constants */
-#define MAX_ALIVE_ENEMIES 15
+#define MAX_ENEMY_VALUE			300
 
 /*	Maze Constants */
 #define	MAX_MAZE_COLUMNS		10000
@@ -39,7 +39,7 @@
 #define	RESTORE_HEALTH			20
 #define HEALTH_DURATION			0
 
-#define	NAUSEA_SCALAR			-1.0f
+#define	NAUSEA_SCALAR			-1
 #define NAUSEA_DURATION			10
 
 #define INVIS_DURATION			15
