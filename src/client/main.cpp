@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
         client->displayCallback();
 
         // Idle callback. Updating objects, etc. can be done here.
-        client->idleCallback(context);
+        client->idleCallback();
     }
 
     client->cleanup();
