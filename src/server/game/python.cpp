@@ -32,6 +32,7 @@ bool Python::doBehavior(ServerGameState& state) {
         for (int p = 0; p < players.size(); p++) {
             auto player = players.get(p);
             if (player == nullptr) continue;
+            if (!player->canBeTargetted()) continue;
 
             float distance_to_player = glm::distance(this->physics.shared.corner, player->physics.shared.corner);
             if (distance_to_player < closest_dist) {

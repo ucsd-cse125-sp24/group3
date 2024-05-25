@@ -22,5 +22,7 @@ public:
 
 	virtual SharedObject toShared() override;
 
+	bool canBeTargetted() const;
+
 private:
 };
