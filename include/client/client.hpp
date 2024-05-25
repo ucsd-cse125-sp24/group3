@@ -172,9 +172,12 @@ private:
     /**
      * @brief Processes all data received from the server and updates the SharedGameState.
      * 
-     * @param context
+     * @param allow_defer whether or not you are allowed to defer packets until the next frame
+     * IMPORTANT: this is a performance optimization for more unstable networks, but it must
+     * be set to false until the ServerAssignEID packet has been received because then it
+     * guarantees the game has been fully loaded before trying to render things
      */
-    void processServerInput();
+    void processServerInput(bool allow_defer);
 
     /**
      * @brief Draws all objects in the SharedGameState.

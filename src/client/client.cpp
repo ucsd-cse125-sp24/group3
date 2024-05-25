@@ -268,7 +268,10 @@ void Client::idleCallback() {
     GamePhase rendered_phase = this->gameState.phase;
 
     if (this->session != nullptr) {
-        processServerInput();
+        // only defer packets to next frame if we've already loaded the entire initial game,
+        // which is signified by having received our EID from the server
+        bool allow_defer = this->session->getInfo().client_eid.has_value();
+        processServerInput(allow_defer);
     }
 
     // If we aren't in the middle of the game then we shouldn't capture any movement info
@@ -356,7 +359,7 @@ void Client::idleCallback() {
 }
 
 
-void Client::processServerInput() {
+void Client::processServerInput(bool allow_defer) {
     // probably want to put rendering logic inside of client, so that this main function
     // mimics the server one where all of the important logic is done inside of a run command
     // But this is a demo of how you could use the client session to get information from
@@ -419,13 +422,13 @@ void Client::processServerInput() {
         this->events_received.pop_front();
 
         auto now = std::chrono::system_clock::now();
-        if (now - start > defer_time) {
+        if (allow_defer && now - start > defer_time) {
             defer_time = defer_time * 2;
             had_to_defer = true;
             break;
         }
     }
-    if (!had_to_defer) {
+    if (allow_defer && !had_to_defer) {
         defer_time -= 1ms;
         if (defer_time < MIN_DEFER_TIME) {
             defer_time = MIN_DEFER_TIME;
