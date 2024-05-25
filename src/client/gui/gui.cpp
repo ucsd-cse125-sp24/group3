@@ -271,7 +271,7 @@ void GUI::_layoutLobbyBrowser() {
             widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK));
         entry->addOnClick([ip, this](widget::Handle handle){
             std::cout << "Connecting to " << ip.address() << " ...\n";
-            if (this->client->connectAndListen(ip.address().to_string())) {
+            if (this->client->connect(ip.address().to_string())) {
                 this->client->gui_state = GUIState::LOBBY;
                 this->clearCapturedKeyboardInput();
             }
@@ -326,7 +326,7 @@ void GUI::_layoutLobbyBrowser() {
     });
     connect_btn->addOnClick([this](widget::Handle handle) {
         auto input = this->getCapturedKeyboardInput();
-        if (client->connectAndListen(input)) {
+        if (client->connect(input)) {
             client->gui_state = GUIState::LOBBY;
             this->clearCapturedKeyboardInput();
         }

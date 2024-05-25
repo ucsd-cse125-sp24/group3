@@ -37,6 +37,7 @@
 #include "shared/game/celltype.hpp"
 #include "shared/utilities/timer.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/network/session.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/ext/matrix_clip_space.hpp"
@@ -85,7 +86,7 @@ AudioManager* Client::getAudioManager() {
     return this->audioManager;
 }
 
-bool Client::connectAndListen(std::string ip_addr) {
+bool Client::connect(std::string ip_addr) {
     this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
     this->session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo(this->config.client.default_name, {}, {}));
@@ -102,9 +103,8 @@ bool Client::connectAndListen(std::string ip_addr) {
     auto packet = PackagedPacket::make_shared(PacketType::ClientDeclareInfo,
         ClientDeclareInfoPacket { .player_name = name });
 
-    this->session->sendPacketAsync(packet);
+    this->session->sendPacket(packet);
 
-    this->session->startListen();
     return true;
 }
 
@@ -160,8 +160,6 @@ bool Client::init() {
     auto cube_frag_path = shaders_dir / "cube.frag";
     this->cube_shader = std::make_shared<Shader>(cube_vert_path.string(), cube_frag_path.string());    
     
-
-
     auto model_vert_path = shaders_dir / "model.vert";
     auto model_frag_path = shaders_dir / "model.frag";
     this->model_shader = std::make_shared<Shader>(model_vert_path.string(), model_frag_path.string());
@@ -255,7 +253,7 @@ void Client::displayCallback() {
 }
 
 // Handle any updates 
-void Client::idleCallback(boost::asio::io_context& context) {
+void Client::idleCallback() {
     // have to do before processing server input because if the phase changes
     // in this call to process server input, we should just skip this first
     // inbetween phase and don't get any input because we might get a serialization
@@ -263,7 +261,10 @@ void Client::idleCallback(boost::asio::io_context& context) {
     GamePhase rendered_phase = this->gameState.phase;
 
     if (this->session != nullptr) {
-        processServerInput(context);
+        // only defer packets to next frame if we've already loaded the entire initial game,
+        // which is signified by having received our EID from the server
+        bool allow_defer = this->session->getInfo().client_eid.has_value();
+        processServerInput(allow_defer);
     }
 
     // If we aren't in the middle of the game then we shouldn't capture any movement info
@@ -291,24 +292,24 @@ void Client::idleCallback(boost::asio::io_context& context) {
     if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
         auto eid = this->session->getInfo().client_eid.value();
 
-        this->session->sendEventAsync(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam->getFacing())));
+        this->session->sendEvent(Event(eid, EventType::ChangeFacing, ChangeFacingEvent(eid, cam->getFacing())));
 
         // Send jump action
         if (is_held_space) {
-            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Jump)));
+            this->session->sendEvent(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Jump)));
         }
 
         if (this->session->getInfo().is_dungeon_master.value()) {
             if (is_held_i) {
-                this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, -1.0f, 0.0f), ActionType::Zoom)));
+                this->session->sendEvent(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, -1.0f, 0.0f), ActionType::Zoom)));
             }
             if (is_held_o) {
-                this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Zoom)));
+                this->session->sendEvent(Event(eid, EventType::StartAction, StartActionEvent(eid, glm::vec3(0.0f, 1.0f, 0.0f), ActionType::Zoom)));
             }
 
             // send one event
             if ((is_held_down || is_held_i || is_held_left || is_held_right || is_held_up || is_held_o) && is_pressed_p)
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
+                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
         }
 
         if (this->session->getInfo().is_dungeon_master.value() && is_pressed_p && is_left_mouse_down) {
@@ -318,46 +319,59 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
             switch (selectedTrap) {
             case ModelType::FloorSpikeFull:
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, false, true)));
+                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, false, true)));
                 break;
             case ModelType::FloorSpikeVertical:
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeVertical, false, true)));
+                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeVertical, false, true)));
                 break;
             case ModelType::FloorSpikeHorizontal:
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeHorizontal, false, true)));
+                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeHorizontal, false, true)));
                 break;
             case ModelType::FireballTrap:
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrap, false, true)));
+                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrap, false, true)));
                 break;
             case ModelType::SpikeTrap:
-                this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, false, true)));
+                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, false, true)));
                 break;
             }
         }
 
         // If movement 0, send stopevent
         if ((sentCamMovement != cam_movement) && cam_movement == glm::vec3(0.0f)) {
-            this->session->sendEventAsync(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement, ActionType::MoveCam)));
+            this->session->sendEvent(Event(eid, EventType::StopAction, StopActionEvent(eid, cam_movement, ActionType::MoveCam)));
             sentCamMovement = cam_movement;
         }
 
         // If movement detected, different from previous, send start event
         else if (sentCamMovement != cam_movement) {
-            this->session->sendEventAsync(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement, ActionType::MoveCam)));
+            this->session->sendEvent(Event(eid, EventType::StartAction, StartActionEvent(eid, cam_movement, ActionType::MoveCam)));
             sentCamMovement = cam_movement;
         }
     }
 }
 
-void Client::processServerInput(boost::asio::io_context& context) {
-    context.run_for(5ms);
 
+void Client::processServerInput(bool allow_defer) {
     // probably want to put rendering logic inside of client, so that this main function
     // mimics the server one where all of the important logic is done inside of a run command
     // But this is a demo of how you could use the client session to get information from
     // the game state
 
-    for (Event event : this->session->getEvents()) {
+    const static std::chrono::milliseconds MIN_DEFER_TIME = 5ms;
+    static std::chrono::milliseconds defer_time = MIN_DEFER_TIME;
+    bool had_to_defer = false;
+
+    auto start = std::chrono::system_clock::now();
+
+    auto events = this->session->handleAllReceivedPackets();
+
+    for (const auto& event : events) {
+        this->events_received.push_back(event);
+    }
+
+    while (!this->events_received.empty()) {
+        const Event& event = this->events_received.front();            
+
         if (event.type == EventType::LoadGameState) {
             GamePhase old_phase = this->gameState.phase;
             this->gameState.update(boost::get<LoadGameStateEvent>(event.data).state);
@@ -395,6 +409,21 @@ void Client::processServerInput(boost::asio::io_context& context) {
                 // update intensity with incoming intensity 
                 this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
             }
+        }
+
+        this->events_received.pop_front();
+
+        auto now = std::chrono::system_clock::now();
+        if (allow_defer && now - start > defer_time) {
+            defer_time = defer_time * 2;
+            had_to_defer = true;
+            break;
+        }
+    }
+    if (allow_defer && !had_to_defer) {
+        defer_time -= 1ms;
+        if (defer_time < MIN_DEFER_TIME) {
+            defer_time = MIN_DEFER_TIME;
         }
     }
 }
@@ -846,7 +875,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_E:
             if (eid.has_value()) {
                 if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
+                    this->session->sendEvent(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
                 }
             }
             break;
@@ -854,7 +883,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_Q:
             if (eid.has_value()) {
                 if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::DropItem, DropItemEvent(eid.value())));
+                    this->session->sendEvent(Event(eid.value(), EventType::DropItem, DropItemEvent(eid.value())));
                 }
             }
             break;
@@ -862,7 +891,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_1:
             if (eid.has_value()) {
                 if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
+                    this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
                 }
             }
             break;
@@ -870,7 +899,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_2:
             if (eid.has_value()) {
                 if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 2)));
+                    this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 2)));
                 }
             }
             break;
@@ -878,7 +907,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_3:
             if (eid.has_value()) {
                 if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 3)));
+                    this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 3)));
                 }
             }
             break;
@@ -886,21 +915,21 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_4:
             if (eid.has_value()) {
                 if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 4)));
+                    this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 4)));
                 }
             }
             break;
         case GLFW_KEY_RIGHT:
             if (eid.has_value()) {
                 if (is_dm.has_value() && is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
+                    this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
                 }
             }
             break;
         case GLFW_KEY_LEFT:
             if (eid.has_value()) {
                 if (is_dm.has_value() && is_dm.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), -1)));
+                    this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), -1)));
                 }
             }
             break;
@@ -941,17 +970,17 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
                 // unhighlight hover
                 if (eid.has_value()) {
                     // nothing being placed, so the CellType we pass shouldn't matter!
-                    this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                    this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
                 }
             }
             else {
-                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, false, false)));
+                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, false, false)));
             }
             break;
         /* Send an event to start 'shift' movement (i.e. sprint) */
         case GLFW_KEY_LEFT_SHIFT:
             if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
+                this->session->sendEvent(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
             is_held_i = true;
             break;
@@ -966,28 +995,28 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_S:
             is_held_down = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
             }
             break;
 
         case GLFW_KEY_W:
             is_held_up = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
             }
             break;
 
         case GLFW_KEY_A:
             is_held_left = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
             }
             break;
 
         case GLFW_KEY_D:
             is_held_right = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
             }
             break;
             
@@ -998,7 +1027,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
         case GLFW_KEY_LEFT_SHIFT:
             if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
+                this->session->sendEvent(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
             is_held_i = false;
             break;
@@ -1006,12 +1035,12 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_O: // zoom out
             is_held_o = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
             }
             break;
         case GLFW_KEY_I: // zoom out
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
             }
             is_held_i = false;
             break;
@@ -1023,16 +1052,16 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
     if (action == GLFW_REPEAT) {
         switch (key) {
        /* case GLFW_KEY_S:
-            this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
+            this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
             break;
         case GLFW_KEY_W:
-            this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
+            this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
             break;
         case GLFW_KEY_A:
-            this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
+            this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
             break;
         case GLFW_KEY_D:
-            this->session->sendEventAsync(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
+            this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
             break;*/
         case GLFW_KEY_BACKSPACE:
             auto ms_since_epoch = getMsSinceEpoch();
@@ -1058,7 +1087,7 @@ void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { /
         auto eid = this->session->getInfo().client_eid.value();
 
         // the actual trap doesn't matter, this is just for highlighting purposes
-        this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
     }
 }
 
@@ -1105,7 +1134,7 @@ void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int
             case GLFW_MOUSE_BUTTON_LEFT:
                 if (eid.has_value() && this->session->getInfo().is_dungeon_master.has_value() &&
                     !this->session->getInfo().is_dungeon_master.value()) {
-                    this->session->sendEventAsync(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
+                    this->session->sendEvent(Event(eid.value(), EventType::UseItem, UseItemEvent(eid.value())));
                 }
                 break;
             }
