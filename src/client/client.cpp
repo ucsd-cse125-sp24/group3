@@ -991,6 +991,12 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             }
             is_held_i = true;
             break;
+        case GLFW_KEY_LEFT_CONTROL:
+            if (this->session->getInfo().is_dungeon_master.has_value() && this->session->getInfo().is_dungeon_master.value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
+            }
+
+            break;
 
         default:
             break;
@@ -1034,7 +1040,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
         case GLFW_KEY_LEFT_SHIFT:
             if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
-
+                this->session->sendEventAsync(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
             is_held_i = false;
             break;
@@ -1050,6 +1056,12 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
                 sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             is_held_i = false;
+            break;
+        case GLFW_KEY_LEFT_CONTROL:
+            if (this->session->getInfo().is_dungeon_master.has_value() && this->session->getInfo().is_dungeon_master.value()) {
+                this->session->sendEventAsync(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
+            }
+
             break;
         default:
             break;

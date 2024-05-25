@@ -203,7 +203,12 @@ void ServerGameState::update(const EventList& events) {
 				break;
 			}
 			case ActionType::Sprint: {
-				obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
+				if (obj->type == ObjectType::DungeonMaster) {
+					obj->physics.velocityMultiplier = glm::vec3(5.0f, 1.1f, 5.0f);
+				}
+				else {
+					obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
+				}
 				break;
 			}
 			case ActionType::Zoom: { // only for DM
@@ -847,9 +852,6 @@ void ServerGameState::doTorchlightTicks() {
 }
 
 void ServerGameState::updateTraps() {
-	// insert DM regardless?
-	this->updated_entities.insert(this->objects.getDM()->globalID);
-
 	// get current time when calling this function
 	auto current_time = std::chrono::system_clock::now();
 	DungeonMaster* dm = this->objects.getDM();
