@@ -338,11 +338,11 @@ void Client::idleCallback(boost::asio::io_context& context) {
 
             // send one event
             if ((is_held_down || is_held_i || is_held_left || is_held_right || is_held_up || is_held_o) && is_pressed_p)
-                sendTrapEvent(true, false, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected]);
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected-1]);
         }
 
         if (this->session->getInfo().is_dungeon_master.value() && is_pressed_p && is_left_mouse_down) {
-            sendTrapEvent(false, true, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected]);
+            sendTrapEvent(false, true, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected-1]);
         }
 
         // If movement 0, send stopevent
@@ -977,11 +977,11 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
                 // unhighlight hover
                 if (eid.has_value()) {
                     // nothing being placed, so the CellType we pass shouldn't matter!
-                    sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected]);
+                    sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
                 }
             }
             else {
-                sendTrapEvent(false, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected]);
+                sendTrapEvent(false, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
         /* Send an event to start 'shift' movement (i.e. sprint) */
@@ -1002,28 +1002,28 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_S:
             is_held_down = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected]);
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
 
         case GLFW_KEY_W:
             is_held_up = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected]);
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
 
         case GLFW_KEY_A:
             is_held_left = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected]);
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
 
         case GLFW_KEY_D:
             is_held_right = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected]);
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
             
@@ -1042,12 +1042,12 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_O: // zoom out
             is_held_o = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected]);
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
         case GLFW_KEY_I: // zoom out
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected]);
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             is_held_i = false;
             break;
@@ -1130,7 +1130,7 @@ void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { /
         auto eid = this->session->getInfo().client_eid.value();
 
         // the actual trap doesn't matter, this is just for highlighting purposes
-        sendTrapEvent(true, false, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected]);
+        sendTrapEvent(true, false, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected-1]);
     }
 }
 
