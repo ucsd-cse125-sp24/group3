@@ -518,6 +518,28 @@ void Client::draw() {
                     true);
                 break;
             }
+            case ObjectType::Minotaur: {
+                auto cube = std::make_unique<Cube>(glm::vec3(0.1f));
+                cube->scaleAbsolute(sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader.get(),
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    {},
+                    true);
+                break;
+            }
+            case ObjectType::Python: {
+                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.2f));
+                cube->scaleAbsolute(sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader.get(),
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    {},
+                    true);
+                break;
+            }
             case ObjectType::SolidSurface: {
                 if (is_dm && sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling) {
                     // don't render ceiling as DM

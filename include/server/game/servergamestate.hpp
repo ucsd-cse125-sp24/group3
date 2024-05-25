@@ -11,6 +11,7 @@
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"
 #include "server/game/objectmanager.hpp"
+#include "server/game/spawner.hpp"
 
 #include <string>
 #include <vector>
@@ -221,6 +222,12 @@ public:
 	 */
 	Grid& getGrid();
 
+	/**
+	 * @brief Returns the spawner in the ServerGameState
+	 * @return Reference to spawner instance in the ServerGameState
+	 */
+	Spawner* getSpawner();
+
 	/*	Debugger Methods	*/
 
 	/**
@@ -340,7 +347,7 @@ private:
 	SoundTable sound_table;
 
 	/**
-	 * @brief number of enemies currently in the maze
+	 * @brief Controls the spawns for the enemies
 	 */
-	int alive_enemy_weight;
+	Spawner* spawner;
 };
