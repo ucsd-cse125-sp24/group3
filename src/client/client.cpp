@@ -240,7 +240,7 @@ void Client::displayCallback() {
         this->draw();
     }
     else if (this->gameState.phase == GamePhase::RESULTS) {
-        if (this->gui_state == GUIState::GAME_HUD)
+        if (this->gui_state == GUIState::GAME_HUD || this->gui_state == GUIState::DEAD_SCREEN)
             this->gui_state = GUIState::RESULTS_SCREEN;
         this->draw();
     }
