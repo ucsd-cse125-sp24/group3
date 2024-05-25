@@ -13,12 +13,12 @@
     "server": {
         "lobby_name": "Hope you're doing well!",
         "lobby_broadcast": true,
-        "max_players": 1
+        "max_players": 4
     },
     "client": {
         "default_name": "Conan O'Brien",
         "lobby_discovery": true,
-        "window_width": 2000,
+        "window_width": 1920,
         "draw_bboxes": false
     }
 }

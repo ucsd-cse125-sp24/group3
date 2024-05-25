@@ -62,6 +62,15 @@ struct LobbyPlayer {
 	DEF_SERIALIZE(Archive& ar, unsigned int version) {
 		ar& id& desired_role & ready;
 	}
+
+	/*	Debug Methods	*/
+	
+	/**
+	 * @brief Generates a string representation of this Lobby Player struct.
+	 * @return std::string representation of this Lobby Player struct.
+	*/
+	std::string to_string(unsigned int tab_offset);
+	std::string to_string() { return this->to_string(0); }
 };
 
 /**
@@ -95,7 +104,9 @@ struct Lobby {
 
 	Lobby(std::string name, int max_players) : name(name), max_players(max_players) {
 		//	Reserve max_players slots in the players vector
-		this->players.reserve(max_players);
+		for (int i = 0; i < max_players; i++) {
+			this->players.push_back(boost::none);
+		}
 	}
 
 	/**
@@ -136,6 +147,15 @@ struct Lobby {
 
 	//	TODO: Add a player role listing? I.e., which player is playing which
 	//	character and which player is playing as the Dungeon Master?
+
+	/*	Debug Methods	*/
+
+	/**
+	 * @brief Generates a string representation of this Lobby struct.
+	 * @return std::string representation of this Lobby struct
+	 */
+	std::string to_string(unsigned int tab_offset) const;
+	std::string to_string() const { return this->to_string(0); }
 };
 
 /**

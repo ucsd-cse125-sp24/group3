@@ -287,6 +287,9 @@ std::chrono::milliseconds Server::doTick() {
             }
 
             this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
+
+            //std::cout << this->state.getLobby().to_string() << std::endl;
+
             break;
         }
 

@@ -327,26 +327,91 @@ void GUI::_layoutLobby() {
     //  2.  Player Status Table
     //  3.  Start Game Button
 
-    //  GUI Subsection 1: Lobby Name
+    /*  GUI Subsection 1:   Lobby Name  */
+
+    glm::vec2 lobby_title_position(0.0f, WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE));
     auto lobby_title = widget::CenterText::make(
         this->client->gameState.lobby.name,
         font::Font::MENU,
         font::Size::LARGE,
         font::Color::BLACK,
         this->fonts,
-        WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE)
+        lobby_title_position.y
     );
 
     this->addWidget(std::move(lobby_title));
 
-    //  GUI Subsection 2: Player Status Table
+    /*  GUI Subsection 2:   Player Status Table */
 
     //  Create a table with 4 rows
-    auto player_status_table = widget::Flexbox::make(
+    glm::vec2 rowSize(WINDOW_WIDTH, 0);
 
+    widget::Flexbox::Options rowFlexboxOptions(
+        widget::Dir::VERTICAL,
+        widget::Align::CENTER,
+        0.0f
     );
 
+    //  Create rows
+    std::vector<glm::vec2> rowOrigins;
 
+    rowOrigins.reserve(this->client->gameState.lobby.max_players);
+
+    for (int i = 0; i < this->client->gameState.lobby.max_players; i++) {
+        //  Get LobbyPlayer for this player
+        boost::optional<LobbyPlayer> lobbyPlayer = this->client->gameState.lobby.players[i];
+        bool playerExists = lobbyPlayer.has_value();
+
+        //  Initialize row origin position
+        rowOrigins[i] = glm::vec2(0, lobby_title_position.y - font::getFontSizePx(font::Size::LARGE) * (i + 1));
+
+        //  Create table row Flexbox
+        auto player_status_row = widget::Flexbox::make(
+            rowOrigins[i],
+            rowSize,
+            rowFlexboxOptions
+        );
+
+        //  Add table row elements to table row
+
+        /*  Player Identification Column    */
+        std::string playerIdString;
+
+        if (!playerExists) {
+            //  Player in this row doesn't exist - player not connected
+            playerIdString = "Empty";
+        }
+        else {
+            //  Player exists
+            playerIdString = "Player " + std::to_string(i + 1);
+
+            if (this->client->session.get()->getInfo().client_eid.has_value()) {
+                EntityID lobbyPlayer_eid = lobbyPlayer.get().id;
+                EntityID client_eid = this->client->session.get()->getInfo().client_eid.value();
+                
+                std::cout << "lobby player eid: " << lobbyPlayer_eid << std::endl;
+                std::cout << "client player eid: " << client_eid << std::endl;
+ 
+                if (lobbyPlayer_eid == client_eid) {
+                    //  This player is this client's player
+                    playerIdString += " (You)";
+                }
+            }
+        }
+        
+        player_status_row->push(widget::DynText::make(
+            playerIdString,
+            this->fonts,
+            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+        ));
+
+        /*  Player Role Column  */
+
+        /*  Ready Status Column */
+
+        //  Add table row to the screen
+        this->addWidget(std::move(player_status_row));
+    }
 
     /*
     auto lobby_title = widget::CenterText::make(

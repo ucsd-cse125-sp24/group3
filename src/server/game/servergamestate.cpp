@@ -138,13 +138,21 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 			}
 		}
 
-		if (num_in_curr_update > 0) {
+		//	Make sure that SharedGameState updates are sent while the server is in the
+		//	Lobby phase (to ensure players can see other players lobby status updates)
+		if (num_in_curr_update > 0 || this->getPhase() == GamePhase::LOBBY) {
 			partial_updates.push_back(curr_update);
 		}
 
 		// wipe updated entities list
 		std::unordered_set<EntityID> empty;
 		std::swap(this->updated_entities, empty);
+	}
+
+	if (partial_updates.size() > 0) {
+		std::cout << "Number of partial updates: " << std::to_string(partial_updates.size()) << std::endl;
+		std::cout << "Partial update's lobby (in server):" << std::endl;
+		std::cout << partial_updates[0].lobby.to_string() << std::endl;
 	}
 
 	return partial_updates;
@@ -1013,6 +1021,19 @@ void ServerGameState::setPlayerVictory(bool playerVictory) {
 
 void ServerGameState::addPlayerToLobby(LobbyPlayer player) {
 	//this->lobby.players[id] = name;
+
+	//	Only add the player if a player with the given EntityID doesn't exist
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (this->lobby.players[i].has_value()
+			&& this->lobby.players[i].get().id == player.id)
+		{
+			//	A player with this EntityID already exists in this
+			//	ServerGameState's Lobby - return without adding player
+			//	again to this server's Lobby
+			return;
+		}
+	}
+
 	bool freeIndex = false;
 
 	for (int i = 0; i < this->lobby.max_players; i++) {
@@ -1020,6 +1041,8 @@ void ServerGameState::addPlayerToLobby(LobbyPlayer player) {
 			//	Found a free index! Adding player here
 			freeIndex = true;
 			this->lobby.players[i] = player;
+			std::cout << "Added new player in index " << std::to_string(i) << std::endl;
+			std::cout << "Player's eid: " << player.id << std::endl;
 			break;
 		}
 	}
