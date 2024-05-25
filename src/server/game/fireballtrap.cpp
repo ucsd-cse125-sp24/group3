@@ -47,6 +47,7 @@ bool FireballTrap::shouldTrigger(ServerGameState& state) {
     for (int p = 0; p < players.size(); p++) {
         auto player = players.get(p);
         if (player == nullptr) continue;
+        if (!player->canBeTargetted()) continue;
 
         glm::vec3 player_pos = player->physics.shared.getCenterPosition();
 
