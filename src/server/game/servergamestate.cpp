@@ -1618,35 +1618,35 @@ void ServerGameState::spawnTorch(GridCell *cell) {
 }
 
 Trap* ServerGameState::spawnFireballTrap(GridCell *cell) {
-    glm::vec3 dimensions(
-        Grid::grid_cell_width / 2,
-        0.5f,
-        Grid::grid_cell_width / 2
-    );
+    glm::vec3 dimensions = Object::models.at(ModelType::SunGod);
     glm::vec3 corner(
-        cell->x * Grid::grid_cell_width,
-        1.0f,
-        cell->y * Grid::grid_cell_width
+        (cell->x * Grid::grid_cell_width),
+        0.0f,
+        (cell->y * Grid::grid_cell_width)
     );
     Direction dir;
     switch (cell->type) {
         case CellType::FireballTrapLeft:
             dir = Direction::LEFT;
+            // corner.z -= (dimensions.z / 2.0f);
             break;
         case CellType::FireballTrapRight:
             dir = Direction::RIGHT;
+            // corner.z -= (dimensions.z / 2.0f);
             break;
         case CellType::FireballTrapUp:
             dir = Direction::UP;
+            corner.x += (dimensions.x / 2.0f);
             break;
         case CellType::FireballTrapDown:
+            corner.x += (dimensions.x / 2.0f);
             dir = Direction::DOWN;
             break;
         default:
             dir = Direction::LEFT;
             break;
     }
-    FireballTrap* fireBallTrap = new FireballTrap(corner, dimensions, dir);
+    FireballTrap* fireBallTrap = new FireballTrap(corner, dir);
     this->objects.createObject(fireBallTrap);
     return fireBallTrap;
 }

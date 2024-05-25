@@ -333,7 +333,7 @@ void Client::idleCallback(boost::asio::io_context& context) {
             case ModelType::FloorSpikeHorizontal:
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeHorizontal, false, true)));
                 break;
-            case ModelType::FireballTrap:
+            case ModelType::SunGod:
                 // TODO: allow for direction selection
                 this->session->sendEventAsync(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrapLeft, false, true)));
                 break;
@@ -624,9 +624,10 @@ void Client::draw() {
                 break;
             }
             case ObjectType::FireballTrap: {
-                // sungod_model->scaleAbsolute( sharedObject->physics.dimensions);
-                sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                sungod_model->draw(this->sungod_shader.get(),
+                this->sungod_model->setDimensions(sharedObject->physics.dimensions);
+                this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->sungod_model->rotateAbsolute(sharedObject->physics.facing);
+                this->sungod_model->draw(this->sungod_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     this->closest_light_sources,

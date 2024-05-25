@@ -13,8 +13,8 @@ using namespace std::chrono_literals;
 const std::chrono::seconds FireballTrap::TIME_UNTIL_RESET = 4s;
 const int FireballTrap::SHOOT_DIST = 15;
 
-FireballTrap::FireballTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir):
-    Trap(ObjectType::FireballTrap, false, corner, Collider::None, ModelType::Cube, dimensions) 
+FireballTrap::FireballTrap(glm::vec3 corner, Direction dir):
+    Trap(ObjectType::FireballTrap, false, corner, Collider::None, ModelType::SunGod) 
 {
     this->shoot_time = std::chrono::system_clock::now();
     this->physics.shared.facing = directionToFacing(dir);
@@ -50,7 +50,7 @@ bool FireballTrap::shouldTrigger(ServerGameState& state) {
     // convert grid units to actual distance values
     const float SHOOT_DIST_UNITS = Grid::grid_cell_width * FireballTrap::SHOOT_DIST;
     if (closest_dist <= SHOOT_DIST_UNITS && player_to_shoot_at != nullptr) {
-        this->physics.shared.facing = glm::normalize(player_to_shoot_at->physics.shared.getCenterPosition() - this_pos);
+        // this->physics.shared.facing = glm::normalize(player_to_shoot_at->physics.shared.getCenterPosition() - this_pos);
         this->target = player_to_shoot_at->globalID;
         return (randomInt(1, 5) == 1);
     }
@@ -121,6 +121,13 @@ float FireballTrap::canSee(Object* other, ServerGameState* state) {
                 return -1.0f;
             }
         }
+    }
+
+    glm::vec3 facing = glm::normalize(this->physics.shared.facing);
+    glm::vec3 dir_to_other = glm::normalize(other_pos - this_pos);
+    float angle_to_other = glm::dot(facing, dir_to_other);
+    if (std::abs(angle_to_other) >= 0.75) {
+        return -1.0f;
     }
 
     float curr_dist = glm::distance(other_pos, this_pos);
