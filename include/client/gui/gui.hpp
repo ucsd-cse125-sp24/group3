@@ -9,6 +9,7 @@
 #include "client/gui/widget/staticimg.hpp"
 #include "client/gui/widget/centertext.hpp"
 #include "client/gui/widget/textinput.hpp"
+#include "client/gui/widget/empty.hpp"
 #include "client/gui/font/font.hpp"
 #include "client/gui/font/loader.hpp"
 #include "client/gui/img/img.hpp"

@@ -347,7 +347,7 @@ void GUI::_layoutLobby() {
     glm::vec2 rowSize(WINDOW_WIDTH, 0);
 
     widget::Flexbox::Options rowFlexboxOptions(
-        widget::Dir::VERTICAL,
+        widget::Dir::HORIZONTAL,
         widget::Align::CENTER,
         0.0f
     );
@@ -355,7 +355,7 @@ void GUI::_layoutLobby() {
     //  Create rows
     std::vector<glm::vec2> rowOrigins;
 
-    rowOrigins.reserve(this->client->gameState.lobby.max_players);
+    rowOrigins.resize(this->client->gameState.lobby.max_players);
 
     for (int i = 0; i < this->client->gameState.lobby.max_players; i++) {
         //  Get LobbyPlayer for this player
@@ -375,6 +375,11 @@ void GUI::_layoutLobby() {
         //  Add table row elements to table row
 
         /*  Player Identification Column    */
+        //  Add spacing
+        player_status_row->push(widget::Empty::make(
+            50.0f
+        ));
+
         std::string playerIdString;
 
         if (!playerExists) {
@@ -402,12 +407,104 @@ void GUI::_layoutLobby() {
         player_status_row->push(widget::DynText::make(
             playerIdString,
             this->fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
         ));
 
         /*  Player Role Column  */
 
+        //  Add spacing
+        player_status_row->push(widget::Empty::make(
+            50.0f
+        ));
+        
+        if (!playerExists 
+            || lobbyPlayer.get().id != this->client->session.get()->getInfo().client_eid.value()) {
+            //  Case 1: This player is not the client player
+            //  In this case, the player is either not connected or their EntityID differs
+            //  from this client's EntityId
+
+            std::string playerRoleString;
+
+            if (!playerExists) {
+                playerRoleString = "...";
+            }
+            else {
+                if (!lobbyPlayer.get().ready) {
+                    playerRoleString = "Player " + std::to_string(i + 1) + " isn't ready...";
+                }
+                else {
+                    if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
+                        playerRoleString = "Player " + std::to_string(i + 1) + " wants to play as the DM.";
+                    }
+                    else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
+                        playerRoleString = "Player " + std::to_string(i + 1) + " wants to play as a Player.";
+                    }
+                    else {
+                        //  Lobby player is ready but their desired role isn't DM or Player - error!
+                        playerRoleString = "Error! Player " + std::to_string(i + 1) + " wants to play as ??";
+                    }
+                }
+            }
+
+            player_status_row->push(widget::DynText::make(
+                playerRoleString,
+                this->fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+            ));
+        }
+        else {
+            //  Case 2: This player is the client player
+
+            //  TODO: Add radio buttons here!
+
+            player_status_row->push(widget::DynText::make(
+                "Play as: Player DM",
+                this->fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+            ));
+        }
         /*  Ready Status Column */
+
+        //  Add spacing
+        player_status_row->push(widget::Empty::make(
+            50.0f
+        ));
+
+        if (!playerExists
+            || lobbyPlayer.get().id != this->client->session.get()->getInfo().client_eid.value()) {
+            //  Case 1: This player is not the client player
+            //  In this case, the player is either not connected or their EntityID differs
+            //  from this client's EntityId
+
+            std::string readyStatusString;
+
+            if (!playerExists) {
+                readyStatusString = "...";
+            }
+            else {
+                if (!lobbyPlayer.get().ready) {
+                    readyStatusString = "Still Preparing...";
+                }
+                else {
+                    readyStatusString = "Ready!";
+                }
+            }
+
+            player_status_row->push(widget::DynText::make(
+                readyStatusString,
+                this->fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+            ));
+        }
+        else {
+            //  Case 2: This player is the client player
+
+            player_status_row->push(widget::DynText::make(
+                "Not Ready",
+                this->fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+            ));
+        }
 
         //  Add table row to the screen
         this->addWidget(std::move(player_status_row));
