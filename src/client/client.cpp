@@ -422,16 +422,14 @@ void Client::processServerInput() {
         if (now - start > defer_time) {
             defer_time = defer_time * 2;
             had_to_defer = true;
-            std::cout << defer_time.count() << "\n";
             break;
         }
     }
     if (!had_to_defer) {
-        defer_time -=1ms;
+        defer_time -= 1ms;
         if (defer_time < MIN_DEFER_TIME) {
             defer_time = MIN_DEFER_TIME;
         }
-        std::cout << defer_time.count() << "\n";
     }
 }
 
