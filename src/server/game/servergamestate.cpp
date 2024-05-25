@@ -1453,15 +1453,15 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				case CellType::ArrowTrapLeft:
 				case CellType::ArrowTrapRight:
 				case CellType::ArrowTrapUp: {
-					Direction dir;
+                    ArrowTrap::Direction dir;
 					if (cell->type == CellType::ArrowTrapDown) {
-						dir = Direction::DOWN;
+						dir = ArrowTrap::Direction::DOWN;
 					} else if (cell->type == CellType::ArrowTrapUp) {
-						dir = Direction::UP;
+						dir = ArrowTrap::Direction::UP;
 					} else if (cell->type == CellType::ArrowTrapLeft) {
-						dir = Direction::LEFT;
+						dir = ArrowTrap::Direction::LEFT;
 					} else {
-						dir = Direction::RIGHT;
+						dir = ArrowTrap::Direction::RIGHT;
 					}
 
 					glm::vec3 dimensions(
@@ -1624,26 +1624,24 @@ Trap* ServerGameState::spawnFireballTrap(GridCell *cell) {
         0.0f,
         (cell->y * Grid::grid_cell_width)
     );
-    Direction dir;
+    FireballTrap::Direction dir;
     switch (cell->type) {
         case CellType::FireballTrapLeft:
-            dir = Direction::LEFT;
-            // corner.z -= (dimensions.z / 2.0f);
+            dir = FireballTrap::Direction::LEFT;
             break;
         case CellType::FireballTrapRight:
-            dir = Direction::RIGHT;
-            // corner.z -= (dimensions.z / 2.0f);
+            dir = FireballTrap::Direction::RIGHT;
             break;
         case CellType::FireballTrapUp:
-            dir = Direction::UP;
+            dir = FireballTrap::Direction::UP;
             corner.x += (dimensions.x / 2.0f);
             break;
         case CellType::FireballTrapDown:
             corner.x += (dimensions.x / 2.0f);
-            dir = Direction::DOWN;
+            dir = FireballTrap::Direction::DOWN;
             break;
         default:
-            dir = Direction::LEFT;
+            dir = FireballTrap::Direction::LEFT;
             break;
     }
     FireballTrap* fireBallTrap = new FireballTrap(corner, dir);

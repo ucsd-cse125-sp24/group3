@@ -178,11 +178,3 @@ public:
 	std::string to_string() { return this->to_string(0); }
 };
 
-enum class Direction {
-    LEFT,
-    UP,
-    DOWN,
-    RIGHT
-};
-
-glm::vec3 directionToFacing(const Direction& direction);

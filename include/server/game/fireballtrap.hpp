@@ -11,6 +11,12 @@
  */
 class FireballTrap: public Trap {
 public:
+    enum class Direction {
+        LEFT,
+        UP,
+        DOWN,
+        RIGHT
+    };
     /**
      * @param corner Corner position of the fireball trap
      * @param dir is the direction the fireball trap is pointing at

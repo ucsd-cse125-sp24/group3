@@ -17,7 +17,20 @@ ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir):
 {
     this->dir = dir;
     this->shoot_time = std::chrono::system_clock::now();
-    this->physics.shared.facing = directionToFacing(dir);
+    switch (dir) {
+        case ArrowTrap::Direction::LEFT:
+            this->physics.shared.facing = glm::vec3(-1.0f, 0.0f, 0.0f);
+            break;
+        case ArrowTrap::Direction::RIGHT:
+            this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
+            break;
+        case ArrowTrap::Direction::UP:
+            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, -1.0f);
+            break;
+        case ArrowTrap::Direction::DOWN:
+            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, 1.0f);
+            break;
+    }
 }
 
 bool ArrowTrap::shouldTrigger(ServerGameState& state) {
