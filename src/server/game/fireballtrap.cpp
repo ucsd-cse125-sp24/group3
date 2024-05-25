@@ -14,7 +14,7 @@ const std::chrono::seconds FireballTrap::TIME_UNTIL_RESET = 4s;
 const int FireballTrap::SHOOT_DIST = 15;
 
 FireballTrap::FireballTrap(glm::vec3 corner, FireballTrap::Direction dir):
-    Trap(ObjectType::FireballTrap, false, corner, Collider::Box, ModelType::SunGod) 
+    Trap(ObjectType::FireballTrap, false, corner, Collider::None, ModelType::SunGod) 
 {
     this->shoot_time = std::chrono::system_clock::now();
     this->target = 0; // wont be accessed until set elsewhere, so safe to set to 0
