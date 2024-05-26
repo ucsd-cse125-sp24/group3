@@ -46,6 +46,16 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "player_walk_4_mono.wav").string();
         case ServerSFX::PlayerWalk5:
             return (dir / "player_walk_5_mono.wav").string();
+        case ServerSFX::Dagger:
+            return (dir / "dagger.wav").string();
+        case ServerSFX::Sword:
+            return (dir / "sword.wav").string();
+        case ServerSFX::Hammer:
+            return (dir / "hammer.wav").string();
+        case ServerSFX::Minotaur:
+            return (dir / "minotaur.wav").string();
+        case ServerSFX::Python:
+            return (dir / "python.wav").string();
         case ServerSFX::CeilingSpikeImpact:
             return (dir / "ceiling_spike_impact_short_mono.wav").string();
         case ServerSFX::CeilingSpikeTrigger:

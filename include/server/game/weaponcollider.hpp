@@ -1,6 +1,7 @@
 #include "server/game/object.hpp"
 #include "server/game/constants.hpp"
 #include "server/game/player.hpp"
+#include "shared/audio/soundtype.hpp"
 #include <chrono>
 
 /*
@@ -8,6 +9,7 @@
  */
 class WeaponCollider : public Object {
 public:
+    ServerSFX sound;
 
     struct WeaponOptions {
         WeaponOptions(int damage, int timeUntilAttack, int attackDuration, bool followPlayer) :
@@ -45,7 +47,9 @@ public:
     ShortAttack(Player* usedPlayer, glm::vec3 corner, glm::vec3 facing):
         WeaponCollider(usedPlayer, corner, facing, DIMENSION, ModelType::Cube,
             WeaponOptions(DAGGER_DMG, DAGGER_PREP, DAGGER_DUR, true))
-    {}
+    {
+        this->sound = ServerSFX::Dagger;
+    }
 };
 
 class MediumAttack : public WeaponCollider {
@@ -55,7 +59,9 @@ public:
     MediumAttack(Player* usedPlayer, glm::vec3 corner, glm::vec3 facing) :
         WeaponCollider(usedPlayer, corner, facing, DIMENSION, ModelType::Cube,
             WeaponOptions(SWORD_DMG, SWORD_PREP, SWORD_DUR, true))
-    {}
+    {
+        this->sound = ServerSFX::Sword;
+    }
 };
 
 class BigAttack : public WeaponCollider {
@@ -65,7 +71,9 @@ public:
     BigAttack(Player* usedPlayer, glm::vec3 corner, glm::vec3 facing) :
         WeaponCollider(usedPlayer, corner, facing, DIMENSION, ModelType::Cube,
             WeaponOptions(HAMMER_DMG, HAMMER_PREP, HAMMER_DUR, true))
-    {}
+    {
+        this->sound = ServerSFX::Hammer;
+    }
 };
 
 class Lightning : public WeaponCollider {

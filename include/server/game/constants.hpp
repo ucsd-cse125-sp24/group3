@@ -61,9 +61,9 @@
 #define	DAGGER_DUR				150
 #define	DAGGER_TOTAL			300
 
-#define	HAMMER_PREP				400
+#define	HAMMER_PREP				500
 #define	HAMMER_DUR				350
-#define	HAMMER_TOTAL			750
+#define	HAMMER_TOTAL			850
 
 #define	LIGHTNING_PREP			1000
 #define	LIGHTNING_DUR		    400

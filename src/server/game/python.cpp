@@ -7,7 +7,7 @@
 
 Python::Python(glm::vec3 corner, glm::vec3 facing) :
     Enemy(corner, facing, ObjectType::Python, ModelType::Cube, SharedStats(
-        Stat(0, 15, 15),
+        Stat(0, 40, 40),
         Stat(0, 5, 2)
     ))
 {
@@ -75,6 +75,14 @@ bool Python::doBehavior(ServerGameState& state) {
         }
         
         this->last_move_time = now;
+
+        state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::Python,
+            this->physics.shared.getCenterPosition(),
+            MIDDLE_VOLUME,
+            MEDIUM_DIST,
+            MEDIUM_ATTEN
+        ));
 
         return true;
     } 

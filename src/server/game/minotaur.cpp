@@ -8,7 +8,7 @@
 Minotaur::Minotaur(glm::vec3 corner, glm::vec3 facing) :
     Enemy(corner, facing, ObjectType::Minotaur, ModelType::Cube, SharedStats(
         Stat(0, 50, 50),
-        Stat(0, 7, 2)
+        Stat(0, 7, 3)
     ))
 {
     this->last_charge_time = std::chrono::system_clock::now();
@@ -55,6 +55,14 @@ bool Minotaur::doBehavior(ServerGameState& state) {
         this->physics.velocity.x = 1.5f * this->physics.shared.facing.x;
         this->physics.velocity.z = 1.5f * this->physics.shared.facing.z;
         this->last_charge_time = now;
+
+        state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::Minotaur,
+            this->physics.shared.getCenterPosition(),
+            DEFAULT_VOLUME,
+            MEDIUM_DIST,
+            MEDIUM_ATTEN
+        ));
 
         return true;
     } 

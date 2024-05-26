@@ -76,7 +76,14 @@ bool WeaponCollider::readyTime(ServerGameState& state) {
         this->playSound = true;
     }
     else if (!this->playSound) {
-        // add sound for other weapons
+        state.soundTable().addNewSoundSource(SoundSource(
+            this->sound,
+            this->physics.shared.getCenterPosition(),
+            MIDDLE_VOLUME,
+            SHORT_DIST,
+            SHORT_ATTEN
+        ));
+        this->playSound = true;
     }
 
     auto now = std::chrono::system_clock::now();
