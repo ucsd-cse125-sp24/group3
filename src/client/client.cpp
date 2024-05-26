@@ -160,7 +160,12 @@ bool Client::init() {
         std::cerr << "GUI failed to init" << std::endl;
         return false;
     }
+
+    // display first frame of the loading screen
+    this->displayCallback();
+
     auto shaders_dir = getRepoRoot() / "src/client/shaders";
+    auto graphics_assets_dir = getRepoRoot() / "assets/graphics";
 
     auto sungod_vert_path = shaders_dir / "sungod.vert";
     auto sungod_frag_path = shaders_dir / "sungod.frag";
@@ -169,11 +174,12 @@ bool Client::init() {
     auto cube_vert_path = shaders_dir / "cube.vert";
     auto cube_frag_path = shaders_dir / "cube.frag";
     this->cube_shader = std::make_shared<Shader>(cube_vert_path.string(), cube_frag_path.string());    
+    auto cube_model_path = graphics_assets_dir / "cube.obj";
+    this->cube_model = std::make_unique<Model>(cube_model_path.string());
 
     auto model_vert_path = shaders_dir / "model.vert";
     auto model_frag_path = shaders_dir / "model.frag";
     this->model_shader = std::make_shared<Shader>(model_vert_path.string(), model_frag_path.string());
-
 
     auto lightVertFilepath = shaders_dir / "lightsource.vert";
     auto lightFragFilepath = shaders_dir / "lightsource.frag";
@@ -182,6 +188,10 @@ bool Client::init() {
     auto solid_surface_vert_path = shaders_dir / "solidsurface.vert";
     auto solid_surface_frag_path = shaders_dir / "solidsurface.frag";
     this->solid_surface_shader = std::make_shared<Shader>(solid_surface_vert_path.string(), solid_surface_frag_path.string());
+    auto wall_model_path = graphics_assets_dir / "wall.obj";
+    this->wall_model = std::make_unique<Model>(wall_model_path.string());
+    auto pillar_model_path = graphics_assets_dir / "pillar.obj";
+    this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
 
     auto wall_vert_path = shaders_dir / "wall.vert";
     auto wall_frag_path = shaders_dir / "wall.frag";
@@ -190,52 +200,22 @@ bool Client::init() {
     auto dm_cube_frag_path = shaders_dir / "dm_cube.frag";
     this->dm_cube_shader = std::make_shared<Shader>(wall_vert_path.string(), dm_cube_frag_path.string());
 
+    auto torchlight_model_path = graphics_assets_dir / "cube.obj";
+    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
     this->light_source = std::make_unique<LightSource>();
 
-        auto graphics_assets_dir = getRepoRoot() / "assets/graphics";
+    auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
+    this->bear_model = std::make_unique<Model>(bear_model_path.string());
+    // this->bear_model->scaleAbsolute(0.25);
 
+    auto player_model_path = graphics_assets_dir / "Fire-testing.obj";
+    this->player_model = std::make_unique<Model>(player_model_path.string());
+    this->player_model->scaleAbsolute(0.25);
 
-        auto cube_model_path = graphics_assets_dir / "cube.obj";
-        this->cube_model = std::make_unique<Model>(cube_model_path.string());
-
-        auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
-        this->bear_model = std::make_unique<Model>(bear_model_path.string());
-        // this->bear_model->scaleAbsolute(0.25);
-
-        auto player_model_path = graphics_assets_dir / "Fire-testing.obj";
-        this->player_model = std::make_unique<Model>(player_model_path.string());
-        this->player_model->scaleAbsolute(0.25);
-
-        auto torchlight_model_path = graphics_assets_dir / "cube.obj";
-        this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
-
-        auto wall_model_path = graphics_assets_dir / "wall.obj";
-        this->wall_model = std::make_unique<Model>(wall_model_path.string());
-
-
-        auto pillar_model_path = graphics_assets_dir / "pillar.obj";
-        this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
-
-        auto sungod_model_path = graphics_assets_dir / "sungod.obj";
-        this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
-    
-    std::atomic_bool done = false;
-    std::thread model_loading_thread([&done, this]() {
-
-        done = true;
-    });
-
-    while (!done) {
-        this->displayCallback();
-        std::this_thread::sleep_for(30ms);
-        // each frame in logo animation is for 30ms
-    } 
-    model_loading_thread.join();
-
-    this->gui_state = GUIState::TITLE_SCREEN;
+    auto sungod_model_path = graphics_assets_dir / "sungod.obj";
+    this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
 
     this->audioManager->init();
-    this->audioManager->playMusic(ClientMusic::TitleTheme);
 
     return true;
 }
@@ -860,6 +840,12 @@ void Client::drawBbox(boost::optional<SharedObject> object) {
 
 // callbacks - for Interaction
 void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+    if (this->gui_state == GUIState::INITIAL_LOAD) {
+        this->audioManager->playMusic(ClientMusic::TitleTheme);
+        this->gui_state = GUIState::TITLE_SCREEN;
+        return;
+    }
+
     // Check for a key press.
     /* Store player EID for use in certain key handling */ 
     std::optional<EntityID> eid;

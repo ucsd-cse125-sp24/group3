@@ -193,25 +193,42 @@ void GUI::_layoutFPSCounter() {
 }
 
 void GUI::_layoutLoadingScreen() {
-    auto logo_flex = widget::Flexbox::make(glm::vec2(0,FRAC_WINDOW_HEIGHT(1,3)), glm::vec2(WINDOW_WIDTH, 0),
+    static bool first = true;
+
+    auto logo_flex = widget::Flexbox::make(glm::vec2(0,0), glm::vec2(WINDOW_WIDTH, 0),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f));
-    logo_flex->push(widget::StaticImg::make(glm::vec2(0, 0), this->logo.getNextFrame()));
+    logo_flex->push(widget::StaticImg::make(glm::vec2(0, 0), this->logo.getNextFrame(), 0.75f));
     this->addWidget(std::move(logo_flex));
 
-    this->addWidget(widget::CenterText::make(
-        "Loading...",
-        font::Font::MENU,
-        font::Size::MEDIUM,
-        font::Color::WHITE,
-        fonts,
-        font::getRelativePixels(40)
-    ));
+    if (first) {
+        // the first frame will be rendered before it loads everything, then everything after will
+        // be once it has loaded
+        this->addWidget(widget::CenterText::make(
+            "Loading...",
+            font::Font::MENU,
+            font::Size::MEDIUM,
+            font::Color::YELLOW,
+            fonts,
+            FRAC_WINDOW_HEIGHT(1,2)
+        ));
+        first = false;
+    } else {
+        this->addWidget(widget::CenterText::make(
+            "Press any key to continue",
+            font::Font::MENU,
+            font::Size::MEDIUM,
+            font::Color::YELLOW,
+            fonts,
+            FRAC_WINDOW_HEIGHT(1,2)
+        ));
+        first = false;
+    }
 }
 
 void GUI::_layoutTitleScreen() {
     auto logo_flex = widget::Flexbox::make(glm::vec2(0, 0), glm::vec2(WINDOW_WIDTH, 0), 
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f));
-    auto logo = widget::StaticImg::make(glm::vec2(0,0), this->logo.getNextFrame(), 0.25f);
+    auto logo = widget::StaticImg::make(glm::vec2(0,0), this->logo.getNextFrame(), 0.75f); 
     logo_flex->push(std::move(logo));
     this->addWidget(std::move(logo_flex));
     
@@ -246,7 +263,7 @@ void GUI::_layoutTitleScreen() {
         glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
     });
     auto menu_flex = widget::Flexbox::make(
-        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
+        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 2)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, font::getRelativePixels(30))
     );
@@ -302,30 +319,15 @@ void GUI::_layoutLobbyBrowser() {
 
     this->addWidget(std::move(lobbies_flex));
 
-    auto input_flex = widget::Flexbox::make(
-        glm::vec2(0.0f, font::getRelativePixels(30) + 2 * font::getFontSizePx(font::Size::MEDIUM)),
-        glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, font::getRelativePixels(20))
-    );
-    input_flex->push(widget::TextInput::make(
-        glm::vec2(0.0f, 0.0f),
-        "IP Entry",
-        this,
-        fonts,
-        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
-    ));
-    this->addWidget(std::move(input_flex));
-
     auto connect_flex = widget::Flexbox::make(
-        glm::vec2(0.0f, font::getRelativePixels(30)),
-        glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, font::getRelativePixels(20))
-    );
+        glm::vec2(FRAC_WINDOW_WIDTH(1, 3), font::getRelativePixels(30)),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::LEFT, font::getRelativePixels(50)
+    ));
 
     std::stringstream ss;
-    ss << "Direct Connect";
     auto connect_btn = widget::DynText::make(
-        ss.str(),
+        "Connect",
         fonts,
         widget::DynText::Options(font::Font::TITLE, font::Size::MEDIUM, font::Color::WHITE)
     );
@@ -341,6 +343,13 @@ void GUI::_layoutLobbyBrowser() {
         }
     });
     connect_flex->push(std::move(connect_btn));
+    connect_flex->push(widget::TextInput::make(
+        glm::vec2(0.0f, 0.0f),
+        "Enter IP",
+        this,
+        fonts,
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
+    ));
     this->addWidget(std::move(connect_flex));
 }
 
