@@ -189,12 +189,11 @@ bool Client::init() {
 
     auto dm_cube_frag_path = shaders_dir / "dm_cube.frag";
     this->dm_cube_shader = std::make_shared<Shader>(wall_vert_path.string(), dm_cube_frag_path.string());
-    
-    std::atomic_bool done = false;
-    std::thread model_loading_thread([&done, this]() {
+
+    this->light_source = std::make_unique<LightSource>();
+
         auto graphics_assets_dir = getRepoRoot() / "assets/graphics";
 
-        this->light_source = std::make_unique<LightSource>();
 
         auto cube_model_path = graphics_assets_dir / "cube.obj";
         this->cube_model = std::make_unique<Model>(cube_model_path.string());
@@ -219,6 +218,9 @@ bool Client::init() {
 
         auto sungod_model_path = graphics_assets_dir / "sungod.obj";
         this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
+    
+    std::atomic_bool done = false;
+    std::thread model_loading_thread([&done, this]() {
 
         done = true;
     });
@@ -258,13 +260,7 @@ void Client::displayCallback() {
     this->gui.beginFrame();
 
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
-        if (this->gui_state == GUIState::INITIAL_LOAD) {
-            // black to match the background of the fire gif
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        } else {
-            glClearColor(0.419608f, 0.058824f, 0.023530f, 1.0f);
-            // red color to match the website homepage background
-        }
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     } else if (this->gameState.phase == GamePhase::LOBBY) {
         glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     } else if (this->gameState.phase == GamePhase::GAME) {

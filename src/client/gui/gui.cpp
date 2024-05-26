@@ -209,6 +209,12 @@ void GUI::_layoutLoadingScreen() {
 }
 
 void GUI::_layoutTitleScreen() {
+    auto logo_flex = widget::Flexbox::make(glm::vec2(0, 0), glm::vec2(WINDOW_WIDTH, 0), 
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f));
+    auto logo = widget::StaticImg::make(glm::vec2(0,0), this->logo.getNextFrame(), 0.25f);
+    logo_flex->push(std::move(logo));
+    this->addWidget(std::move(logo_flex));
+    
     auto title_flex = widget::Flexbox::make(glm::vec2(0, FRAC_WINDOW_HEIGHT(2,3)), glm::vec2(WINDOW_WIDTH, 0), 
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f));
     
@@ -216,33 +222,46 @@ void GUI::_layoutTitleScreen() {
     this->addWidget(std::move(title_flex));
 
     auto start_text = widget::DynText::make(
-        "(Start Game)",
+        "Play",
         fonts,
-        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+        widget::DynText::Options(font::Font::TITLE, font::Size::MEDIUM, font::Color::WHITE)
     );
     start_text->addOnHover([this](widget::Handle handle) {
         auto widget = this->borrowWidget<widget::DynText>(handle);
-        widget->changeColor(font::Color::RED);
+        widget->changeColor(font::Color::YELLOW);
     });
     start_text->addOnClick([this](widget::Handle handle) {
         client->gui_state = GUIState::LOBBY_BROWSER;
     });
-    auto start_flex = widget::Flexbox::make(
+    auto exit_text = widget::DynText::make(
+        "Exit",
+        fonts,
+        widget::DynText::Options(font::Font::TITLE, font::Size::MEDIUM, font::Color::WHITE)
+    );
+    exit_text->addOnHover([this](widget::Handle handle) {
+        auto widget = this->borrowWidget<widget::DynText>(handle);
+        widget->changeColor(font::Color::YELLOW);
+    });
+    exit_text->addOnClick([this](widget::Handle handle) {
+        glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
+    });
+    auto menu_flex = widget::Flexbox::make(
         glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, font::getRelativePixels(30))
     );
 
-    start_flex->push(std::move(start_text));
-    this->addWidget(std::move(start_flex));
+    menu_flex->push(std::move(exit_text));
+    menu_flex->push(std::move(start_text));
+    this->addWidget(std::move(menu_flex));
 }
 
 void GUI::_layoutLobbyBrowser() {
     this->addWidget(widget::CenterText::make(
         "Lobbies",
-        font::Font::MENU,
+        font::Font::TITLE,
         font::Size::LARGE,
-        font::Color::BLACK,
+        font::Color::YELLOW,
         this->fonts,
         WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE)
     ));
@@ -255,10 +274,10 @@ void GUI::_layoutLobbyBrowser() {
 
     for (const auto& [ip, packet]: client->lobby_finder.getFoundLobbies()) {
         std::stringstream ss;
-        ss << "(" << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken << ")";
+        ss << "" << packet.lobby_name << "     (" << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken << ")";
 
         auto entry = widget::DynText::make(ss.str(), this->fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK));
+            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::WHITE));
         entry->addOnClick([ip, this](widget::Handle handle){
             std::cout << "Connecting to " << ip.address() << " ...\n";
             if (this->client->connect(ip.address().to_string())) {
@@ -268,16 +287,16 @@ void GUI::_layoutLobbyBrowser() {
         });
         entry->addOnHover([this](widget::Handle handle){
             auto widget = this->borrowWidget<widget::DynText>(handle);
-            widget->changeColor(font::Color::RED);
+            widget->changeColor(font::Color::YELLOW);
         });
         lobbies_flex->push(std::move(entry));
     }
 
     if (client->lobby_finder.getFoundLobbies().empty()) {
         lobbies_flex->push(widget::DynText::make(
-            "No lobbies found...",
+            "Searching for lobbies...",
             this->fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+            widget::DynText::Options(font::Font::TITLE, font::Size::MEDIUM, font::Color::YELLOW)
         ));
     }
 
@@ -290,10 +309,10 @@ void GUI::_layoutLobbyBrowser() {
     );
     input_flex->push(widget::TextInput::make(
         glm::vec2(0.0f, 0.0f),
-        "Manual IP",
+        "IP Entry",
         this,
         fonts,
-        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
     ));
     this->addWidget(std::move(input_flex));
 
@@ -304,15 +323,15 @@ void GUI::_layoutLobbyBrowser() {
     );
 
     std::stringstream ss;
-    ss << "(Connect to \"" << this->getCapturedKeyboardInput() << "\")";
+    ss << "Direct Connect";
     auto connect_btn = widget::DynText::make(
         ss.str(),
         fonts,
-        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+        widget::DynText::Options(font::Font::TITLE, font::Size::MEDIUM, font::Color::WHITE)
     );
     connect_btn->addOnHover([this](widget::Handle handle) {
         auto btn = this->borrowWidget<widget::DynText>(handle);
-        btn->changeColor(font::Color::RED);
+        btn->changeColor(font::Color::YELLOW);
     });
     connect_btn->addOnClick([this](widget::Handle handle) {
         auto input = this->getCapturedKeyboardInput();

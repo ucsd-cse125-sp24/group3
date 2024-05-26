@@ -37,7 +37,7 @@ public:
         return std::make_unique<StaticImg>(std::forward<Params>(params)...);
     }
 
-    StaticImg(glm::vec2 origin, gui::img::Img img, int size);
+    StaticImg(glm::vec2 origin, gui::img::Img img, float size);
     StaticImg(glm::vec2 origin, gui::img::Img img);
     explicit StaticImg(gui::img::Img img);
     ~StaticImg();
