@@ -202,6 +202,13 @@ bool Client::init() {
     auto pillar_model_path = graphics_assets_dir / "pillar.obj";
     this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
 
+    auto sungod_model_path = graphics_assets_dir / "sungod.obj";
+    this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
+
+    auto sungod_vert_path = shaders_dir / "sungod.vert";
+    auto sungod_frag_path = shaders_dir / "sungod.frag";
+    this->sungod_shader = std::make_shared<Shader>(sungod_vert_path.string(), sungod_frag_path.string());
+
     this->gui_state = GUIState::TITLE_SCREEN;
 
     this->audioManager->init();
@@ -329,8 +336,9 @@ void Client::idleCallback() {
             case ModelType::FloorSpikeHorizontal:
                 this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeHorizontal, false, true)));
                 break;
-            case ModelType::FireballTrap:
-                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrap, false, true)));
+            case ModelType::SunGod:
+                // TODO: allow for direction selection
+                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrapLeft, false, true)));
                 break;
             case ModelType::SpikeTrap:
                 this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, false, true)));
@@ -680,18 +688,13 @@ void Client::draw() {
                 break;
             }
             case ObjectType::FireballTrap: {
-                // if not DM and this is a ghost trap, break
-                if (!is_dm && sharedObject->solidSurface->dm_highlight) {
-                    break;
-                }
-
-                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 0.5f, 0.5f));
-                cube->scaleAbsolute( sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader.get(),
+                this->sungod_model->setDimensions(sharedObject->physics.dimensions);
+                this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->sungod_model->rotateAbsolute(sharedObject->physics.facing);
+                this->sungod_model->draw(this->sungod_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    {},
+                    this->closest_light_sources,
                     true);
                 break;
             }

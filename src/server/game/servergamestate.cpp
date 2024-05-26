@@ -19,6 +19,7 @@
 #include "server/game/weaponcollider.hpp"
 #include "server/game/spawner.hpp"
 
+#include "shared/game/celltype.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/audio/constants.hpp"
 #include "shared/audio/utilities.hpp"
@@ -1015,24 +1016,13 @@ const Lobby& ServerGameState::getLobby() const {
 
 Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 	switch (type) {
-	case CellType::FireballTrap: {
+	case CellType::FireballTrapLeft:
+	case CellType::FireballTrapRight:
+	case CellType::FireballTrapUp:
+	case CellType::FireballTrapDown: {
 		if (cell->type != CellType::Empty)
 			return nullptr;
-
-		glm::vec3 dimensions(
-			Grid::grid_cell_width / 2,
-			0.5f,
-			Grid::grid_cell_width / 2
-		);
-		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
-			1.0f,
-			cell->y * Grid::grid_cell_width
-		);
-
-		FireballTrap* fireBallTrap = new FireballTrap(corner, dimensions);
-		this->objects.createObject(fireBallTrap);
-		return fireBallTrap;
+        return spawnFireballTrap(cell);
 	}
 	case CellType::SpikeTrap: {
 		if (cell->type != CellType::Empty)
@@ -1272,20 +1262,12 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					this->objects.createObject(new Orb(corner, dimensions));
 					break;
 				}
-				case CellType::FireballTrap: {
-					glm::vec3 dimensions(
-						Grid::grid_cell_width / 2,
-						0.5f,
-						Grid::grid_cell_width / 2
-					);
-					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
-						1.0f,
-						cell->y * Grid::grid_cell_width
-					);
-					this->objects.createObject(new FireballTrap(corner, dimensions));
+				case CellType::FireballTrapLeft:
+                case CellType::FireballTrapRight:
+                case CellType::FireballTrapUp:
+                case CellType::FireballTrapDown:
+                    spawnFireballTrap(cell);
 					break;
-				}
 				case CellType::Dagger: {
 					glm::vec3 dimensions(1.0f);
 
@@ -1458,15 +1440,15 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				case CellType::ArrowTrapLeft:
 				case CellType::ArrowTrapRight:
 				case CellType::ArrowTrapUp: {
-					ArrowTrap::Direction dir;
+					Direction dir;
 					if (cell->type == CellType::ArrowTrapDown) {
-						dir = ArrowTrap::Direction::DOWN;
+						dir = Direction::DOWN;
 					} else if (cell->type == CellType::ArrowTrapUp) {
-						dir = ArrowTrap::Direction::UP;
+						dir = Direction::UP;
 					} else if (cell->type == CellType::ArrowTrapLeft) {
-						dir = ArrowTrap::Direction::LEFT;
+						dir = Direction::LEFT;
 					} else {
-						dir = ArrowTrap::Direction::RIGHT;
+						dir = Direction::RIGHT;
 					}
 
 					glm::vec3 dimensions(
@@ -1620,6 +1602,40 @@ void ServerGameState::spawnTorch(GridCell *cell) {
 	));
 
     this->objects.createObject(new Torchlight(corner));
+}
+
+Trap* ServerGameState::spawnFireballTrap(GridCell *cell) {
+    glm::vec3 dimensions = Object::models.at(ModelType::SunGod);
+    glm::vec3 corner(
+        (cell->x * Grid::grid_cell_width),
+        0.0f,
+        (cell->y * Grid::grid_cell_width)
+    );
+    Direction dir;
+    switch (cell->type) {
+        case CellType::FireballTrapLeft:
+            dir = Direction::LEFT;
+            // corner.z -= (dimensions.z / 2.0f);
+            break;
+        case CellType::FireballTrapRight:
+            dir = Direction::RIGHT;
+            // corner.z -= (dimensions.z / 2.0f);
+            break;
+        case CellType::FireballTrapUp:
+            dir = Direction::UP;
+            corner.x += (dimensions.x / 2.0f);
+            break;
+        case CellType::FireballTrapDown:
+            corner.x += (dimensions.x / 2.0f);
+            dir = Direction::DOWN;
+            break;
+        default:
+            dir = Direction::LEFT;
+            break;
+    }
+    FireballTrap* fireBallTrap = new FireballTrap(corner, dir);
+    this->objects.createObject(fireBallTrap);
+    return fireBallTrap;
 }
 
 Grid& ServerGameState::getGrid() {

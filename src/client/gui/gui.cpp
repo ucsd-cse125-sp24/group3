@@ -465,7 +465,7 @@ void GUI::_sharedGameHUD() {
                     itemString = "Floor Spike Vertical";
                     break;
                 }
-                case ModelType::FireballTrap: {
+                case ModelType::SunGod: {
                     itemString = "Fireball Trap";
                     break;
                 }
@@ -570,7 +570,7 @@ void GUI::_sharedGameHUD() {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }
-                case ModelType::FireballTrap: {
+                case ModelType::SunGod: {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }
