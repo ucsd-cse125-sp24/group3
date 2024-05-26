@@ -32,7 +32,6 @@ bool Projectile::doTick(ServerGameState& state) {
 
     this->physics.velocity += dir_to_target * this->opt.homing_strength;
     this->physics.velocity = glm::normalize(this->physics.velocity);
-    std::cout << glm::to_string(this->physics.velocity) <<'\n';
     this->physics.shared.facing = this->physics.velocity;
 
     return true;
