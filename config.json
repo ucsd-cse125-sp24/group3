@@ -2,7 +2,7 @@
     "game": {
       "maze": {
         "directory": "maps",
-        "procedural": true,
+        "procedural": false,
         "maze_file": "test/big.maze"
       }
     },

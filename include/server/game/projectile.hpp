@@ -83,14 +83,16 @@ class HomingFireball : public Projectile {
 public:
     inline static const int DAMAGE = 15;
     inline static const float H_MULT = 0.4;
-    inline static const float V_MULT = 0.0; // not affected by gravity
+    inline static const float V_MULT = 0.1;
     inline static const float HOMING_STRENGTH = 0.1f;
     inline static const int HOMING_DURATION_TICKS = 80; // 2.4s
 
     HomingFireball(glm::vec3 corner, glm::vec3 facing, std::optional<EntityID> target):
         Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube, ServerSFX::FireballImpact,
             Options(false, DAMAGE, H_MULT, V_MULT, true, HOMING_STRENGTH, HOMING_DURATION_TICKS, target))
-    {}
+    {
+        this->physics.feels_gravity = false;
+    }
 };
 
 /**
@@ -104,7 +106,7 @@ public:
     inline static const float H_MULT = 1.20f;
     inline static const float V_MULT = 0.0f; // not affected by gravity
 
-    Arrow(glm::vec3 corner, glm::vec3 facing, ArrowTrap::Direction dir):
+    Arrow(glm::vec3 corner, glm::vec3 facing, Direction dir):
         Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Cube, ServerSFX::ArrowImpact,
             Options(false, DAMAGE, H_MULT, V_MULT, false, 0.0f, 0, {}))
     {
@@ -118,13 +120,13 @@ public:
         float arrow_z_dim;
 
         switch (dir) {
-            case ArrowTrap::Direction::UP:
-            case ArrowTrap::Direction::DOWN:
+            case Direction::UP:
+            case Direction::DOWN:
                 arrow_x_dim = ARROW_WIDTH;
                 arrow_z_dim = ARROW_LENGTH;
                 break;
-            case ArrowTrap::Direction::LEFT:
-            case ArrowTrap::Direction::RIGHT:
+            case Direction::LEFT:
+            case Direction::RIGHT:
                 arrow_x_dim = ARROW_LENGTH;
                 arrow_z_dim = ARROW_WIDTH;
                 break;

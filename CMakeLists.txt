@@ -26,6 +26,11 @@ IF (NOT WIN32)
     )
 ENDIF()
 
+# fix issues on gh action where object files are too large
+if (WIN32)
+  add_compile_options(/bigobj)
+endif ()
+
 # Add google test to CMake
 add_subdirectory(dependencies/google-test) 
 

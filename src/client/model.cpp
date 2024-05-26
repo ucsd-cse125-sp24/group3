@@ -245,6 +245,20 @@ void Model::scaleRelative(const glm::vec3& scale) {
     }
 }
 
+void Model::rotateAbsolute(const glm::vec3& dir, const glm::vec3& axis) {
+    Renderable::rotateAbsolute(dir, axis);
+    for(Mesh& mesh : this->meshes) {
+        mesh.rotateAbsolute(dir, axis);
+    }
+}
+
+void Model::rotateRelative(const glm::vec3& dir, const glm::vec3& axis) {
+    Renderable::rotateRelative(dir, axis);
+    for(Mesh& mesh : this->meshes) {
+        mesh.rotateRelative(dir, axis);
+    }
+}
+
 void Model::clear() {
     Renderable::clear();
     for(Mesh& mesh : this->meshes) {
@@ -412,6 +426,7 @@ Texture::Texture(const std::string& filepath, const aiTextureType& type) {
 
     int width, height, nrComponents;
     // std::cout << "Attempting to load texture at " << filepath << std::endl;
+    stbi_set_flip_vertically_on_load(true);  
     unsigned char *data = stbi_load(filepath.c_str(), &width, &height, &nrComponents, 0);
     if (!data) {
         std::cout << "Texture failed to load at path: " << filepath << std::endl;
