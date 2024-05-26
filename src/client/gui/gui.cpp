@@ -344,6 +344,429 @@ void GUI::_layoutLobby() {
 
     //  Add lobby title CenterText widget to lobby screen
     this->addWidget(std::move(lobby_title));
+
+    /*  GUI Subsection 2:   Player Status Table */
+
+    //  Define table column widths
+    glm::vec3 columnWidths(400.0f, 700.0f, 500.0f);
+
+    float rowHeight = font::getFontSizePx(font::Size::LARGE);
+
+    //  Create max_players rows in the Player Status Table
+    for (int i = 0; i < this->client->gameState.lobby.max_players; i++) {
+        //  Get iterating LobbyPlayer struct
+        boost::optional<LobbyPlayer> lobbyPlayer =
+            this->client->gameState.lobby.players[i];
+
+        //  Create a status row for this player
+        auto player_status_row = _createPlayerStatusRow(
+            lobbyPlayer,
+            columnWidths,
+            glm::vec2(0, lobby_title_height - rowHeight * (i + 1)),
+            i + 1
+        );
+
+        //  Add table row to the screen
+        this->addWidget(std::move(player_status_row));
+    }
+}
+
+gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
+    boost::optional<LobbyPlayer> lobbyPlayer, glm::vec3 columnWidths,
+    glm::vec2 origin, int playerIndex) {
+    //  Determine whether the player is connected to the lobby
+    bool connected = lobbyPlayer.has_value();
+
+    //  Create table row Flexbox
+
+    //  Row Flexbox configurations
+    glm::vec2 rowSize(WINDOW_WIDTH, 0);
+    widget::Flexbox::Options rowFlexboxOptions(
+        widget::Dir::HORIZONTAL,
+        widget::Align::CENTER,
+        0.0f
+    );
+
+    auto player_status_row = widget::Flexbox::make(
+        origin,
+        rowSize,
+        rowFlexboxOptions
+    );
+
+    //  Optional: Add a left margin Empty widget here if necessary
+    //  at the start of the row
+
+    /*  Add Player Identification Column    */
+    //  There are 3 possible values in the Player Identification column,
+    //  all of which are strings
+    //  Case 1: "Empty"
+    //      This is displayed when the lobby player isn't connected
+    //      (i.e., the lobbyPlayer boost::optional doesn't have a value)
+    //  Case 2: "Player X"
+    //      This is displayed if the given player is in the lobby and
+    //      isn't this client's player
+    //  Case 3: "Player X (You)"
+    //      This is displayed if the given player is in the lobby and
+    //      is this client's player
+    std::string playerIdString;
+
+    if (!connected) {
+        //  Player in this row is not connected (Case 1)
+        playerIdString = "Empty";
+    }
+    else {
+        //  Player is connected to the lobby (Case 2 or Case 3)
+        //  Note that in both of these cases, the player identification
+        //  string has the same prefix, "Player X"
+        playerIdString = "Player " + std::to_string(playerIndex);
+
+        //  Check whether this player is this client's player (Case 3)
+        //  This code assumes that the client's eid should always have
+        //  a value if we're in GUIState::Lobby
+        if (this->client->session.get()->getInfo().client_eid.value()
+            == lobbyPlayer.get().id) {
+            playerIdString += " (You)";
+        }
+    }
+
+    //  Create the player identification text widget
+    auto playerID = widget::DynText::make(
+        playerIdString,
+        this->fonts,
+        widget::DynText::Options(
+            font::Font::TEXT,
+            font::Size::MEDIUM,
+            font::Color::BLACK
+        )
+    );
+
+    //  Calculate the remaining column width and create an Empty widget with this width
+    float column1_empty_width = columnWidths.x - playerID->getSize().first;
+
+    auto column1_empty = widget::Empty::make(column1_empty_width);
+
+    //  Push both the text widget and the Empty widget to the row Flexbox
+    player_status_row->push(std::move(playerID));
+    player_status_row->push(std::move(column1_empty));
+
+    //  Optional: Can add column padding here for additional padding between
+    //  columns 1 and 2
+
+    /*  Add Player Role Column  */
+    //  There are two different behaviors based on whether the given lobbyPlayer
+    //  is this client's player or not.
+
+    if (!connected
+        || lobbyPlayer.get().id != this->client->session.get()->getInfo().client_eid.value()) {
+        //  Case 1: This player is NOT the client player
+        //  In this case, there are 4 possible subcases, all of which are composed
+        //  of a single text widget:
+        //  Subcase 1: "..."
+        //      Displays if this player isn't connected
+        //  Subcase 2: "Player X isn't ready..."
+        //      Displays if this player is connected but not ready
+        //  Subcase 3: "Player X wants to play as the DM."
+        //      Displays if this player is ready and their desired player role is
+        //      PlayerRole::DungeonMaster
+        //  Subcase 4: "Player X wants to play as a Player."
+        //      Displays if this player is ready and their desired player role is
+        //      PlayerRole::Player
+        
+        std::string playerRoleString;
+
+        if (!connected) {
+            //  Subcase 1
+            playerRoleString = "...";
+        }
+        else {
+            //  Subcase 2, 3, or 4
+            if (!lobbyPlayer.get().ready) {
+                //  Subcase 2
+                playerRoleString = "Player " + std::to_string(playerIndex)
+                    + " isn't ready...";
+            }
+            else {
+                //  Subcase 3 or 4
+                if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
+                    //  Subcase 3
+                    playerRoleString = "Player " + std::to_string(playerIndex)
+                        + " wants to play as the DM.";
+                }
+                else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
+                    //  subcase 4
+                    playerRoleString = "Player " + std::to_string(playerIndex)
+                        + " wants to play as a Player.";
+                }
+                else {
+                    //  Error - player is in the ready state but their desired
+                    //  role isn't the DM or a Player!
+                    playerRoleString = "Error! Player " + std::to_string(playerIndex)
+                        + " wants to play as ???";
+                }
+            }
+        }
+
+        //  Create player role text widget
+        auto player_role = widget::DynText::make(
+            playerRoleString,
+            this->fonts,
+            widget::DynText::Options(
+                font::Font::TEXT,
+                font::Size::MEDIUM,
+                font::Color::BLACK
+            )
+        );
+
+        //  Compute the remaining column width and create an Empty widget
+        float column2_empty_width = columnWidths.y - player_role->getSize().first;
+
+        auto column2_empty = widget::Empty::make(column2_empty_width);
+
+        //  Push both the player role text widget and the Empty widget to the row
+        player_status_row->push(std::move(player_role));
+        player_status_row->push(std::move(column2_empty));
+    }
+    else {
+        //  Case 2: This player IS the client player
+
+        //  Add a text widget which says "Play as:"
+        auto radio_buttons_label = widget::DynText::make(
+            "Play as:",
+            this->fonts,
+            widget::DynText::Options(
+                font::Font::TEXT,
+                font::Size::MEDIUM,
+                font::Color::BLACK
+            )
+        );
+
+        //  Add Empty widget been radio buttons label and first radio
+        //  button
+        auto radio_label_first_option_empty = widget::Empty::make(
+            50.0f
+        );
+
+        //  Add radio buttons "Player" and "DM"
+
+        //  "Player" radio button
+        auto player_radio_button = widget::DynText::make(
+            "(Player)",
+            fonts,
+            widget::DynText::Options(
+                font::Font::TEXT,
+                font::Size::MEDIUM,
+                font::Color::BLACK
+            )
+        );
+
+        //  Add radio button hover
+        player_radio_button->addOnHover([this](widget::Handle handle) {
+            auto widget = this->borrowWidget<widget::DynText>(handle);
+            widget->changeColor(font::Color::RED);
+        });
+
+        //  Add radio button on click
+        player_radio_button->addOnClick([this](widget::Handle handle) {
+            auto widget = this->borrowWidget<widget::DynText>(handle);
+
+            //  TODO: Change button text to be surrounded by two brackets
+            //  Change other radio button text to not be surrounded by brackets
+
+            client->roleSelection = Client::RadioButtonState::FirstOption;
+            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+        });
+
+        //  Add Empty widget between first radio button and second radio
+        //  button
+        auto radio_first_second_option_empty = widget::Empty::make(
+            50.0f
+        );
+
+        //  "DM" radio button
+        auto dm_radio_button = widget::DynText::make(
+            "(DM)",
+            fonts,
+            widget::DynText::Options(
+                font::Font::TEXT,
+                font::Size::MEDIUM,
+                font::Color::BLACK
+            )
+        );
+
+        //  Add radio button hover
+        dm_radio_button->addOnHover([this](widget::Handle handle) {
+            auto widget = this->borrowWidget<widget::DynText>(handle);
+            widget->changeColor(font::Color::RED);
+        });
+
+        //  Add radio button on click
+        dm_radio_button->addOnClick([this](widget::Handle handle) {
+            auto widget = this->borrowWidget<widget::DynText>(handle);
+            
+            //  TODO: Change button text to be surrounded by two brackets
+            //  Change other radio button text to not be surrounded by brackets
+
+            client->roleSelection = Client::RadioButtonState::SecondOption;
+            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+        });
+
+        //  Compute the remaining column width and create an Empty widget
+        float column2_empty_width = columnWidths.y
+            - radio_buttons_label->getSize().first
+            - radio_label_first_option_empty->getSize().first
+            - player_radio_button->getSize().first
+            - radio_first_second_option_empty->getSize().first
+            - dm_radio_button->getSize().first;
+
+        auto column2_empty = widget::Empty::make(column2_empty_width);
+        
+        //  Push all widgets to the row
+        player_status_row->push(std::move(radio_buttons_label));
+        player_status_row->push(std::move(radio_label_first_option_empty));
+        player_status_row->push(std::move(player_radio_button));
+        player_status_row->push(std::move(radio_first_second_option_empty));
+        player_status_row->push(std::move(dm_radio_button));
+        player_status_row->push(std::move(column2_empty));
+    }
+
+    //  Optional: Can add column padding here for additional padding between
+    //  columns 2 and 3
+
+    /*  Add Ready Status Column */
+    //  There are two different behaviors based on whether the given lobbyPlayer
+    //  is this client's player or not.
+
+    if (!connected
+        || lobbyPlayer.get().id != this->client->session.get()->getInfo().client_eid.value()) {
+        //  Case 1: This player is NOT the client player
+        //  In this case, there are 2 possible subcases, all of which are composed
+        //  of a single text widget:
+        //  Subcase 1: "..."
+        //      Displays if this player isn't connected or not ready
+        //  Subcase 2: "Ready!"
+        //      Displays if this player is ready
+
+        std::string readyStatusString;
+
+        if (!connected || !lobbyPlayer.get().ready) {
+            //  Subcase 1
+            readyStatusString = "...";
+        }
+        else {
+            //  Subcase 2
+            readyStatusString = "Ready!";
+        }
+
+        //  Create ready status string text widget
+        auto ready_status = widget::DynText::make(
+            readyStatusString,
+            this->fonts,
+            widget::DynText::Options(
+                font::Font::TEXT,
+                font::Size::MEDIUM,
+                font::Color::BLACK
+            )
+        );
+
+        //  Compute the remaining column width and create an Empty widget
+        float column3_empty_width = columnWidths.z - ready_status->getSize().first;
+
+        auto column3_empty = widget::Empty::make(column3_empty_width);
+
+        //  Push all widgets to the row
+        player_status_row->push(std::move(ready_status));
+        player_status_row->push(std::move(column3_empty));
+    }
+    else {
+        //  Case 2: This player IS the client player
+
+        //  In this case, there are 3 possible subcases:
+        //  Subcase 1: Text widget with value "Not Ready"
+        //      Displays initially (when the player's state is Connected)
+        //  Subcase 2: Clickable text widget with value "Ready?"
+        //      Displays when the client's player is in the SelectedRole state
+        //  Subcase 3: Text widget with value "Ready!"
+        //      Displays when the client's player is in the Ready state.
+
+        std::string readyStatusString;
+
+        //  First, set string text
+        switch (this->client->lobbyPlayerState) {
+            case Client::LobbyPlayerState::Connected:
+                //  Subcase 1
+                readyStatusString = "Not Ready";
+                break;
+            case Client::LobbyPlayerState::SelectedRole:
+                //  Subcase 2
+                readyStatusString = "Ready?";
+                break;
+            case Client::LobbyPlayerState::Ready:
+                //  Subcase 3
+                readyStatusString = "Ready!";
+                break;
+        }
+
+        //  Create text widget
+        auto ready_status = widget::DynText::make(
+            readyStatusString,
+            this->fonts,
+            widget::DynText::Options(
+                font::Font::TEXT,
+                font::Size::MEDIUM,
+                font::Color::BLACK
+            )
+        );
+
+        //  Add clickable property if in subcase 2
+        if (this->client->lobbyPlayerState == Client::LobbyPlayerState::SelectedRole) {
+            //  Add button hover
+            ready_status->addOnHover([this](widget::Handle handle) {
+                auto widget = this->borrowWidget<widget::DynText>(handle);
+                widget->changeColor(font::Color::RED);
+            });
+
+            //  Add radio button on click
+            ready_status->addOnClick([this](widget::Handle handle) {
+                auto widget = this->borrowWidget<widget::DynText>(handle);
+
+                client->lobbyPlayerState = Client::LobbyPlayerState::Ready;
+
+                //  TODO: Send Ready Event to Server!
+
+                //  Determine player's desired role by radio button selected
+                PlayerRole desired_role;
+
+                switch (this->client->roleSelection) {
+                    case Client::RadioButtonState::FirstOption:
+                        desired_role = PlayerRole::Player;
+                        break;
+                    case Client::RadioButtonState::SecondOption:
+                        desired_role = PlayerRole::DungeonMaster;
+                        break;
+                }
+
+                this->client->session->sendEventAsync(Event(
+                    this->client->session->getInfo().client_eid.value(),
+                    EventType::LobbyAction,
+                    LobbyActionEvent(
+                        LobbyActionEvent::Action::Ready,
+                        desired_role
+                    )
+                ));
+            });
+        }
+
+        //  Calculate remaining empty space and create Empty widget
+        float column3_empty_width = columnWidths.z - ready_status->getSize().first;
+
+        auto column3_empty = widget::Empty::make(column3_empty_width);
+
+        //  Push both widgets to row
+        player_status_row->push(std::move(ready_status));
+        player_status_row->push(std::move(column3_empty));
+    }
+
+    return player_status_row;
 }
 
 void GUI::_sharedGameHUD() {

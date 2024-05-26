@@ -183,6 +183,8 @@ std::chrono::milliseconds Server::doTick() {
                     continue;
                 }
 
+                std::cout << "Received a LobbyAction event!" << std::endl;
+
                 LobbyActionEvent lobbyEvent = boost::get<LobbyActionEvent>(event.data);
 
                 switch (lobbyEvent.action) {
@@ -200,8 +202,13 @@ std::chrono::milliseconds Server::doTick() {
                     if (lobbyEvent.role != PlayerRole::Unknown) {
                         //  Update player's role from lobby event if
                         //  player chose a role
+                        std::cout << "here!" << std::endl;
+
                         player.get().desired_role = lobbyEvent.role;
                         player.get().ready = true;
+
+                        std::cout << "after change:" << std::endl;
+                        std::cout << player.get().to_string() << std::endl;
                     }
                     break;
                 }

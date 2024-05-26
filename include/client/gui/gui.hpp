@@ -18,6 +18,10 @@
 #include <iostream>
 #include <memory>
 #include <unordered_map>
+#include <boost/optional/optional.hpp>
+
+//  Forward declarration of LobbyPlayer struct
+struct LobbyPlayer;
 
 class Client;
 
@@ -342,6 +346,19 @@ private:
      * Displays the lobby name and all of the players who are currently in the lobby.
      */
     void _layoutLobby();
+
+    /**
+     * @brief Creates a player status row (which is represented as a Flexbox widget) for the
+     * given player. This function generates the player status row such that the 3 columns
+     * have the specified width (this is done using the Empty widget).
+     * @param lobbyPlayer Player for whom the player status row is created.
+     * @param columnWidths Widths for the 3 columns of the player status row.
+     * @param origin Origin for this player status row's Flexbox.
+     * @param playerIndex 1-indexed player index for the given LobbyPlayer.
+     * @return gui::widget::Flexbox::Ptr of a Flexbox storing the generated player status row.
+    */
+    gui::widget::Flexbox::Ptr _createPlayerStatusRow(boost::optional<LobbyPlayer> lobbyPlayer,
+        glm::vec3 columnWidths, glm::vec2 origin, int playerIndex);
     /**
      * @brief Displays the Game HUD layout
      * 
