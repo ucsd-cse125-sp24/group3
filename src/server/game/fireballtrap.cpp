@@ -13,26 +13,12 @@ using namespace std::chrono_literals;
 const std::chrono::seconds FireballTrap::TIME_UNTIL_RESET = 4s;
 const int FireballTrap::SHOOT_DIST = 15;
 
-FireballTrap::FireballTrap(glm::vec3 corner, FireballTrap::Direction dir):
+FireballTrap::FireballTrap(glm::vec3 corner, Direction dir):
     Trap(ObjectType::FireballTrap, false, corner, Collider::None, ModelType::SunGod) 
 {
     this->shoot_time = std::chrono::system_clock::now();
+    this->physics.shared.facing = directionToFacing(dir);
     this->target = 0; // wont be accessed until set elsewhere, so safe to set to 0
-    switch (dir) {
-        case Direction::LEFT:
-            this->physics.shared.facing = glm::vec3(-1.0f, 0.0f, 0.0f);
-            break;
-        case Direction::RIGHT:
-            this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
-            break;
-        case Direction::UP:
-            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, -1.0f);
-            break;
-        case Direction::DOWN:
-            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, 1.0f);
-            break;
-    }
-
 }
 
 bool FireballTrap::shouldTrigger(ServerGameState& state) {

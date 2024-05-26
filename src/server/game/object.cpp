@@ -95,3 +95,16 @@ std::string Physics::to_string(unsigned int tab_offset) {
 
 	return representation;
 }
+
+glm::vec3 directionToFacing(const Direction& dir) {
+    switch (dir) {
+        case Direction::LEFT:
+            return glm::vec3(-1.0f, 0.0f, 0.0f);
+        case Direction::RIGHT:
+            return glm::vec3(1.0f, 0.0f, 0.0f);
+        case Direction::UP:
+            return glm::vec3(0.0f, 0.0f, -1.0f);
+        case Direction::DOWN:
+            return glm::vec3(0.0f, 0.0f, 1.0f);
+    }
+}

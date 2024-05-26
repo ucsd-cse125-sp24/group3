@@ -106,7 +106,7 @@ public:
     inline static const float H_MULT = 1.20f;
     inline static const float V_MULT = 0.0f; // not affected by gravity
 
-    Arrow(glm::vec3 corner, glm::vec3 facing, ArrowTrap::Direction dir):
+    Arrow(glm::vec3 corner, glm::vec3 facing, Direction dir):
         Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Cube, ServerSFX::ArrowImpact,
             Options(false, DAMAGE, H_MULT, V_MULT, false, 0.0f, 0, {}))
     {
@@ -120,13 +120,13 @@ public:
         float arrow_z_dim;
 
         switch (dir) {
-            case ArrowTrap::Direction::UP:
-            case ArrowTrap::Direction::DOWN:
+            case Direction::UP:
+            case Direction::DOWN:
                 arrow_x_dim = ARROW_WIDTH;
                 arrow_z_dim = ARROW_LENGTH;
                 break;
-            case ArrowTrap::Direction::LEFT:
-            case ArrowTrap::Direction::RIGHT:
+            case Direction::LEFT:
+            case Direction::RIGHT:
                 arrow_x_dim = ARROW_LENGTH;
                 arrow_z_dim = ARROW_WIDTH;
                 break;

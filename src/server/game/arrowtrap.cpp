@@ -10,25 +10,12 @@
 
 using namespace std::chrono_literals;
 
-ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, ArrowTrap::Direction dir):
+ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir):
     Trap(ObjectType::ArrowTrap, false, corner, Collider::Box, ModelType::Cube, dimensions) 
 {
     this->dir = dir;
     this->shoot_time = std::chrono::system_clock::now();
-    switch (dir) {
-        case ArrowTrap::Direction::LEFT:
-            this->physics.shared.facing = glm::vec3(-1.0f, 0.0f, 0.0f);
-            break;
-        case ArrowTrap::Direction::RIGHT:
-            this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
-            break;
-        case ArrowTrap::Direction::UP:
-            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, -1.0f);
-            break;
-        case ArrowTrap::Direction::DOWN:
-            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, 1.0f);
-            break;
-    }
+    this->physics.shared.facing = directionToFacing(dir);
 }
 
 bool ArrowTrap::shouldTrigger(ServerGameState& state) {
