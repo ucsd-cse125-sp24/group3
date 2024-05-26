@@ -477,7 +477,6 @@ void Client::draw() {
 
         auto dist = glm::distance(sharedObject->physics.corner, my_pos);
 
-
         if (!is_floor) {
             if (!is_dm && !is_ceiling && dist > RENDER_DISTANCE) {
                 continue;
@@ -564,6 +563,7 @@ void Client::draw() {
                     // don't render ceiling as DM
                     break;
                 }
+
                 if (!is_dm && sharedObject->solidSurface->is_internal) {
                     // dont render internal walls as non DM
                     break;
@@ -571,6 +571,7 @@ void Client::draw() {
 
                 Model* model = this->wall_model.get();
                 Shader* shader = this->wall_shader.get();
+
                 switch (sharedObject->solidSurface->surfaceType) {
                     case SurfaceType::Wall:
                         model = this->wall_model.get();
@@ -602,6 +603,7 @@ void Client::draw() {
 
                 model->setDimensions(sharedObject->physics.dimensions);
                 model->translateAbsolute(sharedObject->physics.getCenterPosition());
+
                 if (is_dm) { // 
                     model->draw(shader,
                         this->cam->getViewProj(),
