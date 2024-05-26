@@ -186,7 +186,7 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::MoveCam: {
 				obj->physics.velocity.x = (startAction.movement * PLAYER_SPEED).x;
 				obj->physics.velocity.z = (startAction.movement * PLAYER_SPEED).z;
-				obj->animState = AnimState::WalkAnim;
+				obj->animState = (obj->animState == AnimState::JumpAnim || obj->animState == AnimState::SprintAnim) ? obj->animState : AnimState::WalkAnim;
 				break;
 			}
 			case ActionType::Jump: {
@@ -204,6 +204,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			case ActionType::Sprint: {
 				obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
+				obj->animState = (obj->animState == AnimState::WalkAnim) ? AnimState::SprintAnim : obj->animState;
 				break;
 			}
 			case ActionType::Zoom: { // only for DM
@@ -228,10 +229,13 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::MoveCam: {
 				obj->physics.velocity.x = 0.0f;
 				obj->physics.velocity.z = 0.0f;
+				obj->animState = AnimState::IdleAnim;
 				break;
 			}
 			case ActionType::Sprint: {
 				obj->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
+				obj->animState = AnimState::WalkAnim;
+
 				break;
 			}
 			default: { break; }
@@ -285,6 +289,12 @@ void ServerGameState::update(const EventList& events) {
 			if (player->inventory[itemSelected] != -1) {
 				Item* item = this->objects.getItem(player->inventory[itemSelected]);
 				item->useItem(player, *this, itemSelected);
+
+				if (dynamic_cast<Potion*>(item) != nullptr) {
+					player->animState = AnimState::DrinkPotionAnim;
+				} else if (dynamic_cast<Weapon*>(item) != nullptr) {
+					player->animState = AnimState::AttackAnim;
+				}
 
 				this->updated_entities.insert(player->globalID);
 				this->updated_entities.insert(item->globalID);
@@ -408,7 +418,7 @@ void ServerGameState::update(const EventList& events) {
 	handleDeaths();
 	handleRespawns();
 	deleteEntities();
-	spawnEnemies();
+	// spawnEnemies();
 	tickStatuses();
 	
 	//	Increment timestep

@@ -1,6 +1,7 @@
 #include "client/animationmanager.hpp"
 
 AnimationManager::AnimationManager(Animation* animation) {
+    currEntity = 0;
     m_currentTime = 0.0;
     m_currentAnimation = animation;
 
@@ -12,9 +13,12 @@ AnimationManager::AnimationManager(Animation* animation) {
 
 void AnimationManager::updateAnimation(float dt) {
     m_deltaTime = dt;
-    if (m_currentAnimation) {
+    if (entityAnimMap[currEntity].second) {
+        m_currentAnimation = entityAnimMap[currEntity].second;
+        m_currentTime = entityAnimMap[currEntity].first;
         m_currentTime += m_currentAnimation->getTicksPerSecond() * dt;
         m_currentTime = fmod(m_currentTime, m_currentAnimation->getDuration());
+        entityAnimMap[currEntity].first = m_currentTime;
         calculateBoneTransform(&m_currentAnimation->getRootNode(), glm::mat4(1.0f));
     }
 }
@@ -52,11 +56,14 @@ void AnimationManager::calculateBoneTransform(const AssimpNodeData* node, glm::m
         calculateBoneTransform(&node->children[i], globalTransformation);
 }
 
-void AnimationManager::setAnimation(ObjectType objType, AnimState animState) {
-    if (m_currentAnimation != objAnimMap[objType][animState]) {
-        this->m_currentAnimation = objAnimMap[objType][animState];
-        m_currentTime = 0.0f;
+void AnimationManager::setAnimation(EntityID id, ObjectType objType, AnimState animState) {
+    if (entityAnimMap.find(id) == entityAnimMap.end() || entityAnimMap[id].second != objAnimMap[objType][animState]) {
+        entityAnimMap[id] = std::make_pair(0.0f, objAnimMap[objType][animState]);
     }
+    currEntity = id;
+    
+    // m_currentTime = entityAnimMap[id].first;
+    // m_currentAnimation = entityAnimMap[id].second;
 }
 
 void AnimationManager::addAnimation(Animation* anim, ObjectType objType, AnimState animState) {

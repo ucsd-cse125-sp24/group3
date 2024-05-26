@@ -99,6 +99,7 @@ bool Slime::doBehavior(ServerGameState& state) {
         this->physics.velocity.z = this->jump_strengths.at(this->jump_index) * this->physics.shared.facing.z;
 
         this->last_jump_time = now;
+        this->animState = AnimState::JumpAnim;
         mutated = true;
     }
 

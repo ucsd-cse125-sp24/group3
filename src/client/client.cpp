@@ -185,19 +185,31 @@ bool Client::init() {
     // Animation* bear = new Animation(bear_anim_path.string(), bear_model.get());
     // animManager = new AnimationManager(bear);
 
-    auto player_model_path = graphics_assets_dir / "testanims/player_model.fbx";
-    auto player_walk_path = graphics_assets_dir / "testanims/player_walk.fbx";
-    auto player_jump_path = graphics_assets_dir / "testanims/Running.fbx";
+    auto player_model_path = graphics_assets_dir / "testanims/model_m.fbx";
+    auto player_walk_path = graphics_assets_dir / "testanims/walk-test.fbx";
+    auto player_jump_path = graphics_assets_dir / "testanims/jump-test.fbx";
+    auto player_idle_path = graphics_assets_dir / "testanims/idle.fbx";
+    auto player_run_path = graphics_assets_dir / "testanims/run.fbx";
+    auto player_atk_path = graphics_assets_dir / "testanims/slash.fbx";
+    auto player_use_potion_path = graphics_assets_dir / "testanims/drink.fbx";
 
     this->player_model = std::make_unique<Model>(player_model_path.string());
     this->player_model->scaleAbsolute(0.0025);
     Animation* player_walk = new Animation(player_walk_path.string(), this->player_model.get());
     Animation* player_jump = new Animation(player_jump_path.string(), this->player_model.get());
-    animManager = new AnimationManager(player_walk);
+    Animation* player_idle = new Animation(player_idle_path.string(), this->player_model.get());
+    Animation* player_run = new Animation(player_run_path.string(), this->player_model.get());
+    Animation* player_atk = new Animation(player_atk_path.string(), this->player_model.get());
+    Animation* player_use_potion = new Animation(player_use_potion_path.string(), this->player_model.get());
+
+    animManager = new AnimationManager(player_idle);
 
     animManager->addAnimation(player_walk, ObjectType::Player, AnimState::WalkAnim);
     animManager->addAnimation(player_jump, ObjectType::Player, AnimState::JumpAnim);
-    animManager->addAnimation(player_walk, ObjectType::Player, AnimState::IdleAnim);
+    animManager->addAnimation(player_idle, ObjectType::Player, AnimState::IdleAnim);
+    animManager->addAnimation(player_run, ObjectType::Player, AnimState::SprintAnim);
+    animManager->addAnimation(player_atk, ObjectType::Player, AnimState::AttackAnim);
+    animManager->addAnimation(player_use_potion, ObjectType::Player, AnimState::DrinkPotionAnim);
 
     this->light_source = std::make_unique<LightSource>();
 
@@ -453,48 +465,35 @@ void Client::draw() {
         
         switch (sharedObject->type) {
             case ObjectType::Player: {
-                // AnimState animState = sharedObject->animState;
-                // switch (sharedObject->animState) {
-                //     case AnimState::WalkAnim:
-                //         std::cout << "walk" << std::endl;
-                //         break;
-                //     case AnimState::JumpAnim:
-                //         std::cout << "jump" << std::endl;
-                //         break;
-                //     case AnimState::IdleAnim:
-                //         std::cout << "idle" << std::endl;
-                //         break;
-                //     case AnimState::LandAnim:
-                //         std::cout << "land" << std::endl;
-                //         break;
-                //     case AnimState::SprintAnim:
-                //         std::cout << "sprint" << std::endl;
-                //         break;
-                //     case AnimState::DeathAnim:
-                //         std::cout << "death" << std::endl;
-                //         break;
-                //     case AnimState::AttackAnim:
-                //         std::cout << "attack" << std::endl;
-                //         break;
-                //     default:
-                //         std::cout << "undef" << std::endl;
-                //         break;
-                // }
 
-                animManager->setAnimation(sharedObject->type, sharedObject->animState);
 
-                /* Update model animation */
-                animManager->updateAnimation(0.025f);
-                auto transforms = animManager->getFinalBoneMatrices();
-                // std::cout << transforms.size() << std::endl;
-                this->model_shader->use();
-
-                for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
-                    // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
-                    model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+                AnimState animState = sharedObject->animState;
+                switch (sharedObject->animState) {
+                    case AnimState::WalkAnim:
+                        std::cout << "walk" << std::endl;
+                        break;
+                    case AnimState::JumpAnim:
+                        std::cout << "jump" << std::endl;
+                        break;
+                    case AnimState::IdleAnim:
+                        std::cout << "idle" << std::endl;
+                        break;
+                    case AnimState::LandAnim:
+                        std::cout << "land" << std::endl;
+                        break;
+                    case AnimState::SprintAnim:
+                        std::cout << "sprint" << std::endl;
+                        break;
+                    case AnimState::DeathAnim:
+                        std::cout << "death" << std::endl;
+                        break;
+                    case AnimState::AttackAnim:
+                        std::cout << "attack" << std::endl;
+                        break;
+                    default:
+                        std::cout << "undef" << std::endl;
+                        break;
                 }
-
-                this->model_shader->clear();
 
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
@@ -520,6 +519,20 @@ void Client::draw() {
                     }
                     // break;
                 }
+                animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
+
+                /* Update model animation */
+                animManager->updateAnimation(0.025f);
+                auto transforms = animManager->getFinalBoneMatrices();
+                // std::cout << transforms.size() << std::endl;
+                this->model_shader->use();
+
+                for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
+                    // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
+                    model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+                }
+
+                this->model_shader->clear();
 
                 if (!sharedObject->playerInfo->render) { break; } // dont render while invisible
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
@@ -569,45 +582,79 @@ void Client::draw() {
                 break;
             }
             case ObjectType::Slime: {
-                // auto cube = std::make_unique<Cube>(glm::vec3(0.0, 1.0f, 0.0f));
-                // cube->scaleAbsolute(sharedObject->physics.dimensions);
-                // cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                // cube->draw(this->cube_shader.get(),
-                //     this->cam->getViewProj(),
-                //     this->cam->getPos(),
-                //     {},
-                //     true);
-                // break;
-
-                animManager->setAnimation(sharedObject->type, sharedObject->animState);
-
-                /* Update model animation */
-                animManager->updateAnimation(0.025f);
-                auto transforms = animManager->getFinalBoneMatrices();
-                // std::cout << transforms.size() << std::endl;
-                this->model_shader->use();
-
-                for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
-                    // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
-                    model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
-                }
-
-                this->model_shader->clear();
-
-                auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
-
-                auto player_pos = sharedObject->physics.getCenterPosition();
-                auto player_dir = sharedObject->physics.facing;
-
-                this->player_model->rotateAbsolute(player_dir);
-                this->player_model->translateAbsolute(player_pos);
-                this->player_model->draw(
-                    this->model_shader.get(),
+                auto cube = std::make_unique<Cube>(glm::vec3(0.0, 1.0f, 0.0f));
+                cube->scaleAbsolute(sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
                     {},
                     true);
                 break;
+
+                // animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
+
+                // /* Update model animation */
+                // animManager->updateAnimation(0.025f);
+                // auto transforms = animManager->getFinalBoneMatrices();
+                // // std::cout << transforms.size() << std::endl;
+                // this->model_shader->use();
+
+                // for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
+                //     // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
+                //     model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+                // }
+
+                // this->model_shader->clear();
+
+                // auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
+
+                // auto player_pos = sharedObject->physics.getCenterPosition();
+                // auto player_dir = sharedObject->physics.facing;
+
+                // this->player_model->rotateAbsolute(player_dir);
+                // this->player_model->translateAbsolute(player_pos);
+                // this->player_model->draw(
+                //     this->model_shader.get(),
+                //     this->cam->getViewProj(),
+                //     this->cam->getPos(),
+                //     {},
+                //     true);
+                // auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
+
+                // animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
+
+                // /* Update model animation */
+                // animManager->updateAnimation(0.025f);
+                // auto transforms = animManager->getFinalBoneMatrices();
+                // // std::cout << transforms.size() << std::endl;
+                // this->model_shader->use();
+
+                // for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
+                //     // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
+                //     model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+                // }
+
+                // this->model_shader->clear();
+
+                // auto player_pos = sharedObject->physics.getCenterPosition();
+                // auto player_dir = sharedObject->physics.facing;
+
+                // // this->player_model->setDimensions(sharedObject->physics.dimensions);
+                // this->player_model->translateAbsolute(player_pos);
+                // if (player_dir == glm::vec3(0.0f)) {
+                //     player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
+                // }
+                // player_dir.y = 0.0f;
+                // this->player_model->rotateAbsolute(glm::normalize(player_dir));
+                // this->player_model->draw(
+                //     this->model_shader,
+                //     this->cam->getViewProj(),
+                //     this->cam->getPos(),
+                //     {},
+                //     true);
+                // this->drawBbox(sharedObject);
+                // break;
             }
             case ObjectType::SolidSurface: {
                 if (is_dm && sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling) {

@@ -255,6 +255,7 @@ enum class AnimState {
 	JumpAnim,
 	LandAnim,
 	AttackAnim,
+	DrinkPotionAnim,
 	DeathAnim
 };
 
