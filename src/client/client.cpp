@@ -74,8 +74,7 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     
     audioManager = new AudioManager();
 
-    Client::window_width = config.client.window_width;
-    Client::window_height = static_cast<int>((config.client.window_width * 2.0f) / 3.0f);
+
 
     if (config.client.lobby_discovery)  {
         lobby_finder.startSearching();
@@ -120,10 +119,21 @@ bool Client::init() {
         return false;
     }
 
-    /* Create a windowed mode window and its OpenGL context */
+    GLFWmonitor* monitor;
+    if (config.client.fullscreen) {
+        monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode * mode = glfwGetVideoMode(monitor);
+        Client::window_width = mode->width;
+        Client::window_height = mode->height;
+    } else { // windowed
+        monitor = NULL;
+        Client::window_width = UNIT_WINDOW_WIDTH;
+        Client::window_height = UNIT_WINDOW_HEIGHT;
+    }
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    window = glfwCreateWindow(Client::window_width, Client::window_height, "Arcana", NULL, NULL);
+    window = glfwCreateWindow(Client::window_width, Client::window_height, "Wrath of Zeus", monitor, NULL);
     if (!window)
     {
         glfwTerminate();
