@@ -566,8 +566,10 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
 
         //  Add radio button hover
         player_radio_button->addOnHover([this](widget::Handle handle) {
-            auto widget = this->borrowWidget<widget::DynText>(handle);
-            widget->changeColor(font::Color::RED);
+            if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                auto widget = this->borrowWidget<widget::DynText>(handle);
+                widget->changeColor(font::Color::RED);
+            }
         });
 
         //  Add radio button on click
@@ -576,9 +578,10 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
 
             //  TODO: Change button text to be surrounded by two brackets
             //  Change other radio button text to not be surrounded by brackets
-
-            client->roleSelection = Client::RadioButtonState::FirstOption;
-            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+            if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                client->roleSelection = Client::RadioButtonState::FirstOption;
+                client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+            }
         });
 
         //  Add Empty widget between first radio button and second radio
@@ -600,8 +603,10 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
 
         //  Add radio button hover
         dm_radio_button->addOnHover([this](widget::Handle handle) {
-            auto widget = this->borrowWidget<widget::DynText>(handle);
-            widget->changeColor(font::Color::RED);
+            if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                auto widget = this->borrowWidget<widget::DynText>(handle);
+                widget->changeColor(font::Color::RED);
+            }
         });
 
         //  Add radio button on click
@@ -610,9 +615,10 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             
             //  TODO: Change button text to be surrounded by two brackets
             //  Change other radio button text to not be surrounded by brackets
-
-            client->roleSelection = Client::RadioButtonState::SecondOption;
-            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+            if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                client->roleSelection = Client::RadioButtonState::SecondOption;
+                client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+            }
         });
 
         //  Compute the remaining column width and create an Empty widget
