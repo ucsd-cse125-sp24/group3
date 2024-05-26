@@ -1052,6 +1052,20 @@ void ServerGameState::addPlayerToLobby(LobbyPlayer player) {
 	assert(freeIndex);
 }
 
+void ServerGameState::updateLobbyPlayer(EntityID id, LobbyPlayer player) {
+	//	Iterate through the players vector and update the player with the given
+	//	EntityID
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (!this->lobby.players[i].has_value())
+			continue;
+
+		if (this->lobby.players[i].get().id == id) {
+			//	Update player
+			this->lobby.players[i] = player;
+		}
+	}
+}
+
 void ServerGameState::removePlayerFromLobby(EntityID id) {
 	//	Iterate through the players vector and remove the player with the given
 	//	EntityID

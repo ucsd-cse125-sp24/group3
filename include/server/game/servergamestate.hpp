@@ -209,6 +209,14 @@ public:
 	void addPlayerToLobby(LobbyPlayer player);
 
 	/**
+	 * @brief Updates the LobbyPlayer with the given EntityID to the given
+	 * LobbyPlayer struct
+	 * @param id EntityID of the LobbyPlayer to update
+	 * @param player LobbyPlayer struct to copy to the current lobby player
+	*/
+	void updateLobbyPlayer(EntityID id, LobbyPlayer player);
+
+	/**
 	 * Removes a player from the lobby with the specified id.
 	 */
 	void removePlayerFromLobby(EntityID id);
