@@ -47,6 +47,8 @@ public:
 
     void changeColor(font::Color new_color);
 
+    void changeText(std::string new_text);
+
 private:
     Options options;
     std::string text;
@@ -54,6 +56,13 @@ private:
 
     unsigned int VAO;
     unsigned int VBO;
+
+    /**
+     * @brief Calculates the size of this DynText widget based on
+     * its stored text and sets this DynText widget's height and width
+     * fields.
+    */
+    void _calculateSize();
 };
 
 }

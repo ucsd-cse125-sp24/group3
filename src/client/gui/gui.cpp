@@ -358,6 +358,16 @@ void GUI::_layoutLobby() {
         boost::optional<LobbyPlayer> lobbyPlayer =
             this->client->gameState.lobby.players[i];
 
+        //  DEBUG
+        if (!lobbyPlayer.has_value()) {
+            std::cout << "Player " << std::to_string(i + 1) << " is not connected." << std::endl;
+        }
+        else {
+            std::cout << "Player " << std::to_string(i + 1) << ":" << std::endl;
+            std::cout << lobbyPlayer.get().to_string() << std::endl;
+        }
+        //  DEBUG
+
         //  Create a status row for this player
         auto player_status_row = _createPlayerStatusRow(
             lobbyPlayer,
@@ -369,6 +379,72 @@ void GUI::_layoutLobby() {
         //  Add table row to the screen
         this->addWidget(std::move(player_status_row));
     }
+
+    /*  GUI Subsection 3:   Start Game Button   */
+
+    //  Create dynamic text button for the start game button
+    auto start_game_button = widget::DynText::make(
+        "Start Game",
+        this->fonts,
+        widget::DynText::Options(
+            font::Font::TEXT,
+            font::Size::MEDIUM,
+            font::Color::BLACK
+        )
+    );
+
+    //  Display differently based on whether all players in the lobby are ready
+    bool allReady = true;
+
+    std::cout << "players size: " << std::to_string(this->client->gameState.lobby.players.size()) << std::endl;
+    for (boost::optional<LobbyPlayer> player : this->client->gameState.lobby.players) {
+        if (!player.has_value() || !player.get().ready) {
+            //  Either there aren't enough players in the lobby or at least
+            //  one player isn't ready
+            std::cout << "Not all players are ready" << std::endl;
+            allReady = false;
+            break;
+        }
+    }
+
+    if (allReady) {
+        start_game_button->addOnHover([this](widget::Handle handle) {
+            auto widget = this->borrowWidget<widget::DynText>(handle);
+            widget->changeColor(font::Color::RED);
+        });
+
+        //  Add radio button on click
+        start_game_button->addOnClick([this](widget::Handle handle) {
+            auto widget = this->borrowWidget<widget::DynText>(handle);
+
+            //  Send StartGame event to the server
+            this->client->session->sendEventAsync(Event(
+                this->client->session->getInfo().client_eid.value(),
+                EventType::LobbyAction,
+                LobbyActionEvent(
+                    LobbyActionEvent::Action::StartGame,
+                    PlayerRole::Unknown
+                )
+            ));
+        });
+    }
+
+    //  Create flexbox to contain dynamic text
+    std::cout << "lobby max players: " << std::to_string(this->client->gameState.lobby.max_players) << std::endl;
+    auto start_game_flex = widget::Flexbox::make(
+        glm::vec2(0, 200),
+        glm::vec2(WINDOW_WIDTH, 0),
+        widget::Flexbox::Options(
+            widget::Dir::HORIZONTAL,
+            widget::Align::CENTER,
+            0.0f
+        )
+    );
+
+    //  Push start button text widget to flex row
+    start_game_flex->push(std::move(start_game_button));
+
+    this->addWidget(std::move(start_game_flex));
 }
 
 gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
@@ -392,6 +468,10 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         rowSize,
         rowFlexboxOptions
     );
+
+    //  DEBUG
+    std::cout << "client eid has value? " << (this->client->session->getInfo().client_eid.has_value() ? "true" : "false") << std::endl;
+    //  DEBUG
 
     //  Optional: Add a left margin Empty widget here if necessary
     //  at the start of the row
@@ -555,7 +635,18 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
 
         //  "Player" radio button
         auto player_radio_button = widget::DynText::make(
-            "(Player)",
+            "Player",
+            fonts,
+            widget::DynText::Options(
+                font::Font::TEXT,
+                font::Size::MEDIUM,
+                font::Color::BLACK
+            )
+        );
+
+        //  "DM" radio button
+        auto dm_radio_button = widget::DynText::make(
+            "DM",
             fonts,
             widget::DynText::Options(
                 font::Font::TEXT,
@@ -581,6 +672,12 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
                 client->roleSelection = Client::RadioButtonState::FirstOption;
                 client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+
+                //  Update this radio button text to show it's selected
+                //widget->changeText("[Player]");
+
+                //  Update dm radio button text show it's not selected
+                //dm_button->changeText("DM");
             }
         });
 
@@ -588,17 +685,6 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         //  button
         auto radio_first_second_option_empty = widget::Empty::make(
             50.0f
-        );
-
-        //  "DM" radio button
-        auto dm_radio_button = widget::DynText::make(
-            "(DM)",
-            fonts,
-            widget::DynText::Options(
-                font::Font::TEXT,
-                font::Size::MEDIUM,
-                font::Color::BLACK
-            )
         );
 
         //  Add radio button hover
@@ -618,6 +704,12 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
                 client->roleSelection = Client::RadioButtonState::SecondOption;
                 client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+
+                //  Update this radio button text to show it's selected
+                //widget->changeText("[DM]");
+
+                //  Update player radio button text show it's not selected
+                //player_button->changeText("Player");
             }
         });
 
@@ -696,7 +788,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         //  In this case, there are 3 possible subcases:
         //  Subcase 1: Text widget with value "Not Ready"
         //      Displays initially (when the player's state is Connected)
-        //  Subcase 2: Clickable text widget with value "Ready?"
+        //  Subcase 2: Clickable text widget with value "Ready? (DM/Player)"
         //      Displays when the client's player is in the SelectedRole state
         //  Subcase 3: Text widget with value "Ready!"
         //      Displays when the client's player is in the Ready state.
@@ -711,7 +803,19 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
                 break;
             case Client::LobbyPlayerState::SelectedRole:
                 //  Subcase 2
-                readyStatusString = "Ready?";
+                readyStatusString = "Ready? (";
+
+                switch (this->client->roleSelection) {
+                    case Client::RadioButtonState::FirstOption:
+                        readyStatusString += "Player";
+                        break;
+                    case Client::RadioButtonState::SecondOption:
+                        readyStatusString += "DM";
+                        break;
+                }
+
+                readyStatusString += ")";
+
                 break;
             case Client::LobbyPlayerState::Ready:
                 //  Subcase 3

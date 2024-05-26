@@ -282,6 +282,8 @@ std::chrono::milliseconds Server::doTick() {
 
                         std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
                         std::cout << "Starting game!" << std::endl;
+
+                        this->state.setPhase(GamePhase::GAME);
  
                     }
 
