@@ -423,7 +423,11 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         //  Check whether this player is this client's player (Case 3)
         //  This code assumes that the client's eid should always have
         //  a value if we're in GUIState::Lobby
-        if (this->client->session.get()->getInfo().client_eid.value()
+        //  NOTE: I have gotten an exception here since that wasn't true
+        //  so there might be some sort of race condition. For now, I
+        //  will simply add a has_value() check ahead of this
+        if (this->client->session.get()->getInfo().client_eid.has_value()
+            && this->client->session.get()->getInfo().client_eid.value()
             == lobbyPlayer.get().id) {
             playerIdString += " (You)";
         }
@@ -457,7 +461,8 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
     //  is this client's player or not.
 
     if (!connected
-        || lobbyPlayer.get().id != this->client->session.get()->getInfo().client_eid.value()) {
+        || (this->client->session.get()->getInfo().client_eid.has_value() 
+            && lobbyPlayer.get().id != this->client->session.get()->getInfo().client_eid.value())) {
         //  Case 1: This player is NOT the client player
         //  In this case, there are 4 possible subcases, all of which are composed
         //  of a single text widget:
@@ -637,7 +642,9 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
     //  is this client's player or not.
 
     if (!connected
-        || lobbyPlayer.get().id != this->client->session.get()->getInfo().client_eid.value()) {
+        || (this->client->session.get()->getInfo().client_eid.has_value()
+            && lobbyPlayer.get().id != this->client->session.get()->getInfo().client_eid.value())
+        ) {
         //  Case 1: This player is NOT the client player
         //  In this case, there are 2 possible subcases, all of which are composed
         //  of a single text widget:
