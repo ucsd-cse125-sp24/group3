@@ -308,6 +308,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         SpecificID lightningID = this->state.objects.createObject(new Weapon(glm::vec3(-1.0f, 0, -1.0f), glm::vec3(0.0f), WeaponType::Lightning));
         Weapon* lightning = dynamic_cast<Weapon*>(this->state.objects.getItem(lightningID));
         lightning->iteminfo.held = true;
+        lightning->physics.collider = Collider::None;
         dm->lightning = lightning;
 
         //  Spawn player in random spawn point

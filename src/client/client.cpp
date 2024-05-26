@@ -878,6 +878,19 @@ void Client::draw() {
                 }
                 break;
             }
+            case ObjectType::Item: {
+                // only for testing dummy item
+                /*
+                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 0.0f, 0.0f));
+                cube->scaleAbsolute(sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader.get(),
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    {},
+                    true);
+                break;*/
+            }
             default:
                 break;
         }

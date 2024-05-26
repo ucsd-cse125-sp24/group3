@@ -59,6 +59,7 @@ ServerGameState::ServerGameState(GameConfig config) {
 
 	this->currentGhostTrap = nullptr;
 	this->spawner = new Spawner();
+	this->spawner->spawnDummy(*this);
 
     MazeGenerator generator(config);
     int attempts = 1;
@@ -689,7 +690,9 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 			//	doesn't have a collider
 			if (object->globalID == otherObj->globalID
 				|| otherObj->physics.collider == Collider::None
-				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Player)) {
+				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Player)
+				|| (object->type == ObjectType::Item && otherObj->type == ObjectType::Player)
+				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Item)) {
 				continue;
 			}
 

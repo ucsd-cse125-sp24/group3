@@ -52,6 +52,7 @@ enum class ServerSFX {
     Hammer,
     Minotaur,
     Python,
+    TEMP,
     // make sure to add to server sfx len map!
     // make sure to add to macro below!
 };

@@ -1,6 +1,7 @@
 #include "server/game/spawner.hpp"
 #include "server/game/slime.hpp"
 #include "server/game/python.hpp"
+#include "server/game/item.hpp"
 #include "server/game/minotaur.hpp"
 #include "server/game/servergamestate.hpp"
 #include "shared/utilities/rng.hpp"
@@ -108,23 +109,53 @@ void Spawner::spawnEnemy(ServerGameState& state, int valueRemaining) {
 }
 
 glm::vec3 Spawner::findEmptyPosition(ServerGameState& state) {
-	// TODO 2: check that no collision in the cell you are spawning in
+	// check that no collision in the cell you are spawning in
 
 	auto& grid = state.getGrid();
 	int cols = grid.getColumns();
 	int rows = grid.getRows();
 
 	glm::ivec2 random_cell;
+	CellType celltype;
 	while (true) {
 		random_cell.x = randomInt(0, cols - 1);
 		random_cell.y = randomInt(0, rows - 1); // corresponds to z in the world
+		celltype = grid.getCell(random_cell.x, random_cell.y)->type;
 
-		if (grid.getCell(random_cell.x, random_cell.y)->type == CellType::Empty) {
+		// Manually check where spawning should always not happen
+		if (celltype == CellType::OutsideTheMaze || celltype == CellType::Wall || celltype == CellType::Pillar || \
+			celltype == CellType::FireballTrapLeft || celltype == CellType::FireballTrapRight || \
+			celltype == CellType::FireballTrapDown || celltype == CellType::FireballTrapUp || \
+			celltype == CellType::FloorSpikeFull || celltype == CellType::FloorSpikeVertical || \
+			celltype == CellType::FloorSpikeHorizontal || celltype == CellType::FakeWall ||
+			celltype == CellType::ArrowTrapUp || celltype == CellType::ArrowTrapDown || \
+			celltype == CellType::ArrowTrapRight || celltype == CellType::ArrowTrapLeft || \
+			celltype == CellType::TeleporterTrap || celltype == CellType::Exit
+			) {
+			continue;
+		}
+
+		// add small offset for spawn
+		if (!state.hasObjectCollided(this->dummyItem, 
+				glm::vec3(random_cell.x * Grid::grid_cell_width + 0.01f, 0, random_cell.y * Grid::grid_cell_width + 0.01f))) {
+			for (glm::ivec2 cellPos : this->dummyItem->gridCellPositions) {
+			}
+			state.objects.moveObject(this->dummyItem, glm::vec3(-1, 0, -1));
 			break;
 		}
 	}
 
-	return glm::vec3(random_cell.x * Grid::grid_cell_width, 0, random_cell.y * Grid::grid_cell_width);
+	return glm::vec3(random_cell.x * Grid::grid_cell_width + 0.01f, 0, random_cell.y * Grid::grid_cell_width + 0.01f);
+}
+
+void Spawner::spawnDummy(ServerGameState& state) {
+	// Set dummy item with the biggest possible enemy size
+	// Used for checking spawnable tile
+	SpecificID itemID = state.objects.createObject(new Item(ObjectType::Item, true, glm::vec3(-1, 0, -1), ModelType::Cube, glm::vec3(1)));
+	auto dummy = state.objects.getItem(itemID);
+	dummy->physics.shared.dimensions = glm::vec3(4.0f, 7.0f, 4.0f);
+	this->dummyItem = dummy;
+	dummy->iteminfo.held = true;
 }
 
 void Spawner::addEnemy(ServerGameState& state, SpecificID id) {

@@ -21,6 +21,7 @@ WeaponCollider::WeaponCollider(Player* usedPlayer, glm::vec3 corner, glm::vec3 f
     }
 
     this->playSound = false;
+    this->sound = ServerSFX::TEMP;
 }
 
 void WeaponCollider::doCollision(Object* other, ServerGameState& state) {

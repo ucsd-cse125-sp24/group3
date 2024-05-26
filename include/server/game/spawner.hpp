@@ -9,6 +9,7 @@
 #include <mutex>
 
 class ServerGameState;
+class Item;
 
 /**
  * Spawner Class manages the number of enemies in the maze
@@ -18,7 +19,8 @@ class ServerGameState;
  */
 class Spawner {
 public:
-    
+    Item* dummyItem;
+
     Spawner();
 
     /*
@@ -46,6 +48,12 @@ public:
      * Find empty positions that enemies can safely spawn
      */
     glm::vec3 findEmptyPosition(ServerGameState& state);
+
+    /*
+     * General spawn method to manage number of enemies
+     */
+    void spawnDummy(ServerGameState& state);
+
 
 private:
     int enemyValueCap;

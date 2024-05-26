@@ -13,7 +13,7 @@
 
 
 /* ServerGameState Constants */
-#define MAX_ENEMY_VALUE			300
+#define MAX_ENEMY_VALUE			500
 
 /*	Maze Constants */
 #define	MAX_MAZE_COLUMNS		10000
