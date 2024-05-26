@@ -1,6 +1,7 @@
 #include "server/game/minotaur.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/servergamestate.hpp"
+#include "server/game/weapon.hpp"
 #include "shared/audio/constants.hpp"
 #include "shared/utilities/rng.hpp"
 
@@ -74,4 +75,16 @@ void Minotaur::doCollision(Object* other, ServerGameState& state) {
         creature->stats.health.decrease(3);
         creature->physics.velocity = 0.7f * glm::normalize(this->physics.shared.facing);
     }
+}
+
+bool Minotaur::doDeath(ServerGameState& state) {
+    Enemy::doDeath(state);
+
+    // Drop health potion upon death
+    auto newCorner = this->physics.shared.corner;
+    newCorner.y *= 0;
+    if (randomInt(1, 4) == 4) {
+        state.objects.createObject(new Weapon(newCorner, glm::vec3(1), WeaponType::Hammer));
+    }
+    return true;
 }

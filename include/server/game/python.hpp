@@ -13,6 +13,8 @@ public:
 
     void doCollision(Object* other, ServerGameState& state) override;
 
+    bool doDeath(ServerGameState& state) override;
+
 private:
     std::chrono::system_clock::time_point last_move_time;
     int moveDelay;

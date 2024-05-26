@@ -1,6 +1,7 @@
 #include "server/game/python.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/servergamestate.hpp"
+#include "server/game/potion.hpp"
 #include "shared/audio/constants.hpp"
 #include "shared/utilities/rng.hpp"
 
@@ -53,8 +54,7 @@ bool Python::doBehavior(ServerGameState& state) {
         }
 
         if (this->diagonal) {
-            auto direction = randomInt(0, 1);
-            if (direction == 0) {
+            if (randomInt(0, 1) == 0) {
                 this->physics.velocity.x = (this->physics.shared.facing.x * 0.5) * 0.525
                     + (this->physics.shared.facing.z * 0.5) * 0.85;
                 this->physics.velocity.z = (this->physics.shared.facing.x * 0.5) * -0.85
@@ -95,4 +95,22 @@ void Python::doCollision(Object* other, ServerGameState& state) {
         creature->stats.health.decrease(2);
         creature->physics.velocity = 0.5f * glm::normalize(this->physics.shared.facing);
     }
+}
+
+bool Python::doDeath(ServerGameState& state) {
+    Enemy::doDeath(state);
+
+    // Drop health potion upon death
+    auto newCorner = this->physics.shared.corner;
+    newCorner.y *= 0;
+
+    auto rand = randomInt(1, 4);
+    if (rand == 1) {
+        state.objects.createObject(new Potion(newCorner, glm::vec3(1), PotionType::Nausea));
+    }
+    else if (rand == 4) {
+        state.objects.createObject(new Potion(newCorner, glm::vec3(1), PotionType::Invincibility));
+    }
+
+    return true;
 }

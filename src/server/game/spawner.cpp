@@ -69,7 +69,7 @@ void Spawner::spawnEnemy(ServerGameState& state, int valueRemaining) {
 		auto size = 4 - index;
 		enemyID = state.objects.createObject(new Slime(
 			spawnLocation,
-			glm::vec3(0, 0, 0),
+			glm::vec3(1, 0, 1),
 			size
 		));
 		if (size == 4) {
@@ -86,7 +86,7 @@ void Spawner::spawnEnemy(ServerGameState& state, int valueRemaining) {
 	case 4: {
 		enemyID = state.objects.createObject(new Minotaur(
 			spawnLocation,
-			glm::vec3(0, 0, 0)
+			glm::vec3(1, 0, 1)
 		));
 		value = valueMap[4];
 		break;
@@ -94,7 +94,7 @@ void Spawner::spawnEnemy(ServerGameState& state, int valueRemaining) {
 	case 5: {
 		enemyID = state.objects.createObject(new Python(
 			spawnLocation,
-			glm::vec3(0, 0, 0)
+			glm::vec3(1, 0, 1)
 		));
 		value = valueMap[5];
 		break;
