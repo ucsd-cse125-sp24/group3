@@ -91,10 +91,13 @@ public:
      * @brief Callback which handles all updates to the local SharedGameState, and sends
      * events to the server based on any local inputs. All logic relating to state updates
      * shoud go in here.
-     * 
-     * @param context 
      */
-    void idleCallback(boost::asio::io_context& context);
+    void idleCallback();
+
+    /**
+     * @brief sends all queued packets to server
+     */
+    void sendPacketsToServer();
 
     /**
      * @brief Callback which handles keyboard inputs to the GLFWwindow. Binds to the GLFWwindow.
@@ -161,7 +164,7 @@ public:
      * 
      * @param ip_addr 
      */
-    bool connectAndListen(std::string ip_addr);
+    bool connect(std::string ip_addr);
 
     AudioManager* getAudioManager();
     AnimationManager* getAnimManager() { return animManager; }
@@ -173,9 +176,12 @@ private:
     /**
      * @brief Processes all data received from the server and updates the SharedGameState.
      * 
-     * @param context
+     * @param allow_defer whether or not you are allowed to defer packets until the next frame
+     * IMPORTANT: this is a performance optimization for more unstable networks, but it must
+     * be set to false until the ServerAssignEID packet has been received because then it
+     * guarantees the game has been fully loaded before trying to render things
      */
-    void processServerInput(boost::asio::io_context& context);
+    void processServerInput(bool allow_defer);
 
     /**
      * @brief Draws all objects in the SharedGameState.
@@ -198,6 +204,7 @@ private:
     std::shared_ptr<Shader> light_source_shader;
     std::shared_ptr<Shader> solid_surface_shader;
     std::shared_ptr<Shader> wall_shader;
+    std::shared_ptr<Shader> sungod_shader;
 
     /* Character models and lighting objects, might need to move to different classes later */
     std::unique_ptr<Model> cube_model;
@@ -207,6 +214,7 @@ private:
     std::unique_ptr<Model> torchlight_model;
     std::unique_ptr<Model> wall_model;
     std::unique_ptr<Model> pillar_model;
+    std::unique_ptr<Model> sungod_model;
 
     GLFWwindow *window;
 
@@ -258,5 +266,7 @@ private:
     glm::vec3 world_pos; // stored world pause, calculated before the GUI is rendered
 
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> closest_light_sources;
+
+    std::deque<Event> events_received;
 };
 

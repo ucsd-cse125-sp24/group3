@@ -224,7 +224,6 @@ class Model : public Renderable {
      */
     void rotateRelative(const glm::vec3& dir, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f)) override;
 
-
     /**
      * Clear transformations and reset the model matrix 
      * to the identity.

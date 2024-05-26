@@ -530,6 +530,7 @@ Texture::Texture(const std::string& filepath, const aiTextureType& type) {
 
     int width, height, nrComponents;
     // std::cout << "Attempting to load texture at " << filepath << std::endl;
+    stbi_set_flip_vertically_on_load(true);  
     unsigned char *data = stbi_load(filepath.c_str(), &width, &height, &nrComponents, 0);
     if (!data) {
         std::cout << "Texture failed to load at path: " << filepath << std::endl;

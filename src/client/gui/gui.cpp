@@ -271,7 +271,7 @@ void GUI::_layoutLobbyBrowser() {
             widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK));
         entry->addOnClick([ip, this](widget::Handle handle){
             std::cout << "Connecting to " << ip.address() << " ...\n";
-            if (this->client->connectAndListen(ip.address().to_string())) {
+            if (this->client->connect(ip.address().to_string())) {
                 this->client->gui_state = GUIState::LOBBY;
                 this->clearCapturedKeyboardInput();
             }
@@ -326,7 +326,7 @@ void GUI::_layoutLobbyBrowser() {
     });
     connect_btn->addOnClick([this](widget::Handle handle) {
         auto input = this->getCapturedKeyboardInput();
-        if (client->connectAndListen(input)) {
+        if (client->connect(input)) {
             client->gui_state = GUIState::LOBBY;
             this->clearCapturedKeyboardInput();
         }
@@ -465,7 +465,7 @@ void GUI::_sharedGameHUD() {
                     itemString = "Floor Spike Vertical";
                     break;
                 }
-                case ModelType::FireballTrap: {
+                case ModelType::SunGod: {
                     itemString = "Fireball Trap";
                     break;
                 }
@@ -559,7 +559,7 @@ void GUI::_sharedGameHUD() {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }
-                case ModelType::FireballTrap: {
+                case ModelType::SunGod: {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }
@@ -675,9 +675,21 @@ void GUI::_layoutGameHUD() {
             auto distance = glm::distance(orb_pos.value(), player_pos_ground);
 
             std::stringstream ss;
-            ss << distance << "m to Orb.";
 
-            matchPhaseFlex->push(widget::DynText::make(ss.str(), fonts, widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)));
+            // bruh
+            ss << std::fixed << std::setprecision(1) << distance << "m to Orb.";
+
+            const float MAX_DIST = 150.0f;
+            float dist_frac = std::max(std::min(distance / MAX_DIST, 1.0f), 0.0f);
+
+            glm::vec3 close_color = font::getRGB(font::Color::GREEN);
+            glm::vec3 far_color = font::getRGB(font::Color::RED);
+
+            glm::vec3 color = (dist_frac * far_color) + ((1 - dist_frac) * close_color);
+
+            matchPhaseFlex->push(widget::DynText::make(ss.str(), fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, color))
+            );
         }
     }
 

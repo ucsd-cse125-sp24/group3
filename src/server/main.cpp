@@ -22,9 +22,8 @@ int main(int argc, char** argv) {
 
         if (wait_time <= 0ms) {
             std::cerr << "WARNING: did not meet tick rate!\n";
-            context.run_for(5ms);
         } else {
-            // Wait until next tick
+            // Wait until next tick, and while idle accept new TCP connections
             context.run_for(wait_time);
         }
     }

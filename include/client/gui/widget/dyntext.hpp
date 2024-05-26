@@ -18,11 +18,13 @@ public:
 
     struct Options {
         Options(font::Font font, font::Size size, font::Color color):
+            font(font), size(size), color(font::getRGB(color)) {}
+        Options(font::Font font, font::Size size, glm::vec3 color):
             font(font), size(size), color(color) {}
 
         font::Font font {font::Font::TEXT};
         font::Size size {font::Size::SMALL};
-        font::Color color {font::Color::BLACK};
+        glm::vec3 color;
     };
 
     /**
