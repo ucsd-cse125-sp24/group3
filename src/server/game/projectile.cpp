@@ -16,6 +16,10 @@ Projectile::Projectile(glm::vec3 corner, glm::vec3 facing,
 }
 
 bool Projectile::doTick(ServerGameState& state) {
+    if (this->physics.shared.corner.y == 0.0f) {
+        state.markForDeletion(this->globalID);
+    }
+
     if (!this->opt.homing) return false;
     this->opt.homing_duration--;
     if (this->opt.homing_duration <= 0) return false;
@@ -28,6 +32,7 @@ bool Projectile::doTick(ServerGameState& state) {
 
     this->physics.velocity += dir_to_target * this->opt.homing_strength;
     this->physics.velocity = glm::normalize(this->physics.velocity);
+    std::cout << glm::to_string(this->physics.velocity) <<'\n';
     this->physics.shared.facing = this->physics.velocity;
 
     return true;

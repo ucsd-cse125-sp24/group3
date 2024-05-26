@@ -20,18 +20,19 @@ FireballTrap::FireballTrap(glm::vec3 corner, FireballTrap::Direction dir):
     this->target = 0; // wont be accessed until set elsewhere, so safe to set to 0
     switch (dir) {
         case Direction::LEFT:
-            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, -1.0f);
-            break;
-        case Direction::RIGHT:
-            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, 1.0f);
-            break;
-        case Direction::UP:
-            this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
-            break;
-        case Direction::DOWN:
             this->physics.shared.facing = glm::vec3(-1.0f, 0.0f, 0.0f);
             break;
+        case Direction::RIGHT:
+            this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
+            break;
+        case Direction::UP:
+            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, -1.0f);
+            break;
+        case Direction::DOWN:
+            this->physics.shared.facing = glm::vec3(0.0f, 0.0f, 1.0f);
+            break;
     }
+
 }
 
 bool FireballTrap::shouldTrigger(ServerGameState& state) {
@@ -80,8 +81,13 @@ void FireballTrap::trigger(ServerGameState& state) {
 
     Trap::trigger(state);
 
+    // auto pos_to_go_to = target_obj->physics.shared.getCenterPosition();
+    // auto dir_to_target = glm::normalize(pos_to_go_to - this->physics.shared.getCenterPosition());
+
+    const float CENTER_TO_BEAK_ADJUSTMENT = 0.5f;
+
     state.objects.createObject(new HomingFireball(
-        this->physics.shared.getCenterPosition(),
+        this->physics.shared.getCenterPosition() + glm::vec3(0, CENTER_TO_BEAK_ADJUSTMENT, 0),
         this->physics.shared.facing,
         this->target
     ));
@@ -139,8 +145,9 @@ float FireballTrap::canSee(Object* other, ServerGameState* state) {
 
     glm::vec3 facing = glm::normalize(this->physics.shared.facing);
     glm::vec3 dir_to_other = glm::normalize(other_pos - this_pos);
+    // not really an angle, just a dot product
     float angle_to_other = glm::dot(facing, dir_to_other);
-    if (std::abs(angle_to_other) >= 0.75) {
+    if (angle_to_other <= 0.25) {
         return -1.0f;
     }
 

@@ -37,7 +37,7 @@ void Renderable::scaleAbsolute(const glm::vec3& scale) {
 }
 
 void Renderable::rotateAbsolute(const glm::vec3& dir, const glm::vec3& axis) {
-    float r = glm::atan(dir.x, dir.z);
+    float r = glm::atan(-dir.z, dir.x);
     this->rotation = glm::angleAxis(r, axis);
 }
 
