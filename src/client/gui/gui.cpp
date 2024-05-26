@@ -478,10 +478,10 @@ void GUI::_sharedGameHUD() {
                     
                     break;
                 }
-                case ModelType::FireballTrap: {
+                case ModelType::SunGod: {
                     itemString = "Fireball Trap";
 
-                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()) {
                         std::cout << "FIREBALL IN COOLDOWN!" << std::endl;
                         itemString += " (IN COOLDOWN)";
                     }
@@ -598,7 +598,7 @@ void GUI::_sharedGameHUD() {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }
-                case ModelType::FireballTrap: {
+                case ModelType::SunGod: {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }

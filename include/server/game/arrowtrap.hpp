@@ -19,13 +19,6 @@
  */
 class ArrowTrap: public Trap {
 public:
-    enum class Direction {
-        LEFT,
-        UP,
-        DOWN,
-        RIGHT
-    };
-
     /**
      * @param corner Corner position of the spike trap
      * @param dimensions TODO: remove once we use real model with size

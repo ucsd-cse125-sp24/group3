@@ -40,7 +40,8 @@ std::unordered_map<ModelType, glm::vec3> Object::models ({
     // spread out in the model
 	{ModelType::Player, (FIRE_PLAYER_DIMENSIONS / 4.0f)},
 	{ModelType::WarrenBear, (BEAR_DIMENSIONS / 4.0f)},
-    {ModelType::Torchlight, glm::vec3(1.0f)}
+    {ModelType::Torchlight, glm::vec3(1.0f)},
+    {ModelType::SunGod, (SUNGOD_DIMENSIONS / 2.0f)}
 });
 
 /*	SharedGameState generation	*/
@@ -93,4 +94,17 @@ std::string Physics::to_string(unsigned int tab_offset) {
 	representation += tabs + "}";
 
 	return representation;
+}
+
+glm::vec3 directionToFacing(const Direction& dir) {
+    switch (dir) {
+        case Direction::LEFT:
+            return glm::vec3(-1.0f, 0.0f, 0.0f);
+        case Direction::RIGHT:
+            return glm::vec3(1.0f, 0.0f, 0.0f);
+        case Direction::UP:
+            return glm::vec3(0.0f, 0.0f, -1.0f);
+        case Direction::DOWN:
+            return glm::vec3(0.0f, 0.0f, 1.0f);
+    }
 }
