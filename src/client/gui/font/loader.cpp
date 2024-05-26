@@ -20,11 +20,10 @@ bool Loader::init() {
     // so this is supposed to prevent seg faults related to that
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    if (!this->_loadFont(Font::MENU)) {
-        return false;
-    }
-    if (!this->_loadFont(Font::TEXT)) {
-        return false;
+    for (Font font : ALL_FONTS()) {
+        if (!this->_loadFont(font)) {
+            return false;
+        }
     }
 
     FT_Done_FreeType(this->ft); // done loading fonts, so can release these resources

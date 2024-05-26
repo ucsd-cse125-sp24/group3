@@ -47,6 +47,10 @@ bool GUI::init()
         return false;
     }
 
+    if (!this->logo.init()) {
+        return false;
+    }
+
     std::cout << "Initialized GUI\n";
     return true;
 }
@@ -131,7 +135,7 @@ std::shared_ptr<font::Loader> GUI::getFonts() {
 }
 
 void GUI::layoutFrame(GUIState state) {
-    if (client->config.client.fps_counter) {
+    if (client->config.client.fps_counter && state != GUIState::INITIAL_LOAD) {
         _layoutFPSCounter();
     }
     switch (state) {
@@ -189,41 +193,27 @@ void GUI::_layoutFPSCounter() {
 }
 
 void GUI::_layoutLoadingScreen() {
-    this->addWidget(widget::CenterText::make(
-        "made by",
-        font::Font::MENU,
-        font::Size::MEDIUM,
-        font::Color::WHITE,
-        fonts,
-        FRAC_WINDOW_HEIGHT(7,8)
-    ));
-    this->addWidget(widget::CenterText::make(
-        "Torchlight Games",
-        font::Font::MENU,
-        font::Size::XLARGE,
-        font::Color::TORCHLIGHT_GAMES,
-        fonts,
-        FRAC_WINDOW_HEIGHT(2,3)
-    ));
+    auto logo_flex = widget::Flexbox::make(glm::vec2(0,FRAC_WINDOW_HEIGHT(1,3)), glm::vec2(WINDOW_WIDTH, 0),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f));
+    logo_flex->push(widget::StaticImg::make(glm::vec2(0, 0), this->logo.getNextFrame()));
+    this->addWidget(std::move(logo_flex));
+
     this->addWidget(widget::CenterText::make(
         "Loading...",
         font::Font::MENU,
         font::Size::MEDIUM,
         font::Color::WHITE,
         fonts,
-        FRAC_WINDOW_HEIGHT(1,3)
+        font::getRelativePixels(40)
     ));
 }
 
 void GUI::_layoutTitleScreen() {
-    this->addWidget(widget::CenterText::make(
-        "Arcana",
-        font::Font::MENU,
-        font::Size::XLARGE,
-        font::Color::RED,
-        fonts,
-        FRAC_WINDOW_HEIGHT(2, 3)
-    ));
+    auto title_flex = widget::Flexbox::make(glm::vec2(0, FRAC_WINDOW_HEIGHT(2,3)), glm::vec2(WINDOW_WIDTH, 0), 
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f));
+    
+    title_flex->push(widget::StaticImg::make(glm::vec2(0,0), images.getImg(img::ImgID::Title)));
+    this->addWidget(std::move(title_flex));
 
     auto start_text = widget::DynText::make(
         "(Start Game)",
@@ -794,7 +784,7 @@ void GUI::_layoutGameEscMenu() {
     auto exit_game_txt = widget::DynText::make(
         "(Exit Game)",
         fonts,
-        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::WHITE)
     );
     exit_game_txt->addOnHover([this](widget::Handle handle) {
         auto widget = this->borrowWidget<widget::DynText>(handle);

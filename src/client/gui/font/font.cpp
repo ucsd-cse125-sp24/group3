@@ -21,6 +21,7 @@ std::string getFilepath(Font font) {
     auto dir = getRepoRoot() / "assets/fonts";
     switch (font) {
         case Font::MENU: return (dir / "AncientModernTales-a7Po.ttf").string();
+        case Font::TITLE: return (dir / "spqr.ttf").string();
         default:
         case Font::TEXT: return (dir / "AtlantisInternational-jen0.ttf").string();
     } 
