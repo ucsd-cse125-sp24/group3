@@ -169,6 +169,8 @@ public:
 
     void setWorldPos();
 
+    void sendTrapEvent(bool hover, bool place, ModelType trapType);
+
     int curr_fps;
 private:
     /**
@@ -264,8 +266,8 @@ private:
 
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> closest_light_sources;
 
-    bool phase_change;
-
     std::deque<Event> events_received;
+
+    bool phase_change;
 };
 

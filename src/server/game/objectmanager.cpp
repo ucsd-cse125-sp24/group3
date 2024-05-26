@@ -23,6 +23,7 @@ ObjectManager::ObjectManager() { // cppcheck-suppress uninitMemberVar
 	////	Initialize type-specific SmartVectors
 	//this->base_objects = SmartVector<Object*>();
 	//this->items = SmartVector<Item*>();
+	this->dm = nullptr;
 }
 
 ObjectManager::~ObjectManager() {
