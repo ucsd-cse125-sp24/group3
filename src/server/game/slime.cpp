@@ -138,9 +138,8 @@ bool Slime::doDeath(ServerGameState& state) {
         SpecificID id1 = state.objects.createObject(slime1);
         SpecificID id2 = state.objects.createObject(slime2);
 
-        auto spawner = state.getSpawner();
-        spawner->addEnemy(state, id1);
-        spawner->addEnemy(state, id2);
+        state.spawner->addEnemy(state, id1);
+        state.spawner->addEnemy(state, id2);
     }
 
     Enemy::doDeath(state);

@@ -58,7 +58,7 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->numPlayerDeaths = 0;
 
 	this->currentGhostTrap = nullptr;
-	this->spawner = new Spawner();
+	this->spawner = std::make_unique<Spawner>();
 	this->spawner->spawnDummy(*this);
 
     MazeGenerator generator(config);
@@ -352,7 +352,7 @@ void ServerGameState::update(const EventList& events) {
 				this->currentGhostTrap = trap;
 
 				// cast to solid surface
-				SolidSurface* trapSF = (SolidSurface*)this->currentGhostTrap;
+				SolidSurface* trapSF = dynamic_cast<SolidSurface*>(this->currentGhostTrap);
 
 				trapSF->setDMHighlight(true);
 
@@ -1643,10 +1643,6 @@ Trap* ServerGameState::spawnFireballTrap(GridCell *cell) {
 
 Grid& ServerGameState::getGrid() {
 	return this->grid;
-}
-
-Spawner* ServerGameState::getSpawner() {
-	return this->spawner;
 }
 
 /*	Debugger Methods	*/

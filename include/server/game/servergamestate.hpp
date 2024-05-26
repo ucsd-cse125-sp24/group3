@@ -48,6 +48,11 @@ public:
 	ObjectManager objects;
 
 	/**
+	 * @brief Controls the spawns for the enemies
+	 */
+	std::unique_ptr<Spawner> spawner;
+
+	/**
 	 * @brief Creates a ServerGameState instance. The intial GamePhase is set to
 	 * Lobby.
 	 */
@@ -222,12 +227,6 @@ public:
 	 */
 	Grid& getGrid();
 
-	/**
-	 * @brief Returns the spawner in the ServerGameState
-	 * @return Reference to spawner instance in the ServerGameState
-	 */
-	Spawner* getSpawner();
-
 	/*	Debugger Methods	*/
 
 	/**
@@ -356,9 +355,4 @@ private:
 	 * @brief table of all currently playing sounds
 	 */
 	SoundTable sound_table;
-
-	/**
-	 * @brief Controls the spawns for the enemies
-	 */
-	Spawner* spawner;
 };

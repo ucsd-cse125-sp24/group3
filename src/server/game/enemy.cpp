@@ -14,7 +14,6 @@ Enemy::Enemy(glm::vec3 corner, glm::vec3 facing, ObjectType type, ModelType mode
 Enemy::~Enemy() {}
 
 bool Enemy::doDeath(ServerGameState& state) {
-    auto spawner = state.getSpawner();
-    spawner->decreaseValue(this->typeID);
+    state.spawner->decreaseValue(this->typeID);
     return true;
 }

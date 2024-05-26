@@ -15,6 +15,7 @@
 Spawner::Spawner() {
     this->enemyValueCap = MAX_ENEMY_VALUE;
     this->currentEnemyValue = 0;
+	this->dummyItem = nullptr;
 
     this->valueMap.push_back(20); // 0: Big slime (size = 4)
     this->valueMap.push_back(10); // 1: Medium slime (size = 3)
