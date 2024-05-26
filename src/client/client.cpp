@@ -70,6 +70,15 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     gui_state(gui::GUIState::INITIAL_LOAD),
     lobby_finder(io_context, config),
     cam(new Camera()) {    
+
+    //  Initialize Client's GUIState::Lobby related state
+    //  Initial lobby player state is set to connected (this assumes that whenever
+    //  GUIState is set to GUIState::Lobby, the client is connected to a lobby)
+    this->lobbyPlayerState = LobbyPlayerState::Connected;
+
+    //  Initial GUIState::Lobby player status table role selection radio button
+    //  state (none of the radio buttons are selected)
+    this->roleSelection = RadioButtonState::NoneSelected;
     
     audioManager = new AudioManager();
 

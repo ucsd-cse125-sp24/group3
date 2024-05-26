@@ -226,6 +226,22 @@ private:
      */
     LobbyPlayerState lobbyPlayerState;
 
+    /**
+     * @brief Radio button state enum for a radio button GUI
+     * (represents currently selected radio button)
+     */
+    enum class RadioButtonState {
+        NoneSelected,
+        FirstOption,
+        SecondOption
+    };
+
+    /**
+     * @brief This client's player's lobby player role radio
+     * button selection
+     */
+    RadioButtonState roleSelection;
+
     AudioManager* audioManager;
 
     /* Camera object representing player's current position & orientation */

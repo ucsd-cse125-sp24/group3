@@ -149,11 +149,12 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 		std::swap(this->updated_entities, empty);
 	}
 
-	if (partial_updates.size() > 0) {
+	//	DEBUG
+	/*if (partial_updates.size() > 0) {
 		std::cout << "Number of partial updates: " << std::to_string(partial_updates.size()) << std::endl;
 		std::cout << "Partial update's lobby (in server):" << std::endl;
 		std::cout << partial_updates[0].lobby.to_string() << std::endl;
-	}
+	}*/
 
 	return partial_updates;
 }
