@@ -16,7 +16,7 @@ Minotaur::Minotaur(glm::vec3 corner, glm::vec3 facing) :
     this->chargeDuration = 3;
     this->stopped = false;
 
-    this->physics.velocityMultiplier.y = 0;
+    this->physics.velocityMultiplier.y = 0.2;
     this->physics.velocityMultiplier.x = 0.3;
     this->physics.velocityMultiplier.z = 0.3;
     this->physics.shared.dimensions = glm::vec3(3.0f, 7.0f, 3.0f);
@@ -86,6 +86,7 @@ void Minotaur::doCollision(Object* other, ServerGameState& state) {
         creature->stats.health.decrease(3);
         auto knockback = glm::normalize(
             other->physics.shared.getCenterPosition() - this->physics.shared.getCenterPosition());
+        knockback.y = 0;
         creature->physics.currTickVelocity = 0.7f * knockback;
     }
 }

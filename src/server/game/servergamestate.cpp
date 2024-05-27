@@ -1013,9 +1013,38 @@ void ServerGameState::handleTickVelocity() {
 		auto player = players.get(p);
 		if (player == nullptr) continue;
 
-		//TODO MAKE IT LONGER
+		// is this actually the best i can do...?
 		if (player->physics.currTickVelocity != glm::vec3(0.0f)) {
-			player->physics.currTickVelocity = glm::vec3(0.0f);
+			if (player->physics.currTickVelocity.x > 0) {
+				player->physics.currTickVelocity.x -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.x < 0) {
+				player->physics.currTickVelocity.x += 0.05f;
+			}
+
+			if (player->physics.currTickVelocity.y > 0) {
+				player->physics.currTickVelocity.y -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.y < 0) {
+				player->physics.currTickVelocity.y += 0.05f;
+			}
+
+			if (player->physics.currTickVelocity.z > 0) {
+				player->physics.currTickVelocity.z -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.z < 0) {
+				player->physics.currTickVelocity.z += 0.05f;
+			}
+
+			if (abs(player->physics.currTickVelocity.x) <= 0.05f) {
+				player->physics.currTickVelocity.x = 0.0f;
+			}
+			if (abs(player->physics.currTickVelocity.y) <= 0.05f) {
+				player->physics.currTickVelocity.y = 0.0f;
+			}
+			if (abs(player->physics.currTickVelocity.z) <= 0.05f) {
+				player->physics.currTickVelocity.z = 0.0f;
+			}
 		}
 	}
 
@@ -1025,7 +1054,36 @@ void ServerGameState::handleTickVelocity() {
 		if (enemy == nullptr) continue;
 
 		if (enemy->physics.currTickVelocity != glm::vec3(0.0f)) {
-			enemy->physics.currTickVelocity = glm::vec3(0.0f);
+			if (enemy->physics.currTickVelocity.x > 0) {
+				enemy->physics.currTickVelocity.x -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.x < 0) {
+				enemy->physics.currTickVelocity.x += 0.05f;
+			}
+
+			if (enemy->physics.currTickVelocity.y > 0) {
+				enemy->physics.currTickVelocity.y -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.y < 0) {
+				enemy->physics.currTickVelocity.y += 0.05f;
+			}
+
+			if (enemy->physics.currTickVelocity.z > 0) {
+				enemy->physics.currTickVelocity.z -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.z < 0) {
+				enemy->physics.currTickVelocity.z += 0.05f;
+			}
+
+			if (abs(enemy->physics.currTickVelocity.x) <= 0.05f) {
+				enemy->physics.currTickVelocity.x = 0.0f;
+			}
+			if (abs(enemy->physics.currTickVelocity.y) <= 0.05f) {
+				enemy->physics.currTickVelocity.y = 0.0f;
+			}
+			if (abs(enemy->physics.currTickVelocity.z) <= 0.05f) {
+				enemy->physics.currTickVelocity.z = 0.0f;
+			}
 		}
 	}
 }

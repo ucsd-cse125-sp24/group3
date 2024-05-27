@@ -17,7 +17,7 @@ Python::Python(glm::vec3 corner, glm::vec3 facing) :
     this->diagonal = false;
     this->stopped = false;
 
-    this->physics.velocityMultiplier.y = 0;
+    this->physics.velocityMultiplier.y = 0.3;
     this->physics.velocityMultiplier.x = 0.4;
     this->physics.velocityMultiplier.z = 0.4;
     this->physics.shared.dimensions = glm::vec3(2.0f, 3.0f, 2.0f);
@@ -106,6 +106,7 @@ void Python::doCollision(Object* other, ServerGameState& state) {
         creature->stats.health.decrease(2);
         auto knockback = glm::normalize(
             other->physics.shared.getCenterPosition() - this->physics.shared.getCenterPosition());
+        knockback.y = 0;
         creature->physics.currTickVelocity = 0.5f * knockback;
     }
 }

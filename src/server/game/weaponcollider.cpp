@@ -46,7 +46,7 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
         auto knockback = glm::normalize(
             other->physics.shared.getCenterPosition() - this->usedPlayer->physics.shared.getCenterPosition());
 
-        creature->physics.currTickVelocity = 0.5f * knockback;
+        creature->physics.currTickVelocity = 0.4f * knockback;
     }
 }
 

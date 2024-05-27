@@ -53,8 +53,8 @@ void Spawner::spawnEnemy(ServerGameState& state, int valueRemaining) {
 	int index = 0;
 	// Get enemy that can fit within value
 	while (true) {
-		index = 5; //spawn pythons only
-		//index = randomInt(0, valueMap.size()-1);
+		//index = 5; //spawn pythons only
+		index = randomInt(0, valueMap.size()-1);
 
 		// Dont spawn mini slimes
 		if (index == 3) { continue; }
