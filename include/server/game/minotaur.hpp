@@ -19,4 +19,5 @@ private:
     std::chrono::system_clock::time_point last_charge_time;
     int chargeDelay;
     int chargeDuration;
+    bool stopped;
 };

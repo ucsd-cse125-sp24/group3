@@ -15,6 +15,7 @@ Python::Python(glm::vec3 corner, glm::vec3 facing) :
     this->moveDelay = 3;
     this->moveDuration = 1;
     this->diagonal = false;
+    this->stopped = false;
 
     this->physics.velocityMultiplier.y = 0;
     this->physics.velocityMultiplier.x = 0.4;
@@ -75,6 +76,7 @@ bool Python::doBehavior(ServerGameState& state) {
         }
         
         this->last_move_time = now;
+        this->stopped = false;
 
         state.soundTable().addNewSoundSource(SoundSource(
             ServerSFX::Python,
@@ -86,9 +88,10 @@ bool Python::doBehavior(ServerGameState& state) {
 
         return true;
     } 
-    else if (elapsed_seconds > std::chrono::seconds(this->moveDuration)) {
+    else if (elapsed_seconds > std::chrono::seconds(this->moveDuration) && !this->stopped) {
         this->physics.velocity.x = 0;
         this->physics.velocity.z = 0;
+        this->stopped = true;
         return true;
     }
         
@@ -101,7 +104,9 @@ void Python::doCollision(Object* other, ServerGameState& state) {
 
     if (creature->type == ObjectType::Player) {
         creature->stats.health.decrease(2);
-        creature->physics.velocity = 0.5f * glm::normalize(this->physics.shared.facing);
+        auto knockback = glm::normalize(
+            other->physics.shared.getCenterPosition() - this->physics.shared.getCenterPosition());
+        creature->physics.currTickVelocity = 0.5f * knockback;
     }
 }
 

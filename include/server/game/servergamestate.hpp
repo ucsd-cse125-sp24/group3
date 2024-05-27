@@ -133,6 +133,8 @@ public:
 
 	void spawnEnemies();
 
+	void handleTickVelocity();
+
 	void deleteEntities();
 
 	/*	SharedGameState generation	*/

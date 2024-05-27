@@ -35,7 +35,19 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
     
     // do damage if creature
     creature->stats.health.decrease(this->opt.damage);
-    creature->physics.velocity = -0.5f * glm::normalize(creature->physics.shared.facing);
+
+    if (this->usedPlayer == nullptr) {
+        auto knockback = glm::normalize(
+            other->physics.shared.getCenterPosition() - this->physics.shared.getCenterPosition());
+
+        creature->physics.currTickVelocity = 0.7f * knockback;
+    }
+    else {
+        auto knockback = glm::normalize(
+            other->physics.shared.getCenterPosition() - this->usedPlayer->physics.shared.getCenterPosition());
+
+        creature->physics.currTickVelocity = 0.5f * knockback;
+    }
 }
 
 void WeaponCollider::updateMovement(ServerGameState& state) {

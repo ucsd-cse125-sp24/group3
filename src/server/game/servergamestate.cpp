@@ -436,6 +436,7 @@ void ServerGameState::update(const EventList& events) {
 	handleRespawns();
 	deleteEntities();
 	spawnEnemies();
+	handleTickVelocity();
 	tickStatuses();
 	
 	//	Increment timestep
@@ -497,7 +498,7 @@ void ServerGameState::updateMovement() {
 
 		//	Object is movable - compute total movement step
 		glm::vec3 totalMovementStep = 
-			object->physics.velocity * object->physics.velocityMultiplier;
+			object->physics.velocity * object->physics.velocityMultiplier + object->physics.currTickVelocity;
 		totalMovementStep.x *= object->physics.nauseous;
 		totalMovementStep.z *= object->physics.nauseous;
 
@@ -1005,6 +1006,30 @@ void ServerGameState::tickStatuses() {
 		enemy->statuses.tickStatus();
 	}
 }
+
+void ServerGameState::handleTickVelocity() {
+	auto players = this->objects.getPlayers();
+	for (auto p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		//TODO MAKE IT LONGER
+		if (player->physics.currTickVelocity != glm::vec3(0.0f)) {
+			player->physics.currTickVelocity = glm::vec3(0.0f);
+		}
+	}
+
+	auto enemies = this->objects.getEnemies();
+	for (auto e = 0; e < enemies.size(); e++) {
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		if (enemy->physics.currTickVelocity != glm::vec3(0.0f)) {
+			enemy->physics.currTickVelocity = glm::vec3(0.0f);
+		}
+	}
+}
+
 
 unsigned int ServerGameState::getTimestep() const {
 	return this->timestep;

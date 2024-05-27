@@ -14,6 +14,7 @@ Minotaur::Minotaur(glm::vec3 corner, glm::vec3 facing) :
     this->last_charge_time = std::chrono::system_clock::now();
     this->chargeDelay = 8;
     this->chargeDuration = 3;
+    this->stopped = false;
 
     this->physics.velocityMultiplier.y = 0;
     this->physics.velocityMultiplier.x = 0.3;
@@ -55,6 +56,7 @@ bool Minotaur::doBehavior(ServerGameState& state) {
         this->physics.velocity.x = 1.5f * this->physics.shared.facing.x;
         this->physics.velocity.z = 1.5f * this->physics.shared.facing.z;
         this->last_charge_time = now;
+        this->stopped = false;
 
         state.soundTable().addNewSoundSource(SoundSource(
             ServerSFX::Minotaur,
@@ -66,9 +68,10 @@ bool Minotaur::doBehavior(ServerGameState& state) {
 
         return true;
     } 
-    else if (elapsed_seconds > std::chrono::seconds(this->chargeDuration)) {
+    else if (elapsed_seconds > std::chrono::seconds(this->chargeDuration) && !this->stopped) {
         this->physics.velocity.x = 0;
         this->physics.velocity.z = 0;
+        this->stopped = true;
         return true;
     }
 
@@ -81,7 +84,9 @@ void Minotaur::doCollision(Object* other, ServerGameState& state) {
 
     if (creature->type == ObjectType::Player) {
         creature->stats.health.decrease(3);
-        creature->physics.velocity = 0.7f * glm::normalize(this->physics.shared.facing);
+        auto knockback = glm::normalize(
+            other->physics.shared.getCenterPosition() - this->physics.shared.getCenterPosition());
+        creature->physics.currTickVelocity = 0.7f * knockback;
     }
 }
 

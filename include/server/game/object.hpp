@@ -39,8 +39,8 @@ struct Physics {
 		glm::vec3 corner, glm::vec3 facing,
 		glm::vec3 dimensions = glm::vec3(1.0f)):
 		shared{.corner=corner, .facing=facing, .dimensions=dimensions},
-		movable(movable), feels_gravity(true), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)), nauseous(1.0f),
-		collider(collider)
+		movable(movable), feels_gravity(true), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)), \
+		currTickVelocity(glm::vec3(0.0f)), nauseous(1.0f), collider(collider)
 	{}
 
 	/**
@@ -71,6 +71,11 @@ struct Physics {
 	 * @brief 3-D vector that denotes this object's velocity multiplier.
 	 */
 	glm::vec3 velocityMultiplier;
+
+	/**
+	 * @brief Tick velocity for knockbacks
+	 */
+	glm::vec3 currTickVelocity;
 
 	/**
 	 * @brief Factor for potion of nausea

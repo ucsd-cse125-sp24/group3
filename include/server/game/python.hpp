@@ -20,4 +20,5 @@ private:
     int moveDelay;
     int moveDuration;
     bool diagonal;
+    bool stopped;
 };
