@@ -33,7 +33,9 @@ set(FILES
     game/orb.cpp
     game/weapon.cpp
     game/weaponcollider.cpp
-
+    game/spawner.cpp
+    game/minotaur.cpp
+    game/python.cpp
     audio/soundtable.cpp
 )
 

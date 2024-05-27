@@ -13,7 +13,7 @@
 
 
 /* ServerGameState Constants */
-#define MAX_ALIVE_ENEMIES 15
+#define MAX_ENEMY_VALUE			500
 
 /*	Maze Constants */
 #define	MAX_MAZE_COLUMNS		10000
@@ -39,7 +39,7 @@
 #define	RESTORE_HEALTH			20
 #define HEALTH_DURATION			0
 
-#define	NAUSEA_SCALAR			-1.0f
+#define	NAUSEA_SCALAR			-1
 #define NAUSEA_DURATION			10
 
 #define INVIS_DURATION			15
@@ -48,9 +48,9 @@
 #define INVINCIBLITY_DUR		15
 
 /*	Weapon Stats	*/
-#define	SWORD_DMG				15
-#define DAGGER_DMG				10
-#define HAMMER_DMG				30
+#define	SWORD_DMG				5
+#define DAGGER_DMG				7
+#define HAMMER_DMG				15
 #define	LIGHTNING_DMG			99
 
 #define	SWORD_PREP				200
@@ -61,9 +61,9 @@
 #define	DAGGER_DUR				150
 #define	DAGGER_TOTAL			300
 
-#define	HAMMER_PREP				400
+#define	HAMMER_PREP				500
 #define	HAMMER_DUR				350
-#define	HAMMER_TOTAL			750
+#define	HAMMER_TOTAL			850
 
 #define	LIGHTNING_PREP			1000
 #define	LIGHTNING_DUR		    400

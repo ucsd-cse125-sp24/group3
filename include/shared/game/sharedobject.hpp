@@ -33,6 +33,8 @@ enum class ObjectType {
 	TeleporterTrap,
 	Spell,
 	Slime,
+	Minotaur,
+	Python,
 	Item,
 	Exit,
 	Orb,

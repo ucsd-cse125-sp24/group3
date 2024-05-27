@@ -17,6 +17,7 @@
 #include "server/game/orb.hpp"
 #include "server/game/weapon.hpp"
 #include "server/game/weaponcollider.hpp"
+#include "server/game/spawner.hpp"
 
 #include "shared/game/celltype.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -57,6 +58,8 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->numPlayerDeaths = 0;
 
 	this->currentGhostTrap = nullptr;
+	this->spawner = std::make_unique<Spawner>();
+	this->spawner->spawnDummy(*this);
 
     MazeGenerator generator(config);
     int attempts = 1;
@@ -434,6 +437,7 @@ void ServerGameState::update(const EventList& events) {
 	handleRespawns();
 	deleteEntities();
 	spawnEnemies();
+	handleTickVelocity();
 	tickStatuses();
 	
 	//	Increment timestep
@@ -495,7 +499,7 @@ void ServerGameState::updateMovement() {
 
 		//	Object is movable - compute total movement step
 		glm::vec3 totalMovementStep = 
-			object->physics.velocity * object->physics.velocityMultiplier;
+			object->physics.velocity * object->physics.velocityMultiplier + object->physics.currTickVelocity;
 		totalMovementStep.x *= object->physics.nauseous;
 		totalMovementStep.z *= object->physics.nauseous;
 
@@ -702,7 +706,9 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 			//	doesn't have a collider
 			if (object->globalID == otherObj->globalID
 				|| otherObj->physics.collider == Collider::None
-				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Player)) {
+				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Player)
+				|| (object->type == ObjectType::Item && otherObj->type == ObjectType::Player)
+				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Item)) {
 				continue;
 			}
 
@@ -731,7 +737,8 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 					otherObj->type == ObjectType::Weapon ||
 					otherObj->type == ObjectType::Orb ||
 					otherObj->type == ObjectType::WeaponCollider ||
-					otherObj->type == ObjectType::Slime) {
+					otherObj->type == ObjectType::Slime ||
+					otherObj->type == ObjectType::Torchlight) {
 					continue;
 				}
 
@@ -744,31 +751,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 }
 
 void ServerGameState::spawnEnemies() {
-	// temp numbers, to tune later...
-	// 1/300 chance every 30ms -> expected spawn every 9s 
-	// TODO 1: small slimes are weighted the same as large slimes
-	// TODO 2: check that no collision in the cell you are spawning in
-	if (randomInt(1, 300) == 1 && this->objects.getEnemies().numElements() < MAX_ALIVE_ENEMIES) {
-		int cols = this->grid.getColumns();
-		int rows = this->grid.getRows();
-
-		glm::ivec2 random_cell;
-		while (true) {
-			random_cell.x = randomInt(0, cols - 1);
-			random_cell.y = randomInt(0, rows - 1); // corresponds to z in the world
-
-			if (this->grid.getCell(random_cell.x, random_cell.y)->type == CellType::Empty) {
-				break;
-			}
-		}
-
-		int size = randomInt(2, 4);
-		this->objects.createObject(new Slime(
-			glm::vec3(random_cell.x * Grid::grid_cell_width, 0, random_cell.y * Grid::grid_cell_width),
-			glm::vec3(0, 0, 0),
-			size
-		));
-	}
+	this->spawner->spawn(*this);
 }
 
 void ServerGameState::updateItems() {
@@ -967,7 +950,6 @@ void ServerGameState::handleDeaths() {
 			this->updated_entities.insert(enemy->globalID);
 			if (enemy->doDeath(*this)) {
 				this->entities_to_delete.insert(enemy->globalID);
-				this->alive_enemy_weight--;
 			}
 		}
 	}
@@ -1018,6 +1000,88 @@ void ServerGameState::tickStatuses() {
 		enemy->statuses.tickStatus();
 	}
 }
+
+void ServerGameState::handleTickVelocity() {
+	auto players = this->objects.getPlayers();
+	for (auto p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		// is this actually the best i can do...?
+		if (player->physics.currTickVelocity != glm::vec3(0.0f)) {
+			if (player->physics.currTickVelocity.x > 0) {
+				player->physics.currTickVelocity.x -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.x < 0) {
+				player->physics.currTickVelocity.x += 0.05f;
+			}
+
+			if (player->physics.currTickVelocity.y > 0) {
+				player->physics.currTickVelocity.y -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.y < 0) {
+				player->physics.currTickVelocity.y += 0.05f;
+			}
+
+			if (player->physics.currTickVelocity.z > 0) {
+				player->physics.currTickVelocity.z -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.z < 0) {
+				player->physics.currTickVelocity.z += 0.05f;
+			}
+
+			if (abs(player->physics.currTickVelocity.x) <= 0.05f) {
+				player->physics.currTickVelocity.x = 0.0f;
+			}
+			if (abs(player->physics.currTickVelocity.y) <= 0.05f) {
+				player->physics.currTickVelocity.y = 0.0f;
+			}
+			if (abs(player->physics.currTickVelocity.z) <= 0.05f) {
+				player->physics.currTickVelocity.z = 0.0f;
+			}
+		}
+	}
+
+	auto enemies = this->objects.getEnemies();
+	for (auto e = 0; e < enemies.size(); e++) {
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		if (enemy->physics.currTickVelocity != glm::vec3(0.0f)) {
+			if (enemy->physics.currTickVelocity.x > 0) {
+				enemy->physics.currTickVelocity.x -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.x < 0) {
+				enemy->physics.currTickVelocity.x += 0.05f;
+			}
+
+			if (enemy->physics.currTickVelocity.y > 0) {
+				enemy->physics.currTickVelocity.y -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.y < 0) {
+				enemy->physics.currTickVelocity.y += 0.05f;
+			}
+
+			if (enemy->physics.currTickVelocity.z > 0) {
+				enemy->physics.currTickVelocity.z -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.z < 0) {
+				enemy->physics.currTickVelocity.z += 0.05f;
+			}
+
+			if (abs(enemy->physics.currTickVelocity.x) <= 0.05f) {
+				enemy->physics.currTickVelocity.x = 0.0f;
+			}
+			if (abs(enemy->physics.currTickVelocity.y) <= 0.05f) {
+				enemy->physics.currTickVelocity.y = 0.0f;
+			}
+			if (abs(enemy->physics.currTickVelocity.z) <= 0.05f) {
+				enemy->physics.currTickVelocity.z = 0.0f;
+			}
+		}
+	}
+}
+
 
 unsigned int ServerGameState::getTimestep() const {
 	return this->timestep;

@@ -21,6 +21,7 @@ WeaponCollider::WeaponCollider(Player* usedPlayer, glm::vec3 corner, glm::vec3 f
     }
 
     this->playSound = false;
+    this->sound = ServerSFX::TEMP;
 }
 
 void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
@@ -34,6 +35,19 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
     
     // do damage if creature
     creature->stats.health.decrease(this->opt.damage);
+
+    if (this->usedPlayer == nullptr) {
+        auto knockback = glm::normalize(
+            other->physics.shared.getCenterPosition() - this->physics.shared.getCenterPosition());
+
+        creature->physics.currTickVelocity = 0.7f * knockback;
+    }
+    else {
+        auto knockback = glm::normalize(
+            other->physics.shared.getCenterPosition() - this->usedPlayer->physics.shared.getCenterPosition());
+
+        creature->physics.currTickVelocity = 0.4f * knockback;
+    }
 }
 
 void WeaponCollider::updateMovement(ServerGameState& state) {
@@ -75,7 +89,14 @@ bool WeaponCollider::readyTime(ServerGameState& state) {
         this->playSound = true;
     }
     else if (!this->playSound) {
-        // add sound for other weapons
+        state.soundTable().addNewSoundSource(SoundSource(
+            this->sound,
+            this->physics.shared.getCenterPosition(),
+            MIDDLE_VOLUME,
+            SHORT_DIST,
+            SHORT_ATTEN
+        ));
+        this->playSound = true;
     }
 
     auto now = std::chrono::system_clock::now();

@@ -59,6 +59,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
 			break;
+		case ObjectType::Item:
+			object->typeID = this->items.push(dynamic_cast<Item*>(object));
+			break;
 		case ObjectType::Weapon:
 			object->typeID = this->items.push(dynamic_cast<Weapon*>(object));
 			break;
@@ -81,6 +84,8 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
 			break;
+		case ObjectType::Python:
+		case ObjectType::Minotaur:
         case ObjectType::Slime:
 			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
 			break;
@@ -135,21 +140,21 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::TeleporterTrap:
 		this->traps.remove(object->typeID);
 		break;
-	case ObjectType::Item:
-		this->items.remove(object->typeID);
-		break;
 	case ObjectType::Player:
 		this->players.remove(object->typeID);
 		break;
 	case ObjectType::Projectile:
 		this->projectiles.remove(object->typeID);
 		break;
+	case ObjectType::Python:
+	case ObjectType::Minotaur:
 	case ObjectType::Slime:
 		this->enemies.remove(object->typeID);
 		break;
 	case ObjectType::WeaponCollider:
 		this->weaponColliders.remove(object->typeID);
 		break;
+	case ObjectType::Item:
 	case ObjectType::Weapon:
 	case ObjectType::Spell:
 	case ObjectType::Potion:

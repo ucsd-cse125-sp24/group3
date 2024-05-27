@@ -26,7 +26,6 @@ void Orb::doCollision(Object* other, ServerGameState& state) {
 	}
 }
 
-// TODO: MAY NOT BE NEEDED AT ALL
 void Orb::useItem(Object* other, ServerGameState& state, int itemSelected) {
 	auto player = dynamic_cast<Player*>(other);
 	dropItem(other, state, itemSelected, 0.0f);
