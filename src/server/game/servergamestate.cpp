@@ -363,7 +363,7 @@ void ServerGameState::update(const EventList& events) {
 				this->currentGhostTrap = trap;
 
 				// cast to solid surface
-				SolidSurface* trapSF = dynamic_cast<SolidSurface*>(this->currentGhostTrap);
+				SolidSurface* trapSF = (SolidSurface*)this->currentGhostTrap;
 
 				trapSF->setDMHighlight(true);
 
