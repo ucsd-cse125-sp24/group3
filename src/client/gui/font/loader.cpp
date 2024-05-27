@@ -21,7 +21,7 @@ bool Loader::init() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     for (Font font : ALL_FONTS()) {
-        if (!this->_loadFont(font)) {
+        if (!this->_loadFont(font)) { // cppcheck-suppress useStlAlgorithm
             return false;
         }
     }

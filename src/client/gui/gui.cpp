@@ -14,7 +14,7 @@
 namespace gui {
 
 
-GUI::GUI(Client* client): capture_keystrokes(false) {
+GUI::GUI(Client* client): capture_keystrokes(false), logo() {
     this->client = client;
 }
 

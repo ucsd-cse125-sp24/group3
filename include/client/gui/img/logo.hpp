@@ -8,6 +8,7 @@ class Logo {
 public:
     static const inline std::size_t NUM_FRAMES = 156;
 
+    Logo() = default;
     bool init();
 
     Img getNextFrame();

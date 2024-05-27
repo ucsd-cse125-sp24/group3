@@ -45,7 +45,7 @@ bool Logo::_loadFrame(std::size_t index) {
     ss << "frame_" << index + 1 << ".png";
 
     auto path = getRepoRoot() / "assets/imgs/logo_animation" / ss.str();
-    unsigned char* img_data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+    unsigned char* img_data = stbi_load(path.string().c_str(), &width, &height, &channels, 0);
 
     if (stbi_failure_reason()) {
         std::cout << "failure: " << stbi_failure_reason() << std::endl;
