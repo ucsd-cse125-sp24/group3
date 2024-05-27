@@ -816,7 +816,7 @@ void GUI::_layoutGameHUD() {
     if (is_dm.has_value() && is_dm.value()) {
         // add some DM specific stuff in here
         auto traps_placed_txt = widget::CenterText::make(
-            std::to_string(self->trapInventoryInfo->trapsPlaced) + " / " + std::to_string(MAX_TRAPS),
+            "Traps Placed: " + std::to_string(self->trapInventoryInfo->trapsPlaced) + " / " + std::to_string(MAX_TRAPS),
             font::Font::TEXT,
             font::Size::SMALL,
             font::Color::RED,
@@ -829,7 +829,7 @@ void GUI::_layoutGameHUD() {
     }
 
     auto health_txt = widget::CenterText::make(
-        std::to_string(self->stats->health.current()) + " Traps Placed / " + std::to_string(self->stats->health.max()),
+        std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
         font::Font::TEXT,
         font::Size::SMALL,
         font::Color::WHITE,
