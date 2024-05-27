@@ -348,7 +348,7 @@ void GUI::_layoutLobby() {
     /*  GUI Subsection 2:   Player Status Table */
 
     //  Define table column widths
-    glm::vec3 columnWidths(400.0f, 700.0f, 500.0f);
+    glm::vec3 columnWidths(350.0f, 850.0f, 300.0f);
 
     float rowHeight = font::getFontSizePx(font::Size::LARGE);
 

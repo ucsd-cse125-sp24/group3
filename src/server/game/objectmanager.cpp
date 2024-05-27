@@ -125,6 +125,10 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	//	Check that the given object exists
 	Object* object = this->objects.get(globalID);
 
+	//	DEBUG
+	//std::cout << "Object to be deleted: " << object->to_string() << std::endl;
+	//	DEBUG
+
 	if (object == nullptr) {
 		//	Object with the given index doesn't exist
 		std::cout << "obj doesn't exist? in ObjectManager::removeObject" << std::endl;
