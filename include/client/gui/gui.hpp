@@ -13,6 +13,7 @@
 #include "client/gui/font/loader.hpp"
 #include "client/gui/img/img.hpp"
 #include "client/gui/img/loader.hpp"
+#include "server/game/constants.hpp"
 
 #include <iostream>
 #include <memory>

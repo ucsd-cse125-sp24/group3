@@ -698,6 +698,7 @@ void GUI::_layoutGameHUD() {
     if (!self_eid.has_value()) {
         return;
     }
+
     auto self = client->gameState.objects.at(*self_eid);
 
     auto matchPhaseFlex = widget::Flexbox::make(
@@ -778,7 +779,6 @@ void GUI::_layoutGameHUD() {
         }
     }
 
-
     matchPhaseFlex->push(widget::DynText::make(
         orbStateString,
         fonts,
@@ -814,11 +814,22 @@ void GUI::_layoutGameHUD() {
     this->addWidget(std::move(matchPhaseFlex));
 
     if (is_dm.has_value() && is_dm.value()) {
+        // add some DM specific stuff in here
+        auto traps_placed_txt = widget::CenterText::make(
+            std::to_string(self->trapInventoryInfo->trapsPlaced) + " / " + std::to_string(MAX_TRAPS),
+            font::Font::TEXT,
+            font::Size::SMALL,
+            font::Color::RED,
+            fonts,
+            font::getRelativePixels(120)
+        );
+        this->addWidget(std::move(traps_placed_txt));
+
         return;
     }
 
     auto health_txt = widget::CenterText::make(
-        std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
+        std::to_string(self->stats->health.current()) + " Traps Placed / " + std::to_string(self->stats->health.max()),
         font::Font::TEXT,
         font::Size::SMALL,
         font::Color::WHITE,

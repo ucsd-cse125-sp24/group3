@@ -399,7 +399,6 @@ void ServerGameState::update(const EventList& events) {
 					break;
 				}
 
-
 				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
 				if (trap == nullptr) { 
@@ -414,6 +413,8 @@ void ServerGameState::update(const EventList& events) {
 				dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
 
 				dm->setPlacedTraps(trapsPlaced + 1);
+
+				dm->sharedTrapInventory.trapsPlaced = trapsPlaced + 1;
 			}
 			break;
 		}
@@ -847,13 +848,6 @@ void ServerGameState::updateTraps() {
 		//std::cout << coolDownMap << " cooldown map size" << std::endl;
 
 		for (auto it = dm->sharedTrapInventory.trapsInCooldown.cbegin(); it != dm->sharedTrapInventory.trapsInCooldown.cend();) {
-			//switch (it->first) {
-			//case CellType::FireballTrap:
-			//	std::cout << "trap in cooldown: fireball" << std::endl;
-			//default:
-			//	std::cout << "trap" << std::endl;
-			//}
-
 			if (std::chrono::round<std::chrono::seconds>(current_time - std::chrono::system_clock::from_time_t(it->second)) >= std::chrono::seconds(TRAP_COOL_DOWN)) {
 				it = dm->sharedTrapInventory.trapsInCooldown.erase(it);
 			}

@@ -126,9 +126,10 @@ struct SharedTrapInventory {
 	int inventory_size;
 	std::vector<ModelType> inventory;
 	std::unordered_map<CellType, std::time_t> trapsInCooldown;
+	int trapsPlaced;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& selected& inventory_size& inventory& trapsInCooldown;
+		ar& selected& inventory_size& inventory& trapsInCooldown& trapsPlaced;
 	}
 };
 
