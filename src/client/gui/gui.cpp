@@ -527,6 +527,27 @@ void GUI::_sharedGameHUD() {
     );
     this->addWidget(std::move(item_txt));
 
+    // Flexbox for the item frames
+    auto frameflex = widget::Flexbox::make(
+        glm::vec2(0.0f, flexHeight),          //position relative to screen
+        glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
+    );
+
+    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LeftHotbar), 2));
+    for (int i = 0; i < inventory_size; i++) {
+        if (selected == i) {
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleSelected), 2));
+            
+        }
+        else {
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleHotbar), 2));
+        }
+    }
+    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightHotbar), 2));
+
+    this->addWidget(std::move(frameflex));
+
     // Flexbox for the items 
     // Loading itemframe again if no item
     auto itemflex = widget::Flexbox::make(
@@ -581,7 +602,7 @@ void GUI::_sharedGameHUD() {
                     }
                 }
             } else {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleHotbar), 2));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Blank), 2));
             }
         } else {
             if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
@@ -613,46 +634,12 @@ void GUI::_sharedGameHUD() {
                 }
             }
             else {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleHotbar), 2));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Blank), 2));
             }
         }
     }
 
     this->addWidget(std::move(itemflex));
-
-    // Flexbox for the item frames
-    auto frameflex = widget::Flexbox::make(
-        glm::vec2(0.0f, flexHeight),          //position relative to screen
-        glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
-        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
-    );
-
-    for (int i = 0; i < inventory_size; i++) {
-        if (selected == i) {
-            if (i == 0) {
-                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LeftSelected), 2));
-            } 
-            else if (i == inventory_size - 1) {
-                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightSelected), 2));
-            }
-            else {
-                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleSelected), 2));
-            }
-        }
-        else {
-            if (i == 0) {
-                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LeftHotbar), 2));
-            }
-            else if (i == inventory_size - 1) {
-                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightHotbar), 2));
-            }
-            else {
-                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleHotbar), 2));
-            }
-        }
-    }
-
-    this->addWidget(std::move(frameflex));
 
     if (!is_dm.value()) {
         // Flexbox for the health bar
