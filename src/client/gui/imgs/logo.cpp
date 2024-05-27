@@ -2,6 +2,9 @@
 #include "stb_image.h"
 #include <sstream>
 #include <iostream>
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 namespace gui::img {
 
@@ -17,8 +20,20 @@ bool Logo::init() {
 }
 
 Img Logo::getNextFrame() {
+    static const auto FRAME_DELAY = 20ms;
+
+    static auto prev_frame_time = std::chrono::system_clock::now();
+    auto now = std::chrono::system_clock::now();
+
+    auto time_since_last_frame = now - prev_frame_time;
+
     std::size_t index = this->curr_frame;
-    this->curr_frame++;
+
+    if (time_since_last_frame > FRAME_DELAY) {
+        this->curr_frame++;
+        prev_frame_time = now;
+    }
+
     if (this->curr_frame >= NUM_FRAMES) {
         this->curr_frame = 0;
     }
