@@ -144,36 +144,37 @@ bool Client::init() {
     std::cout << "shader version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << "shader version: " << glGetString(GL_VERSION) << std::endl;
 
-    // Init GUI (e.g. load in all fonts)
-    // TODO: pass in shader for image loading in second param
-    if (!this->gui.init()) {
-        std::cerr << "GUI failed to init" << std::endl;
-        return false;
-    }
-
-    this->displayCallback();
-
     auto shaders_dir = getRepoRoot() / "src/client/shaders";
     auto graphics_assets_dir = getRepoRoot() / "assets/graphics";
+
+    auto deferred_lighting_vert_path = shaders_dir / "deferred_lighting.vert";
+    auto deferred_lighting_frag_path = shaders_dir / "deferred_lighting.frag";
+    this->deferred_lighting_shader = std::make_shared<Shader>(deferred_lighting_vert_path.string(), deferred_lighting_frag_path.string());
+
+    auto deferred_light_box_vert_path = shaders_dir / "deferred_light_box.vert";
+    auto deferred_light_box_frag_path = shaders_dir / "deferred_light_box.frag";
+    this->deferred_light_box_shader = std::make_shared<Shader>(deferred_light_box_vert_path.string(), deferred_light_box_frag_path.string());
+
+    this->configureGBuffer();
 
     auto cube_vert_path = shaders_dir / "cube.vert";
     auto cube_frag_path = shaders_dir / "cube.frag";
     this->cube_shader = std::make_shared<Shader>(cube_vert_path.string(), cube_frag_path.string());    
     
-    auto model_vert_path = shaders_dir / "model.vert";
-    auto model_frag_path = shaders_dir / "model.frag";
-    this->model_shader = std::make_shared<Shader>(model_vert_path.string(), model_frag_path.string());
-
-    auto cube_model_path = graphics_assets_dir / "cube.obj";
-    this->cube_model = std::make_unique<Model>(cube_model_path.string());
-
-    auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
-    this->bear_model = std::make_unique<Model>(bear_model_path.string());
-    // this->bear_model->scaleAbsolute(0.25);
-
-    auto player_model_path = graphics_assets_dir / "Fire-testing.obj";
-    this->player_model = std::make_unique<Model>(player_model_path.string());
-    this->player_model->scaleAbsolute(0.25);
+    // auto model_vert_path = shaders_dir / "model.vert";
+    // auto model_frag_path = shaders_dir / "model.frag";
+    // this->model_shader = std::make_shared<Shader>(model_vert_path.string(), model_frag_path.string());
+    //
+    // auto cube_model_path = graphics_assets_dir / "cube.obj";
+    // this->cube_model = std::make_unique<Model>(cube_model_path.string());
+    //
+    // auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
+    // this->bear_model = std::make_unique<Model>(bear_model_path.string());
+    // // this->bear_model->scaleAbsolute(0.25);
+    //
+    // auto player_model_path = graphics_assets_dir / "Fire-testing.obj";
+    // this->player_model = std::make_unique<Model>(player_model_path.string());
+    // this->player_model->scaleAbsolute(0.25);
 
     this->light_source = std::make_unique<LightSource>();
 
@@ -181,8 +182,8 @@ bool Client::init() {
     auto lightFragFilepath = shaders_dir / "lightsource.frag";
     this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
 
-    auto torchlight_model_path = graphics_assets_dir / "cube.obj";
-    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
+    // auto torchlight_model_path = graphics_assets_dir / "cube.obj";
+    // this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
 
     auto solid_surface_vert_path = shaders_dir / "solidsurface.vert";
     auto solid_surface_frag_path = shaders_dir / "solidsurface.frag";
@@ -197,20 +198,35 @@ bool Client::init() {
     auto dm_cube_frag_path = shaders_dir / "dm_cube.frag";
     this->dm_cube_shader = std::make_shared<Shader>(wall_vert_path.string(), dm_cube_frag_path.string());
 
-    auto pillar_model_path = graphics_assets_dir / "pillar.obj";
-    this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
-
-    auto sungod_model_path = graphics_assets_dir / "sungod.obj";
-    this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
+    // auto pillar_model_path = graphics_assets_dir / "pillar.obj";
+    // this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
+    //
+    // auto sungod_model_path = graphics_assets_dir / "sungod.obj";
+    // this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
 
     auto sungod_vert_path = shaders_dir / "sungod.vert";
     auto sungod_frag_path = shaders_dir / "sungod.frag";
     this->sungod_shader = std::make_shared<Shader>(sungod_vert_path.string(), sungod_frag_path.string());
 
+    auto deferred_geometry_vert_path = shaders_dir / "deferred_geometry.vert";
+    auto deferred_geometry_frag_path = shaders_dir / "deferred_geometry.frag";
+    this->deferred_geometry_shader = std::make_shared<Shader>(deferred_geometry_vert_path.string(), deferred_geometry_frag_path.string());
+
+    
+
     this->gui_state = GUIState::TITLE_SCREEN;
 
     this->audioManager->init();
     this->audioManager->playMusic(ClientMusic::TitleTheme);
+
+    // Init GUI (e.g. load in all fonts)
+    // TODO: pass in shader for image loading in second param
+    if (!this->gui.init()) {
+        std::cerr << "GUI failed to init" << std::endl;
+        return false;
+    }
+
+    this->displayCallback();
 
     return true;
 }
@@ -436,34 +452,78 @@ void Client::processServerInput(bool allow_defer) {
     }
 }
 
-void Client::draw() {
-    // auto start = std::chrono::system_clock::now();
+void Client::configureGBuffer() {
+    std::cout << __LINE__ << std::endl;
+    glGenFramebuffers(1, &gBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 
+    // position color buffer
+    glGenTextures(1, &gPosition);
+    glBindTexture(GL_TEXTURE_2D, gPosition);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+    std::cout << __LINE__ << std::endl;
+    // normal color buffer
+    glGenTextures(1, &gNormal);
+    glBindTexture(GL_TEXTURE_2D, gNormal);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+    std::cout << __LINE__ << std::endl;
+    // color + specular color buffer
+    glGenTextures(1, &gAlbedoSpec);
+    glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
+    std::cout << __LINE__ << std::endl;
+
+    // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+    unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+    glDrawBuffers(3, attachments);
+    std::cout << __LINE__ << std::endl;
+
+    // create and attach depth buffer (renderbuffer)
+    unsigned int rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, WINDOW_WIDTH, WINDOW_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+    std::cout << __LINE__ << std::endl;
+    // finally check if framebuffer is complete
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Framebuffer not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    std::cout << __LINE__ << std::endl;
+
+    this->deferred_lighting_shader->use();
+    this->deferred_lighting_shader->setInt("gPosition", 0);
+    this->deferred_lighting_shader->setInt("gNormal", 1);
+    this->deferred_lighting_shader->setInt("gAlbedoSpec", 2);
+    std::cout << __LINE__ << std::endl;
+}
+
+void Client::draw() {
     if (!this->session->getInfo().client_eid.has_value()) {
         return;
     }
-    auto eid = this->session->getInfo().client_eid.value();
-    bool is_dm = this->session->getInfo().is_dungeon_master.value();
-    glm::vec3 my_pos = this->gameState.objects[eid]->physics.corner;
-    for (auto& [id, sharedObject] : this->gameState.objects) {
+    this->geometryPass();
+    this->lightingPass();
+}
 
+void Client::geometryPass() {
+    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    this->deferred_geometry_shader->use();
+    auto viewProj = this->cam->getViewProj();
+    this->deferred_geometry_shader->setMat4("viewProj", viewProj);
+    for (auto& [id, sharedObject] : this->gameState.objects) {
         if (!sharedObject.has_value()) {
             continue;
-        }
-
-        bool is_ceiling = sharedObject->type == ObjectType::SolidSurface &&
-            sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling;
-
-        bool is_floor = sharedObject->type == ObjectType::SolidSurface &&
-            sharedObject->solidSurface->surfaceType == SurfaceType::Floor;
-
-        auto dist = glm::distance(sharedObject->physics.corner, my_pos);
-
-
-        if (!is_floor) {
-            if (!is_dm && !is_ceiling && dist > RENDER_DISTANCE) {
-                continue;
-            }
         }
 
         switch (sharedObject->type) {
@@ -491,327 +551,188 @@ void Client::draw() {
                     break;
                 }
 
-                if (!sharedObject->playerInfo->render) { break; } // dont render while invisible
-                auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
-
-                auto player_pos = sharedObject->physics.getCenterPosition();
-
-                this->player_model->translateAbsolute(player_pos);
-                this->player_model->draw(
-                    this->model_shader.get(),
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    {},
-                    true);
+                // if (!sharedObject->playerInfo->render) { break; } // dont render while invisible
+                // auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
+                //
+                // auto player_pos = sharedObject->physics.getCenterPosition();
+                //
+                // this->player_model->translateAbsolute(player_pos);
+                // this->player_model->draw(
+                //     this->model_shader.get(),
+                //     this->cam->getViewProj(),
+                //     this->cam->getPos(),
+                //     {},
+                //     true);
                 break;
             }
-            // CHANGE THIS
-            case ObjectType::DungeonMaster: {
-                // don't render yourself
-                if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
-                    //  TODO: Update the player eye level to an acceptable level
-                    glm::vec3 pos = sharedObject->physics.getCenterPosition();
-                    pos.y += PLAYER_EYE_LEVEL;
-                    cam->updatePos(pos);
-                    break;
-                }
-                auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
-
-                auto player_pos = sharedObject->physics.corner;
-
-                this->player_model->setDimensions(sharedObject->physics.dimensions);
-                this->player_model->translateAbsolute(player_pos);
-                this->player_model->draw(
-                    this->model_shader.get(),
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    {},
-                    true);
-                this->drawBbox(sharedObject);
-                break;
-            }
-            case ObjectType::Slime: {
-                auto cube = std::make_unique<Cube>(glm::vec3(0.0, 1.0f, 0.0f));
-                cube->scaleAbsolute(sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader.get(),
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    {},
-                    true);
-                break;
-            }
-            case ObjectType::SolidSurface: {
-                if (is_dm && sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling) {
-                    // don't render ceiling as DM
-                    break;
-                }
-                if (!is_dm && sharedObject->solidSurface->is_internal) {
-                    // dont render internal walls as non DM
-                    break;
-                }
-
-                Model* model = this->wall_model.get();
-                Shader* shader = this->wall_shader.get();
-                switch (sharedObject->solidSurface->surfaceType) {
-                    case SurfaceType::Wall:
-                        model = this->wall_model.get();
-                        shader = this->wall_shader.get();
-                        break;
-                    case SurfaceType::Pillar:
-                        model = this->pillar_model.get();
-                        shader = this->wall_shader.get();
-                        break;
-                    case SurfaceType::Ceiling:
-                        model = this->cube_model.get();
-                        shader = this->solid_surface_shader.get();
-                        break;
-                    case SurfaceType::Floor:
-                        model = this->cube_model.get();
-                        shader = this->solid_surface_shader.get();
-                        break;
-                }
-
-                if (is_dm) {
-                    // if the DM, override
-                    if (sharedObject->solidSurface->surfaceType != SurfaceType::Floor) {
-                        shader = this->dm_cube_shader.get();
-                    }
-                    else {
-                        shader = this->solid_surface_shader.get();
-                    }
-
-                    if (sharedObject->solidSurface->dm_highlight) {
-                        model->overrideSolidColor(glm::vec3(1.0f, 0.0f, 0.0f));
-                    } else {
-                        model->overrideSolidColor({});
-                    }
-                }
-
-                model->setDimensions(sharedObject->physics.dimensions);
-                model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                if (is_dm) { // 
-                    model->draw(shader,
-                        this->cam->getViewProj(),
+            case ObjectType::SolidSurface:
+                this->wall_model->setDimensions(sharedObject->physics.dimensions);
+                this->wall_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->wall_model->draw(
+                        this->deferred_geometry_shader.get(),
+                        viewProj,
                         this->cam->getPos(),
                         {},
                         true);
-                } else {
-                    model->draw(shader,
-                        this->cam->getViewProj(),
-                        this->cam->getPos(),
-                        this->closest_light_sources,
-                        true);
-                }
                 break;
-            }
-            case ObjectType::FakeWall: {
-                glm::vec3 color;
-                if (sharedObject->trapInfo->triggered) {
-                    color = glm::vec3(0.4f, 0.5f, 0.7f);
-                } else {
-                    // off-color if not currently "visible"
-                    // TODO: change to translucent
-                    color = glm::vec3(0.5f, 0.6f, 0.8f);
-                }
-                auto cube = std::make_unique<Cube>(color);
-                cube->scaleAbsolute(sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader.get(),
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    {},
-                    true);
-                break;
-            }
-            case ObjectType::SpikeTrap: {
-                auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
-                cube->scaleAbsolute( sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader.get(),
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    {}, 
-                    true);
-                break;
-            }
-            case ObjectType::Torchlight: {
-                // do not render torches if dungeon master
-                if (!this->session->getInfo().is_dungeon_master.has_value()) {
-                    break; // just in case this message wasn't received, don't crash
-                }
-
-                if (!this->session->getInfo().is_dungeon_master.value()) {
-                    this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    this->torchlight_model->draw(
-                        this->light_source_shader.get(),
-                        this->cam->getViewProj(),
-                        this->cam->getPos(),
-                        {},
-                        true);
-                }
-                break;
-            }
-            case ObjectType::FireballTrap: {
-                this->sungod_model->setDimensions(sharedObject->physics.dimensions);
-                this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->sungod_model->rotateAbsolute(sharedObject->physics.facing);
-                this->sungod_model->draw(this->sungod_shader.get(),
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    this->closest_light_sources,
-                    true);
-                break;
-            }
-            case ObjectType::ArrowTrap: {
-                auto cube = std::make_unique<Cube>(glm::vec3(0.5f, 0.3f, 0.2f));
-                cube->scaleAbsolute( sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader.get(),
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    {},
-                    true);
-                break;
-            }
-            case ObjectType::Projectile: {  
-                // TODO use model
-                auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
-                cube->scaleAbsolute( sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader.get(),
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    {},
-                    true);
-                break;
-            }
-            case ObjectType::FloorSpike: {
-                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.0f));
-                cube->scaleAbsolute( sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader.get(),
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    {},
-                    true);
-                break;
-            }
-            case ObjectType::Orb: {
-                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    glm::vec3 color = glm::vec3(0.0f, 0.7f, 1.0f);
-                    auto cube = std::make_unique<Cube>(color);
-                    cube->scaleAbsolute(sharedObject->physics.dimensions);
-                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader.get(),
-                        this->cam->getViewProj(),
-                        this->cam->getPos(),
-                        {},
-                        true);
-                }
-                break;
-            }
-            case ObjectType::Potion: {
-                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    glm::vec3 color;
-                    if (sharedObject->modelType == ModelType::HealthPotion) {
-                        color = glm::vec3(1.0f, 0.0f, 0.0f);
-                    } else if (sharedObject->modelType == ModelType::NauseaPotion || sharedObject->modelType == ModelType::InvincibilityPotion) {
-                        color = glm::vec3(1.0f, 0.5f, 0.0f);
-                    } else if (sharedObject->modelType == ModelType::InvisibilityPotion) {
-                        color = glm::vec3(0.2f, 0.2f, 0.2f);
-                    }
-
-                    auto cube = std::make_unique<Cube>(color);
-                    cube->scaleAbsolute(sharedObject->physics.dimensions);
-                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader.get(),
-                        this->cam->getViewProj(),
-                        this->cam->getPos(),
-                        {},
-                        true);
-                }
-                break;
-            }
-            case ObjectType::Spell: {
-                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    glm::vec3 color;
-                    if (sharedObject->modelType == ModelType::FireSpell) {
-                        color = glm::vec3(0.9f, 0.1f, 0.0f);
-                    }
-                    else if (sharedObject->modelType == ModelType::HealSpell) {
-                        color = glm::vec3(1.0f, 1.0f, 0.0f);
-                    }
-                    else {
-                        color = glm::vec3(0.8f, 0.7f, 0.6f);
-                    }
-
-                    auto cube = std::make_unique<Cube>(color);
-                    cube->scaleAbsolute(sharedObject->physics.dimensions);
-                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader.get(),
-                        this->cam->getViewProj(),
-                        this->cam->getPos(),
-                        {},
-                        true);
-                }
-                break;
-            }
-            case ObjectType::TeleporterTrap: {
-                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 1.0f));
-                cube->scaleAbsolute( sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader.get(),
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    {},
-                    true);
-                break;
-            }
-            case ObjectType::Exit: {
-                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 0.0f, 0.0f));
-                cube->scaleAbsolute( sharedObject->physics.dimensions);
-                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                cube->draw(this->cube_shader.get(),
-                    this->cam->getViewProj(),
-                    this->cam->getPos(),
-                    {},
-                    true);
-                break;
-            }
-            case ObjectType::Weapon: {
-                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    auto cube = std::make_unique<Cube>(glm::vec3(0.5f));
-                    cube->scaleAbsolute(sharedObject->physics.dimensions);
-                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader.get(),
-                        this->cam->getViewProj(),
-                        this->cam->getPos(),
-                        {},
-                        true);
-                }
-                break;
-            }
-            case ObjectType::WeaponCollider: {
-                if (sharedObject->weaponInfo->attacked) {
-                    auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
-                    cube->scaleAbsolute(sharedObject->physics.dimensions);
-                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader.get(),
-                        this->cam->getViewProj(),
-                        this->cam->getPos(),
-                        {},
-                        false);
-                }
-                break;
-            }
             default:
                 break;
         }
     }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glUseProgram(0);
+}
 
-    // auto stop = std::chrono::system_clock::now();
-    // std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << "\n";
+void Client::lightingPass() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gPosition);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gNormal);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
+
+    this->deferred_lighting_shader->use();
+    auto camPos = this->cam->getPos();
+    this->deferred_lighting_shader->setVec3("viewPos", camPos);
+    for (int i = 0; i < this->closest_light_sources.size(); i++) {
+        boost::optional<SharedObject>& curr_source = this->closest_light_sources.at(i);
+        if (!curr_source.has_value()) {
+            continue;
+        }
+        SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
+
+        glm::vec3 pos = curr_source->physics.getCenterPosition();
+
+        this->deferred_lighting_shader->setVec3("lights[" + std::to_string(i) + "].Position", pos);
+        this->deferred_lighting_shader->setVec3("lights[" + std::to_string(i) + "].Color", properties.diffuse_color);
+        // update attenuation parameters and calculate radius
+        this->deferred_lighting_shader->setFloat("lights[" + std::to_string(i) + "].Linear", properties.attenuation_linear);
+        this->deferred_lighting_shader->setFloat("lights[" + std::to_string(i) + "].Quadratic", properties.attenuation_quadratic);
+    }
+
+    if (quadVAO == 0) {
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+
+    // 2.5. copy content of geometry's depth buffer to default framebuffer's depth buffer
+    // ----------------------------------------------------------------------------------
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+    // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
+    // the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
+    // depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
+    glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    // 3. render lights on top of scene
+    // --------------------------------
+    this->deferred_light_box_shader->use();
+    glm::mat4 viewProj = this->cam->getViewProj();
+    this->deferred_light_box_shader->setMat4("viewProj", viewProj);
+    for (int i = 0; i < this->closest_light_sources.size(); i++) {
+        boost::optional<SharedObject>& curr_source = this->closest_light_sources.at(i);
+        SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
+
+        glm::vec3 pos = curr_source->physics.getCenterPosition();
+        auto model = glm::mat4(1.0f);
+        model = glm::translate(model, pos);
+        // model = glm::scale(model, glm::vec3(0.125f));
+
+        this->deferred_light_box_shader->setMat4("model", model);
+        this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);
+        this->renderCube();
+    }
+
+}
+
+void Client::renderCube() {
+    // initialize (if necessary)
+    if (cubeVAO == 0) {
+        float vertices[] = {
+            // back face
+            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+            -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+            // front face
+            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+            -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+            // left face
+            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            // right face
+             1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+             1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+            // bottom face
+            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+            // top face
+            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+             1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+             1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+            -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+        };
+        glGenVertexArrays(1, &cubeVAO);
+        glGenBuffers(1, &cubeVBO);
+        // fill buffer
+        glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        // link vertex attributes
+        glBindVertexArray(cubeVAO);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
+    // render Cube
+    glBindVertexArray(cubeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
 }
 
 void Client::drawBbox(boost::optional<SharedObject> object) {

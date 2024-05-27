@@ -179,10 +179,32 @@ private:
      */
     void processServerInput(bool allow_defer);
 
+    GLuint gBuffer;
+    GLuint gPosition, gNormal, gAlbedoSpec;
+    GLuint quadVAO = 0;
+    GLuint quadVBO;
+    GLuint cubeVAO = 0;
+    GLuint cubeVBO = 0;
+
+    void configureGBuffer();
+
     /**
      * @brief Draws all objects in the SharedGameState.
      */
     void draw();
+
+    /**
+     *
+     *
+     */
+    void geometryPass();
+
+    /**
+     *
+     */
+    void lightingPass();
+
+    void renderCube();
 
     /**
      * @brief Draw bounding box around a given SharedObject
@@ -201,6 +223,9 @@ private:
     std::shared_ptr<Shader> solid_surface_shader;
     std::shared_ptr<Shader> wall_shader;
     std::shared_ptr<Shader> sungod_shader;
+    std::shared_ptr<Shader> deferred_geometry_shader;
+    std::shared_ptr<Shader> deferred_lighting_shader;
+    std::shared_ptr<Shader> deferred_light_box_shader;
 
     /* Character models and lighting objects, might need to move to different classes later */
     std::unique_ptr<Model> cube_model;

@@ -87,61 +87,60 @@ void Mesh::draw(
     glm::vec3 camPos,
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
     bool fill) {
-    // activate the shader program
-    shader->use();
+    // // activate the shader program
+    // shader->use();
 
     // vertex shader uniforms
-    shader->setMat4("viewProj", viewProj);
+    // shader->setMat4("viewProj", viewProj);
     auto model = this->getModelMat();
     shader->setMat4("model", model);
 
-    if (this->solidColor.has_value()) {
-        shader->setVec3("material.ambient", this->solidColor.value());
-    }
-    else {
-        shader->setVec3("material.ambient", this->material.ambient);
-    }
+    // if (this->solidColor.has_value()) {
+    //     shader->setVec3("material.ambient", this->solidColor.value());
+    // }
+    // else {
+    //     shader->setVec3("material.ambient", this->material.ambient);
+    // }
+    //
+    //
+    // // fragment shader uniforms
+    // shader->setVec3("material.diffuse", this->material.diffuse);
+    // shader->setVec3("material.specular", this->material.specular);
+    // shader->setFloat("material.shininess", this->material.shininess);
+    //
+    // shader->setVec3("viewPos", camPos);
+    //
+    // // set lightsource uniforms 
+    // unsigned int curr_light_num = 0;
+    // for (auto curr_source : lightSources) {
+    //     if (curr_light_num > MAX_POINT_LIGHTS) {
+    //         break;
+    //     }
+    //     if (!curr_source.has_value()) {
+    //         continue;
+    //     }
+    //
+    //     SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
+    //     glm::vec3 pos = curr_source->physics.getCenterPosition();
+    //
+    //     std::string pointLight = "pointLights[" + std::to_string(curr_light_num) + "]";
+    //     shader->setBool(pointLight + ".enabled", true);
+    //     shader->setFloat(pointLight + ".intensity", properties.intensity);
+    //     shader->setVec3(pointLight + ".position", pos);
+    //     // needed for attenuation
+    //     shader->setFloat(pointLight + ".constant", 1.0f);
+    //     shader->setFloat(pointLight + ".linear", properties.attenuation_linear);
+    //     shader->setFloat(pointLight + ".quadratic", properties.attenuation_quadratic);
+    //
+    //     // light color
+    //     shader->setVec3(pointLight + ".ambient", properties.ambient_color);
+    //     shader->setVec3(pointLight + ".diffuse", properties.diffuse_color);
+    //     shader->setVec3(pointLight + ".specular", properties.specular_color);
+    //
+    //     curr_light_num++;
+    // }
 
-
-    // fragment shader uniforms
-    shader->setVec3("material.diffuse", this->material.diffuse);
-    shader->setVec3("material.specular", this->material.specular);
-    shader->setFloat("material.shininess", this->material.shininess);
-
-    shader->setVec3("viewPos", camPos);
-
-    // set lightsource uniforms 
-    unsigned int curr_light_num = 0;
-    for (auto curr_source : lightSources) {
-        if (curr_light_num > MAX_POINT_LIGHTS) {
-            break;
-        }
-        if (!curr_source.has_value()) {
-            continue;
-        }
-
-        SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
-        glm::vec3 pos = curr_source->physics.getCenterPosition();
-
-        std::string pointLight = "pointLights[" + std::to_string(curr_light_num) + "]";
-        shader->setBool(pointLight + ".enabled", true);
-        shader->setFloat(pointLight + ".intensity", properties.intensity);
-        shader->setVec3(pointLight + ".position", pos);
-        // needed for attenuation
-        shader->setFloat(pointLight + ".constant", 1.0f);
-        shader->setFloat(pointLight + ".linear", properties.attenuation_linear);
-        shader->setFloat(pointLight + ".quadratic", properties.attenuation_quadratic);
-
-        // light color
-        shader->setVec3(pointLight + ".ambient", properties.ambient_color);
-        shader->setVec3(pointLight + ".diffuse", properties.diffuse_color);
-        shader->setVec3(pointLight + ".specular", properties.specular_color);
-
-        curr_light_num++;
-    }
-
-    if (textures.size() == 0) {
-    } else {
+    if (textures.size() != 0) {
         unsigned int diffuseNr = 1;
         unsigned int specularNr = 1;
         for(unsigned int i = 0; i < textures.size(); i++) {
@@ -154,11 +153,10 @@ void Mesh::draw(
             else if(name == "texture_specular")
                 number = std::to_string(specularNr++);
 
-            std::string shaderTextureName = "material." + name + number;
+            std::string shaderTextureName = name + number;
             shader->setInt(shaderTextureName, i);
             glBindTexture(GL_TEXTURE_2D, textures[i].getID());
         }
-        glActiveTexture(GL_TEXTURE0);
     }
 
     // draw mesh
@@ -168,9 +166,10 @@ void Mesh::draw(
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
-    glUseProgram(0);
+
+    // glActiveTexture(GL_TEXTURE0);
 }
 
 Model::Model(const std::string& filepath) {
