@@ -57,7 +57,7 @@ struct GameConfig {
         std::string default_name;
         /// @brief Whether or not the client should listen for server lobby broadcasts
         bool lobby_discovery;
-        int window_width;
+        bool fullscreen;
         bool draw_bboxes;
         bool fps_counter;
     } client;

@@ -13,6 +13,7 @@
 #include "client/gui/font/loader.hpp"
 #include "client/gui/img/img.hpp"
 #include "client/gui/img/loader.hpp"
+#include "client/gui/img/logo.hpp"
 
 #include <iostream>
 #include <memory>
@@ -281,6 +282,8 @@ private:
     std::string keyboard_input;
 
     Client* client;
+
+    img::Logo logo;
 
     /// =<INTERNAL HELPERS>==========================================================
     /**

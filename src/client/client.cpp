@@ -74,8 +74,7 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     
     audioManager = new AudioManager();
 
-    Client::window_width = config.client.window_width;
-    Client::window_height = static_cast<int>((config.client.window_width * 2.0f) / 3.0f);
+
 
     if (config.client.lobby_discovery)  {
         lobby_finder.startSearching();
@@ -120,10 +119,21 @@ bool Client::init() {
         return false;
     }
 
-    /* Create a windowed mode window and its OpenGL context */
+    GLFWmonitor* monitor;
+    if (config.client.fullscreen) {
+        monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode * mode = glfwGetVideoMode(monitor);
+        Client::window_width = mode->width;
+        Client::window_height = mode->height;
+    } else { // windowed
+        monitor = NULL;
+        Client::window_width = UNIT_WINDOW_WIDTH;
+        Client::window_height = UNIT_WINDOW_HEIGHT;
+    }
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    window = glfwCreateWindow(Client::window_width, Client::window_height, "Arcana", NULL, NULL);
+    window = glfwCreateWindow(Client::window_width, Client::window_height, "Wrath of Zeus", monitor, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -151,21 +161,48 @@ bool Client::init() {
         return false;
     }
 
+    // display first frame of the loading screen
     this->displayCallback();
 
     auto shaders_dir = getRepoRoot() / "src/client/shaders";
     auto graphics_assets_dir = getRepoRoot() / "assets/graphics";
 
+    auto sungod_vert_path = shaders_dir / "sungod.vert";
+    auto sungod_frag_path = shaders_dir / "sungod.frag";
+    this->sungod_shader = std::make_shared<Shader>(sungod_vert_path.string(), sungod_frag_path.string());
+
     auto cube_vert_path = shaders_dir / "cube.vert";
     auto cube_frag_path = shaders_dir / "cube.frag";
     this->cube_shader = std::make_shared<Shader>(cube_vert_path.string(), cube_frag_path.string());    
-    
+    auto cube_model_path = graphics_assets_dir / "cube.obj";
+    this->cube_model = std::make_unique<Model>(cube_model_path.string());
+
     auto model_vert_path = shaders_dir / "model.vert";
     auto model_frag_path = shaders_dir / "model.frag";
     this->model_shader = std::make_shared<Shader>(model_vert_path.string(), model_frag_path.string());
 
-    auto cube_model_path = graphics_assets_dir / "cube.obj";
-    this->cube_model = std::make_unique<Model>(cube_model_path.string());
+    auto lightVertFilepath = shaders_dir / "lightsource.vert";
+    auto lightFragFilepath = shaders_dir / "lightsource.frag";
+    this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
+
+    auto solid_surface_vert_path = shaders_dir / "solidsurface.vert";
+    auto solid_surface_frag_path = shaders_dir / "solidsurface.frag";
+    this->solid_surface_shader = std::make_shared<Shader>(solid_surface_vert_path.string(), solid_surface_frag_path.string());
+    auto wall_model_path = graphics_assets_dir / "wall.obj";
+    this->wall_model = std::make_unique<Model>(wall_model_path.string());
+    auto pillar_model_path = graphics_assets_dir / "pillar.obj";
+    this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
+
+    auto wall_vert_path = shaders_dir / "wall.vert";
+    auto wall_frag_path = shaders_dir / "wall.frag";
+    this->wall_shader = std::make_shared<Shader>(wall_vert_path.string(), wall_frag_path.string());
+
+    auto dm_cube_frag_path = shaders_dir / "dm_cube.frag";
+    this->dm_cube_shader = std::make_shared<Shader>(wall_vert_path.string(), dm_cube_frag_path.string());
+
+    auto torchlight_model_path = graphics_assets_dir / "cube.obj";
+    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
+    this->light_source = std::make_unique<LightSource>();
 
     auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
     this->bear_model = std::make_unique<Model>(bear_model_path.string());
@@ -175,42 +212,10 @@ bool Client::init() {
     this->player_model = std::make_unique<Model>(player_model_path.string());
     this->player_model->scaleAbsolute(0.25);
 
-    this->light_source = std::make_unique<LightSource>();
-
-    auto lightVertFilepath = shaders_dir / "lightsource.vert";
-    auto lightFragFilepath = shaders_dir / "lightsource.frag";
-    this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
-
-    auto torchlight_model_path = graphics_assets_dir / "cube.obj";
-    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
-
-    auto solid_surface_vert_path = shaders_dir / "solidsurface.vert";
-    auto solid_surface_frag_path = shaders_dir / "solidsurface.frag";
-    this->solid_surface_shader = std::make_shared<Shader>(solid_surface_vert_path.string(), solid_surface_frag_path.string());
-
-    auto wall_model_path = graphics_assets_dir / "wall.obj";
-    this->wall_model = std::make_unique<Model>(wall_model_path.string());
-    auto wall_vert_path = shaders_dir / "wall.vert";
-    auto wall_frag_path = shaders_dir / "wall.frag";
-    this->wall_shader = std::make_shared<Shader>(wall_vert_path.string(), wall_frag_path.string());
-
-    auto dm_cube_frag_path = shaders_dir / "dm_cube.frag";
-    this->dm_cube_shader = std::make_shared<Shader>(wall_vert_path.string(), dm_cube_frag_path.string());
-
-    auto pillar_model_path = graphics_assets_dir / "pillar.obj";
-    this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
-
     auto sungod_model_path = graphics_assets_dir / "sungod.obj";
     this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
 
-    auto sungod_vert_path = shaders_dir / "sungod.vert";
-    auto sungod_frag_path = shaders_dir / "sungod.frag";
-    this->sungod_shader = std::make_shared<Shader>(sungod_vert_path.string(), sungod_frag_path.string());
-
-    this->gui_state = GUIState::TITLE_SCREEN;
-
     this->audioManager->init();
-    this->audioManager->playMusic(ClientMusic::TitleTheme);
 
     return true;
 }
@@ -235,7 +240,7 @@ void Client::displayCallback() {
     this->gui.beginFrame();
 
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
-        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     } else if (this->gameState.phase == GamePhase::LOBBY) {
         glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     } else if (this->gameState.phase == GamePhase::GAME) {
@@ -835,6 +840,12 @@ void Client::drawBbox(boost::optional<SharedObject> object) {
 
 // callbacks - for Interaction
 void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+    if (this->gui_state == GUIState::INITIAL_LOAD) {
+        this->audioManager->playMusic(ClientMusic::TitleTheme);
+        this->gui_state = GUIState::TITLE_SCREEN;
+        return;
+    }
+
     // Check for a key press.
     /* Store player EID for use in certain key handling */ 
     std::optional<EntityID> eid;
