@@ -16,7 +16,7 @@
 
 #include <iostream>
 #include <memory>
-#include <unordered_map>
+#include <map>
 
 class Client;
 
@@ -272,7 +272,7 @@ public:
 
 private:
     widget::Handle next_handle {0};
-    std::unordered_map<widget::Handle, widget::Widget::Ptr> widgets;
+    std::map<widget::Handle, widget::Widget::Ptr> widgets;
 
     std::shared_ptr<font::Loader> fonts;
     img::Loader images;

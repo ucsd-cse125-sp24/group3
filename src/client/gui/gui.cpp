@@ -52,7 +52,7 @@ bool GUI::init()
 }
 
 void GUI::beginFrame() {
-    std::unordered_map<widget::Handle, widget::Widget::Ptr> empty;
+    std::map<widget::Handle, widget::Widget::Ptr> empty;
     std::swap(this->widgets, empty);
 }
 
