@@ -207,7 +207,12 @@ void ServerGameState::update(const EventList& events) {
 				break;
 			}
 			case ActionType::Sprint: {
-				obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
+				if (obj->type == ObjectType::DungeonMaster) {
+					obj->physics.velocityMultiplier = glm::vec3(5.0f, 1.1f, 5.0f);
+				}
+				else {
+					obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
+				}
 				break;
 			}
 			case ActionType::Zoom: { // only for DM
@@ -335,7 +340,9 @@ void ServerGameState::update(const EventList& events) {
 
 			if (cell == nullptr)
 				break;
-			
+
+			this->updated_entities.insert(dm->globalID);
+
 			// mark previous ghost trap for deletion, if exists
 			if (this->currentGhostTrap != nullptr) {
 				markForDeletion(this->currentGhostTrap->globalID);
@@ -344,6 +351,10 @@ void ServerGameState::update(const EventList& events) {
 
 			if (trapPlacementEvent.hover) {
 				// only for traps, not lightning
+				if (trapPlacementEvent.cell == CellType::Lightning) {
+					break;
+				}
+
 				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
 				if (trap == nullptr)
@@ -359,9 +370,18 @@ void ServerGameState::update(const EventList& events) {
 				this->updated_entities.insert(trap->globalID);
 			}
 			else if(trapPlacementEvent.place) {
+				auto curr_time = std::chrono::system_clock::now();
+
 				int trapsPlaced = dm->getPlacedTraps();
 
 				if (trapsPlaced == MAX_TRAPS) {
+					break;
+				}
+
+				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
+
+				// in cooldown map sadly
+				if (it != dm->sharedTrapInventory.trapsInCooldown.end()) {
 					break;
 				}
 				
@@ -372,19 +392,13 @@ void ServerGameState::update(const EventList& events) {
 						0.0f,
 						cell->y * Grid::grid_cell_width
 					);
+
 					lightning->useLightning(dm, *this, corner);
+
+					dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
 					break;
 				}
 
-				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
-
-				// in cooldown and haven't elapsed enough time yet
-				if (it != dm->sharedTrapInventory.trapsInCooldown.end() && 
-					std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(it->second)) < std::chrono::seconds(TRAP_COOL_DOWN)) {
-					break;
-				}
-
-				auto curr_time = std::chrono::system_clock::now();
 
 				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
@@ -821,7 +835,32 @@ void ServerGameState::doTorchlightTicks() {
 }
 
 void ServerGameState::updateTraps() {
-	// check for activations
+	// get current time when calling this function
+	auto current_time = std::chrono::system_clock::now();
+	DungeonMaster* dm = this->objects.getDM();
+
+	// update DM trap cooldown
+	if (this->objects.getDM() != nullptr) {
+		auto& coolDownMap = dm->sharedTrapInventory.trapsInCooldown;
+
+		//std::cout << coolDownMap << " cooldown map size" << std::endl;
+
+		for (auto it = dm->sharedTrapInventory.trapsInCooldown.cbegin(); it != dm->sharedTrapInventory.trapsInCooldown.cend();) {
+			//switch (it->first) {
+			//case CellType::FireballTrap:
+			//	std::cout << "trap in cooldown: fireball" << std::endl;
+			//default:
+			//	std::cout << "trap" << std::endl;
+			//}
+
+			if (std::chrono::round<std::chrono::seconds>(current_time - std::chrono::system_clock::from_time_t(it->second)) >= std::chrono::seconds(TRAP_COOL_DOWN)) {
+				it = dm->sharedTrapInventory.trapsInCooldown.erase(it);
+			}
+			else {
+				it++;
+			}
+		}
+	}
 
 	// This object moved, so we should check to see if a trap should trigger because of it
 	auto traps = this->objects.getTraps();
@@ -829,10 +868,9 @@ void ServerGameState::updateTraps() {
 		auto trap = traps.get(i);
 		if (trap == nullptr) { continue; } // unsure if i need this?
 		if (trap->getIsDMTrap()) {
-			auto current_time = std::chrono::system_clock::now();
 			
 			if (current_time >= trap->getExpiration()) {
-				DungeonMaster* dm = this->objects.getDM();
+				
 				int trapsPlaced = dm->getPlacedTraps();
 
 				this->markForDeletion(trap->globalID);
@@ -841,6 +879,7 @@ void ServerGameState::updateTraps() {
 			}
 		}
 
+		// check for activations
 		if (trap->shouldTrigger(*this)) {
 			trap->trigger(*this);
 			this->updated_entities.insert(trap->globalID);

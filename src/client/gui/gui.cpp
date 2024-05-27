@@ -455,26 +455,54 @@ void GUI::_sharedGameHUD() {
             switch (self->trapInventoryInfo->inventory[selected]) {
                 case ModelType::FloorSpikeFull: {
                     itemString = "Floor Spike Full";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeFull) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
                     break;
                 }
                 case ModelType::FloorSpikeHorizontal: {
                     itemString = "Floor Spike Horizontal";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeHorizontal) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
                     break;
                 }
                 case ModelType::FloorSpikeVertical: {
                     itemString = "Floor Spike Vertical";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeVertical) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+                    
                     break;
                 }
                 case ModelType::SunGod: {
                     itemString = "Fireball Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        std::cout << "FIREBALL IN COOLDOWN!" << std::endl;
+                        itemString += " (IN COOLDOWN)";
+                    }
                     break;
                 }
                 case ModelType::SpikeTrap: {
                     itemString = "Ceiling Spike Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::SpikeTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
                     break;
                 }
                 case ModelType::Lightning: {
                     itemString = "Lightning Bolt";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::Lightning) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+
+                    
                     break;
                 }
             }

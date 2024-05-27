@@ -320,13 +320,10 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         auto session = std::make_shared<Session>(std::move(this->socket),
             SessionInfo({}, dm->globalID, true));
 
-
         this->sessions.insert(SessionEntry(dm->globalID, true, addr, session));
 
         std::cout << "Established new connection with " << addr << ", which was assigned eid "
             << dm->globalID << std::endl;
-
-        first_player = false;
 
         return session;
     } 
