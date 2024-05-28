@@ -31,7 +31,7 @@
 
 /*	Spell Constants	*/
 #define	FIRE_LIMIT				50
-#define	HEAL_LIMIT				50
+#define	HEAL_LIMIT				3
 #define	TELEPORT_LIMIT			1
 #define	TELEPORT_RANGE			15
 
@@ -83,4 +83,4 @@
 #define MAX_TRAPS 10
 #define TRAP_INVENTORY_SIZE 10
 #define TRAP_TIME 10
-#define TRAP_COOL_DOWN 20
+#define TRAP_COOL_DOWN 5

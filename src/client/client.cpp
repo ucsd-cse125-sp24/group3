@@ -699,6 +699,11 @@ void Client::draw() {
                 break;
             }
             case ObjectType::FireballTrap: {
+                // if not DM and this is a ghost trap, break
+                if (!is_dm && sharedObject->trapInfo->dm_hover) {
+                    break;
+                }
+
                 this->sungod_model->setDimensions(sharedObject->physics.dimensions);
                 this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->sungod_model->rotateAbsolute(sharedObject->physics.facing);

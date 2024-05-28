@@ -19,7 +19,7 @@ SpikeTrap::SpikeTrap(glm::vec3 corner, glm::vec3 dimensions):
 }
 
 bool SpikeTrap::shouldTrigger(ServerGameState& state) {
-    if (this->info.triggered) {
+    if (this->info.triggered || this->info.dm_hover) {
         return false;
     }
 
