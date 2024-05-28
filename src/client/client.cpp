@@ -183,13 +183,13 @@ bool Client::init() {
     // Animation* bear = new Animation(bear_anim_path.string(), bear_model.get());
     // animManager = new AnimationManager(bear);
 
-    auto player_model_path = graphics_assets_dir / "testanims/model_m.fbx";
-    auto player_walk_path = graphics_assets_dir / "testanims/walk-test.fbx";
-    auto player_jump_path = graphics_assets_dir / "testanims/jump-test.fbx";
-    auto player_idle_path = graphics_assets_dir / "testanims/idle.fbx";
-    auto player_run_path = graphics_assets_dir / "testanims/run.fbx";
-    auto player_atk_path = graphics_assets_dir / "testanims/slash.fbx";
-    auto player_use_potion_path = graphics_assets_dir / "testanims/drink.fbx";
+    auto player_model_path = graphics_assets_dir / "animations/model_m.fbx";
+    auto player_walk_path = graphics_assets_dir / "animations/walk-test.fbx";
+    auto player_jump_path = graphics_assets_dir / "animations/jump-test.fbx";
+    auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
+    auto player_run_path = graphics_assets_dir / "animations/run.fbx";
+    auto player_atk_path = graphics_assets_dir / "animations/slash.fbx";
+    auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
 
     this->player_model = std::make_unique<Model>(player_model_path.string());
     this->player_model->scaleAbsolute(0.0025);
@@ -502,35 +502,33 @@ void Client::draw() {
         
         switch (sharedObject->type) {
             case ObjectType::Player: {
-
-
-                AnimState animState = sharedObject->animState;
-                switch (sharedObject->animState) {
-                    case AnimState::WalkAnim:
-                        std::cout << "walk" << std::endl;
-                        break;
-                    case AnimState::JumpAnim:
-                        std::cout << "jump" << std::endl;
-                        break;
-                    case AnimState::IdleAnim:
-                        std::cout << "idle" << std::endl;
-                        break;
-                    case AnimState::LandAnim:
-                        std::cout << "land" << std::endl;
-                        break;
-                    case AnimState::SprintAnim:
-                        std::cout << "sprint" << std::endl;
-                        break;
-                    case AnimState::DeathAnim:
-                        std::cout << "death" << std::endl;
-                        break;
-                    case AnimState::AttackAnim:
-                        std::cout << "attack" << std::endl;
-                        break;
-                    default:
-                        std::cout << "undef" << std::endl;
-                        break;
-                }
+                // AnimState animState = sharedObject->animState;
+                // switch (sharedObject->animState) {
+                //     case AnimState::WalkAnim:
+                //         std::cout << "walk" << std::endl;
+                //         break;
+                //     case AnimState::JumpAnim:
+                //         std::cout << "jump" << std::endl;
+                //         break;
+                //     case AnimState::IdleAnim:
+                //         std::cout << "idle" << std::endl;
+                //         break;
+                //     case AnimState::LandAnim:
+                //         std::cout << "land" << std::endl;
+                //         break;
+                //     case AnimState::SprintAnim:
+                //         std::cout << "sprint" << std::endl;
+                //         break;
+                //     case AnimState::DeathAnim:
+                //         std::cout << "death" << std::endl;
+                //         break;
+                //     case AnimState::AttackAnim:
+                //         std::cout << "attack" << std::endl;
+                //         break;
+                //     default:
+                //         std::cout << "undef" << std::endl;
+                //         break;
+                // }
 
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
@@ -538,7 +536,7 @@ void Client::draw() {
 
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
-                    pos.z += 4.0f;
+                    // pos.z += 4.0f;
                     cam->updatePos(pos);
 
                     // update listener position & facing
@@ -554,7 +552,7 @@ void Client::draw() {
                     if (!sharedObject->playerInfo->is_alive) {
                         this->gui_state = GUIState::DEAD_SCREEN;
                     }
-                    // break;
+                    break;
                 }
                 animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
 
@@ -628,70 +626,6 @@ void Client::draw() {
                     {},
                     true);
                 break;
-
-                // animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
-
-                // /* Update model animation */
-                // animManager->updateAnimation(0.025f);
-                // auto transforms = animManager->getFinalBoneMatrices();
-                // // std::cout << transforms.size() << std::endl;
-                // this->model_shader->use();
-
-                // for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
-                //     // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
-                //     model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
-                // }
-
-                // this->model_shader->clear();
-
-                // auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
-
-                // auto player_pos = sharedObject->physics.getCenterPosition();
-                // auto player_dir = sharedObject->physics.facing;
-
-                // this->player_model->rotateAbsolute(player_dir);
-                // this->player_model->translateAbsolute(player_pos);
-                // this->player_model->draw(
-                //     this->model_shader.get(),
-                //     this->cam->getViewProj(),
-                //     this->cam->getPos(),
-                //     {},
-                //     true);
-                // auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
-
-                // animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
-
-                // /* Update model animation */
-                // animManager->updateAnimation(0.025f);
-                // auto transforms = animManager->getFinalBoneMatrices();
-                // // std::cout << transforms.size() << std::endl;
-                // this->model_shader->use();
-
-                // for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
-                //     // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
-                //     model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
-                // }
-
-                // this->model_shader->clear();
-
-                // auto player_pos = sharedObject->physics.getCenterPosition();
-                // auto player_dir = sharedObject->physics.facing;
-
-                // // this->player_model->setDimensions(sharedObject->physics.dimensions);
-                // this->player_model->translateAbsolute(player_pos);
-                // if (player_dir == glm::vec3(0.0f)) {
-                //     player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
-                // }
-                // player_dir.y = 0.0f;
-                // this->player_model->rotateAbsolute(glm::normalize(player_dir));
-                // this->player_model->draw(
-                //     this->model_shader,
-                //     this->cam->getViewProj(),
-                //     this->cam->getPos(),
-                //     {},
-                //     true);
-                // this->drawBbox(sharedObject);
-                // break;
             }
             case ObjectType::SolidSurface: {
                 if (is_dm && sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling) {
