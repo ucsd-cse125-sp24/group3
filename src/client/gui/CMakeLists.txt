@@ -14,6 +14,7 @@ set(FILES
     widget/dyntext.cpp
     widget/flexbox.cpp
     widget/staticimg.cpp
+    widget/empty.cpp
 
     gui.cpp
 )

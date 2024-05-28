@@ -223,6 +223,38 @@ private:
     gui::GUI gui;
     gui::GUIState gui_state;
 
+    /**
+     * @brief Enum that describes this client's player's lobby player state 
+     * (only relevant when GUIState is set to GUIState::Lobby)
+     */
+    enum class LobbyPlayerState {
+        Connected,
+        SelectedRole,
+        Ready
+    };
+
+    /**
+     * @brief This client's player's lobby player state
+     * (only relevant when GUIState is set to GUIState::Lobby)
+     */
+    LobbyPlayerState lobbyPlayerState;
+
+    /**
+     * @brief Radio button state enum for a radio button GUI
+     * (represents currently selected radio button)
+     */
+    enum class RadioButtonState {
+        NoneSelected,
+        FirstOption,
+        SecondOption
+    };
+
+    /**
+     * @brief This client's player's lobby player role radio
+     * button selection
+     */
+    RadioButtonState roleSelection;
+
     AudioManager* audioManager;
 
     /* Camera object representing player's current position & orientation */
