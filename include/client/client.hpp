@@ -116,6 +116,8 @@ public:
      */
     void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
+    void scrollCallback(GLFWwindow* window, double xposIn, double yposIn);
+
     /**
      * @brief Callback which handles mouse button presses.
      * 
@@ -166,6 +168,8 @@ public:
     AudioManager* getAudioManager();
 
     void setWorldPos();
+
+    void sendTrapEvent(bool hover, bool place, ModelType trapType);
 
     int curr_fps;
 private:
@@ -263,5 +267,7 @@ private:
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> closest_light_sources;
 
     std::deque<Event> events_received;
+
+    bool phase_change;
 };
 

@@ -19,6 +19,4 @@ public:
 	SharedSolidSurface shared{};
 
 	virtual SharedObject toShared() override;
-
-	void setDMHighlight(bool highlight);
 };

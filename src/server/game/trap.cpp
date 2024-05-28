@@ -2,7 +2,7 @@
 
 Trap::Trap(ObjectType type, bool movable, glm::vec3 corner, Collider collider, ModelType model, glm::vec3 dimensions):
     Object(type, Physics(movable, collider, corner, glm::vec3(0.0f), dimensions), model),
-    info(SharedTrapInfo {.triggered = false} )
+    info(SharedTrapInfo {.triggered = false, .dm_hover = false } )
 {
     this->is_dm_trap = false;
     this->expiration = std::chrono::system_clock::now();
@@ -24,6 +24,10 @@ void Trap::reset(ServerGameState& state) {
 
 void Trap::setIsDMTrap(bool is_dm_trap) {
     this->is_dm_trap = is_dm_trap;
+}
+
+void Trap::setIsDMTrapHover(bool is_dm_trap_hover) {
+    this->info.dm_hover = is_dm_trap_hover;
 }
 
 void Trap::setExpiration(std::chrono::time_point<std::chrono::system_clock> expiration) {

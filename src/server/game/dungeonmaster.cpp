@@ -1,5 +1,6 @@
 #include "server/game/dungeonmaster.hpp"
 #include "shared/game/sharedobject.hpp"
+#include "server/game/weapon.hpp"
 #include <iostream>
 
 SharedObject DungeonMaster::toShared() {
@@ -15,7 +16,7 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
 )), sharedTrapInventory(SharedTrapInventory{ .selected = 1, .inventory_size = TRAP_INVENTORY_SIZE, .inventory = std::vector<ModelType>(TRAP_INVENTORY_SIZE, ModelType::Frame) }) {
     this->physics.feels_gravity = false;
     this->physics.velocityMultiplier = glm::vec3(3.0f, 1.0f, 3.0f);
-
+    this->lightning = nullptr;
 
     this->placedTraps = 0;
 
@@ -25,6 +26,7 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
     this->sharedTrapInventory.inventory[2] = ModelType::FloorSpikeVertical;
     this->sharedTrapInventory.inventory[3] = ModelType::SunGod;
     this->sharedTrapInventory.inventory[4] = ModelType::SpikeTrap;
+    this->sharedTrapInventory.inventory[5] = ModelType::Lightning;
 }
 
 int DungeonMaster::getPlacedTraps() {

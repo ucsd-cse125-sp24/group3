@@ -49,6 +49,10 @@ void set_callbacks(GLFWwindow* window) {
     glfwSetCharCallback(window, [](GLFWwindow* w, unsigned int codepoint) {
         static_cast<Client*>(glfwGetWindowUserPointer(w))->charCallback(w, codepoint);
     });
+
+    glfwSetScrollCallback(window, [](GLFWwindow* w, double xposOffset, double yposOffset) {
+        static_cast<Client*>(glfwGetWindowUserPointer(w))->scrollCallback(w, xposOffset, yposOffset);
+    });
 }
 
 void set_opengl_settings(GLFWwindow* window) {
