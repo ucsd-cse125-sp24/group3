@@ -70,7 +70,7 @@ public:
      * @param client Pointer to the client object. Note that GUI is a friend class to client, so GUI can
      * access private client data members for ease of use.
      */
-    explicit GUI(Client* client, GameConfig config);
+    explicit GUI(Client* client, const GameConfig& config);
     /**
      * @brief Initializes all of the necessary file loading for all of the GUI elements, and
      * registers all of the static shader variables for each of the derived widget classes

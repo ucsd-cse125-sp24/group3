@@ -14,7 +14,7 @@
 namespace gui {
 
 
-GUI::GUI(Client* client, GameConfig config): capture_keystrokes(false), logo() {
+GUI::GUI(Client* client, const GameConfig& config): capture_keystrokes(false), logo() {
     this->client = client;
     this->config = config;
 }
