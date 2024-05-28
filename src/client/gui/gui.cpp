@@ -381,7 +381,9 @@ void GUI::_layoutLobby() {
 
     //  Define table column widths
     //glm::vec3 columnWidths(400.0f, 850.0f, 400.0f);
-    glm::vec3 columnWidths(500.0f, 1000.0f, 500.0f);
+    glm::vec3 columnWidths(font::getRelativePixels(400.0f), 
+        font::getRelativePixels(900.0f),
+        font::getRelativePixels(400.0f));
 
     float rowHeight = font::getFontSizePx(font::Size::LARGE);
 
