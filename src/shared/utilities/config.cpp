@@ -56,7 +56,7 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
             .client = {
                 .default_name = json.at("client").at("default_name"),
                 .lobby_discovery = json.at("client").at("lobby_discovery"),
-                .window_width = json.at("client").at("window_width"),
+                .fullscreen = json.at("client").at("fullscreen"),
                 .draw_bboxes = json.at("client").at("draw_bboxes"),
                 .fps_counter = json.at("client").at("fps_counter")
             }
@@ -88,7 +88,8 @@ GameConfig getDefaultConfig() {
         },
         .client = {
             .default_name = "Player",
-            .lobby_discovery = false
+            .lobby_discovery = false,
+            .fullscreen = false
         }
     };
 }

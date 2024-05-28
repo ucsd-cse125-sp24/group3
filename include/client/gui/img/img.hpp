@@ -28,6 +28,7 @@ enum class ImgID {
     Dagger,
     Sword,
     Hammer,
+    Title,
     LeftHotbar,
     RightHotbar,
     MiddleHotbar,
@@ -41,7 +42,7 @@ enum class ImgID {
     {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::HealthPotion, ImgID::UnknownPotion, \
         ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
         ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer, \
-        ImgID::LeftHotbar, ImgID::RightHotbar, ImgID::MiddleHotbar, ImgID::Blank, \
+        ImgID::LeftHotbar, ImgID::RightHotbar, ImgID::MiddleHotbar, ImgID::Blank, ImgID::Title, \
         ImgID::MiddleSelected, ImgID::HealthBar, ImgID::HealthTickEmpty, ImgID::HealthTickFull \
     }
 

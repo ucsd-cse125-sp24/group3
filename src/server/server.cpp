@@ -31,7 +31,6 @@
 #include "shared/utilities/constants.hpp"
 #include "shared/utilities/light.hpp"
 #include "shared/utilities/typedefs.hpp"
-#include "shared/utilities/config.hpp"
 
 using namespace std::chrono_literals;
 using namespace boost::asio::ip;

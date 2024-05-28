@@ -8,6 +8,7 @@ std::string getImgFilepath(ImgID img) {
     auto img_root = getRepoRoot() / "assets/imgs";
     switch (img) {
         default:
+        case ImgID::Title: return (img_root / "title.png").string();
         case ImgID::Yoshi: return (img_root / "Yoshi.png").string();
         case ImgID::AwesomeSauce: return (img_root / "awesomeface.png").string();
         case ImgID::HealthPotion: return (img_root / "pot_health.png").string();
