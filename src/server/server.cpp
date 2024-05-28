@@ -227,75 +227,76 @@ std::chrono::milliseconds Server::doTick() {
                     }
 
                     if (allReady) {
-                        //  TODO:
-                        //  Randomly select a player from those whose desired role is
-                        //  PlayerRole::DungeonMaster (or from all players if no player
-                        //  has desired role set to PlayerRole::DungeonMaster) to be
-                        //  the Dungeon Master. Replace that player's Player object in 
-                        //  the ObjectManager to be the DungeonMaster
+                        
+                        if (!this->config.server.disable_dm) {
+                            //  Randomly select a player from those whose desired role is
+                            //  PlayerRole::DungeonMaster (or from all players if no player
+                            //  has desired role set to PlayerRole::DungeonMaster) to be
+                            //  the Dungeon Master. Replace that player's Player object in 
+                            //  the ObjectManager to be the DungeonMaster
 
-                        //  Determine list of players that want to play as the DM
-                        std::vector<LobbyPlayer> wannabe_dms;
+                            //  Determine list of players that want to play as the DM
+                            std::vector<LobbyPlayer> wannabe_dms;
 
-                        for (boost::optional<LobbyPlayer> player : this->state.getLobby().players) {
-                            if (player.get().desired_role == PlayerRole::DungeonMaster) {
-                                wannabe_dms.push_back(player.get());
-                            }
-                        }
-
-                        //  If no player wants to be a DM, then randomly choose one of them
-                        if (wannabe_dms.size() == 0) {
                             for (boost::optional<LobbyPlayer> player : this->state.getLobby().players) {
-                                wannabe_dms.push_back(player.get());
+                                if (player.get().desired_role == PlayerRole::DungeonMaster) {
+                                    wannabe_dms.push_back(player.get());
+                                }
                             }
-                        }
 
-                        //  Randomly select a DM
-                        size_t randomPlayerIndex = randomInt(0, wannabe_dms.size() - 1);
-                        LobbyPlayer new_dm = wannabe_dms[randomPlayerIndex];
-
-                        this->state.objects.replaceObject(new_dm.id, new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
-                        DungeonMaster* dm = this->state.objects.getDM();
-
-                        //  Initialize DM's lightning bolt
-                        SpecificID lightningID = this->state.objects.createObject(new Weapon(glm::vec3(-1.0f, 0, -1.0f), glm::vec3(0.0f), WeaponType::Lightning));
-                        Weapon* lightning = dynamic_cast<Weapon*>(this->state.objects.getItem(lightningID));
-                        lightning->iteminfo.held = true;
-                        lightning->physics.collider = Collider::None;
-                        dm->lightning = lightning;
-
-                        //  Spawn player in random spawn point
-
-                        //  TODO: Possibly replace this random spawn point with player assignments?
-                        //  I.e., assign each player a spawn point to avoid multiple players getting
-                        //  the same spawn point?
-
-                        auto& by_id = this->sessions.get<IndexByID>();
-                        auto session_entry = by_id.find(dm->globalID);
-
-                        if (session_entry != by_id.end()) {
-                            std::weak_ptr<Session> session_ref = session_entry->session;
-                            std::shared_ptr<Session> session = session_ref.lock();
-                            if (session != nullptr) {
-                                session->sendPacket(PackagedPacket::make_shared(PacketType::ServerAssignEID,
-                                    ServerAssignEIDPacket{ .eid = dm->globalID, .is_dungeon_master = true }));
+                            //  If no player wants to be a DM, then randomly choose one of them
+                            if (wannabe_dms.size() == 0) {
+                                for (boost::optional<LobbyPlayer> player : this->state.getLobby().players) {
+                                    wannabe_dms.push_back(player.get());
+                                }
                             }
-                        }
 
-                        //  Get DM's player index
-                        int index = 1;
-                        for (boost::optional<LobbyPlayer> player : this->state.getLobby().players) {
-                            if (player.get().id == dm->globalID) {
-                                break;
+                            //  Randomly select a DM
+                            size_t randomPlayerIndex = randomInt(0, wannabe_dms.size() - 1);
+                            LobbyPlayer new_dm = wannabe_dms[randomPlayerIndex];
+
+                            this->state.objects.replaceObject(new_dm.id, new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
+                            DungeonMaster* dm = this->state.objects.getDM();
+
+                            //  Initialize DM's lightning bolt
+                            SpecificID lightningID = this->state.objects.createObject(new Weapon(glm::vec3(-1.0f, 0, -1.0f), glm::vec3(0.0f), WeaponType::Lightning));
+                            Weapon* lightning = dynamic_cast<Weapon*>(this->state.objects.getItem(lightningID));
+                            lightning->iteminfo.held = true;
+                            lightning->physics.collider = Collider::None;
+                            dm->lightning = lightning;
+
+                            //  Spawn player in random spawn point
+
+                            //  TODO: Possibly replace this random spawn point with player assignments?
+                            //  I.e., assign each player a spawn point to avoid multiple players getting
+                            //  the same spawn point?
+
+                            auto& by_id = this->sessions.get<IndexByID>();
+                            auto session_entry = by_id.find(dm->globalID);
+
+                            if (session_entry != by_id.end()) {
+                                std::weak_ptr<Session> session_ref = session_entry->session;
+                                std::shared_ptr<Session> session = session_ref.lock();
+                                if (session != nullptr) {
+                                    session->sendPacket(PackagedPacket::make_shared(PacketType::ServerAssignEID,
+                                        ServerAssignEIDPacket{ .eid = dm->globalID, .is_dungeon_master = true }));
+                                }
                             }
-                            index++;
-                        }
 
-                        std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
-                        std::cout << "Starting game!" << std::endl;
+                            //  Get DM's player index
+                            int index = 1;
+                            for (boost::optional<LobbyPlayer> player : this->state.getLobby().players) {
+                                if (player.get().id == dm->globalID) {
+                                    break;
+                                }
+                                index++;
+                            }
+
+                            std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
+                            std::cout << "Starting game!" << std::endl;
+                        }
 
                         this->state.setPhase(GamePhase::GAME);
- 
                     }
 
                     break;
