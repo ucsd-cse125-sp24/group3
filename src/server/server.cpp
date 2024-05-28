@@ -294,6 +294,9 @@ std::chrono::milliseconds Server::doTick() {
 
                             std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
                             std::cout << "Starting game!" << std::endl;
+                            // TODO: more permanent way to wait until DM has received their is_dungeon_master value
+                            // from the assign eid packet
+                            std::this_thread::sleep_for(2s);
                         }
 
                         this->state.setPhase(GamePhase::GAME);
