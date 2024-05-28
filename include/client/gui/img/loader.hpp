@@ -20,7 +20,7 @@ public:
 private:
     std::unordered_map<ImgID, Img> img_map; 
 
-    bool _loadImg(ImgID id);
+    bool _loadImg(ImgID img_id);
 };
 
 }

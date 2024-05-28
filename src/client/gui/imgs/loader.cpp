@@ -41,8 +41,10 @@ bool Loader::_loadImg(ImgID img_id) {
     std::cout << "Loading " << path << "...\n";
     unsigned char* img_data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 
-    if (stbi_failure_reason())
+    if (stbi_failure_reason()) {
         std::cout << "failure: " << stbi_failure_reason() << std::endl;
+        return false;
+    }
 
     if (img_data == 0 || width == 0 || height == 0) {
         std::cerr << "Error loading " << path << std::endl;
