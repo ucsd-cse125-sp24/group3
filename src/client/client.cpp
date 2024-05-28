@@ -667,7 +667,7 @@ void Client::draw() {
             }
             case ObjectType::SpikeTrap: {
                 // if not DM and this is a ghost trap, break
-                if (!is_dm && sharedObject->solidSurface->dm_highlight) {
+                if (!is_dm && sharedObject->trapInfo->dm_hover) {
                     break;
                 }
 
@@ -711,7 +711,7 @@ void Client::draw() {
             }
             case ObjectType::ArrowTrap: {
                 // if not DM and this is a ghost trap, break
-                if (!is_dm && sharedObject->solidSurface->dm_highlight) {
+                if (!is_dm && sharedObject->trapInfo->dm_hover) {
                     break;
                 }
 
@@ -739,7 +739,7 @@ void Client::draw() {
             }
             case ObjectType::FloorSpike: {
                 // if not DM and this is a ghost trap, break
-                if (!is_dm && sharedObject->solidSurface->dm_highlight) {
+                if (!is_dm && sharedObject->trapInfo->dm_hover) {
                     break;
                 }
 
@@ -815,7 +815,7 @@ void Client::draw() {
             }
             case ObjectType::TeleporterTrap: {
                 // if not DM and this is a ghost trap, break
-                if (!is_dm && sharedObject->solidSurface->dm_highlight) {
+                if (!is_dm && sharedObject->trapInfo->dm_hover) {
                     break;
                 }
 

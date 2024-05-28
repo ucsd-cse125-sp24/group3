@@ -62,6 +62,8 @@ public:
 
     void setIsDMTrap(bool is_dm_trap);
 
+    void setIsDMTrapHover(bool is_dm_trap_hover);
+
     void setExpiration(std::chrono::time_point<std::chrono::system_clock> expiration);
 
     bool getIsDMTrap();
