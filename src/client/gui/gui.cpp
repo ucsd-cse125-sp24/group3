@@ -528,11 +528,11 @@ void GUI::_sharedGameHUD() {
         }
     }
 
-    auto txtHeight = 95.0;
-    auto flexHeight = 5.0;
+    auto txtHeight = font::getRelativePixels(95.0);
+    auto flexHeight = font::getRelativePixels(3.0);
     if (!is_dm.value()) {
-        txtHeight += 37;
-        flexHeight += 37;
+        txtHeight += font::getRelativePixels(50);
+        flexHeight += font::getRelativePixels(37);
     }
 
     // Text for item description
@@ -542,7 +542,7 @@ void GUI::_sharedGameHUD() {
         font::Size::SMALL,
         font::Color::WHITE,
         fonts,
-        font::getRelativePixels(txtHeight)
+        txtHeight
     );
     this->addWidget(std::move(item_txt));
 
@@ -827,7 +827,7 @@ void GUI::_layoutGameHUD() {
             font::Size::SMALL,
             font::Color::RED,
             fonts,
-            font::getRelativePixels(120)
+            font::getRelativePixels(125)
         );
         this->addWidget(std::move(traps_placed_txt));
 
