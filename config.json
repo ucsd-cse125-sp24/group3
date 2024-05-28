@@ -2,8 +2,8 @@
     "game": {
       "maze": {
         "directory": "maps",
-        "procedural": true,
-        "maze_file": "test/itemRoom.maze"
+        "procedural": false,
+        "maze_file": "test/big.maze"
       }
     },
     "network": {
@@ -13,7 +13,7 @@
     "server": {
         "lobby_name": "Tyler's Lobby",
         "lobby_broadcast": true,
-        "max_players": 5,
+        "max_players": 2,
         "disable_dm": false
     },
     "client": {
