@@ -42,7 +42,8 @@ enum class EventType {
     UseItem,
     DropItem,
     UpdateLightSources,
-    TrapPlacement
+    TrapPlacement,
+    LoadGameResults
 };
 
 enum class ActionType {
@@ -298,6 +299,24 @@ struct UpdateLightSourcesEvent {
     }
 };
 
+struct LoadGameResultsEvent {
+    LoadGameResultsEvent() = default;
+    LoadGameResultsEvent(
+        const std::vector<std::vector<char>>& map,
+        int exit_row, int exit_col
+    ): 
+        ascii_map(map), exit_row(exit_row), exit_col(exit_col)
+    {}
+
+    std::vector<std::vector<char>> ascii_map;
+    int exit_row;
+    int exit_col;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & ascii_map & exit_row & exit_col;
+    }
+};
+
 
 /**
  * All of the different kinds of events in a tagged union, so we can
@@ -317,7 +336,8 @@ using EventData = boost::variant<
     UseItemEvent,
     UpdateLightSourcesEvent,
     DropItemEvent,
-    TrapPlacementEvent
+    TrapPlacementEvent,
+    LoadGameResultsEvent
 >;
 
 /**

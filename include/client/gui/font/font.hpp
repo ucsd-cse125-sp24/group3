@@ -16,10 +16,11 @@ enum class Font {
     MENU,
     TEXT,
     TITLE,
+    MAP
 };
 
 #define ALL_FONTS() { \
-    Font::MENU, Font::TEXT, Font::TITLE \
+    Font::MENU, Font::TEXT, Font::TITLE, Font::MAP \
 }
 
 /**

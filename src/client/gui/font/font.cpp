@@ -22,6 +22,7 @@ std::string getFilepath(Font font) {
     switch (font) {
         case Font::MENU: return (dir / "AncientModernTales-a7Po.ttf").string();
         case Font::TITLE: return (dir / "spqr.ttf").string();
+        case Font::MAP: return (dir / "Ac437_IBM_VGA_8x16.ttf").string();
         default:
         case Font::TEXT: return (dir / "AtlantisInternational-jen0.ttf").string();
     } 

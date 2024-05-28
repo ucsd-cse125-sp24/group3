@@ -3,6 +3,7 @@
 #include <memory>
 #include <iostream>
 #include <vector>
+#include <array>
 #include "client/gui/font/font.hpp"
 #include "client/gui/widget/dyntext.hpp"
 #include "shared/utilities/rng.hpp"
@@ -1494,8 +1495,53 @@ void GUI::_layoutResultsScreen() {
         font::Size::LARGE,
         won ? font::Color::BLUE : font::Color::RED,
         fonts,
-        FRAC_WINDOW_HEIGHT(1, 2)
+        WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE) - font::getRelativePixels(40)
     ));
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    // Display the ASCII map of the maze, if its been received yet
+    if (this->client->game_results.has_value()) {
+        // only display map in 21x21 square around position, which starts at the exit
+        const int VISIBLE_WIDTH = 61;
+        const int RADIUS = VISIBLE_WIDTH / 2;
+        std::array<std::array<char, VISIBLE_WIDTH>, VISIBLE_WIDTH> visible_map;
+        auto& ascii_map = this->client->game_results->ascii_map;
+        int center_row = this->client->results_map_pos.y;
+        int center_col = this->client->results_map_pos.x;
+        int top_left_row = center_row - RADIUS;
+        int top_left_col = center_col - RADIUS;
+        // parse the packet information into the visible map we are going to render on this frame
+        for (int i = 0; i < VISIBLE_WIDTH; i++) {
+            int row = top_left_row + i;
+            for (int j = 0; j < VISIBLE_WIDTH; j++) {
+                int col = top_left_col + j;
+                if (row < 0 || row >= ascii_map.size() || col < 0 || col >= ascii_map.at(row).size()) {
+                    visible_map[i][j] = ' ';
+                } else {
+                    visible_map[i][j] = ascii_map[row][col];
+                }
+            }
+        }
+
+        const int BOTTOM_Y = font::getRelativePixels(100); // start 100 pixels up from bottom
+        auto map_flex = widget::Flexbox::make(glm::vec2(0, BOTTOM_Y), glm::vec2(WINDOW_WIDTH, 0.0f), 
+            widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f));
+
+        // now that we have the map, create widgets to display each row
+        for (int i = 0; i < visible_map.size(); i++) {
+            int row = visible_map.size() - 1 - i; // start at bottom row
+            std::string row_str;
+            auto& row_arr = visible_map.at(row);
+            for (int col = 0; col < row_arr.size(); col++) {
+                row_str += row_arr.at(col);
+            }
+            map_flex->push(widget::DynText::make(row_str, fonts, widget::DynText::Options(
+                font::Font::MAP, font::Size::SMALL, font::Color::WHITE
+            )));
+        }
+        this->addWidget(std::move(map_flex));
+    }
 }
 
 void GUI::_handleClick(float x, float y) {

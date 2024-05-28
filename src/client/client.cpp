@@ -449,6 +449,9 @@ void Client::processServerInput(bool allow_defer) {
                 // update intensity with incoming intensity 
                 this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
             }
+        } else if (event.type == EventType::LoadGameResults) {
+            this->game_results = boost::get<LoadGameResultsEvent>(event.data);
+            this->results_map_pos = glm::ivec2(this->game_results->exit_col, this->game_results->exit_row);
         }
 
         this->events_received.pop_front();
@@ -1155,6 +1158,26 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             if (Client::time_of_last_keystroke + 100 < ms_since_epoch) {
                 Client::time_of_last_keystroke = ms_since_epoch;
                 this->gui.captureBackspace();
+            }
+        }
+    }
+
+    // code to move around the map in the results screen
+    if (this->gameState.phase == GamePhase::RESULTS) {
+        if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+            switch (key) {
+                case GLFW_KEY_W:
+                    this->results_map_pos.y--;
+                    break;
+                case GLFW_KEY_A:
+                    this->results_map_pos.x--;
+                    break;
+                case GLFW_KEY_S:
+                    this->results_map_pos.y++;
+                    break;
+                case GLFW_KEY_D:
+                    this->results_map_pos.x++;
+                    break;
             }
         }
     }

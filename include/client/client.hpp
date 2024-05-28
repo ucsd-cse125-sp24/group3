@@ -301,5 +301,9 @@ private:
     std::deque<Event> events_received;
 
     bool phase_change;
+
+    // when the game results packet is received, store the results here
+    std::optional<LoadGameResultsEvent> game_results;
+    glm::ivec2 results_map_pos;
 };
 

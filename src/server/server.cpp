@@ -353,11 +353,37 @@ std::chrono::milliseconds Server::doTick() {
                 sendLightSourceUpdates(playerID);
             }
 
+            static int i = 0;
+            i++;
+            if (i > 200) {
+                this->state.setPhase(GamePhase::RESULTS);
+            }
+
             break;
         }
         case GamePhase::RESULTS: {
-            //  Do nothing - in this phase, the client(s) just display the
-            //  end-of-match data to the players
+            static bool sent_results = false;
+            // only send the results information once
+            if (!sent_results) {
+                sent_results = true;
+                Grid& grid = this->state.getGrid();
+                glm::ivec2 exit_pos; // store exit pos here, to tell clients to start map here
+                std::vector<std::vector<char>> ascii_map;
+                for (int r = 0; r < grid.getRows(); r++) {
+                    std::vector<char> row;
+                    for (int c = 0; c < grid.getColumns(); c++) {
+                        CellType type = grid.getCell(c, r)->type;
+                        if (type == CellType::Exit) {
+                            exit_pos.x = c;
+                            exit_pos.y = r;
+                        }
+                        row.push_back(cellTypeToChar(type));
+                    }
+                    ascii_map.push_back(row);
+                }
+                sendUpdateToAllClients(Event(this->world_eid, 
+                    EventType::LoadGameResults, LoadGameResultsEvent(ascii_map, exit_pos.y, exit_pos.x)));
+            }
             break;
         }
 
