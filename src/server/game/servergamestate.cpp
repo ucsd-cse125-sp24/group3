@@ -362,10 +362,7 @@ void ServerGameState::update(const EventList& events) {
 
 				this->currentGhostTrap = trap;
 
-				// cast to solid surface
-				SolidSurface* trapSF = (SolidSurface*)this->currentGhostTrap;
-
-				trapSF->setDMHighlight(true);
+				this->currentGhostTrap->setIsDMTrapHover(true);
 
 				this->updated_entities.insert(trap->globalID);
 			}

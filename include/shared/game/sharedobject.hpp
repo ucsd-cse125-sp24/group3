@@ -166,11 +166,10 @@ struct SharedSolidSurface {
 	 */
 	SurfaceType surfaceType;
 
-	bool dm_highlight;
 	bool is_internal;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & surfaceType & dm_highlight & is_internal;
+		ar & surfaceType & is_internal;
 	}
 };
 
@@ -207,9 +206,10 @@ struct SharedPhysics {
 
 struct SharedTrapInfo {
 	bool triggered;
+	bool dm_hover;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & triggered;
+		ar & triggered & dm_hover;
 	}
 };
 
