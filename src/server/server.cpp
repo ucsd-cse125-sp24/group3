@@ -292,6 +292,11 @@ std::chrono::milliseconds Server::doTick() {
                                 index++;
                             }
 
+                            this->state.markAsUpdated(dm->globalID);
+                            for (const auto& partial_update : this->state.generateSharedGameState(false)) {
+                                sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
+                            }
+
                             std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
                             std::cout << "Starting game!" << std::endl;
                             // TODO: more permanent way to wait until DM has received their is_dungeon_master value
