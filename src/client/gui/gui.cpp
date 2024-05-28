@@ -1022,7 +1022,6 @@ void GUI::_sharedGameHUD() {
                     itemString = "Fireball Trap";
 
                     if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()) {
-                        std::cout << "FIREBALL IN COOLDOWN!" << std::endl;
                         itemString += " (IN COOLDOWN)";
                     }
                     break;
@@ -1242,12 +1241,9 @@ void GUI::_layoutGameHUD() {
         bool orbIsCarried = false;
 
         for (int i = 0; i < client->gameState.lobby.max_players; i++) {
-            std::cout << i << "\n";
             auto lobbyPlayer = client->gameState.lobby.players[i];
 
             if (!lobbyPlayer.has_value()) continue;
-
-            std::cout << i << " has id " << lobbyPlayer.get().id << "\n";
 
             auto player = client->gameState.objects.at(lobbyPlayer.get().id);
 
@@ -1258,12 +1254,10 @@ void GUI::_layoutGameHUD() {
             if (playerObj.type == ObjectType::DungeonMaster) continue;
 
             if (playerObj.inventoryInfo.get().hasOrb) {
-                std::cout << i << " has the orb\n";
                 orbIsCarried = true;
                 orbStateString = "Player " + std::to_string(i + 1) + " has the Orb!";
                 break;
             }
-            std::cout << "didnt have the orb\n";
         }
 
         if (!orbIsCarried) {

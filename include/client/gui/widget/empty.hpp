@@ -13,9 +13,9 @@ public:
 	}
 
 	Empty(glm::vec2 origin, glm::vec2 size);
-	Empty(glm::vec2 size) : Empty(glm::vec2(0, 0), size) {}
+	explicit Empty(glm::vec2 size) : Empty(glm::vec2(0, 0), size) {}
 	Empty(float width, float height) : Empty(glm::vec2(width, height)) {}
-	Empty(float width) : Empty(width, 0.0f) {}
+	explicit Empty(float width) : Empty(width, 0.0f) {}
 
 	void render() override;
 private:

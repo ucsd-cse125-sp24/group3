@@ -65,7 +65,7 @@ public:
 	 * index, and false if the index is out of bounds.
 	*/
 	bool set(T object, size_t index) {
-		if (index < 0 || index >= wrapped_vector.size())
+		if (index >= wrapped_vector.size())
 			return false;
 
 		//	Remove index from free list if the specified index is currently

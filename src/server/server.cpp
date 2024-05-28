@@ -247,7 +247,7 @@ std::chrono::milliseconds Server::doTick() {
                             //  If no player wants to be a DM, then randomly choose one of them
                             if (wannabe_dms.size() == 0) {
                                 for (boost::optional<LobbyPlayer> player : this->state.getLobby().players) {
-                                    wannabe_dms.push_back(player.get());
+                                    wannabe_dms.push_back(player.get()); // cppcheck-suppress useStlAlgorithm
                                 }
                             }
 

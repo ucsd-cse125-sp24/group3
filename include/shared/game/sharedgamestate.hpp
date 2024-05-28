@@ -100,9 +100,9 @@ struct Lobby {
 	 */
 	Lobby() : Lobby(4) {}
 
-	Lobby(int max_players) : Lobby("Default Lobby Name", max_players) {}
+	explicit Lobby(int max_players) : Lobby("Default Lobby Name", max_players) {}
 
-	Lobby(std::string name, int max_players) : name(name), max_players(max_players) {
+	Lobby(const std::string& name, int max_players) : name(name), max_players(max_players) {
 		//	Reserve max_players slots in the players vector
 		for (int i = 0; i < max_players; i++) {
 			this->players.push_back(boost::none);

@@ -90,7 +90,7 @@ void DynText::changeColor(font::Color new_color) {
     this->options.color = font::getRGB(new_color);
 }
 
-void DynText::changeText(std::string new_text) {
+void DynText::changeText(const std::string& new_text) {
     this->text = new_text;
 
     //  Update height and width based on the new text

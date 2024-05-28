@@ -49,7 +49,7 @@ public:
 
     void changeColor(font::Color new_color);
 
-    void changeText(std::string new_text);
+    void changeText(const std::string& new_text);
 
 private:
     Options options;
