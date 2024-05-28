@@ -25,7 +25,7 @@ enum class ModelType {
 	ArrowTrapLeft,
 	ArrowTrapRight,
 	SpikeTrap,
-	FireballTrap,
+	SunGod,
 	TeleporterTrap,
 	Dagger,
 	Sword,

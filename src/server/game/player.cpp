@@ -32,3 +32,8 @@ Player::Player(glm::vec3 corner, glm::vec3 facing):
 Player::~Player() {
 
 }
+
+bool Player::canBeTargetted() const {
+    // cannot be seen / targetted if the player is dead or invisible
+    return this->info.is_alive && this->info.render;
+}

@@ -48,6 +48,8 @@ struct GameConfig {
         bool lobby_broadcast;
         /// @brief max number of players this server allows
         int max_players;
+        /// @brief whether or not the server will spawn a DM
+        bool disable_dm;
     } server;
     /// @brief Config settings for the client
     struct {
@@ -55,8 +57,9 @@ struct GameConfig {
         std::string default_name;
         /// @brief Whether or not the client should listen for server lobby broadcasts
         bool lobby_discovery;
-        int window_width;
+        bool fullscreen;
         bool draw_bboxes;
+        bool fps_counter;
     } client;
 
     /**

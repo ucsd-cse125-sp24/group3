@@ -91,13 +91,24 @@ int main(int argc, char* argv[])
     // Setup OpenGL settings.
     set_opengl_settings(window);
 
+    double lastTime = glfwGetTime();
+    int nbFrames = 0;
+
     // Loop while GLFW window should stay open.
     while (!glfwWindowShouldClose(window)) {
+        double currentTime = glfwGetTime();
+        nbFrames++;
+        if ( currentTime - lastTime >= 1.0 ){ // update fps every second
+            client->curr_fps = nbFrames; 
+            nbFrames = 0;
+            lastTime += 1.0;
+        }
+
         // Main render display callback. Rendering of objects is done here.
         client->displayCallback();
 
         // Idle callback. Updating objects, etc. can be done here.
-        client->idleCallback(context);
+        client->idleCallback();
     }
 
     client->cleanup();

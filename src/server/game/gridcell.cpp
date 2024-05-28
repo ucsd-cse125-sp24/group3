@@ -19,8 +19,14 @@ CellType charToCellType(char c) {
 		return CellType::Enemy;
 	case 'X':
 		return CellType::SpikeTrap;
-	case '&':
-		return CellType::FireballTrap;
+	case '1':
+		return CellType::FireballTrapLeft;
+	case '2':
+		return CellType::FireballTrapRight;
+	case '3':
+		return CellType::FireballTrapDown;
+	case '4':
+		return CellType::FireballTrapUp;
 	case '+':
 		return CellType::FloorSpikeFull;
 	case '|':
@@ -99,8 +105,14 @@ char cellTypeToChar(CellType type) {
 		return 'E';
 	case CellType::SpikeTrap:
 		return 'X';
-	case CellType::FireballTrap:
-		return '&';
+	case CellType::FireballTrapLeft:
+		return '1';
+	case CellType::FireballTrapRight:
+		return '2';
+	case CellType::FireballTrapDown:
+		return '3';
+	case CellType::FireballTrapUp:
+		return '4';
 	case CellType::FloorSpikeFull:
 		return '+';
 	case CellType::FloorSpikeVertical:

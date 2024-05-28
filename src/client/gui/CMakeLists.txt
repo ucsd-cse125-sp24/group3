@@ -3,6 +3,7 @@ set(LIB_NAME game_gui_lib)
 set(FILES
     imgs/img.cpp
     imgs/loader.cpp
+    imgs/logo.cpp
 
     font/font.cpp
     font/loader.cpp

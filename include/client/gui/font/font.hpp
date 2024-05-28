@@ -11,14 +11,16 @@ namespace gui::font {
 
 /**
  * Abstract representation of the different fonts to use in our game
- * 
- * NOTE: currently I haven't found a good font for "Text", so both of these
- * map to the same font.
  */
 enum class Font {
     MENU,
-    TEXT
+    TEXT,
+    TITLE,
 };
+
+#define ALL_FONTS() { \
+    Font::MENU, Font::TEXT, Font::TITLE \
+}
 
 /**
  * Mappings from our specified abstract fonts to the file to load
@@ -31,10 +33,11 @@ std::string getFilepath(Font font);
 enum class Color {
     BLACK,
     RED,
+    GREEN,
     BLUE,
     GRAY,
     WHITE,
-    TORCHLIGHT_GAMES
+    YELLOW,
 };
 
 /**

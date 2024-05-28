@@ -21,6 +21,7 @@ std::string getFilepath(Font font) {
     auto dir = getRepoRoot() / "assets/fonts";
     switch (font) {
         case Font::MENU: return (dir / "AncientModernTales-a7Po.ttf").string();
+        case Font::TITLE: return (dir / "spqr.ttf").string();
         default:
         case Font::TEXT: return (dir / "AtlantisInternational-jen0.ttf").string();
     } 
@@ -32,11 +33,13 @@ glm::vec3 getRGB(Color color) {
             return {1.0f, 0.0f, 0.0f};
         case Color::BLUE:
             return {0.0f, 0.0f, 1.0f};
+        case Color::GREEN:
+            return {0.0f, 1.0f, 0.0f};
         case Color::GRAY:
             return {0.5f, 0.5f, 0.5f};
         case Color::WHITE:
             return {1.0f, 1.0f, 1.0f};
-        case Color::TORCHLIGHT_GAMES:
+        case Color::YELLOW:
             return {0.902, 0.575, 0.055};
 
         case Color::BLACK:

@@ -14,6 +14,7 @@
 #include "client/gui/font/loader.hpp"
 #include "client/gui/img/img.hpp"
 #include "client/gui/img/loader.hpp"
+#include "client/gui/img/logo.hpp"
 
 #include <iostream>
 #include <memory>
@@ -287,6 +288,8 @@ private:
 
     Client* client;
 
+    img::Logo logo;
+
     /// =<INTERNAL HELPERS>==========================================================
     /**
      * @brief Performs a click on the specied coordinate in the GUI coordinate frame.
@@ -337,6 +340,12 @@ private:
      * Transitions to the Lobby once a lobby is selected to join.
      */
     void _layoutLobbyBrowser();
+
+    /**
+     * @brief Display fps counter on the top left corner
+     */
+    void _layoutFPSCounter();
+
     /**
      * @brief Displays the lobby layout
      * 

@@ -51,12 +51,14 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
                 .lobby_name = json.at("server").at("lobby_name"),
                 .lobby_broadcast = json.at("server").at("lobby_broadcast"),
                 .max_players = json.at("server").at("max_players"),
+                .disable_dm = json.at("server").at("disable_dm")
             },
             .client = {
                 .default_name = json.at("client").at("default_name"),
                 .lobby_discovery = json.at("client").at("lobby_discovery"),
-                .window_width = json.at("client").at("window_width"),
-                .draw_bboxes = json.at("client").at("draw_bboxes")
+                .fullscreen = json.at("client").at("fullscreen"),
+                .draw_bboxes = json.at("client").at("draw_bboxes"),
+                .fps_counter = json.at("client").at("fps_counter")
             }
         };
     } catch (nlohmann::json::exception& ex) {
@@ -82,10 +84,12 @@ GameConfig getDefaultConfig() {
             .lobby_name = "My Test Lobby",
             .lobby_broadcast = false,
             .max_players = 1,
+            .disable_dm = false
         },
         .client = {
             .default_name = "Player",
-            .lobby_discovery = false
+            .lobby_discovery = false,
+            .fullscreen = false
         }
     };
 }

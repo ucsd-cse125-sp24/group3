@@ -1,7 +1,7 @@
 #pragma once
 
-#define MIN_WINDOW_WIDTH  800
-#define MIN_WINDOW_HEIGHT 450
+#define MIN_WINDOW_WIDTH  1280
+#define MIN_WINDOW_HEIGHT 720
 
 // The screen width that's defined as 1:1, from which other 
 // resolutions can calculate pixel sizes

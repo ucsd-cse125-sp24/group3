@@ -31,6 +31,7 @@
 #include "shared/utilities/constants.hpp"
 #include "shared/utilities/light.hpp"
 #include "shared/utilities/typedefs.hpp"
+#include "shared/utilities/config.hpp"
 #include "shared/utilities/rng.hpp"
 
 using namespace std::chrono_literals;
@@ -41,7 +42,8 @@ Server::Server(boost::asio::io_context& io_context, GameConfig config)
      acceptor(io_context, tcp::endpoint(tcp::v4(), config.network.server_port)),
      socket(io_context),
      world_eid(0),
-     state(ServerGameState(GamePhase::LOBBY, config))
+     state(ServerGameState(GamePhase::LOBBY, config)),
+     config(config)
 {
     _doAccept(); // start asynchronously accepting
 
@@ -71,10 +73,10 @@ EventList Server::getAllClientEvents() {
     EventList allEvents;
 
     // Loop through each session
-    for (const auto& [eid, is_dm, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
-        if (auto s = session.lock()) {
+    for (const auto& [eid, _is_dm, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
+        if (session->isOkay()) {
             // Get events from the current session
-            std::vector<Event> sessionEvents = s->getEvents();
+            std::vector<Event> sessionEvents = session->handleAllReceivedPackets();
 
             // Put events into the allEvents vector, prepending each event with the id of the 
             // client that requested it
@@ -90,10 +92,11 @@ EventList Server::getAllClientEvents() {
 
 void Server::sendUpdateToAllClients(Event event) {
     for (const auto& [_eid, is_dm, _ip, session] : this->sessions) { // cppcheck-suppress unusedVariable
-        if (auto s = session.lock()) {
-            s->sendEventAsync(event);
+        if (session->isOkay()) {
+            session->sendEvent(event);
         }
     }
+
 }
 
 void Server::sendLightSourceUpdates(EntityID playerID) {
@@ -145,8 +148,8 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
     auto session_ref = by_id.find(playerID);
     if (session_ref != by_id.end()) {
         auto session = session_ref->session;
-        if (!session.expired()) {
-            session.lock()->sendEventAsync(Event(
+        if (session->isOkay()) {
+            session->sendEvent(Event(
                 this->world_eid,
                 EventType::UpdateLightSources,
                 event_data));
@@ -161,7 +164,7 @@ std::chrono::milliseconds Server::doTick() {
         case GamePhase::LOBBY: {
             //  Go through sessions and update GameState lobby info
             for (const auto& [eid, is_dm, ip, session] : this->sessions) {
-                if (auto s = session.lock()) {
+                if (session->isOkay()) {
                     this->state.addPlayerToLobby(LobbyPlayer(eid, PlayerRole::Unknown, false));
                 }
                 else {
@@ -266,7 +269,7 @@ std::chrono::milliseconds Server::doTick() {
                             std::weak_ptr<Session> session_ref = session_entry->session;
                             std::shared_ptr<Session> session = session_ref.lock();
                             if (session != nullptr) {
-                                session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
+                                session->sendPacket(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                                     ServerAssignEIDPacket{ .eid = dm->globalID, .is_dungeon_master = true }));
                             }
                         }
@@ -303,8 +306,8 @@ std::chrono::milliseconds Server::doTick() {
             // Go through sessions and update GameState lobby info
             // TODO: move this into updateGameState or something else
             for (const auto& [eid, is_dm, ip, session]: this->sessions) {
-                if (auto s = session.lock()) {
-                    this->state.addPlayerToLobby(eid, s->getInfo().client_name.value_or("UNKNOWN NAME"));
+                if (session->isOkay()) {
+                    this->state.addPlayerToLobby(eid, session->getInfo().client_name.value_or("UNKNOWN NAME"));
                 } else {
                     this->state.removePlayerFromLobby(eid);
                 }
@@ -346,10 +349,6 @@ std::chrono::milliseconds Server::doTick() {
             std::exit(1);
     }
 
-    // send partial updates to the clients
-    for (const auto& partial_update: this->state.generateSharedGameState(false)) {
-        sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
-    }
 
     // TODO: send sound effects to DM?
     auto players = this->state.objects.getPlayers();
@@ -360,17 +359,24 @@ std::chrono::milliseconds Server::doTick() {
             continue; // no sounds to send to that player
         }
 
-        auto session = session_entry.session.lock();
-        if (session == nullptr) {
+        auto session = session_entry.session;
+        if (!session->isOkay()) {
             continue; // lost connection with this session, so can't send audio updates to it
         }
 
-        session->sendEventAsync(Event(this->world_eid, EventType::LoadSoundCommands, LoadSoundCommandsEvent(
+        session->sendEvent(Event(this->world_eid, EventType::LoadSoundCommands, LoadSoundCommandsEvent(
             audio_commands_per_player.at(session_entry.id)
         )));
     }
 
     this->state.soundTable().tickSounds();
+
+    // send partial updates to the clients
+    // ALSO where the packets actually get sent
+    for (const auto& partial_update: this->state.generateSharedGameState(false)) {
+        sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
+    }
+
 
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
@@ -387,15 +393,12 @@ void Server::_doAccept() {
                 auto new_session = this->_handleNewSession(addr);
 
                 // send complete gamestate to the new person who connected
+                int i = 0;
                 for (auto& partial_update : this->state.generateSharedGameState(true)) {
-                    new_session->sendEventAsync(Event(0, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
+                    new_session->sendEvent(Event(0, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
                 }
 
-                new_session->startListen();
-                std::cout << "sending assign eid\n";
-                std::cout << new_session->getInfo().is_dungeon_master.value() << "\n";
-                std::cout << new_session->getInfo().client_eid.value() << "\n";
-                new_session->sendPacketAsync(PackagedPacket::make_shared(PacketType::ServerAssignEID,
+                new_session->sendPacket(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                     ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value(), 
                                             .is_dungeon_master = new_session->getInfo().is_dungeon_master.value()}));
             } else {
@@ -415,10 +418,10 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
     auto old_session = by_ip.find(addr);
     if (old_session != by_ip.end()) {
         // We already had a session with this IP
-        if (old_session->session.expired()) {
+        if (!old_session->session->isOkay()) {
             EntityID old_id = old_session->id;
 
-            // The old session is expired, so create new one
+            // The old session is dead, so create new one
 
             auto new_session = std::make_shared<Session>(std::move(this->socket),
                 SessionInfo({}, old_id, old_session->is_dungeon_master));
@@ -435,7 +438,7 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
             std::cerr << "Error: incoming connection request from " << addr
                 << " with which we already have an active session" << std::endl;
 
-            return old_session->session.lock();
+            return old_session->session;
         }
     }
 
