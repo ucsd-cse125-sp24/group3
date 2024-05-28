@@ -11,6 +11,7 @@
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"
 #include "server/game/objectmanager.hpp"
+#include "server/game/spawner.hpp"
 
 #include <string>
 #include <vector>
@@ -45,6 +46,11 @@ public:
 	 * instance at the current timestep.
 	 */
 	ObjectManager objects;
+
+	/**
+	 * @brief Controls the spawns for the enemies
+	 */
+	std::unique_ptr<Spawner> spawner;
 
 	/**
 	 * @brief Creates a ServerGameState instance. The intial GamePhase is set to
@@ -126,6 +132,8 @@ public:
 	void tickStatuses();
 
 	void spawnEnemies();
+
+	void handleTickVelocity();
 
 	void deleteEntities();
 
@@ -330,7 +338,7 @@ private:
 
 	std::unordered_map<std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
 
-	std::vector<SolidSurface*> previouslyHighlighted;
+	Trap* currentGhostTrap;
 
 	/**
     /**
@@ -369,8 +377,4 @@ private:
 	 * @brief table of all currently playing sounds
 	 */
 	SoundTable sound_table;
-	/**
-	 * @brief number of enemies currently in the maze
-	 */
-	int alive_enemy_weight;
 };

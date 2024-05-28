@@ -18,6 +18,7 @@
 #include "boost/variant/get.hpp"
 #include "server/game/objectmanager.hpp"
 #include "server/game/potion.hpp"
+#include "server/game/weapon.hpp"
 #include "server/game/enemy.hpp"
 #include "server/game/player.hpp"
 #include "shared/game/event.hpp"
@@ -256,6 +257,13 @@ std::chrono::milliseconds Server::doTick() {
                         this->state.objects.replaceObject(new_dm.id, new DungeonMaster(this->state.getGrid().getRandomSpawnPoint() + glm::vec3(0.0f, 25.0f, 0.0f), glm::vec3(0.0f)));
                         DungeonMaster* dm = this->state.objects.getDM();
 
+                        //  Initialize DM's lightning bolt
+                        SpecificID lightningID = this->state.objects.createObject(new Weapon(glm::vec3(-1.0f, 0, -1.0f), glm::vec3(0.0f), WeaponType::Lightning));
+                        Weapon* lightning = dynamic_cast<Weapon*>(this->state.objects.getItem(lightningID));
+                        lightning->iteminfo.held = true;
+                        lightning->physics.collider = Collider::None;
+                        dm->lightning = lightning;
+
                         //  Spawn player in random spawn point
 
                         //  TODO: Possibly replace this random spawn point with player assignments?
@@ -416,6 +424,7 @@ void Server::_doAccept() {
 std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr) {
     auto& by_ip = this->sessions.get<IndexByIP>();
     auto old_session = by_ip.find(addr);
+
     if (old_session != by_ip.end()) {
         // We already had a session with this IP
         if (!old_session->session->isOkay()) {

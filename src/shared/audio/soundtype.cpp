@@ -46,10 +46,22 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "player_walk_4_mono.wav").string();
         case ServerSFX::PlayerWalk5:
             return (dir / "player_walk_5_mono.wav").string();
+        case ServerSFX::Dagger:
+            return (dir / "dagger.wav").string();
+        case ServerSFX::Sword:
+            return (dir / "sword.wav").string();
+        case ServerSFX::Hammer:
+            return (dir / "hammer.wav").string();
+        case ServerSFX::Minotaur:
+            return (dir / "minotaur.wav").string();
+        case ServerSFX::Python:
+            return (dir / "python.wav").string();
         case ServerSFX::CeilingSpikeImpact:
             return (dir / "ceiling_spike_impact_short_mono.wav").string();
         case ServerSFX::CeilingSpikeTrigger:
             return (dir / "ceiling_spike_trigger_mono.wav").string();
+        case ServerSFX::Thunder:
+            return (dir / "thunder.wav").string();
         case ServerSFX::TorchLoop:
             return (dir / "torch_loop_mono.wav").string();
         
@@ -66,7 +78,7 @@ std::string getAudioPath(ClientMusic music) {
         case ClientMusic::TitleTheme:
             return (dir / "piano.wav").string();
         case ClientMusic::GameTheme:
-            return (dir / "mono-retrowave.mp3").string();
+            return (dir / "maze.mp3").string();
         default:
             std::cerr << "FATAL: no known path for ClientMusic " << static_cast<int>(music) << std::endl;
             std::exit(1);

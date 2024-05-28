@@ -14,8 +14,9 @@
 namespace gui {
 
 
-GUI::GUI(Client* client): capture_keystrokes(false), logo() {
+GUI::GUI(Client* client, const GameConfig& config): capture_keystrokes(false), logo() {
     this->client = client;
+    this->config = config;
 }
 
 bool GUI::init()
@@ -56,7 +57,7 @@ bool GUI::init()
 }
 
 void GUI::beginFrame() {
-    std::unordered_map<widget::Handle, widget::Widget::Ptr> empty;
+    std::map<widget::Handle, widget::Widget::Ptr> empty;
     std::swap(this->widgets, empty);
 }
 
@@ -994,26 +995,65 @@ void GUI::_sharedGameHUD() {
             switch (self->trapInventoryInfo->inventory[selected]) {
                 case ModelType::FloorSpikeFull: {
                     itemString = "Floor Spike Full";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeFull) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
                     break;
                 }
                 case ModelType::FloorSpikeHorizontal: {
                     itemString = "Floor Spike Horizontal";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeHorizontal) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
                     break;
                 }
                 case ModelType::FloorSpikeVertical: {
                     itemString = "Floor Spike Vertical";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeVertical) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+                    
                     break;
                 }
                 case ModelType::SunGod: {
                     itemString = "Fireball Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        std::cout << "FIREBALL IN COOLDOWN!" << std::endl;
+                        itemString += " (IN COOLDOWN)";
+                    }
                     break;
                 }
                 case ModelType::SpikeTrap: {
                     itemString = "Ceiling Spike Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::SpikeTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+                    break;
+                }
+                case ModelType::Lightning: {
+                    itemString = "Lightning Bolt";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::Lightning) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+
+                    
                     break;
                 }
             }
         }
+    }
+
+    auto txtHeight = font::getRelativePixels(95.0);
+    auto flexHeight = font::getRelativePixels(3.0);
+    if (!is_dm.value()) {
+        txtHeight += font::getRelativePixels(50);
+        flexHeight += font::getRelativePixels(37);
     }
 
     // Text for item description
@@ -1023,14 +1063,35 @@ void GUI::_sharedGameHUD() {
         font::Size::SMALL,
         font::Color::WHITE,
         fonts,
-        font::getRelativePixels(70)
+        txtHeight
     );
     this->addWidget(std::move(item_txt));
+
+    // Flexbox for the item frames
+    auto frameflex = widget::Flexbox::make(
+        glm::vec2(0.0f, flexHeight),          //position relative to screen
+        glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
+    );
+
+    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LeftHotbar), 2));
+    for (int i = 0; i < inventory_size; i++) {
+        if (selected == i) {
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleSelected), 2));
+            
+        }
+        else {
+            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleHotbar), 2));
+        }
+    }
+    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightHotbar), 2));
+
+    this->addWidget(std::move(frameflex));
 
     // Flexbox for the items 
     // Loading itemframe again if no item
     auto itemflex = widget::Flexbox::make(
-        glm::vec2(0.0f, 0.0f),         
+        glm::vec2(0.0f, flexHeight),
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
     );
@@ -1081,7 +1142,7 @@ void GUI::_sharedGameHUD() {
                     }
                 }
             } else {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Blank), 2));
             }
         } else {
             if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
@@ -1106,34 +1167,46 @@ void GUI::_sharedGameHUD() {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }
+                case ModelType::Lightning: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
                 }
             }
             else {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Blank), 2));
             }
         }
     }
 
     this->addWidget(std::move(itemflex));
 
-    // Flexbox for the item frames
-    auto frameflex = widget::Flexbox::make(
-        glm::vec2(0.0f, 0.0f),          //position relative to screen
-        glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
-        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
-    );
+    if (!is_dm.value()) {
+        // Flexbox for the health bar
+        auto healthflex = widget::Flexbox::make(
+            glm::vec2(0.0f, 5.0f),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        healthflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthBar), 2));
+        this->addWidget(std::move(healthflex));
 
-    for (int i = 0; i < inventory_size; i++) {
-        if (selected == i) {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame), 2));
+        auto healthtickflex = widget::Flexbox::make(
+            glm::vec2(0.0f, 5.0f),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        for (int i = 1; i <= self->stats->health.max(); i++) {
+            if (i <= self->stats->health.current()) {
+                healthtickflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthTickFull), 2));
+            }
+            else {
+                healthtickflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthTickEmpty), 2));
+            }
         }
-        else {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
-        }
+
+        this->addWidget(std::move(healthtickflex));
     }
-
-    this->addWidget(std::move(frameflex));
-
 }
 
 void GUI::_layoutGameHUD() {
@@ -1152,6 +1225,7 @@ void GUI::_layoutGameHUD() {
     if (!self_eid.has_value()) {
         return;
     }
+
     auto self = client->gameState.objects.at(*self_eid);
 
     auto matchPhaseFlex = widget::Flexbox::make(
@@ -1238,7 +1312,6 @@ void GUI::_layoutGameHUD() {
         }
     }
 
-
     matchPhaseFlex->push(widget::DynText::make(
         orbStateString,
         fonts,
@@ -1274,16 +1347,27 @@ void GUI::_layoutGameHUD() {
     this->addWidget(std::move(matchPhaseFlex));
 
     if (is_dm.has_value() && is_dm.value()) {
+        // add some DM specific stuff in here
+        auto traps_placed_txt = widget::CenterText::make(
+            "Traps Placed: " + std::to_string(self->trapInventoryInfo->trapsPlaced) + " / " + std::to_string(MAX_TRAPS),
+            font::Font::TEXT,
+            font::Size::SMALL,
+            font::Color::RED,
+            fonts,
+            font::getRelativePixels(125)
+        );
+        this->addWidget(std::move(traps_placed_txt));
+
         return;
     }
 
     auto health_txt = widget::CenterText::make(
         std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
-        font::Font::MENU,
-        font::Size::MEDIUM,
-        font::Color::RED,
+        font::Font::TEXT,
+        font::Size::SMALL,
+        font::Color::WHITE,
         fonts,
-        font::getRelativePixels(90)
+        font::getRelativePixels(13)
     );
     this->addWidget(std::move(health_txt));
 
