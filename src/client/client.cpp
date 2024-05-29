@@ -1076,11 +1076,15 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
                 // unhighlight hover
                 if (eid.has_value()) {
                     // nothing being placed, so the CellType we pass shouldn't matter!
-                    sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
+                    auto obj = this->gameState.objects.at(eid.value());
+
+                    sendTrapEvent(true, false, obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected-1]);
                 }
             }
             else {
-                sendTrapEvent(false, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
+                auto obj = this->gameState.objects.at(eid.value());
+
+                sendTrapEvent(false, false, obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected-1]);
             }
             break;
         /* Send an event to start 'shift' movement (i.e. sprint) */
@@ -1240,8 +1244,10 @@ void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { /
     if (is_pressed_p) {
         auto eid = this->session->getInfo().client_eid.value();
 
+        auto obj = this->gameState.objects.at(eid);
+
         // the actual trap doesn't matter, this is just for highlighting purposes
-        sendTrapEvent(true, false, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected-1]);
+        sendTrapEvent(true, false, obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected-1]);
     }
 }
 
@@ -1269,6 +1275,22 @@ void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int
             is_left_mouse_down = true;
         } else if (action == GLFW_RELEASE) {
             is_left_mouse_down = false;
+        }
+    }
+
+    if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        if (action == GLFW_PRESS) {
+            if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
+                if (is_pressed_p) {
+                    auto eid = this->session->getInfo().client_eid.value();
+
+                    auto obj = this->gameState.objects.at(eid);
+
+                    auto model = obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected - 1];
+
+
+                }
+            }
         }
     }
 

@@ -1420,6 +1420,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					cell->type = CellType::TeleportSpell;
 				}
 			} else if (cell->type == CellType::RandomWeapon) {
+				std::cout << "weapon row: " << cell->x << " weapon col: " << cell->y << std::endl;
 				int r = randomInt(1, 3);
 				if (r == 1) {
 					cell->type = CellType::Dagger;
@@ -1517,6 +1518,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				case CellType::HealthPotion: {
+					std::cout << "health potion row: " << cell->x << " health potion col: " << cell->y << std::endl;
 					glm::vec3 dimensions(1.0f);
 
 					glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
@@ -1675,36 +1677,12 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				default: {
-					freeSpots[row][col] = true;
+					// available spot for placement
+					solidSurfaceInGridCells.insert({row, col});
 				}
 			}
 		}
 	}
-
-	// Create Floor
-	//for (int c = 0; c < this->grid.getColumns(); c++) {
-	//	for (int r = 0; r < this->grid.getRows(); r++) {
-	//		auto type = this->grid.getCell(c, r)->type;
-	//		if (isWallLikeCell(type) || type == CellType::OutsideTheMaze) {
-	//			continue;
-	//		}
-
-	//		glm::vec3 corner = glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width);
-
-	//		SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
-	//			corner,
-	//			glm::vec3(Grid::grid_cell_width, 0.1,
-	//				Grid::grid_cell_width)
-	//		);
-
-	//		this->objects.createObject(floor);
-
-	//		if(freeSpots[r][c]) {
-	//			solidSurfaceInGridCells.insert({{c, r}, {floor}});
-	//		}
-	//	}
-	//}
-
 }
 
 void ServerGameState::spawnWall(GridCell* cell, int col, int row, bool is_internal) {
@@ -1734,7 +1712,7 @@ void ServerGameState::spawnWall(GridCell* cell, int col, int row, bool is_intern
         this->objects.createObject(wall);
 		if (cell->type == CellType::Wall || cell->type == CellType::Pillar) {
 			// don't let the DM select walls with torches
-			solidSurfaceInGridCells.insert({{col, row}, { wall }});
+			solidSurfaceInGridCells.insert({col, row});
 		}	
     }
 }

@@ -51,6 +51,13 @@ void Item::doCollision(Object* other, ServerGameState& state) {
 	if (pickedUp) {
 		this->iteminfo.held = true;
 		this->physics.collider = Collider::None;
+
+		// update cell type in game state to empty
+		GridCell* cell = state.getGrid().getCell(this->physics.shared.corner.x / Grid::grid_cell_width, this->physics.shared.corner.z / Grid::grid_cell_width);
+
+		cell->type = CellType::Empty;
+
+		std::cout << "item row: " << cell->x << " item col: " << cell->y << std::endl;
 	}
 }
 

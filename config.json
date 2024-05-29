@@ -2,8 +2,8 @@
     "game": {
       "maze": {
         "directory": "maps",
-        "procedural": true,
-        "maze_file": "test/big.maze"
+        "procedural": false,
+        "maze_file": "test/itemRoom.maze"
       }
     },
     "network": {
