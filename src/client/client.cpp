@@ -298,8 +298,6 @@ void Client::sendTrapEvent(bool hover, bool place, ModelType trapType) {
     case ModelType::Lightning:
         this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::Lightning, hover, place)));
         break;
-    default:
-        std::cout << "trap DNE yet! Please be patient" << std::endl;
     }
 }
 
