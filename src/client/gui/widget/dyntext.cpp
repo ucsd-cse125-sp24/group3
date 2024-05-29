@@ -83,6 +83,7 @@ void DynText::render() {
             { xpos + w, ypos + h,   1.0f, 0.0f }           
         };
         // render glyph texture over quad
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, ch.texture_id);
         // update content of VBO memory
         glBindBuffer(GL_ARRAY_BUFFER, VBO);

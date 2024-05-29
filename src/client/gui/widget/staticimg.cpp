@@ -85,7 +85,7 @@ void StaticImg::render() {
     // // transform = glm::translate(transform, glm::vec3(this->origin.x, this->origin.y, 0));
     // shader->setMat4("transform", transform);
 
-    // glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->texture_id);
     glBindVertexArray(quadVAO);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
