@@ -60,7 +60,7 @@ void Minimap::addToGUI(gui::GUI* gui) {
 
     // now a whole bunch of calculations for rendering to the screen in the top right...
 
-    const float IMG_CELL_SIZE = gui::font::getRelativePixels(24); // each img is 24x24 pixels
+    const float IMG_CELL_SIZE = gui::font::getRelativePixels(12); // each img is 24x24 pixels, but scaled half
     const float MAP_WIDTH_PX = IMG_CELL_SIZE * VISIBLE_WIDTH;
 
     const float LEFT_X = WINDOW_WIDTH - MAP_WIDTH_PX;
@@ -76,14 +76,16 @@ void Minimap::addToGUI(gui::GUI* gui) {
         );
 
         for (int col = 0; col < row_arr.size(); col++) {
-            glm::ivec2 coord(col, row);
+            glm::ivec2 local_coord(col, row); // relative to the visible map
+            glm::ivec2 top_left = center.value() - (VISIBLE_WIDTH / 2);
+            glm::ivec2 global_coord = top_left + local_coord; // relative to the entire map
 
             img::ImgID img = visible_map.at(row).at(col);
-            if (pos_to_player.contains(coord)) {
-                img = img::ImgID::MazePlayer1; // TODO: change based on the eid
+            if (pos_to_player.contains(global_coord)) {
+                img = img::ImgID::MazePlayer; // TODO: change based on the eid
             }
 
-            row_flex->push(widget::StaticImg::make(gui->imageLoader().getImg(img)));
+            row_flex->push(widget::StaticImg::make(glm::vec2(0, 0), gui->imageLoader().getImg(img), 0.5f));
         }
 
         gui->addWidget(std::move(row_flex));
@@ -99,7 +101,7 @@ Minimap::VisibleMap Minimap::getVisibleMap(glm::ivec2 center) const {
         for (int j = 0; j < VISIBLE_WIDTH; j++) {
             int col = top_left.x + j;
             if (row < 0 || row >= map.size() || col < 0 || col >= map.at(row).size()) {
-                visible_map[i][j] = gui::img::ImgID::MazeBlank;
+                visible_map[i][j] = gui::img::ImgID::MazeWall;
             } else {
                 visible_map[i][j] = gui::img::cellTypeToImage(map[row][col]);
             }

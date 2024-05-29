@@ -13,7 +13,7 @@ namespace gui {
     class GUI;
 }
 
-#define VISIBLE_WIDTH 11
+#define VISIBLE_WIDTH 21
 
 class Minimap {
 public:
