@@ -236,6 +236,7 @@ private:
     std::unique_ptr<Model> wall_model;
     std::unique_ptr<Model> pillar_model;
     std::unique_ptr<Model> sungod_model;
+    std::unique_ptr<Model> slime_model;
 
     GLFWwindow *window;
 

@@ -155,26 +155,27 @@ bool Client::init() {
     auto deferred_light_box_frag_path = shaders_dir / "deferred_light_box.frag";
     this->deferred_light_box_shader = std::make_shared<Shader>(deferred_light_box_vert_path.string(), deferred_light_box_frag_path.string());
 
-    this->configureGBuffer();
-
     auto cube_vert_path = shaders_dir / "cube.vert";
     auto cube_frag_path = shaders_dir / "cube.frag";
     this->cube_shader = std::make_shared<Shader>(cube_vert_path.string(), cube_frag_path.string());    
     
-    // auto model_vert_path = shaders_dir / "model.vert";
-    // auto model_frag_path = shaders_dir / "model.frag";
-    // this->model_shader = std::make_shared<Shader>(model_vert_path.string(), model_frag_path.string());
-    //
-    // auto cube_model_path = graphics_assets_dir / "cube.obj";
-    // this->cube_model = std::make_unique<Model>(cube_model_path.string());
-    //
-    // auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
-    // this->bear_model = std::make_unique<Model>(bear_model_path.string());
-    // // this->bear_model->scaleAbsolute(0.25);
-    //
-    // auto player_model_path = graphics_assets_dir / "Fire-testing.obj";
-    // this->player_model = std::make_unique<Model>(player_model_path.string());
-    // this->player_model->scaleAbsolute(0.25);
+    auto model_vert_path = shaders_dir / "model.vert";
+    auto model_frag_path = shaders_dir / "model.frag";
+    this->model_shader = std::make_shared<Shader>(model_vert_path.string(), model_frag_path.string());
+
+    auto cube_model_path = graphics_assets_dir / "cube.obj";
+    this->cube_model = std::make_unique<Model>(cube_model_path.string());
+
+    auto slime_model_path = graphics_assets_dir / "slime.obj";
+    this->slime_model = std::make_unique<Model>(slime_model_path.string());
+
+    auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
+    this->bear_model = std::make_unique<Model>(bear_model_path.string());
+    // this->bear_model->scaleAbsolute(0.25);
+
+    auto player_model_path = graphics_assets_dir / "Fire-testing.obj";
+    this->player_model = std::make_unique<Model>(player_model_path.string());
+    this->player_model->scaleAbsolute(0.25);
 
     this->light_source = std::make_unique<LightSource>();
 
@@ -182,14 +183,14 @@ bool Client::init() {
     auto lightFragFilepath = shaders_dir / "lightsource.frag";
     this->light_source_shader = std::make_shared<Shader>(lightVertFilepath.string(), lightFragFilepath.string());
 
-    // auto torchlight_model_path = graphics_assets_dir / "cube.obj";
-    // this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
+    auto torchlight_model_path = graphics_assets_dir / "cube.obj";
+    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
 
     auto solid_surface_vert_path = shaders_dir / "solidsurface.vert";
     auto solid_surface_frag_path = shaders_dir / "solidsurface.frag";
     this->solid_surface_shader = std::make_shared<Shader>(solid_surface_vert_path.string(), solid_surface_frag_path.string());
 
-    auto wall_model_path = graphics_assets_dir / "wall.obj";
+    auto wall_model_path = graphics_assets_dir / "wall2.obj";
     this->wall_model = std::make_unique<Model>(wall_model_path.string());
     auto wall_vert_path = shaders_dir / "wall.vert";
     auto wall_frag_path = shaders_dir / "wall.frag";
@@ -198,11 +199,11 @@ bool Client::init() {
     auto dm_cube_frag_path = shaders_dir / "dm_cube.frag";
     this->dm_cube_shader = std::make_shared<Shader>(wall_vert_path.string(), dm_cube_frag_path.string());
 
-    // auto pillar_model_path = graphics_assets_dir / "pillar.obj";
-    // this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
-    //
-    // auto sungod_model_path = graphics_assets_dir / "sungod.obj";
-    // this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
+    auto pillar_model_path = graphics_assets_dir / "pillar.obj";
+    this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
+
+    auto sungod_model_path = graphics_assets_dir / "sungod.obj";
+    this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
 
     auto sungod_vert_path = shaders_dir / "sungod.vert";
     auto sungod_frag_path = shaders_dir / "sungod.frag";
@@ -212,7 +213,7 @@ bool Client::init() {
     auto deferred_geometry_frag_path = shaders_dir / "deferred_geometry.frag";
     this->deferred_geometry_shader = std::make_shared<Shader>(deferred_geometry_vert_path.string(), deferred_geometry_frag_path.string());
 
-    
+    this->configureGBuffer();
 
     this->gui_state = GUIState::TITLE_SCREEN;
 
@@ -513,9 +514,30 @@ void Client::geometryPass() {
     this->deferred_geometry_shader->use();
     auto viewProj = this->cam->getViewProj();
     this->deferred_geometry_shader->setMat4("viewProj", viewProj);
+
+    auto eid = this->session->getInfo().client_eid.value();
+    bool is_dm = this->session->getInfo().is_dungeon_master.value();
+    glm::vec3 my_pos = this->gameState.objects[eid]->physics.corner;
+
+    // draw all objects to g-buffer
     for (auto& [id, sharedObject] : this->gameState.objects) {
         if (!sharedObject.has_value()) {
             continue;
+        }
+
+        bool is_ceiling = sharedObject->type == ObjectType::SolidSurface &&
+            sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling;
+
+        bool is_floor = sharedObject->type == ObjectType::SolidSurface &&
+            sharedObject->solidSurface->surfaceType == SurfaceType::Floor;
+
+        auto dist = glm::distance(sharedObject->physics.corner, my_pos);
+
+
+        if (!is_floor) {
+            if (!is_dm && !is_ceiling && dist > RENDER_DISTANCE) {
+                continue;
+            }
         }
 
         switch (sharedObject->type) {
@@ -543,30 +565,363 @@ void Client::geometryPass() {
                     break;
                 }
 
-                // if (!sharedObject->playerInfo->render) { break; } // dont render while invisible
-                // auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
-                //
-                // auto player_pos = sharedObject->physics.getCenterPosition();
-                //
-                // this->player_model->translateAbsolute(player_pos);
-                // this->player_model->draw(
-                //     this->model_shader.get(),
-                //     this->cam->getViewProj(),
-                //     this->cam->getPos(),
-                //     {},
-                //     true);
+                if (!sharedObject->playerInfo->render) { break; } // dont render while invisible
+
+                this->player_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->player_model->draw(
+                    this->deferred_geometry_shader.get(),
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    true);
                 break;
             }
-            case ObjectType::SolidSurface:
-                this->wall_model->setDimensions(sharedObject->physics.dimensions);
-                this->wall_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->wall_model->draw(
-                        this->deferred_geometry_shader.get(),
-                        viewProj,
-                        this->cam->getPos(),
-                        {},
-                        true);
+            // CHANGE THIS
+            case ObjectType::DungeonMaster: {
+                // don't render yourself
+                if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+                    //  TODO: Update the player eye level to an acceptable level
+                    glm::vec3 pos = sharedObject->physics.getCenterPosition();
+                    pos.y += PLAYER_EYE_LEVEL;
+                    cam->updatePos(pos);
+                    break;
+                }
+                auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
+
+                auto player_pos = sharedObject->physics.corner;
+
+                this->player_model->setDimensions(sharedObject->physics.dimensions);
+                this->player_model->translateAbsolute(player_pos);
+                this->player_model->draw(
+                    this->deferred_geometry_shader.get(),
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    true);
                 break;
+            }
+            case ObjectType::Slime: {
+                this->slime_model->setDimensions(sharedObject->physics.dimensions);
+                this->slime_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->slime_model->draw(this->deferred_geometry_shader.get(),
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    true);
+                break;
+            }
+            // case ObjectType::Minotaur: {
+            //     auto cube = std::make_unique<Cube>(glm::vec3(0.1f));
+            //     cube->scaleAbsolute(sharedObject->physics.dimensions);
+            //     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            //     cube->draw(this->cube_shader.get(),
+            //         this->cam->getViewProj(),
+            //         this->cam->getPos(),
+            //         {},
+            //         true);
+            //     break;
+            // }
+            // case ObjectType::Python: {
+            //     auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.2f));
+            //     cube->scaleAbsolute(sharedObject->physics.dimensions);
+            //     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            //     cube->draw(this->cube_shader.get(),
+            //         this->cam->getViewProj(),
+            //         this->cam->getPos(),
+            //         {},
+            //         true);
+            //     break;
+            // }
+            case ObjectType::SolidSurface: {
+                if (is_dm && sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling) {
+                    // don't render ceiling as DM
+                    break;
+                }
+
+                if (!is_dm && sharedObject->solidSurface->is_internal) {
+                    // dont render internal walls as non DM
+                    break;
+                }
+
+                Model* model = this->wall_model.get();
+                Shader* shader = this->deferred_geometry_shader.get();
+
+                switch (sharedObject->solidSurface->surfaceType) {
+                    case SurfaceType::Wall:
+                        model = this->wall_model.get();
+                        break;
+                    case SurfaceType::Pillar:
+                        model = this->pillar_model.get();
+                        break;
+                    case SurfaceType::Ceiling:
+                        model = this->cube_model.get();
+                        break;
+                    case SurfaceType::Floor:
+                        model = this->cube_model.get();
+                        break;
+                }
+
+                // if (is_dm) {
+                //     // if the DM, override shader
+                //     if (sharedObject->solidSurface->surfaceType != SurfaceType::Floor) {
+                //         shader = this->dm_cube_shader.get();
+                //     }
+                //     else {
+                //         shader = this->solid_surface_shader.get();
+                //     }
+                // }
+
+                model->setDimensions(sharedObject->physics.dimensions);
+                model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                model->draw(shader,
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    true);
+                break;
+            }
+            case ObjectType::FakeWall: {
+                glm::vec3 color;
+                if (sharedObject->trapInfo->triggered) {
+                    color = glm::vec3(0.4f, 0.5f, 0.7f);
+                } else {
+                    // off-color if not currently "visible"
+                    // TODO: change to translucent
+                    color = glm::vec3(0.5f, 0.6f, 0.8f);
+                }
+                cube_model->scaleAbsolute(sharedObject->physics.dimensions);
+                cube_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube_model->draw(this->deferred_geometry_shader.get(),
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    true);
+                break;
+            }
+            // case ObjectType::SpikeTrap: {
+            //     // if not DM and this is a ghost trap, break
+            //     if (!is_dm && sharedObject->trapInfo->dm_hover) {
+            //         break;
+            //     }
+            //
+            //     auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
+            //     cube->scaleAbsolute( sharedObject->physics.dimensions);
+            //     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            //     cube->draw(this->cube_shader.get(),
+            //         this->cam->getViewProj(),
+            //         this->cam->getPos(),
+            //         {}, 
+            //         true);
+            //     break;
+            // }
+            // case ObjectType::Torchlight: {
+            //     // do not render torches if dungeon master
+            //     if (!this->session->getInfo().is_dungeon_master.has_value()) {
+            //         break; // just in case this message wasn't received, don't crash
+            //     }
+            //
+            //     if (!this->session->getInfo().is_dungeon_master.value()) {
+            //         this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+            //         this->torchlight_model->draw(
+            //             this->light_source_shader.get(),
+            //             this->cam->getViewProj(),
+            //             this->cam->getPos(),
+            //             {},
+            //             true);
+            //     }
+            //     break;
+            // }
+            // // case ObjectType::FireballTrap: {
+            // //     // if not DM and this is a ghost trap, break
+            // //     if (!is_dm && sharedObject->trapInfo->dm_hover) {
+            // //         break;
+            // //     }
+            // //
+            // //     this->sungod_model->setDimensions(sharedObject->physics.dimensions);
+            // //     this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+            // //     this->sungod_model->rotateAbsolute(sharedObject->physics.facing);
+            // //     this->sungod_model->draw(this->sungod_shader.get(),
+            // //         this->cam->getViewProj(),
+            // //         this->cam->getPos(),
+            // //         this->closest_light_sources,
+            // //         true);
+            // //     break;
+            // // }
+            // // case ObjectType::ArrowTrap: {
+            // //     // if not DM and this is a ghost trap, break
+            // //     if (!is_dm && sharedObject->trapInfo->dm_hover) {
+            // //         break;
+            // //     }
+            // //
+            // //     auto cube = std::make_unique<Cube>(glm::vec3(0.5f, 0.3f, 0.2f));
+            // //     cube->scaleAbsolute( sharedObject->physics.dimensions);
+            // //     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            // //     cube->draw(this->cube_shader.get(),
+            // //         this->cam->getViewProj(),
+            // //         this->cam->getPos(),
+            // //         {},
+            // //         true);
+            // //     break;
+            // // }
+            // case ObjectType::Projectile: {  
+            //     // TODO use model
+            //     auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
+            //     cube->scaleAbsolute( sharedObject->physics.dimensions);
+            //     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            //     cube->draw(this->cube_shader.get(),
+            //         this->cam->getViewProj(),
+            //         this->cam->getPos(),
+            //         {},
+            //         true);
+            //     break;
+            // }
+            // // case ObjectType::FloorSpike: {
+            // //     // if not DM and this is a ghost trap, break
+            // //     if (!is_dm && sharedObject->trapInfo->dm_hover) {
+            // //         break;
+            // //     }
+            // //
+            // //     auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.0f));
+            // //     cube->scaleAbsolute( sharedObject->physics.dimensions);
+            // //     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            // //     cube->draw(this->cube_shader.get(),
+            // //         this->cam->getViewProj(),
+            // //         this->cam->getPos(),
+            // //         {},
+            // //         true);
+            // //     break;
+            // // }
+            // case ObjectType::Orb: {
+            //     if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+            //         glm::vec3 color = glm::vec3(0.0f, 0.7f, 1.0f);
+            //         auto cube = std::make_unique<Cube>(color);
+            //         cube->scaleAbsolute(sharedObject->physics.dimensions);
+            //         cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            //         cube->draw(this->cube_shader.get(),
+            //             this->cam->getViewProj(),
+            //             this->cam->getPos(),
+            //             {},
+            //             true);
+            //     }
+            //     break;
+            // }
+            // case ObjectType::Potion: {
+            //     if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+            //         glm::vec3 color;
+            //         if (sharedObject->modelType == ModelType::HealthPotion) {
+            //             color = glm::vec3(1.0f, 0.0f, 0.0f);
+            //         } else if (sharedObject->modelType == ModelType::NauseaPotion || sharedObject->modelType == ModelType::InvincibilityPotion) {
+            //             color = glm::vec3(1.0f, 0.5f, 0.0f);
+            //         } else if (sharedObject->modelType == ModelType::InvisibilityPotion) {
+            //             color = glm::vec3(0.2f, 0.2f, 0.2f);
+            //         }
+            //
+            //         auto cube = std::make_unique<Cube>(color);
+            //         cube->scaleAbsolute(sharedObject->physics.dimensions);
+            //         cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            //         cube->draw(this->cube_shader.get(),
+            //             this->cam->getViewProj(),
+            //             this->cam->getPos(),
+            //             {},
+            //             true);
+            //     }
+            //     break;
+            // }
+            // case ObjectType::Spell: {
+            //     if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+            //         glm::vec3 color;
+            //         if (sharedObject->modelType == ModelType::FireSpell) {
+            //             color = glm::vec3(0.9f, 0.1f, 0.0f);
+            //         }
+            //         else if (sharedObject->modelType == ModelType::HealSpell) {
+            //             color = glm::vec3(1.0f, 1.0f, 0.0f);
+            //         }
+            //         else {
+            //             color = glm::vec3(0.8f, 0.7f, 0.6f);
+            //         }
+            //
+            //         auto cube = std::make_unique<Cube>(color);
+            //         cube->scaleAbsolute(sharedObject->physics.dimensions);
+            //         cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            //         cube->draw(this->cube_shader.get(),
+            //             this->cam->getViewProj(),
+            //             this->cam->getPos(),
+            //             {},
+            //             true);
+            //     }
+            //     break;
+            // }
+            // // case ObjectType::TeleporterTrap: {
+            // //     // if not DM and this is a ghost trap, break
+            // //     if (!is_dm && sharedObject->trapInfo->dm_hover) {
+            // //         break;
+            // //     }
+            // //
+            // //     auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 1.0f));
+            // //     cube->scaleAbsolute( sharedObject->physics.dimensions);
+            // //     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            // //     cube->draw(this->cube_shader.get(),
+            // //         this->cam->getViewProj(),
+            // //         this->cam->getPos(),
+            // //         {},
+            // //         true);
+            // //     break;
+            // // }
+            // case ObjectType::Exit: {
+            //     auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 0.0f, 0.0f));
+            //     cube->scaleAbsolute( sharedObject->physics.dimensions);
+            //     cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            //     cube->draw(this->cube_shader.get(),
+            //         this->cam->getViewProj(),
+            //         this->cam->getPos(),
+            //         {},
+            //         true);
+            //     break;
+            // }
+            // case ObjectType::Weapon: {
+            //     if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+            //         auto cube = std::make_unique<Cube>(glm::vec3(0.5f));
+            //         cube->scaleAbsolute(sharedObject->physics.dimensions);
+            //         cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            //         cube->draw(this->cube_shader.get(),
+            //             this->cam->getViewProj(),
+            //             this->cam->getPos(),
+            //             {},
+            //             true);
+            //     }
+            //     break;
+            // }
+            // // case ObjectType::WeaponCollider: {
+            // //     if (sharedObject->weaponInfo->lightning) {
+            // //         if (!sharedObject->weaponInfo->attacked) {
+            // //             auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 1.0f, 0.0f));
+            // //             cube->scaleAbsolute(sharedObject->physics.dimensions);
+            // //             cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            // //             cube->draw(this->cube_shader.get(),
+            // //                 this->cam->getViewProj(),
+            // //                 this->cam->getPos(),
+            // //                 {},
+            // //                 false);
+            // //         } else {
+            // //             auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 1.0f, 0.0f));
+            // //             cube->scaleAbsolute(sharedObject->physics.dimensions);
+            // //             cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            // //             cube->draw(this->cube_shader.get(),
+            // //                 this->cam->getViewProj(),
+            // //                 this->cam->getPos(),
+            // //                 {},
+            // //                 true);
+            // //         }
+            // //     }
+            // //     else {
+            // //         if (sharedObject->weaponInfo->attacked) {
+            // //             auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
+            // //             cube->scaleAbsolute(sharedObject->physics.dimensions);
+            // //             cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+            // //             cube->draw(this->cube_shader.get(),
+            // //                 this->cam->getViewProj(),
+            // //                 this->cam->getPos(),
+            // //                 {},
+            // //                 false);
+            // //         }
+            // //     }
+            // //     break;
+            // // }
             default:
                 break;
         }
@@ -644,6 +999,14 @@ void Client::lightingPass() {
     this->deferred_light_box_shader->setMat4("viewProj", viewProj);
     for (int i = 0; i < this->closest_light_sources.size(); i++) {
         boost::optional<SharedObject>& curr_source = this->closest_light_sources.at(i);
+        if (!curr_source.has_value()) {
+            continue;
+        }
+
+        if (!curr_source->pointLightInfo.has_value()) {
+            std::cout << "got a torch without point light info for some reason" << std::endl;
+            continue;
+        }
         SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
 
         glm::vec3 pos = curr_source->physics.getCenterPosition();
@@ -741,7 +1104,6 @@ void Client::drawBbox(boost::optional<SharedObject> object) {
         object_bbox->draw(this->cube_shader.get(),
             this->cam->getViewProj(),
             this->cam->getPos(),
-            {},
             false);
     }
 }

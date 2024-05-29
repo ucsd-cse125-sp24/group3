@@ -90,7 +90,7 @@ class Mesh : public Renderable {
     void draw(Shader* shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
+            
             bool fill) override;
 
 
@@ -126,7 +126,7 @@ class Model : public Renderable {
     void draw(Shader* shader,
             glm::mat4 viewProj,
             glm::vec3 camPos, 
-            std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
+            
             bool fill) override;
 
     /**
