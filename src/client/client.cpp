@@ -220,8 +220,13 @@ bool Client::init() {
     // Animation* bear = new Animation(bear_anim_path.string(), bear_model.get());
     // animManager = new AnimationManager(bear);
 
-    auto player_model_path = graphics_assets_dir / "animations/model_m.fbx";
+    auto player_model_path = graphics_assets_dir / "model_m2/model_m2_text_path.fbx";
+    // auto player_model_path = graphics_assets_dir / "char2/obj/Char2_b/firema 1.obj";
     auto player_walk_path = graphics_assets_dir / "animations/walk-test.fbx";
+    // auto player_model_path = graphics_assets_dir / "model_m2_test_1/model_m2_test_1.dae";
+    // auto player_walk_path = graphics_assets_dir / "animations/walk_test_2.dae";
+    // auto player_model_path = graphics_assets_dir / "animations/model_m2.glb";
+    // auto player_walk_path = graphics_assets_dir / "animations/walk.glb";
     auto player_jump_path = graphics_assets_dir / "animations/jump-test.fbx";
     auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
     auto player_run_path = graphics_assets_dir / "animations/run.fbx";
@@ -246,7 +251,11 @@ bool Client::init() {
     animManager->addAnimation(player_atk, ObjectType::Player, AnimState::AttackAnim);
     animManager->addAnimation(player_use_potion, ObjectType::Player, AnimState::DrinkPotionAnim);
 
-    auto sungod_model_path = graphics_assets_dir / "sungod.obj";
+    // auto sungod_model_path = graphics_assets_dir / "sungod.obj";
+    // auto sungod_model_path = graphics_assets_dir / "model_m2/model_m2.dae";
+    auto sungod_model_path = graphics_assets_dir / "model_m2/model_m2_text_path.fbx";
+    // auto sungod_model_path = graphics_assets_dir / "char3/Char3/girl1 1_og.obj";
+    // auto sungod_model_path = graphics_assets_dir / "char2/obj/Char2_b/firema 1.obj";
     this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
 
     this->audioManager->init();
@@ -498,7 +507,6 @@ void Client::draw() {
 
         auto dist = glm::distance(sharedObject->physics.corner, my_pos);
 
-
         if (!is_floor) {
             if (!is_dm && !is_ceiling && dist > RENDER_DISTANCE) {
                 continue;
@@ -541,7 +549,7 @@ void Client::draw() {
 
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
-                    // pos.z += 4.0f;
+                    pos.z += 4.0f;
                     cam->updatePos(pos);
 
                     // update listener position & facing
@@ -557,7 +565,7 @@ void Client::draw() {
                     if (!sharedObject->playerInfo->is_alive) {
                         this->gui_state = GUIState::DEAD_SCREEN;
                     }
-                    break;
+                    // break;
                 }
                 animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
 
@@ -586,7 +594,7 @@ void Client::draw() {
                     this->model_shader.get(),
                     this->cam->getViewProj(),
                     this->cam->getPos(),
-                    {},
+                    this->closest_light_sources,
                     true);
                 break;
             }
@@ -744,8 +752,9 @@ void Client::draw() {
                 break;
             }
             case ObjectType::FireballTrap: {
-                this->sungod_model->setDimensions(sharedObject->physics.dimensions);
+                // this->sungod_model->setDimensions(sharedObject->physics.dimensions);
                 this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition() - glm::vec3(0.0f, 8.5f, 0.0f));
                 this->sungod_model->rotateAbsolute(sharedObject->physics.facing);
                 this->sungod_model->draw(this->sungod_shader.get(),
                     this->cam->getViewProj(),

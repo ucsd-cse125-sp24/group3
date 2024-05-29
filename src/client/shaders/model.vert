@@ -53,11 +53,5 @@ void main() {
 	fragNormal = vec3(model * totalNormal);
     fragPos = vec3(model * totalPosition);
 
-    /*
-    gl_Position = viewProj * model * vec4(position, 1);
-	fragNormal = vec3(model * vec4(normal, 0));
-    fragPos = vec3(model * vec4(position, 1));
-    */
-
     TexCoords = uvs;
 }
