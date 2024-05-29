@@ -103,7 +103,7 @@ public:
 class Arrow : public Projectile {
 public:
     inline static const int DAMAGE = 10;
-    inline static const float H_MULT = 1.20f;
+    inline static const float H_MULT = 0.75f;
     inline static const float V_MULT = 0.0f; // not affected by gravity
 
     Arrow(glm::vec3 corner, glm::vec3 facing, Direction dir):

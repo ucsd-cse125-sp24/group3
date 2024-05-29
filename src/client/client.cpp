@@ -298,8 +298,6 @@ void Client::sendTrapEvent(bool hover, bool place, ModelType trapType) {
     case ModelType::Lightning:
         this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::Lightning, hover, place)));
         break;
-    default:
-        std::cout << "trap DNE yet! Please be patient" << std::endl;
     }
 }
 
@@ -324,17 +322,38 @@ void Client::idleCallback() {
 
     if (this->gui_state != GUIState::GAME_HUD) { return; }
 
-    glm::vec3 cam_movement = glm::vec3(0.0f);
+    glm::vec3 move_dir(0.0f);
 
+    bool moved = false;
     // Sets a direction vector
-    if(is_held_right)
-        cam_movement += cam->move(true, 1.0f);
-    if(is_held_left)
-        cam_movement += cam->move(true, -1.0f);
-    if (is_held_up)
-        cam_movement += cam->move(false, 1.0f);
-    if (is_held_down)
-        cam_movement += cam->move(false, -1.0f);
+    if(is_held_right) {
+        move_dir.x += 1.0f;
+        moved = true;
+    }
+    if(is_held_left) {
+        move_dir.x -= 1.0f;
+        moved = true;
+    }
+    if (is_held_up) {
+        move_dir.z += 1.0f;
+        moved = true;
+    }
+    if (is_held_down) {
+        move_dir.z -= 1.0f;
+        moved = true;
+    }
+    
+    glm::vec3 cam_movement(0.0f);
+
+    if (moved) {
+        move_dir = glm::normalize(move_dir);
+        cam_movement += cam->move(true, move_dir.x);
+        cam_movement += cam->move(false, move_dir.z);
+    }
+
+    if (std::isnan(cam_movement.x) || std::isnan(cam_movement.y) || std::isnan(cam_movement.z)) {
+        cam_movement = glm::vec3(0.0f);
+    }
 
     // Update camera facing direction
     cam->update(mouse_xpos, mouse_ypos);
