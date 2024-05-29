@@ -375,7 +375,9 @@ std::chrono::milliseconds Server::doTick() {
             players.push_back(player);
         }
     }
-    players.push_back(this->state.objects.getDM());
+    if (this->state.objects.getDM() != nullptr) {
+        players.push_back(this->state.objects.getDM());
+    }
     auto audio_commands_per_player = this->state.soundTable().getCommandsPerPlayer(players);
 
     for (auto& session_entry : this->sessions) {
