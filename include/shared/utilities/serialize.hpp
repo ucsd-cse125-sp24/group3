@@ -52,5 +52,13 @@ namespace  boost {
         {
             ar & vec.x & vec.y & vec.z;
         }
+        /**
+         * Function to serialize a glm::ivec2 for Boost
+         */
+        template<class Archive>
+        void serialize(Archive & ar, glm::ivec2& vec, const unsigned int version)
+        {
+            ar & vec.x & vec.y;
+        }
     }
 }

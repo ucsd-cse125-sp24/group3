@@ -42,7 +42,12 @@ enum class ImgID {
     MazeWall,
     MazeEmpty,
     MazeBlank,
-    MazeOrb
+    MazeOrb,
+    MazeExit,
+    MazePlayer1,
+    MazePlayer2,
+    MazePlayer3,
+    MazePlayer4
 };
 #define GET_ALL_IMG_IDS() \
     {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::HealthPotion, ImgID::UnknownPotion, \
@@ -50,7 +55,8 @@ enum class ImgID {
         ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer, \
         ImgID::LeftHotbar, ImgID::RightHotbar, ImgID::MiddleHotbar, ImgID::Blank, ImgID::Title, \
         ImgID::MiddleSelected, ImgID::HealthBar, ImgID::HealthTickEmpty, ImgID::HealthTickFull, \
-        ImgID::MazeEmpty, ImgID::MazeWall, ImgID::MazeBlank, ImgID::MazeOrb, \
+        ImgID::MazeEmpty, ImgID::MazeWall, ImgID::MazeBlank, ImgID::MazeOrb, ImgID::MazeExit, \
+        ImgID::MazePlayer1, ImgID::MazePlayer2, ImgID::MazePlayer3, ImgID::MazePlayer4, \
     }
 
 /**

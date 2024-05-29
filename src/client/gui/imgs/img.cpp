@@ -36,6 +36,11 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::MazeWall: return (img_root / "maze" / "wall.png").string();
         case ImgID::MazeBlank: return (img_root / "maze" / "blank.png").string();
         case ImgID::MazeOrb: return (img_root / "maze" / "orb.png").string();
+        case ImgID::MazeExit: return (img_root / "maze" / "exit.png").string();
+        case ImgID::MazePlayer1: return (img_root / "maze" / "player1.png").string();
+        case ImgID::MazePlayer2: return (img_root / "maze" / "player2.png").string();
+        case ImgID::MazePlayer3: return (img_root / "maze" / "player3.png").string();
+        case ImgID::MazePlayer4: return (img_root / "maze" / "player4.png").string();
     }
 }
 
@@ -45,11 +50,19 @@ ImgID cellTypeToImage(CellType type) {
             return ImgID::MazeEmpty;
         case CellType::Wall:
         case CellType::Pillar:
+        case CellType::TorchDown:
+        case CellType::TorchLeft:
+        case CellType::TorchRight:
+        case CellType::TorchUp:
             return ImgID::MazeWall;
         case CellType::Orb:
             return ImgID::MazeOrb;
-        default:
+        case CellType::Exit:
+            return ImgID::MazeExit;
+        case CellType::OutsideTheMaze:
             return ImgID::MazeBlank;
+        default:
+            return ImgID::MazeEmpty;
     }
 }
 

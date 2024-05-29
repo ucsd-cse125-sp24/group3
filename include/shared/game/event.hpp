@@ -299,21 +299,34 @@ struct UpdateLightSourcesEvent {
     }
 };
 
+struct ivec2_hash {
+    size_t operator()(const glm::ivec2& vec) const {
+        size_t seed = 0;
+        boost::hash_combine(seed, vec.x);
+        boost::hash_combine(seed, vec.y);
+        return seed;
+    }
+};
+
 struct LoadGameResultsEvent {
     LoadGameResultsEvent() = default;
     LoadGameResultsEvent(
         const std::vector<std::vector<CellType>>& map,
-        int exit_row, int exit_col
+        int exit_row, int exit_col,
+        std::unordered_map<glm::ivec2, int, ivec2_hash>& player_positions
     ): 
-        ascii_map(map), exit_row(exit_row), exit_col(exit_col)
+        ascii_map(map), exit_row(exit_row), exit_col(exit_col),
+        player_positions(player_positions)
     {}
 
     std::vector<std::vector<CellType>> ascii_map;
     int exit_row;
     int exit_col;
+    // hash map from grid coordinate -> player number
+    std::unordered_map<glm::ivec2, int, ivec2_hash> player_positions;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & ascii_map & exit_row & exit_col;
+        ar & ascii_map & exit_row & exit_col & player_positions;
     }
 };
 

@@ -381,8 +381,18 @@ std::chrono::milliseconds Server::doTick() {
                     }
                     ascii_map.push_back(row);
                 }
+                std::unordered_map<glm::ivec2, int, ivec2_hash> player_grid_positions;
+                auto players = this->state.objects.getPlayers();
+                for (int i = 0; i < players.size(); i++) {
+                    auto player = players.get(i);
+                    if (player == nullptr) continue;
+                    glm::ivec2 grid_pos = Grid::getGridCellFromPosition(player->physics.shared.corner);
+                    std::cout << "player grid pos " << glm::to_string(grid_pos) << "\n";
+                    player_grid_positions.insert({grid_pos, player->typeID});
+                }
                 sendUpdateToAllClients(Event(this->world_eid, 
-                    EventType::LoadGameResults, LoadGameResultsEvent(ascii_map, exit_pos.y, exit_pos.x)));
+                    EventType::LoadGameResults, LoadGameResultsEvent(
+                        ascii_map, exit_pos.y, exit_pos.x, player_grid_positions)));
             }
             break;
         }

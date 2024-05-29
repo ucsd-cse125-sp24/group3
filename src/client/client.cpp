@@ -318,6 +318,21 @@ void Client::idleCallback() {
         processServerInput(allow_defer);
     }
 
+    if (this->gameState.phase == GamePhase::RESULTS) {
+        if (is_held_right) {
+            this->results_map_pos.x++;
+        }
+        if (is_held_left) {
+            this->results_map_pos.x--;
+        }
+        if (is_held_down) {
+            this->results_map_pos.y++;
+        }
+        if (is_held_up) {
+            this->results_map_pos.y--;
+        }
+    }
+
     // If we aren't in the middle of the game then we shouldn't capture any movement info
     // or send any movement related events
     if (rendered_phase != GamePhase::GAME) { return; }
@@ -327,14 +342,19 @@ void Client::idleCallback() {
     glm::vec3 cam_movement = glm::vec3(0.0f);
 
     // Sets a direction vector
-    if(is_held_right)
+    if(is_held_right) {
         cam_movement += cam->move(true, 1.0f);
-    if(is_held_left)
+    }
+    if(is_held_left) {
         cam_movement += cam->move(true, -1.0f);
-    if (is_held_up)
+    }
+    if (is_held_up) {
         cam_movement += cam->move(false, 1.0f);
-    if (is_held_down)
+    }
+    if (is_held_down) {
         cam_movement += cam->move(false, -1.0f);
+    }
+
 
     // Update camera facing direction
     cam->update(mouse_xpos, mouse_ypos);
@@ -1158,26 +1178,6 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             if (Client::time_of_last_keystroke + 100 < ms_since_epoch) {
                 Client::time_of_last_keystroke = ms_since_epoch;
                 this->gui.captureBackspace();
-            }
-        }
-    }
-
-    // code to move around the map in the results screen
-    if (this->gameState.phase == GamePhase::RESULTS) {
-        if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-            switch (key) {
-                case GLFW_KEY_W:
-                    this->results_map_pos.y--;
-                    break;
-                case GLFW_KEY_A:
-                    this->results_map_pos.x--;
-                    break;
-                case GLFW_KEY_S:
-                    this->results_map_pos.y++;
-                    break;
-                case GLFW_KEY_D:
-                    this->results_map_pos.x++;
-                    break;
             }
         }
     }
