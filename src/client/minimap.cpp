@@ -63,16 +63,16 @@ void Minimap::addToGUI(gui::GUI* gui) {
     const float IMG_CELL_SIZE = gui::font::getRelativePixels(12); // each img is 24x24 pixels, but scaled half
     const float MAP_WIDTH_PX = IMG_CELL_SIZE * VISIBLE_WIDTH;
 
-    const float LEFT_X = WINDOW_WIDTH - MAP_WIDTH_PX;
-    const float BOTTOM_Y = WINDOW_HEIGHT - MAP_WIDTH_PX;
+    // const float LEFT_X = WINDOW_WIDTH - MAP_WIDTH_PX;
+    // const float BOTTOM_Y = WINDOW_HEIGHT - MAP_WIDTH_PX;
 
     for (int i = 0; i < visible_map.size(); i++) {
         int row = visible_map.size() - 1 - i; // start at bottom row
         auto& row_arr = visible_map.at(row);
         auto row_flex = widget::Flexbox::make(
-            glm::vec2(LEFT_X, BOTTOM_Y + (IMG_CELL_SIZE * i)),
-            glm::vec2(MAP_WIDTH_PX, 0.0f), 
-            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::LEFT, 0.0f)
+            glm::vec2(0, 100 + (IMG_CELL_SIZE * i)),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
         );
 
         for (int col = 0; col < row_arr.size(); col++) {

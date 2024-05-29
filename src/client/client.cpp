@@ -1010,6 +1010,7 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
         
         case GLFW_KEY_TAB:
+            this->is_held_tab = true;
             this->gui.setCaptureKeystrokes(true);
             break;
 
@@ -1119,6 +1120,10 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
     if (action == GLFW_RELEASE) {
         switch (key) {
+        case GLFW_KEY_TAB:
+            is_held_tab = false;
+            break;
+
         case GLFW_KEY_S:
             is_held_down = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {

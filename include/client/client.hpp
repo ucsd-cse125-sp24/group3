@@ -281,6 +281,8 @@ private:
 
     bool is_left_mouse_down = false;
 
+    bool is_held_tab = false;
+
     /* Mouse position coordinates */
     float mouse_xpos = 0.0f;
     float mouse_ypos = 0.0f;

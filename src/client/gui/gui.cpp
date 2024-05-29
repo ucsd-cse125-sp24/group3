@@ -1233,7 +1233,9 @@ void GUI::_layoutGameHUD() {
 
     auto self = client->gameState.objects.at(*self_eid);
 
-    this->client->minimap.addToGUI(this);
+    if (this->client->is_held_tab) {
+        this->client->minimap.addToGUI(this);
+    }
 
     auto matchPhaseFlex = widget::Flexbox::make(
         glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(150))),
