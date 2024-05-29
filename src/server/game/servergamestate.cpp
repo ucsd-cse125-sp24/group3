@@ -235,8 +235,11 @@ void ServerGameState::update(const EventList& events) {
 			}
 			case ActionType::Sprint: {
 				obj->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
-				obj->animState = AnimState::WalkAnim;
-
+				if (obj->physics.velocity.x != 0.0f && obj->physics.velocity.z != 0.0f) {
+					obj->animState = AnimState::WalkAnim;
+				} else {
+					obj->animState = AnimState::IdleAnim;
+				}
 				break;
 			}
 			default: { break; }
@@ -600,7 +603,11 @@ void ServerGameState::updateMovement() {
 			object->physics.shared.corner.y = 0;
 
 			// After landing, set object's animation to non-jump (idle)
-			object->animState = AnimState::WalkAnim;
+			if (object->physics.velocity.x != 0.0f && object->physics.velocity.z != 0.0f) {
+				object->animState = AnimState::WalkAnim;
+			} else {
+				object->animState = AnimState::IdleAnim;
+			}
 
 			// Play relevant landing sounds
 			if (starting_corner_pos.y != 0.0f) {
