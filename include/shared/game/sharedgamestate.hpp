@@ -180,8 +180,11 @@ struct SharedGameState {
 
 	unsigned int numPlayerDeaths;
 
+	std::vector<std::pair<EntityID, glm::ivec2>> player_grid_positions;
+
 	SharedGameState():
-		objects(std::unordered_map<EntityID, boost::optional<SharedObject>>())
+		objects(std::unordered_map<EntityID, boost::optional<SharedObject>>()),
+		player_grid_positions()
 	{
 		this->phase = GamePhase::TITLE_SCREEN;
 		this->timestep = FIRST_TIMESTEP;
@@ -193,7 +196,8 @@ struct SharedGameState {
 	}
 
 	SharedGameState(GamePhase start_phase, const GameConfig& config):
-		objects(std::unordered_map<EntityID, boost::optional<SharedObject>>())
+		objects(std::unordered_map<EntityID, boost::optional<SharedObject>>()),
+		player_grid_positions()
 	{
 		this->phase = start_phase;
 		this->timestep = FIRST_TIMESTEP;
@@ -207,7 +211,8 @@ struct SharedGameState {
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
 		ar & objects & timestep & lobby & phase & matchPhase
-			& timesteps_left & playerVictory & numPlayerDeaths;
+			& timesteps_left & playerVictory & numPlayerDeaths
+			& player_grid_positions;
 	}
 
 	/**

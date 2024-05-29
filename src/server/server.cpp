@@ -353,47 +353,10 @@ std::chrono::milliseconds Server::doTick() {
                 sendLightSourceUpdates(playerID);
             }
 
-            static int i = 0;
-            i++;
-            if (i > 30) {
-                this->state.setPhase(GamePhase::RESULTS);
-            }
-
             break;
         }
         case GamePhase::RESULTS: {
-            static bool sent_results = false;
-            // only send the results information once
-            if (!sent_results) {
-                sent_results = true;
-                Grid& grid = this->state.getGrid();
-                glm::ivec2 exit_pos; // store exit pos here, to tell clients to start map here
-                std::vector<std::vector<CellType>> ascii_map;
-                for (int r = 0; r < grid.getRows(); r++) {
-                    std::vector<CellType> row;
-                    for (int c = 0; c < grid.getColumns(); c++) {
-                        CellType type = grid.getCell(c, r)->type;
-                        if (type == CellType::Exit) {
-                            exit_pos.x = c;
-                            exit_pos.y = r;
-                        }
-                        row.push_back(type);
-                    }
-                    ascii_map.push_back(row);
-                }
-                std::unordered_map<glm::ivec2, int, ivec2_hash> player_grid_positions;
-                auto players = this->state.objects.getPlayers();
-                for (int i = 0; i < players.size(); i++) {
-                    auto player = players.get(i);
-                    if (player == nullptr) continue;
-                    glm::ivec2 grid_pos = Grid::getGridCellFromPosition(player->physics.shared.corner);
-                    std::cout << "player grid pos " << glm::to_string(grid_pos) << "\n";
-                    player_grid_positions.insert({grid_pos, player->typeID});
-                }
-                sendUpdateToAllClients(Event(this->world_eid, 
-                    EventType::LoadGameResults, LoadGameResultsEvent(
-                        ascii_map, exit_pos.y, exit_pos.x, player_grid_positions)));
-            }
+            // currently do nothing
             break;
         }
 
@@ -460,6 +423,22 @@ void Server::_doAccept() {
                     new_session->sendEvent(Event(0, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
                 }
 
+                // send the entire minimap so the client can just render the nearby stuff
+                // cheater's delight, but we aren't worried about that here..
+                Grid& grid = this->state.getGrid();
+                std::vector<std::vector<CellType>> map;
+                for (int r = 0; r < grid.getRows(); r++) {
+                    std::vector<CellType> row;
+                    for (int c = 0; c < grid.getColumns(); c++) {
+                        CellType type = grid.getCell(c, r)->type;
+                        row.push_back(type);
+                    }
+                    map.push_back(row);
+                }
+                sendUpdateToAllClients(Event(this->world_eid, 
+                    EventType::LoadMinimap, LoadMinimapEvent(map)));
+
+                // Tell the player what their EID is
                 new_session->sendPacket(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                     ServerAssignEIDPacket { .eid = new_session->getInfo().client_eid.value(), 
                                             .is_dungeon_master = new_session->getInfo().is_dungeon_master.value()}));

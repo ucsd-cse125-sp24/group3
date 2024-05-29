@@ -17,6 +17,7 @@
 #include "server/game/constants.hpp"
 #include "client/gui/img/logo.hpp"
 #include "shared/utilities/config.hpp"
+#include "client/minimap.hpp"
 
 #include <iostream>
 #include <memory>
@@ -276,6 +277,11 @@ public:
      * @returns shared pointer to the font loader
      */
     std::shared_ptr<font::Loader> getFonts();
+    /**
+     * @brief getter for the image loader
+     * @returns image loader
+     */
+    const img::Loader& imageLoader();
     /// ==============================================================================
 
 private:

@@ -107,7 +107,16 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 	std::vector<SharedGameState> partial_updates;
 	auto all_objects = this->objects.toShared();
 
-	auto getUpdateTemplate = [this]() {
+	std::vector<std::pair<EntityID, glm::ivec2>> player_grid_positions;
+	auto players = this->objects.getPlayers();
+	for (int i = 0; i < players.size(); i++) {
+		auto player = players.get(i);
+		if (player == nullptr) continue;
+		player_grid_positions.push_back({player->globalID, 
+			Grid::getGridCellFromPosition(player->physics.shared.getCenterPosition())});
+	}
+
+	auto getUpdateTemplate = [this, &player_grid_positions]() {
 		SharedGameState curr_update;
 		curr_update.timestep = this->timestep;
 		curr_update.lobby = this->lobby;
@@ -116,6 +125,7 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 		curr_update.timesteps_left = this->timesteps_left;
 		curr_update.playerVictory = this->playerVictory;
 		curr_update.numPlayerDeaths = this->numPlayerDeaths;
+		curr_update.player_grid_positions = player_grid_positions;
 		return curr_update;
 	};
 

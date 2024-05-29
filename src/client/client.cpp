@@ -316,21 +316,6 @@ void Client::idleCallback() {
         processServerInput(allow_defer);
     }
 
-    if (this->gameState.phase == GamePhase::RESULTS) {
-        if (is_held_right) {
-            this->results_map_pos.x++;
-        }
-        if (is_held_left) {
-            this->results_map_pos.x--;
-        }
-        if (is_held_down) {
-            this->results_map_pos.y++;
-        }
-        if (is_held_up) {
-            this->results_map_pos.y--;
-        }
-    }
-
     // If we aren't in the middle of the game then we shouldn't capture any movement info
     // or send any movement related events
     if (rendered_phase != GamePhase::GAME) { return; }
@@ -441,6 +426,11 @@ void Client::processServerInput(bool allow_defer) {
             GamePhase old_phase = this->gameState.phase;
             this->gameState.update(boost::get<LoadGameStateEvent>(event.data).state);
 
+            // update player positions in minimap
+            for (const auto& [id, position] : this->gameState.player_grid_positions) {
+                this->minimap.updatePlayerPosition(id, position);
+            }
+
             if (!this->session->getInfo().is_dungeon_master.has_value()) {
                 if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
                     phase_change = true;
@@ -448,15 +438,22 @@ void Client::processServerInput(bool allow_defer) {
             }
             else {
                 if (phase_change || (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME)) {
-                    std::cout << "game phase change!" << std::endl;
                     // set to Dungeon Master POV if DM
                     if (this->session->getInfo().is_dungeon_master.value()) {
-                        std::cout << "dungeon master cam!" << std::endl;
                         this->cam = std::make_unique<DungeonMasterCamera>();
                         // TODO: fix race condition where this doesn't get received in time when reconnecting because the server is doing way more stuff and is delayed
                     }
 
                     this->gui_state = GUIState::GAME_HUD;
+
+                    // should have id by now so load in the minimap
+                    if (this->session->getInfo().client_eid.has_value()) {
+                        auto val = this->session->getInfo().client_eid.value();
+                        std::cout << "setting self id to " << val << "\n";
+                        this->minimap.setSelfId(val);
+                    } else {
+                        std::cerr << "Warning: don't have player eid at game start time??\n";
+                    }
 
                     audioManager->stopMusic(ClientMusic::TitleTheme);
                     audioManager->playMusic(ClientMusic::GameTheme);
@@ -483,9 +480,9 @@ void Client::processServerInput(bool allow_defer) {
                 // update intensity with incoming intensity 
                 this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
             }
-        } else if (event.type == EventType::LoadGameResults) {
-            this->game_results = boost::get<LoadGameResultsEvent>(event.data);
-            this->results_map_pos = glm::ivec2(this->game_results->exit_col, this->game_results->exit_row);
+        } else if (event.type == EventType::LoadMinimap) {
+            auto map = boost::get<LoadMinimapEvent>(event.data).map;
+            this->minimap.loadMap(map);
         }
 
         this->events_received.pop_front();

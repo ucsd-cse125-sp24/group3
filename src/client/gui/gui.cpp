@@ -137,6 +137,10 @@ std::shared_ptr<font::Loader> GUI::getFonts() {
     return this->fonts;
 }
 
+const img::Loader& GUI::imageLoader() {
+    return this->images;
+}
+
 void GUI::layoutFrame(GUIState state) {
     if (client->config.client.fps_counter && state != GUIState::INITIAL_LOAD) {
         _layoutFPSCounter();
@@ -1229,6 +1233,8 @@ void GUI::_layoutGameHUD() {
 
     auto self = client->gameState.objects.at(*self_eid);
 
+    this->client->minimap.addToGUI(this);
+
     auto matchPhaseFlex = widget::Flexbox::make(
         glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(150))),
         glm::vec2(0, 0),
@@ -1499,77 +1505,6 @@ void GUI::_layoutResultsScreen() {
         WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE) - font::getRelativePixels(40)
     ));
 
-    // Display the ASCII map of the maze, if its been received yet
-    if (this->client->game_results.has_value()) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-        // only display map in 21x21 square around position, which starts at the exit
-        const int VISIBLE_WIDTH = 61;
-        const int RADIUS = VISIBLE_WIDTH / 2;
-        std::array<std::array<CellType, VISIBLE_WIDTH>, VISIBLE_WIDTH> visible_map;
-        auto& ascii_map = this->client->game_results->ascii_map;
-        int center_row = this->client->results_map_pos.y;
-        int center_col = this->client->results_map_pos.x;
-        int top_left_row = center_row - RADIUS;
-        int top_left_col = center_col - RADIUS;
-        // parse the packet information into the visible map we are going to render on this frame
-        for (int i = 0; i < VISIBLE_WIDTH; i++) {
-            int row = top_left_row + i;
-            for (int j = 0; j < VISIBLE_WIDTH; j++) {
-                int col = top_left_col + j;
-                if (row < 0 || row >= ascii_map.size() || col < 0 || col >= ascii_map.at(row).size()) {
-                    visible_map[i][j] = CellType::OutsideTheMaze;
-                } else {
-                    visible_map[i][j] = ascii_map[row][col];
-                }
-            }
-        }
-
-        const int BOTTOM_Y = font::getRelativePixels(24); // start 100 pixels up from bottom
-        const int ROW_HEIGHT = font::getRelativePixels(24);
-
-        const auto& player_positions = this->client->game_results->player_positions;
-
-        // now that we have the map, create widgets to display each row
-        for (int i = 0; i < visible_map.size(); i++) {
-            int row = visible_map.size() - 1 - i; // start at bottom row
-            auto& row_arr = visible_map.at(row);
-            auto row_flex = widget::Flexbox::make(glm::vec2(0, BOTTOM_Y + ROW_HEIGHT * i), glm::vec2(WINDOW_WIDTH, 0.0f), 
-                widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f));
-            for (int col = 0; col < row_arr.size(); col++) {
-                glm::ivec2 coord(col, row);
-
-                if (player_positions.contains(coord)) {
-                    // if a player is currently in this position, display the player icon instead
-                    img::ImgID img;
-                    switch (player_positions.at(coord)) {
-                        case 0:
-                        std::cout << "p1\n";
-                            img = img::ImgID::MazePlayer1;
-                            break;
-                        case 1:
-                            img = img::ImgID::MazePlayer2;
-                            break;
-                        case 2:
-                            img = img::ImgID::MazePlayer3;
-                            break;
-                        case 3:
-                            img = img::ImgID::MazePlayer4;
-                            break;
-                        default:
-                            std::cout << "Invalid player id, skipping player on results map...\n";
-                            img = img::ImgID::MazeEmpty;
-                            break;
-                    }
-                    row_flex->push(widget::StaticImg::make(images.getImg(img)));
-                } else {
-                    // otherwise, display what the starting grid cell was from the initial load
-                    row_flex->push(widget::StaticImg::make(images.getImg(img::cellTypeToImage(row_arr.at(col)))));
-                }
-            }
-            this->addWidget(std::move(row_flex));
-        }
-    }
 }
 
 void GUI::_handleClick(float x, float y) {

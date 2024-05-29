@@ -18,6 +18,7 @@
 #include "client/util.hpp"
 #include "client/lobbyfinder.hpp"
 #include "client/gui/gui.hpp"
+#include "client/minimap.hpp"
 #include "client/camera.hpp"
 #include "client/audio/audiomanager.hpp"
 #include "client/constants.hpp"
@@ -302,8 +303,6 @@ private:
 
     bool phase_change;
 
-    // when the game results packet is received, store the results here
-    std::optional<LoadGameResultsEvent> game_results;
-    glm::ivec2 results_map_pos;
+    Minimap minimap;
 };
 
