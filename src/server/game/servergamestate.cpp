@@ -31,6 +31,7 @@
 #include "shared/utilities/rng.hpp"
 #include "server/game/mazegenerator.hpp"
 
+#include <cmath>
 #include <fstream>
 
 /*	Constructors and Destructors	*/
@@ -449,6 +450,7 @@ void ServerGameState::update(const EventList& events) {
 	handleTickVelocity();
 	handleDM();
 	tickStatuses();
+	updateCompass();
 	
 	//	Increment timestep
 	this->timestep++;
@@ -1003,7 +1005,7 @@ void ServerGameState::tickStatuses() {
 		player->statuses.tickStatus();
 	}
 	auto enemies = this->objects.getEnemies();
-	for (auto e = 0; e < players.size(); e++) {
+	for (auto e = 0; e < enemies.size(); e++) {
 		auto enemy = enemies.get(e);
 		if (enemy == nullptr) continue;
 
@@ -1013,7 +1015,55 @@ void ServerGameState::tickStatuses() {
 
 void ServerGameState::handleDM() {
 	DungeonMaster* dm = this->objects.getDM();
-	dm->manaRegen();
+	if (dm != nullptr) {
+		dm->manaRegen();
+	}
+}
+
+void ServerGameState::updateCompass() {
+	/*
+	std::optional<glm::vec3> orb_pos;
+
+	
+	for (auto p = 0; p < players.size(); p++) {
+		Player* player = players.get(p);
+		if (player == nullptr) continue;
+
+		if (player->sharedInventory.hasOrb) {
+			orb_pos = player->physics.shared.corner;
+			orb_pos->y = 0;
+			break;
+		}
+	}
+
+	if (!orb_pos.has_value()) {
+		auto items = this->objects.getItems();
+		for (auto i = 0; i < items.size(); i++) {
+			Item* item = items.get(i);
+			if (item == nullptr) continue;
+			if (item->type == ObjectType::Orb) {
+				orb_pos = item->physics.shared.corner;
+				orb_pos->y = 0;
+				break;
+			}
+		}
+	}*/
+
+	auto players = this->objects.getPlayers();
+	for (auto p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		//auto x = player->physics.shared.getCenterPosition().x - orb_pos->x;
+		//auto y = player->physics.shared.getCenterPosition().y - orb_pos->y;
+
+		auto angle = atan2(player->physics.shared.facing.z, player->physics.shared.facing.x)
+			* (180.0 / 3.141592653589793238463);
+		if (angle < 0) {
+			angle += 360;
+		}
+		player->compass.angle = angle;
+	}
 }
 
 void ServerGameState::handleTickVelocity() {

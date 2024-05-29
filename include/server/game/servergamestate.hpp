@@ -131,6 +131,8 @@ public:
 
 	void handleDM();
 
+	void updateCompass();
+
 	void tickStatuses();
 
 	void spawnEnemies();

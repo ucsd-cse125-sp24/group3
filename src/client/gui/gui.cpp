@@ -1044,8 +1044,32 @@ void GUI::_sharedGameHUD() {
     }
 
     // TODO Need to arrange
-    auto txtHeight = font::getRelativePixels(95.0);
-    auto flexHeight = font::getRelativePixels(3.0);
+    auto txtHeight = font::getRelativePixels(145.0);
+    auto flexHeight = font::getRelativePixels(45.0);
+
+    if (!this->config.client.fullscreen) {
+        txtHeight -= font::getRelativePixels(10);
+    }
+
+    // Item Description Background
+    if (itemString != "" || is_dm.value()) {
+        auto itemBGFlexHeight = txtHeight - 7;
+        if (!this->config.client.fullscreen) {
+            itemBGFlexHeight++;
+        }
+        auto itemBGFlex = widget::Flexbox::make(
+            glm::vec2(0.0f, itemBGFlexHeight),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        if (!is_dm.value()) {
+            itemBGFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemBG), 2));
+        }
+        else {
+            itemBGFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMTrapBG), 2));
+        }
+        this->addWidget(std::move(itemBGFlex));
+    }
 
     // Text for item description
     auto item_txt = widget::CenterText::make(
@@ -1065,18 +1089,31 @@ void GUI::_sharedGameHUD() {
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
     );
 
-    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LeftHotbar), 2));
-    for (int i = 0; i < inventory_size; i++) {
-        if (selected == i) {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleSelected), 2));
-            
-        }
-        else {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleHotbar), 2));
-        }
-    }
-    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightHotbar), 2));
+    if (!is_dm.value()) {
+        frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LeftHotbar), 2));
+        for (int i = 0; i < inventory_size; i++) {
+            if (selected == i) {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleSelected), 2));
 
+            }
+            else {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleHotbar), 2));
+            }
+        }
+        frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightHotbar), 2));
+    } else {
+        frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMLeftHotbar), 2));
+        for (int i = 0; i < inventory_size; i++) {
+            if (selected == i) {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleSelected), 2));
+
+            }
+            else {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleHotbar), 2));
+            }
+        }
+        frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMRightHotbar), 2));
+    }
     this->addWidget(std::move(frameflex));
 
     // Flexbox for the items 
@@ -1246,14 +1283,15 @@ void GUI::_layoutGameHUD() {
     auto self = client->gameState.objects.at(*self_eid);
 
     auto matchPhaseFlex = widget::Flexbox::make(
-        glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(150))),
+        glm::vec2(font::getRelativePixels(20), font::getRelativePixels(20)),
         glm::vec2(0, 0),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );
 
+    std::optional<glm::vec3> orb_pos;
     std::string orbStateString;
     if (client->gameState.matchPhase == MatchPhase::MazeExploration) {
-        orbStateString = "The Orb is hidden somewhere in the Labyrinth...";
+        orbStateString = "The Orb is hidden...";
     }
     else {
         bool orbIsCarried = false;
@@ -1281,8 +1319,6 @@ void GUI::_layoutGameHUD() {
         if (!orbIsCarried) {
             orbStateString = "The Orb has been dropped!";
         }
-
-        std::optional<glm::vec3> orb_pos;
 
         for (const auto& [eid, obj] : client->gameState.objects) {
             if (obj->type == ObjectType::Player && obj->inventoryInfo->hasOrb) {
@@ -1329,12 +1365,19 @@ void GUI::_layoutGameHUD() {
             );
         }
     }
-
     matchPhaseFlex->push(widget::DynText::make(
         orbStateString,
         fonts,
         widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
     ));
+    this->addWidget(std::move(matchPhaseFlex));
+
+    // Show death or timer on the top
+    auto death_timeflex = widget::Flexbox::make(
+        glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(50))),
+        glm::vec2(WINDOW_WIDTH, 0),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
+    );
 
     //  Add timer string
     if (client->gameState.matchPhase == MatchPhase::RelayRace) {
@@ -1344,35 +1387,40 @@ void GUI::_layoutGameHUD() {
 
         timerString += (timerSeconds > 1) ? " seconds" : " second";
 
-        matchPhaseFlex->push(widget::DynText::make(
+        death_timeflex->push(widget::DynText::make(
             timerString,
             fonts,
             widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
         ));
     }
+    else {
+        //  Add player deaths string
+        std::string playerDeathsString = std::to_string(client->gameState.numPlayerDeaths)
+            + " / " + std::to_string(PLAYER_DEATHS_TO_RELAY_RACE)
+            + " Player Deaths";
 
-    //  Add player deaths string
-    std::string playerDeathsString = std::to_string(client->gameState.numPlayerDeaths)
-        + " / " + std::to_string(PLAYER_DEATHS_TO_RELAY_RACE)
-        + " Player Deaths";
+        death_timeflex->push(widget::DynText::make(
+            playerDeathsString,
+            fonts,
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
+        ));
+    }
 
-    matchPhaseFlex->push(widget::DynText::make(
-        playerDeathsString,
-        fonts,
-        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
-    ));
+    this->addWidget(std::move(death_timeflex));
 
-    this->addWidget(std::move(matchPhaseFlex));
-
+    auto txtHeight = font::getRelativePixels(170);
+    if (!this->config.client.fullscreen) {
+        txtHeight -= font::getRelativePixels(14);
+    }
     if (is_dm.has_value() && is_dm.value()) {
         // add some DM specific stuff in here
         auto traps_placed_txt = widget::CenterText::make(
             "Traps Placed: " + std::to_string(self->trapInventoryInfo->trapsPlaced) + " / " + std::to_string(MAX_TRAPS),
             font::Font::TEXT,
             font::Size::SMALL,
-            font::Color::RED,
+            font::Color::YELLOW,
             fonts,
-            font::getRelativePixels(125)
+            txtHeight
         );
         this->addWidget(std::move(traps_placed_txt));
 
@@ -1398,21 +1446,6 @@ void GUI::_layoutGameHUD() {
     );
     this->addWidget(std::move(health_txt));
 
-    auto status_flex = widget::Flexbox::make(
-        glm::vec2(font::getRelativePixels(20), font::getRelativePixels(20)),
-        glm::vec2(0.0f, 0.0f),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
-    );
-
-    for (const std::string& status: self->statuses->getStatusStrings()) {
-        status_flex->push(widget::DynText::make(
-            status,
-            fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
-        ));
-    }
-
-    this->addWidget(std::move(status_flex));
     // Flexbox for item durations
     auto durationFlex = widget::Flexbox::make(
         glm::vec2(10.0f, FRAC_WINDOW_HEIGHT(1, 2)),
@@ -1444,6 +1477,57 @@ void GUI::_layoutGameHUD() {
         ++it;
     }
     this->addWidget(std::move(durationFlex));
+
+    auto compassFlex = widget::Flexbox::make(
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(120), font::getRelativePixels(10)),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
+    );
+
+    if (self->compass->angle > 270) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass270), 2));
+    }
+    else if (self->compass->angle > 180) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass180), 2));
+    }
+    else if (self->compass->angle > 90) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass90), 2));
+    }
+    else {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass0), 2));
+    }
+    this->addWidget(std::move(compassFlex));
+
+    auto needleFlex = widget::Flexbox::make(
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(120), font::getRelativePixels(10)),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
+    );
+    needleFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Needle), 2));
+
+    if (orb_pos.has_value()) {
+        auto player_pos_ground = self->physics.corner;
+        player_pos_ground.y = 0;
+
+        auto distance = glm::distance(orb_pos.value(), player_pos_ground);
+
+        std::stringstream ss;
+
+        ss << std::fixed << std::setprecision(1) << "  " << distance << "m";
+
+        const float MAX_DIST = 150.0f;
+        float dist_frac = std::max(std::min(distance / MAX_DIST, 1.0f), 0.0f);
+
+        glm::vec3 close_color = font::getRGB(font::Color::GREEN);
+        glm::vec3 far_color = font::getRGB(font::Color::RED);
+
+        glm::vec3 color = (dist_frac * far_color) + ((1 - dist_frac) * close_color);
+
+        needleFlex->push(widget::DynText::make(ss.str(), fonts,
+            widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, color))
+        );
+    }
+    this->addWidget(std::move(needleFlex));
 }
 
 void GUI::_layoutGameEscMenu() {

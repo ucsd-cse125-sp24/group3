@@ -33,12 +33,24 @@ enum class ImgID {
     RightHotbar,
     MiddleHotbar,
     MiddleSelected,
+    DMLeftHotbar,
+    DMRightHotbar,
+    DMMiddleHotbar,
+    DMMiddleSelected,
     HealthBar,
     HealthTickEmpty,
     HealthTickFull,
     ManaBar,
     ManaTickEmpty,
     ManaTickFull,
+    Needle,
+    Compass,
+    ItemBG,
+    DMTrapBG,
+    Compass0,
+    Compass90,
+    Compass180,
+    Compass270,
     Blank,
 };
 #define GET_ALL_IMG_IDS() \
@@ -47,7 +59,10 @@ enum class ImgID {
         ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer, \
         ImgID::LeftHotbar, ImgID::RightHotbar, ImgID::MiddleHotbar, ImgID::Blank, ImgID::Title, \
         ImgID::MiddleSelected, ImgID::HealthBar, ImgID::HealthTickEmpty, ImgID::HealthTickFull, \
-        ImgID::ManaBar, ImgID::ManaTickEmpty, ImgID::ManaTickFull, \
+        ImgID::ManaBar, ImgID::ManaTickEmpty, ImgID::ManaTickFull, ImgID::ItemBG, \
+        ImgID::DMTrapBG, ImgID::Needle, ImgID::Compass, ImgID::Compass0, \
+        ImgID::Compass90, ImgID::Compass180, ImgID::Compass270, \
+        ImgID::DMLeftHotbar, ImgID::DMRightHotbar, ImgID::DMMiddleHotbar, ImgID::DMMiddleSelected, \
     }
 
 /**
