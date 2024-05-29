@@ -1035,12 +1035,7 @@ void GUI::_sharedGameHUD() {
                     break;
                 }
                 case ModelType::Lightning: {
-                    itemString = "Lightning Bolt";
-
-                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::Lightning) != self->trapInventoryInfo->trapsInCooldown.end()) {
-                        itemString += " (IN COOLDOWN)";
-                    }
-
+                    itemString = "Lightning Bolt (10)";
                     
                     break;
                 }
@@ -1048,12 +1043,9 @@ void GUI::_sharedGameHUD() {
         }
     }
 
+    // TODO Need to arrange
     auto txtHeight = font::getRelativePixels(95.0);
     auto flexHeight = font::getRelativePixels(3.0);
-    if (!is_dm.value()) {
-        txtHeight += font::getRelativePixels(50);
-        flexHeight += font::getRelativePixels(37);
-    }
 
     // Text for item description
     auto item_txt = widget::CenterText::make(
@@ -1205,6 +1197,32 @@ void GUI::_sharedGameHUD() {
         }
 
         this->addWidget(std::move(healthtickflex));
+    }
+    else {
+        // Flexbox for the mana bar for DM
+        auto manaflex = widget::Flexbox::make(
+            glm::vec2(0.0f, 5.0f),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        manaflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ManaBar), 2));
+        this->addWidget(std::move(manaflex));
+
+        auto manatickflex = widget::Flexbox::make(
+            glm::vec2(0.0f, 5.0f),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        for (int i = 1; i <= 30; i++) {
+            if (i <= self->DMInfo->mana_remaining) {
+                manatickflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ManaTickFull), 2));
+            }
+            else {
+                manatickflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ManaTickEmpty), 2));
+            }
+        }
+
+        this->addWidget(std::move(manatickflex));
     }
 }
 
@@ -1358,6 +1376,15 @@ void GUI::_layoutGameHUD() {
         );
         this->addWidget(std::move(traps_placed_txt));
 
+        auto mana_txt = widget::CenterText::make(
+            std::to_string(self->DMInfo->mana_remaining) + " / " + std::to_string(30),
+            font::Font::TEXT,
+            font::Size::SMALL,
+            font::Color::WHITE,
+            fonts,
+            font::getRelativePixels(13)
+        );
+        this->addWidget(std::move(mana_txt));
         return;
     }
 

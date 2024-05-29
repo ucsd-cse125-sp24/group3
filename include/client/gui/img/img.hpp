@@ -36,6 +36,9 @@ enum class ImgID {
     HealthBar,
     HealthTickEmpty,
     HealthTickFull,
+    ManaBar,
+    ManaTickEmpty,
+    ManaTickFull,
     Blank,
 };
 #define GET_ALL_IMG_IDS() \
@@ -43,7 +46,8 @@ enum class ImgID {
         ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
         ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer, \
         ImgID::LeftHotbar, ImgID::RightHotbar, ImgID::MiddleHotbar, ImgID::Blank, ImgID::Title, \
-        ImgID::MiddleSelected, ImgID::HealthBar, ImgID::HealthTickEmpty, ImgID::HealthTickFull \
+        ImgID::MiddleSelected, ImgID::HealthBar, ImgID::HealthTickEmpty, ImgID::HealthTickFull, \
+        ImgID::ManaBar, ImgID::ManaTickEmpty, ImgID::ManaTickFull, \
     }
 
 /**

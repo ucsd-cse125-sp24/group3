@@ -379,6 +379,22 @@ void ServerGameState::update(const EventList& events) {
 			else if(trapPlacementEvent.place) {
 				auto curr_time = std::chrono::system_clock::now();
 
+				// Lightning now has its own mana system
+				if (trapPlacementEvent.cell == CellType::Lightning) {
+					if (dm->dmInfo.mana_remaining >= LIGHTNING_MANA) {
+						Weapon* lightning = dm->lightning;
+						glm::vec3 corner(
+							cell->x * Grid::grid_cell_width,
+							0.0f,
+							cell->y * Grid::grid_cell_width
+						);
+
+						lightning->useLightning(dm, *this, corner);
+						dm->useMana();
+					}
+					break;
+				}
+
 				int trapsPlaced = dm->getPlacedTraps();
 
 				if (trapsPlaced == MAX_TRAPS) {
@@ -389,20 +405,6 @@ void ServerGameState::update(const EventList& events) {
 
 				// in cooldown map sadly
 				if (it != dm->sharedTrapInventory.trapsInCooldown.end()) {
-					break;
-				}
-				
-				if(trapPlacementEvent.cell == CellType::Lightning){
-					Weapon* lightning = dm->lightning;
-					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
-						0.0f,
-						cell->y * Grid::grid_cell_width
-					);
-
-					lightning->useLightning(dm, *this, corner);
-
-					dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
 					break;
 				}
 
@@ -445,6 +447,7 @@ void ServerGameState::update(const EventList& events) {
 	deleteEntities();
 	spawnEnemies();
 	handleTickVelocity();
+	handleDM();
 	tickStatuses();
 	
 	//	Increment timestep
@@ -1008,13 +1011,18 @@ void ServerGameState::tickStatuses() {
 	}
 }
 
+void ServerGameState::handleDM() {
+	DungeonMaster* dm = this->objects.getDM();
+	dm->manaRegen();
+}
+
 void ServerGameState::handleTickVelocity() {
 	auto players = this->objects.getPlayers();
 	for (auto p = 0; p < players.size(); p++) {
 		auto player = players.get(p);
 		if (player == nullptr) continue;
 
-		// is this actually the best i can do...?
+		// is this actually the best i can do...? -ted
 		if (player->physics.currTickVelocity != glm::vec3(0.0f)) {
 			if (player->physics.currTickVelocity.x > 0) {
 				player->physics.currTickVelocity.x -= 0.05f;

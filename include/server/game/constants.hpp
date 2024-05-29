@@ -67,7 +67,10 @@
 
 #define	LIGHTNING_PREP			1000
 #define	LIGHTNING_DUR		    400
-#define	LIGHTNING_TOTAL			3000 // 3 second cd
+
+#define	DM_MANA_TOTAL			30
+#define	DM_MANA_REGEN			1
+#define	LIGHTNING_MANA			10
 
 /*	Game	*/
 #define	GRAVITY					0.03f

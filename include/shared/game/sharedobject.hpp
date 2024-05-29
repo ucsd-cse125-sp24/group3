@@ -252,6 +252,15 @@ struct SharedExit {
 	}
 };
 
+struct SharedDMInfo {
+
+	int mana_remaining;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& mana_remaining;
+	}
+};
+
 /**
  * @brief Representation of the Object class used by ServerGameState, containing
  * exactly the subset of Object data required by the client.
@@ -274,6 +283,7 @@ public:
 	boost::optional<SharedStatuses> statuses;
 	boost::optional<SharedExit> exit;
 	boost::optional<SharedWeaponInfo> weaponInfo;
+	boost::optional<SharedDMInfo> DMInfo;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
@@ -282,7 +292,7 @@ public:
 		ar & globalID & type & physics & modelType & stats & 
 			 iteminfo & solidSurface & trapInfo & playerInfo & 
 			 inventoryInfo & statuses & trapInventoryInfo & pointLightInfo &
-             exit & weaponInfo;
+             exit & weaponInfo & DMInfo;
 	}
 private:
 };

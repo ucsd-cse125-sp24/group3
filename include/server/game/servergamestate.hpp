@@ -129,6 +129,8 @@ public:
 
 	void handleRespawns();
 
+	void handleDM();
+
 	void tickStatuses();
 
 	void spawnEnemies();

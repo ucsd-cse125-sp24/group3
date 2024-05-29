@@ -3,7 +3,7 @@
       "maze": {
         "directory": "maps",
         "procedural": false,
-        "maze_file": "test/big.maze"
+        "maze_file": "test/itemRoom.maze"
       }
     },
     "network": {
@@ -14,12 +14,12 @@
         "lobby_name": "Tyler's Lobby",
         "lobby_broadcast": true,
         "max_players": 1,
-        "disable_dm": true
+        "disable_dm": false
     },
     "client": {
         "default_name": "Conan O'Brien",
         "lobby_discovery": true,
-        "fullscreen": false,
+        "fullscreen": true,
         "draw_bboxes": false,
         "fps_counter": true
     }

@@ -30,6 +30,9 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::HealthBar: return (img_root / "healthbar.png").string();
         case ImgID::HealthTickEmpty: return (img_root / "healthtick_empty.png").string();
         case ImgID::HealthTickFull: return (img_root / "healthtick_full.png").string();
+        case ImgID::ManaBar: return (img_root / "manabar.png").string();
+        case ImgID::ManaTickEmpty: return (img_root / "manatick_empty.png").string();
+        case ImgID::ManaTickFull: return (img_root / "manatick_full.png").string();
     }
 }
 
