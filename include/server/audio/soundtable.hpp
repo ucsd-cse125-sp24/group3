@@ -19,7 +19,7 @@ public:
 
     void addStaticSoundSource(const SoundSource& source);
     void addNewSoundSource(const SoundSource& source);
-    std::unordered_map<EntityID, std::vector<SoundCommand>> getCommandsPerPlayer(SmartVector<Player*>& players);
+    std::unordered_map<EntityID, std::vector<SoundCommand>> getCommandsPerPlayer(const std::vector<Object*>& players);
     void tickSounds();
 
     const std::unordered_map<SoundID, SoundSource>& data() const;
