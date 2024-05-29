@@ -302,13 +302,13 @@ struct UpdateLightSourcesEvent {
 struct LoadGameResultsEvent {
     LoadGameResultsEvent() = default;
     LoadGameResultsEvent(
-        const std::vector<std::vector<char>>& map,
+        const std::vector<std::vector<CellType>>& map,
         int exit_row, int exit_col
     ): 
         ascii_map(map), exit_row(exit_row), exit_col(exit_col)
     {}
 
-    std::vector<std::vector<char>> ascii_map;
+    std::vector<std::vector<CellType>> ascii_map;
     int exit_row;
     int exit_col;
 

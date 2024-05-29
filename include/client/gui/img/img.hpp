@@ -2,6 +2,7 @@
 
 #include "shared/utilities/root_path.hpp"
 #include "client/core.hpp"
+#include "shared/game/celltype.hpp"
 
 #include <initializer_list>
 #include <string>
@@ -37,13 +38,19 @@ enum class ImgID {
     HealthTickEmpty,
     HealthTickFull,
     Blank,
+
+    MazeWall,
+    MazeEmpty,
+    MazeBlank,
+    MazeOrb
 };
 #define GET_ALL_IMG_IDS() \
     {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::HealthPotion, ImgID::UnknownPotion, \
         ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
         ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer, \
         ImgID::LeftHotbar, ImgID::RightHotbar, ImgID::MiddleHotbar, ImgID::Blank, ImgID::Title, \
-        ImgID::MiddleSelected, ImgID::HealthBar, ImgID::HealthTickEmpty, ImgID::HealthTickFull \
+        ImgID::MiddleSelected, ImgID::HealthBar, ImgID::HealthTickEmpty, ImgID::HealthTickFull, \
+        ImgID::MazeEmpty, ImgID::MazeWall, ImgID::MazeBlank, ImgID::MazeOrb, \
     }
 
 /**
@@ -61,5 +68,7 @@ struct Img {
  * @param img ID of the image to get the filepath of
  */
 std::string getImgFilepath(ImgID img);
+
+ImgID cellTypeToImage(CellType type);
 
 }

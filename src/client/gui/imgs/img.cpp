@@ -1,6 +1,8 @@
 #include "client/gui/img/img.hpp"
+#include "shared/game/celltype.hpp"
 
 #include <string>
+#include <stack>
 
 namespace gui::img {
 
@@ -30,6 +32,24 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::HealthBar: return (img_root / "healthbar.png").string();
         case ImgID::HealthTickEmpty: return (img_root / "healthtick_empty.png").string();
         case ImgID::HealthTickFull: return (img_root / "healthtick_full.png").string();
+        case ImgID::MazeEmpty: return (img_root / "maze" / "empty.png").string();
+        case ImgID::MazeWall: return (img_root / "maze" / "wall.png").string();
+        case ImgID::MazeBlank: return (img_root / "maze" / "blank.png").string();
+        case ImgID::MazeOrb: return (img_root / "maze" / "orb.png").string();
+    }
+}
+
+ImgID cellTypeToImage(CellType type) {
+    switch (type) {
+        case CellType::Empty:
+            return ImgID::MazeEmpty;
+        case CellType::Wall:
+        case CellType::Pillar:
+            return ImgID::MazeWall;
+        case CellType::Orb:
+            return ImgID::MazeOrb;
+        default:
+            return ImgID::MazeBlank;
     }
 }
 

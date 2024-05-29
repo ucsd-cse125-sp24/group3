@@ -355,7 +355,7 @@ std::chrono::milliseconds Server::doTick() {
 
             static int i = 0;
             i++;
-            if (i > 200) {
+            if (i > 30) {
                 this->state.setPhase(GamePhase::RESULTS);
             }
 
@@ -368,16 +368,16 @@ std::chrono::milliseconds Server::doTick() {
                 sent_results = true;
                 Grid& grid = this->state.getGrid();
                 glm::ivec2 exit_pos; // store exit pos here, to tell clients to start map here
-                std::vector<std::vector<char>> ascii_map;
+                std::vector<std::vector<CellType>> ascii_map;
                 for (int r = 0; r < grid.getRows(); r++) {
-                    std::vector<char> row;
+                    std::vector<CellType> row;
                     for (int c = 0; c < grid.getColumns(); c++) {
                         CellType type = grid.getCell(c, r)->type;
                         if (type == CellType::Exit) {
                             exit_pos.x = c;
                             exit_pos.y = r;
                         }
-                        row.push_back(cellTypeToChar(type));
+                        row.push_back(type);
                     }
                     ascii_map.push_back(row);
                 }

@@ -5,6 +5,7 @@
 #include <vector>
 #include <array>
 #include "client/gui/font/font.hpp"
+#include "client/gui/img/img.hpp"
 #include "client/gui/widget/dyntext.hpp"
 #include "shared/utilities/rng.hpp"
 #include "client/client.hpp"
@@ -1498,14 +1499,12 @@ void GUI::_layoutResultsScreen() {
         WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE) - font::getRelativePixels(40)
     ));
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
     // Display the ASCII map of the maze, if its been received yet
     if (this->client->game_results.has_value()) {
         // only display map in 21x21 square around position, which starts at the exit
-        const int VISIBLE_WIDTH = 61;
+        const int VISIBLE_WIDTH = 51;
         const int RADIUS = VISIBLE_WIDTH / 2;
-        std::array<std::array<char, VISIBLE_WIDTH>, VISIBLE_WIDTH> visible_map;
+        std::array<std::array<CellType, VISIBLE_WIDTH>, VISIBLE_WIDTH> visible_map;
         auto& ascii_map = this->client->game_results->ascii_map;
         int center_row = this->client->results_map_pos.y;
         int center_col = this->client->results_map_pos.x;
@@ -1517,7 +1516,7 @@ void GUI::_layoutResultsScreen() {
             for (int j = 0; j < VISIBLE_WIDTH; j++) {
                 int col = top_left_col + j;
                 if (row < 0 || row >= ascii_map.size() || col < 0 || col >= ascii_map.at(row).size()) {
-                    visible_map[i][j] = ' ';
+                    visible_map[i][j] = CellType::OutsideTheMaze;
                 } else {
                     visible_map[i][j] = ascii_map[row][col];
                 }
@@ -1525,22 +1524,19 @@ void GUI::_layoutResultsScreen() {
         }
 
         const int BOTTOM_Y = font::getRelativePixels(100); // start 100 pixels up from bottom
-        auto map_flex = widget::Flexbox::make(glm::vec2(0, BOTTOM_Y), glm::vec2(WINDOW_WIDTH, 0.0f), 
-            widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f));
+        const int ROW_HEIGHT = font::getRelativePixels(16);
 
         // now that we have the map, create widgets to display each row
         for (int i = 0; i < visible_map.size(); i++) {
             int row = visible_map.size() - 1 - i; // start at bottom row
-            std::string row_str;
             auto& row_arr = visible_map.at(row);
+            auto row_flex = widget::Flexbox::make(glm::vec2(0, BOTTOM_Y + ROW_HEIGHT * i), glm::vec2(WINDOW_WIDTH, 0.0f), 
+                widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f));
             for (int col = 0; col < row_arr.size(); col++) {
-                row_str += row_arr.at(col);
+                row_flex->push(widget::StaticImg::make(images.getImg(img::cellTypeToImage(row_arr.at(col)))));
             }
-            map_flex->push(widget::DynText::make(row_str, fonts, widget::DynText::Options(
-                font::Font::MAP, font::Size::SMALL, font::Color::WHITE
-            )));
+            this->addWidget(std::move(row_flex));
         }
-        this->addWidget(std::move(map_flex));
     }
 }
 
