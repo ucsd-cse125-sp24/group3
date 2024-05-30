@@ -10,6 +10,7 @@ class Player : public Creature {
 public:
 	SharedPlayerInfo info;
 	SharedInventory sharedInventory;
+	SharedCompass compass;
 
 	std::vector<SpecificID> inventory;
 

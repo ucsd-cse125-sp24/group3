@@ -48,15 +48,17 @@ glm::vec3 getRGB(Color color);
 const int UNIT_LARGE_SIZE_PX = 128; // how many pixels a small font is on the unit screen size
 enum class Size {
     SMALL,
+    SMALLMEDIUM,
     MEDIUM,
     LARGE,
     XLARGE
 };
 const std::unordered_map<Size, float> SIZE_TO_SCALE = {
-    {Size::SMALL,   0.25f},
-    {Size::MEDIUM,  0.50f},
-    {Size::LARGE,   1.0f},
-    {Size::XLARGE,  2.0f},
+    {Size::SMALL,       0.25f},
+    {Size::SMALLMEDIUM, 0.35f},
+    {Size::MEDIUM,      0.50f},
+    {Size::LARGE,       1.0f},
+    {Size::XLARGE,      2.0f},
 };
 
 int getFontSizePx(Size size);

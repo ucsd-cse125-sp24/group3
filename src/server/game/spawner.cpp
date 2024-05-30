@@ -26,9 +26,7 @@ Spawner::Spawner() {
 }
 
 void Spawner::spawn(ServerGameState& state) {
-	valueLock.lock();
 	auto val = this->currentEnemyValue;
-	valueLock.unlock();
 
 	if (val >= MAX_ENEMY_VALUE) { return; }
 
@@ -105,9 +103,7 @@ void Spawner::spawnEnemy(ServerGameState& state, int valueRemaining) {
 	}
 	
 	this->enemiesAlive[enemyID] = value;
-	valueLock.lock();
 	this->currentEnemyValue += value;
-	valueLock.unlock();
 }
 
 glm::vec3 Spawner::findEmptyPosition(ServerGameState& state) {
@@ -184,15 +180,11 @@ void Spawner::addEnemy(ServerGameState& state, SpecificID id) {
 	}
 
 	this->enemiesAlive[id] = value;
-	valueLock.lock();
 	this->currentEnemyValue += value;
-	valueLock.unlock();
 }
 
 void Spawner::decreaseValue(SpecificID id) {
 	auto value = this->enemiesAlive[id];
 	this->enemiesAlive.erase(id);
-	valueLock.lock();
 	this->currentEnemyValue -= value;
-	valueLock.unlock();
 }
