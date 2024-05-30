@@ -104,7 +104,6 @@ int main(int argc, char* argv[])
         nbFrames++;
         if ( currentTime - lastTime >= 1.0 ){ // update fps every second
             client->curr_fps = nbFrames; 
-            std::cout << client->curr_fps << "fps\n";
             nbFrames = 0;
             lastTime += 1.0;
         }

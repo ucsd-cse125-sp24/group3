@@ -187,10 +187,10 @@ bool Client::init() {
     auto deferred_light_box_frag_path = shaders_dir / "deferred_light_box.frag";
     this->deferred_light_box_shader = std::make_shared<Shader>(deferred_light_box_vert_path.string(), deferred_light_box_frag_path.string());
 
-    auto wall_model_path = graphics_assets_dir / "wall2.obj";
+    auto wall_model_path = graphics_assets_dir / "wall.obj";
     this->wall_model = std::make_unique<Model>(wall_model_path.string());
 
-    auto pillar_model_path = graphics_assets_dir / "pillar2.obj";
+    auto pillar_model_path = graphics_assets_dir / "pillar.obj";
     this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
 
     auto torchlight_model_path = graphics_assets_dir / "exit.obj";
@@ -228,8 +228,6 @@ bool Client::init() {
     this->exit_model = std::make_unique<Model>(exit_model_path.string());
 
     this->configureGBuffer();
-
-    this->gui_state = GUIState::TITLE_SCREEN;
 
     this->audioManager->init();
 

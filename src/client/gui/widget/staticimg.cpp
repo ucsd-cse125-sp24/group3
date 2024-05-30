@@ -22,7 +22,7 @@ StaticImg::StaticImg(glm::vec2 origin, gui::img::Img img, float size):
         screen_factor_height = 1.5;
     }
 
-    this->size_width = size * screen_factor_width;
+    this->size_width = size * screen_factor_height;
     this->size_height = size * screen_factor_height;
     this->width = img.width * this->size_width;
     this->height = img.height * this->size_height;
