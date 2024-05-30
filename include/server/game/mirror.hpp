@@ -21,6 +21,8 @@ public:
 	*/
 	void useItem(Object* other, ServerGameState& state, int itemSelected) override;
 
+	void dropItem(Object* other, ServerGameState& state, int itemSelected, float dropDistance) override;
+
 	/**
 	 * @brief Determines whether the mirror has been used for the mirror holding
 	 * duration and updated the remaining time it will be used.

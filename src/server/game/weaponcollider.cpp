@@ -1,4 +1,5 @@
 #include "server/game/object.hpp"
+#include "server/game/item.hpp"
 #include "server/game/constants.hpp"
 #include "server/game/creature.hpp"
 #include "server/game/weaponcollider.hpp"
@@ -47,6 +48,23 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
             other->physics.shared.getCenterPosition() - this->usedPlayer->physics.shared.getCenterPosition());
 
         creature->physics.currTickVelocity = 0.4f * knockback;
+    }
+
+    //  If this weapon collider is a lightning bolt and it collides with
+    //  a Player whose currently using a Mirror, then don't do any damage
+    //  to the player and destroy the player's mirror.
+    //  Also, paralyze the DM for some amount of time.
+    if (this->info.lightning && creature->type == ObjectType::Player) {
+        Player* player = dynamic_cast<Player*>(creature);
+
+        for (const auto & [itemID, remaining_use_time] : player->sharedInventory.usedItems) {
+            Item * item = state.objects.getItem(itemID);
+            if (item->type == ObjectType::Mirror) {
+                std::cout << "Player using a mirror got hit by a lightning bolt!";
+
+                //  TODO: Don't apply damage here
+            }
+        }
     }
 }
 

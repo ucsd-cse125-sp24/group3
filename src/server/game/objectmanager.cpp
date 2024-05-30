@@ -10,6 +10,7 @@
 #include "server/game/spell.hpp"
 #include "server/game/weaponcollider.hpp"
 #include "server/game/weapon.hpp"
+#include "server/game/mirror.hpp"
 #include "shared/utilities/rng.hpp"
 
 #include <memory>
@@ -110,6 +111,9 @@ SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID
 		case ObjectType::Orb:
 			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
 			break;
+		case ObjectType::Mirror:
+			object->typeID = this->items.push(dynamic_cast<Mirror*>(object));
+			break;
         default:
 			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << 
 				"\nDid you remember to add a new switch statement to ObjectManager::createObject?\n";
@@ -178,6 +182,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Spell:
 	case ObjectType::Potion:
 	case ObjectType::Orb:
+	case ObjectType::Mirror:
 		this->items.remove(object->typeID);
 		break;
 	case ObjectType::Exit:

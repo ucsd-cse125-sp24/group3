@@ -17,6 +17,8 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::FireSpell: return (img_root / "fire_wand.png").string();
         case ImgID::HealSpell: return (img_root / "heal_wand.png").string();
         case ImgID::Orb: return (img_root / "orb.png").string();
+        //  TODO: Replace mirror image with an image of an actual mirror
+        case ImgID::Mirror: return (img_root / "orb.png").string();
         case ImgID::Scroll: return (img_root / "scroll.png").string();
         case ImgID::Crosshair: return (img_root / "crosshair046.png").string();
         case ImgID::Dagger: return (img_root / "weapon_dagger.png").string();

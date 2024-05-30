@@ -3,6 +3,7 @@
 
 Mirror::Mirror(glm::vec3 corner, glm::vec3 dimensions)
 	: Item(ObjectType::Mirror, false, corner, ModelType::Cube, dimensions) {
+	this->modelType = ModelType::Mirror;
 
 }
 
@@ -30,6 +31,13 @@ void Mirror::useItem(Object* other, ServerGameState& state, int itemSelected) {
 	});
 
 	//	Don't call Item::useItem() to avoid consuming the mirror
+}
+
+void Mirror::dropItem(Object* other, ServerGameState& state, int itemSelected, float dropDistance) {
+	//	Set used to false (to ensure that the mirror item renders on the ground)
+	this->iteminfo.used = false;
+
+	Item::dropItem(other, state, itemSelected, dropDistance);
 }
 
 bool Mirror::timeOut() {

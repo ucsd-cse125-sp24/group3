@@ -17,6 +17,7 @@
 #include "server/game/orb.hpp"
 #include "server/game/weapon.hpp"
 #include "server/game/weaponcollider.hpp"
+#include "server/game/mirror.hpp"
 #include "server/game/spawner.hpp"
 
 #include "shared/game/celltype.hpp"
@@ -783,6 +784,16 @@ void ServerGameState::updateItems() {
 				if (pot->timeOut()) {
 					pot->revertEffect(*this);
 					this->updated_entities.insert(pot->globalID);
+				}
+			}
+		}
+
+		if (item->type == ObjectType::Mirror) {
+			Mirror* mirror = dynamic_cast<Mirror*>(item);
+			if (mirror->iteminfo.used) {
+				if (mirror->timeOut()) {
+					mirror->revertEffect(*this);
+					this->updated_entities.insert(mirror->globalID);
 				}
 			}
 		}
@@ -1718,9 +1729,9 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				}
 				case CellType::Exit: {
 					glm::vec3 corner(
-						cell->x* Grid::grid_cell_width,
+						cell->x * Grid::grid_cell_width,
 						0.0f,
-						cell->y* Grid::grid_cell_width
+						cell->y * Grid::grid_cell_width
 					);
 
 					glm::vec3 dimensions(
@@ -1730,6 +1741,16 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					);
 
 					this->objects.createObject(new Exit(false, corner, dimensions));
+					break;
+				}
+				case CellType::Mirror: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x* Grid::grid_cell_width + 1,
+						0,
+						cell->y* Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Mirror(corner, dimensions));
 					break;
 				}
 				default: {

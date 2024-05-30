@@ -990,6 +990,10 @@ void GUI::_sharedGameHUD() {
                     itemString = "Hammer";
                     break;
                 }
+                case ModelType::Mirror: {
+                    itemString = "Mirror";
+                    break;
+                }
             }
         }
     } else { // DM hotbar
@@ -1169,6 +1173,10 @@ void GUI::_sharedGameHUD() {
                     case ModelType::Hammer: {
                         itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Hammer), 2));
                         break;
+                    }
+                    case ModelType::Mirror: {
+                        //  TODO: Replace with an img of a mirror
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Mirror), 2));
                     }
                 }
             } else {
@@ -1507,6 +1515,9 @@ void GUI::_layoutGameHUD() {
         }
         else if (type == ModelType::NauseaPotion) {
             name = "Nauseous: ";
+        }
+        else if (type == ModelType::Mirror) {
+            name = "Holding Mirror: ";
         }
 
         durationFlex->push(widget::DynText::make(
