@@ -749,7 +749,7 @@ void Client::geometryPass() {
                 break;
             }
             case ObjectType::Projectile: {  
-                this->spike_trap_model->scaleAbsolute(sharedObject->physics.dimensions);
+                this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
                 this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
@@ -771,7 +771,7 @@ void Client::geometryPass() {
             }
             case ObjectType::Orb: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    this->orb_model->scaleAbsolute(sharedObject->physics.dimensions);
+                    this->orb_model->setDimensions(sharedObject->physics.dimensions);
                     this->orb_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                     this->orb_model->draw(this->deferred_geometry_shader.get(),
                         this->cam->getPos(),
@@ -811,7 +811,7 @@ void Client::geometryPass() {
                         color = glm::vec3(0.8f, 0.7f, 0.6f);
                     }
 
-                    this->item_model->scaleAbsolute(sharedObject->physics.dimensions);
+                    this->item_model->setDimensions(sharedObject->physics.dimensions);
                     this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                     this->item_model->draw(this->deferred_geometry_shader.get(),
                         this->cam->getPos(),
@@ -825,7 +825,7 @@ void Client::geometryPass() {
                     break;
                 }
 
-                this->orb_model->scaleAbsolute( sharedObject->physics.dimensions);
+                this->orb_model->setDimensions( sharedObject->physics.dimensions);
                 this->orb_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->orb_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
@@ -833,7 +833,7 @@ void Client::geometryPass() {
                 break;
             }
             case ObjectType::Exit: {
-                this->exit_model->scaleAbsolute( sharedObject->physics.dimensions);
+                this->exit_model->setDimensions( sharedObject->physics.dimensions);
                 this->exit_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->exit_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
@@ -842,7 +842,7 @@ void Client::geometryPass() {
             }
             case ObjectType::Weapon: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    this->item_model->scaleAbsolute(sharedObject->physics.dimensions);
+                    this->item_model->setDimensions(sharedObject->physics.dimensions);
                     this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                     this->item_model->draw(this->deferred_geometry_shader.get(),
                         this->cam->getPos(),
@@ -853,13 +853,13 @@ void Client::geometryPass() {
             case ObjectType::WeaponCollider: {
                 if (sharedObject->weaponInfo->lightning) {
                     if (!sharedObject->weaponInfo->attacked) {
-                        this->item_model->scaleAbsolute(sharedObject->physics.dimensions);
+                        this->item_model->setDimensions(sharedObject->physics.dimensions);
                         this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                         this->item_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(),
                             false);
                     } else {
-                        this->item_model->scaleAbsolute(sharedObject->physics.dimensions);
+                        this->item_model->setDimensions(sharedObject->physics.dimensions);
                         this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                         this->item_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(),
@@ -868,7 +868,7 @@ void Client::geometryPass() {
                 }
                 else {
                     if (sharedObject->weaponInfo->attacked) {
-                        this->item_model->scaleAbsolute(sharedObject->physics.dimensions);
+                        this->item_model->setDimensions(sharedObject->physics.dimensions);
                         this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                         this->item_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(),
