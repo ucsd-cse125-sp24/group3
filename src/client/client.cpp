@@ -262,6 +262,9 @@ void Client::displayCallback() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     } else if (this->gameState.phase == GamePhase::LOBBY) {
         glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+    } else if (this->gameState.phase == GamePhase::INTRO_CUTSCENE) {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        this->draw();
     } else if (this->gameState.phase == GamePhase::GAME) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         this->draw();
@@ -441,10 +444,8 @@ void Client::processServerInput(bool allow_defer) {
             }
             else {
                 if (phase_change || (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME)) {
-                    std::cout << "game phase change!" << std::endl;
                     // set to Dungeon Master POV if DM
                     if (this->session->getInfo().is_dungeon_master.value()) {
-                        std::cout << "dungeon master cam!" << std::endl;
                         this->cam = std::make_unique<DungeonMasterCamera>();
                         // TODO: fix race condition where this doesn't get received in time when reconnecting because the server is doing way more stuff and is delayed
                     }
@@ -476,6 +477,9 @@ void Client::processServerInput(bool allow_defer) {
                 // update intensity with incoming intensity 
                 this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
             }
+        } else if (event.type == EventType::LoadIntroCutscene) {
+            const auto& data = boost::get<LoadIntroCutsceneEvent>(event.data);
+            this->intro_cutscene = data;
         }
 
         this->events_received.pop_front();
@@ -557,12 +561,29 @@ void Client::geometryPass() {
     auto viewProj = this->cam->getViewProj();
     this->deferred_geometry_shader->setMat4("viewProj", viewProj);
 
-    auto eid = this->session->getInfo().client_eid.value();
+    if (!this->session->getInfo().client_eid.has_value()) {
+        std::cerr << "WARNING: trying to do geometry loop without knowing self eid\n";
+        return;
+    }
+
+    EntityID self_eid = this->session->getInfo().client_eid.value();
     bool is_dm = this->session->getInfo().is_dungeon_master.value();
-    glm::vec3 my_pos = this->gameState.objects[eid]->physics.corner;
+    std::unordered_map<EntityID, boost::optional<SharedObject>>* objects = &this->gameState.objects;
+    if (this->gameState.phase == GamePhase::INTRO_CUTSCENE) {
+        if (!this->intro_cutscene.has_value()) {
+            return; // haven't received cutscene packet yet
+        }
+
+        // use different values for the intro cutscene
+        is_dm = false;
+        self_eid = this->intro_cutscene->pov_eid;
+        objects = &this->intro_cutscene->state.objects;
+    }
+
+    glm::vec3 my_pos = (*objects)[self_eid]->physics.corner;
 
     // draw all objects to g-buffer
-    for (auto& [id, sharedObject] : this->gameState.objects) {
+    for (auto& [id, sharedObject] : *objects) {
         if (!sharedObject.has_value()) {
             continue;
         }
@@ -584,7 +605,7 @@ void Client::geometryPass() {
         switch (sharedObject->type) {
             case ObjectType::Player: {
                 // don't render yourself
-                if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+                if (sharedObject->globalID == self_eid) {
                     //  TODO: Update the player eye level to an acceptable level
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
@@ -618,7 +639,7 @@ void Client::geometryPass() {
             // CHANGE THIS
             case ObjectType::DungeonMaster: {
                 // don't render yourself
-                if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+                if (sharedObject->globalID == self_eid) {
                     //  TODO: Update the player eye level to an acceptable level
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
@@ -895,11 +916,22 @@ void Client::lightingPass() {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
 
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS>* closest_lights = &this->closest_light_sources;
+    if (this->gameState.phase == GamePhase::INTRO_CUTSCENE) {
+        if (!this->intro_cutscene.has_value()) {
+            return; // don't have cutscene info yet
+        }
+
+        closest_lights = &this->intro_cutscene->lights;
+    }
+
+
+
     this->deferred_lighting_shader->use();
     auto camPos = this->cam->getPos();
     this->deferred_lighting_shader->setVec3("viewPos", camPos);
-    for (int i = 0; i < this->closest_light_sources.size(); i++) {
-        boost::optional<SharedObject>& curr_source = this->closest_light_sources.at(i);
+    for (int i = 0; i < closest_lights->size(); i++) {
+        boost::optional<SharedObject>& curr_source = closest_lights->at(i);
         if (!curr_source.has_value()) {
             continue;
         }
@@ -953,8 +985,8 @@ void Client::lightingPass() {
     this->deferred_light_box_shader->use();
     glm::mat4 viewProj = this->cam->getViewProj();
     this->deferred_light_box_shader->setMat4("viewProj", viewProj);
-    for (int i = 0; i < this->closest_light_sources.size(); i++) {
-        boost::optional<SharedObject>& curr_source = this->closest_light_sources.at(i);
+    for (int i = 0; i < closest_lights->size(); i++) {
+        boost::optional<SharedObject>& curr_source = closest_lights->at(i);
         if (!curr_source.has_value()) {
             continue;
         }

@@ -42,7 +42,8 @@ enum class EventType {
     UseItem,
     DropItem,
     UpdateLightSources,
-    TrapPlacement
+    TrapPlacement,
+    LoadIntroCutscene,
 };
 
 enum class ActionType {
@@ -298,6 +299,23 @@ struct UpdateLightSourcesEvent {
     }
 };
 
+struct LoadIntroCutsceneEvent {
+    LoadIntroCutsceneEvent() = default;
+
+    explicit LoadIntroCutsceneEvent(
+        const SharedGameState& state,
+        EntityID pov_eid,
+        const std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS>& lights
+    ) : state(state), pov_eid(pov_eid), lights(lights) {}
+
+    SharedGameState state;
+    EntityID pov_eid;
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lights;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & state & lights & pov_eid;
+    }
+};
 
 /**
  * All of the different kinds of events in a tagged union, so we can
@@ -317,7 +335,8 @@ using EventData = boost::variant<
     UseItemEvent,
     UpdateLightSourcesEvent,
     DropItemEvent,
-    TrapPlacementEvent
+    TrapPlacementEvent,
+    LoadIntroCutsceneEvent
 >;
 
 /**

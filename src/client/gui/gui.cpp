@@ -396,16 +396,6 @@ void GUI::_layoutLobby() {
         boost::optional<LobbyPlayer> lobbyPlayer =
             this->client->gameState.lobby.players[i];
 
-        //  DEBUG
-        if (!lobbyPlayer.has_value()) {
-            std::cout << "Player " << std::to_string(i + 1) << " is not connected." << std::endl;
-        }
-        else {
-            std::cout << "Player " << std::to_string(i + 1) << ":" << std::endl;
-            std::cout << lobbyPlayer.get().to_string() << std::endl;
-        }
-        //  DEBUG
-
         //  Create a status row for this player
         auto player_status_row = _createPlayerStatusRow(
             lobbyPlayer,
@@ -434,12 +424,10 @@ void GUI::_layoutLobby() {
     //  Display differently based on whether all players in the lobby are ready
     bool allReady = true;
 
-    std::cout << "players size: " << std::to_string(this->client->gameState.lobby.players.size()) << std::endl;
     for (boost::optional<LobbyPlayer> player : this->client->gameState.lobby.players) {
         if (!player.has_value() || !player.get().ready) {
             //  Either there aren't enough players in the lobby or at least
             //  one player isn't ready
-            std::cout << "Not all players are ready" << std::endl;
             allReady = false;
             break;
         }
@@ -468,7 +456,6 @@ void GUI::_layoutLobby() {
     }
 
     //  Create flexbox to contain dynamic text
-    std::cout << "lobby max players: " << std::to_string(this->client->gameState.lobby.max_players) << std::endl;
     auto start_game_flex = widget::Flexbox::make(
         glm::vec2(0, 200),
         glm::vec2(WINDOW_WIDTH, 0),
@@ -506,10 +493,6 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         rowSize,
         rowFlexboxOptions
     );
-
-    //  DEBUG
-    std::cout << "client eid has value? " << (this->client->session->getInfo().client_eid.has_value() ? "true" : "false") << std::endl;
-    //  DEBUG
 
     //  Optional: Add a left margin Empty widget here if necessary
     //  at the start of the row

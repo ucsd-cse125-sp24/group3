@@ -265,12 +265,6 @@ std::chrono::milliseconds Server::doTick() {
                             lightning->physics.collider = Collider::None;
                             dm->lightning = lightning;
 
-                            //  Spawn player in random spawn point
-
-                            //  TODO: Possibly replace this random spawn point with player assignments?
-                            //  I.e., assign each player a spawn point to avoid multiple players getting
-                            //  the same spawn point?
-
                             auto& by_id = this->sessions.get<IndexByID>();
                             auto session_entry = by_id.find(dm->globalID);
 
@@ -299,12 +293,9 @@ std::chrono::milliseconds Server::doTick() {
 
                             std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
                             std::cout << "Starting game!" << std::endl;
-                            // TODO: more permanent way to wait until DM has received their is_dungeon_master value
-                            // from the assign eid packet
-                            std::this_thread::sleep_for(2s);
                         }
 
-                        this->state.setPhase(GamePhase::GAME);
+                        this->state.setPhase(GamePhase::INTRO_CUTSCENE);
                     }
 
                     break;
@@ -318,27 +309,18 @@ std::chrono::milliseconds Server::doTick() {
 
             break;
         }
-
-            /*
-            // Go through sessions and update GameState lobby info
-            // TODO: move this into updateGameState or something else
-            for (const auto& [eid, is_dm, ip, session]: this->sessions) {
-                if (session->isOkay()) {
-                    this->state.addPlayerToLobby(eid, session->getInfo().client_name.value_or("UNKNOWN NAME"));
-                } else {
-                    this->state.removePlayerFromLobby(eid);
-                }
-            }
-
-            if (this->state.getLobby().players.size() >= this->state.getLobby().max_players) {
+        case GamePhase::INTRO_CUTSCENE: {
+            bool finished = this->intro_cutscene.update();
+            if (finished) {
                 this->state.setPhase(GamePhase::GAME);
-                // TODO: figure out how to selectively broadcast to only the players that were already in the lobby
-                // this->lobby_broadcaster.stopBroadcasting();
+            } else {
+                LoadIntroCutsceneEvent update = this->intro_cutscene.toNetwork();
+                sendUpdateToAllClients(Event(this->world_eid, EventType::LoadIntroCutscene, update));
             }
 
-            this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
             break;
-            */
+        }
+
         case GamePhase::GAME: {
             EventList allClientEvents = getAllClientEvents();
 
@@ -400,7 +382,6 @@ std::chrono::milliseconds Server::doTick() {
     for (const auto& partial_update: this->state.generateSharedGameState(false)) {
         sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
     }
-
 
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
