@@ -28,6 +28,7 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
     this->sharedTrapInventory.inventory[4] = ModelType::SpikeTrap;
     this->sharedTrapInventory.inventory[5] = ModelType::Lightning;
     this->sharedTrapInventory.inventory[6] = ModelType::ArrowTrap;
+    this->sharedTrapInventory.inventory[7] = ModelType::TeleporterTrap;
 }
 
 int DungeonMaster::getPlacedTraps() {

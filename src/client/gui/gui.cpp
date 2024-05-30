@@ -1047,6 +1047,16 @@ void GUI::_sharedGameHUD() {
                     
                     break;
                 }
+                case ModelType::TeleporterTrap: {
+                    itemString = "Teleporter Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::TeleporterTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+
+
+                    break;
+                }
                 case ModelType::ArrowTrap: {
                     itemString = "Arrow Trap";
 
@@ -1186,6 +1196,10 @@ void GUI::_sharedGameHUD() {
                     break;
                 }
                 case ModelType::ArrowTrap: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::TeleporterTrap: {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }

@@ -304,6 +304,9 @@ void Client::sendTrapEvent(bool hover, bool place, ModelType trapType) {
     break; case ModelType::SpikeTrap:
         this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, hover, place)));
         break;
+    case ModelType::TeleporterTrap:
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::TeleporterTrap, hover, place)));
+        break;
     case ModelType::Lightning:
         this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::Lightning, hover, place)));
         break;
