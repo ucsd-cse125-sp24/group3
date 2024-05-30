@@ -368,7 +368,16 @@ std::chrono::milliseconds Server::doTick() {
 
 
     // TODO: send sound effects to DM?
-    auto players = this->state.objects.getPlayers();
+    std::vector<Object*> players; // hold players and DM
+    for (int i = 0; i < this->state.objects.getPlayers().size(); i++) {
+        auto player = this->state.objects.getPlayer(i);
+        if (player != nullptr) {
+            players.push_back(player);
+        }
+    }
+    if (this->state.objects.getDM() != nullptr) {
+        players.push_back(this->state.objects.getDM());
+    }
     auto audio_commands_per_player = this->state.soundTable().getCommandsPerPlayer(players);
 
     for (auto& session_entry : this->sessions) {

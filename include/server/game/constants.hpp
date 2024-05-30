@@ -74,8 +74,8 @@
 
 /*	Game	*/
 #define	GRAVITY					0.03f
-#define	PLAYER_SPEED 			1.5f
-#define JUMP_SPEED				0.5f
+#define	PLAYER_SPEED 			1.65f
+#define JUMP_SPEED				0.55f
 
 /* Default model sizes */
 #define BEAR_DIMENSIONS         glm::vec3(14.163582, 17.914591, 10.655818)
