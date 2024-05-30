@@ -28,6 +28,10 @@ void TeleporterTrap::reset(ServerGameState& state) {
 }
 
 void TeleporterTrap::doCollision(Object* other, ServerGameState& state) {
+    if (this->info.dm_hover) {
+        return;
+    }
+
     int r_col = 0;
     int r_row = 0;
     auto& grid = state.getGrid();

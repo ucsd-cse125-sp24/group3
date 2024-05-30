@@ -3,6 +3,7 @@
 #include "server/game/creature.hpp"
 #include "server/game/weaponcollider.hpp"
 #include "server/game/servergamestate.hpp"
+#include "shared/audio/constants.hpp"
 #include <chrono>
 
 
@@ -14,21 +15,43 @@ WeaponCollider::WeaponCollider(Player* usedPlayer, glm::vec3 corner, glm::vec3 f
     this->preparing_time = std::chrono::system_clock::now();
     this->usedPlayer = usedPlayer;
     this->info.attacked = false;
+    this->info.lightning = false;
+    if(!this->opt.followPlayer) { 
+        this->info.lightning = true; 
+    }
+
+    this->playSound = false;
+    this->sound = ServerSFX::TEMP;
 }
 
 void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
-    
     Creature* creature = dynamic_cast<Creature*>(other);
     if (creature == nullptr) return;
 
     // don't dmg yourself
-    if (creature->globalID == this->usedPlayer->globalID) return;
-
+    if (this->usedPlayer != nullptr) {
+        if (creature->globalID == this->usedPlayer->globalID) return;
+    }
+    
     // do damage if creature
     creature->stats.health.decrease(this->opt.damage);
+
+    if (this->usedPlayer == nullptr) {
+        auto knockback = glm::normalize(
+            other->physics.shared.getCenterPosition() - this->physics.shared.getCenterPosition());
+
+        creature->physics.currTickVelocity = 0.7f * knockback;
+    }
+    else {
+        auto knockback = glm::normalize(
+            other->physics.shared.getCenterPosition() - this->usedPlayer->physics.shared.getCenterPosition());
+
+        creature->physics.currTickVelocity = 0.4f * knockback;
+    }
 }
 
 void WeaponCollider::updateMovement(ServerGameState& state) {
+    if(!this->opt.followPlayer) { return; }
 
     glm::vec3 attack_origin(
         this->usedPlayer->physics.shared.getCenterPosition().x,
@@ -52,8 +75,30 @@ void WeaponCollider::updateMovement(ServerGameState& state) {
     state.objects.moveObject(this, attack_origin);
 }
 
-bool WeaponCollider::readyTime() {
+bool WeaponCollider::readyTime(ServerGameState& state) {
     if (this->info.attacked) { return true; }
+
+    if (!this->playSound && this->info.lightning) {
+        state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::Thunder,
+            this->physics.shared.getCenterPosition(),
+            DEFAULT_VOLUME,
+            FAR_DIST,
+            FAR_ATTEN
+        ));
+        this->playSound = true;
+    }
+    else if (!this->playSound) {
+        state.soundTable().addNewSoundSource(SoundSource(
+            this->sound,
+            this->physics.shared.getCenterPosition(),
+            MIDDLE_VOLUME,
+            SHORT_DIST,
+            SHORT_ATTEN
+        ));
+        this->playSound = true;
+    }
+
     auto now = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_milliseconds{ now - this->preparing_time };
     if (elapsed_milliseconds > std::chrono::milliseconds(this->opt.timeUntilAttack)) {

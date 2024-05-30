@@ -5,10 +5,12 @@
 #include "server/game/creature.hpp"
 #include "shared/game/sharedobject.hpp"
 
+class Weapon;
 
 class DungeonMaster : public Creature {
 public:
 	SharedTrapInventory sharedTrapInventory;
+	Weapon* lightning;
 
 	DungeonMaster(glm::vec3 corner, glm::vec3 facing);
 	~DungeonMaster();

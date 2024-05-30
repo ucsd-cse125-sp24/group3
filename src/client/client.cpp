@@ -69,10 +69,19 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     config(config),
     gameState(GamePhase::TITLE_SCREEN, config),
     session(nullptr),
-    gui(this),
+    gui(this, config),
     gui_state(gui::GUIState::INITIAL_LOAD),
     lobby_finder(io_context, config),
     cam(new Camera()) {    
+
+    //  Initialize Client's GUIState::Lobby related state
+    //  Initial lobby player state is set to connected (this assumes that whenever
+    //  GUIState is set to GUIState::Lobby, the client is connected to a lobby)
+    this->lobbyPlayerState = LobbyPlayerState::Connected;
+
+    //  Initial GUIState::Lobby player status table role selection radio button
+    //  state (none of the radio buttons are selected)
+    this->roleSelection = RadioButtonState::NoneSelected;
     
     audioManager = new AudioManager();
 
@@ -82,7 +91,7 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
         lobby_finder.startSearching();
     }
 
-
+    phase_change = false;
 }
 
 AudioManager* Client::getAudioManager() {
@@ -271,7 +280,7 @@ void Client::displayCallback() {
         this->draw();
     }
     else if (this->gameState.phase == GamePhase::RESULTS) {
-        if (this->gui_state == GUIState::GAME_HUD)
+        if (this->gui_state == GUIState::GAME_HUD || this->gui_state == GUIState::DEAD_SCREEN)
             this->gui_state = GUIState::RESULTS_SCREEN;
         this->draw();
     }
@@ -285,6 +294,32 @@ void Client::displayCallback() {
     /* Poll for and process events */
     glfwPollEvents();
     glfwSwapBuffers(window);
+}
+
+
+void Client::sendTrapEvent(bool hover, bool place, ModelType trapType) {
+    auto eid = this->session->getInfo().client_eid.value();
+
+    switch (trapType) {
+    case ModelType::FloorSpikeFull:
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, hover, place)));
+        break;
+    case ModelType::FloorSpikeVertical:
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeVertical, hover, place)));
+        break;
+    case ModelType::FloorSpikeHorizontal:
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeHorizontal, hover, place)));
+        break;
+    case ModelType::SunGod:
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrapUp, hover, place)));
+        break;
+    case ModelType::SpikeTrap:
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, hover, place)));
+        break;
+    case ModelType::Lightning:
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::Lightning, hover, place)));
+        break;
+    }
 }
 
 // Handle any updates 
@@ -308,17 +343,38 @@ void Client::idleCallback() {
 
     if (this->gui_state != GUIState::GAME_HUD) { return; }
 
-    glm::vec3 cam_movement = glm::vec3(0.0f);
+    glm::vec3 move_dir(0.0f);
 
+    bool moved = false;
     // Sets a direction vector
-    if(is_held_right)
-        cam_movement += cam->move(true, 1.0f);
-    if(is_held_left)
-        cam_movement += cam->move(true, -1.0f);
-    if (is_held_up)
-        cam_movement += cam->move(false, 1.0f);
-    if (is_held_down)
-        cam_movement += cam->move(false, -1.0f);
+    if(is_held_right) {
+        move_dir.x += 1.0f;
+        moved = true;
+    }
+    if(is_held_left) {
+        move_dir.x -= 1.0f;
+        moved = true;
+    }
+    if (is_held_up) {
+        move_dir.z += 1.0f;
+        moved = true;
+    }
+    if (is_held_down) {
+        move_dir.z -= 1.0f;
+        moved = true;
+    }
+    
+    glm::vec3 cam_movement(0.0f);
+
+    if (moved) {
+        move_dir = glm::normalize(move_dir);
+        cam_movement += cam->move(true, move_dir.x);
+        cam_movement += cam->move(false, move_dir.z);
+    }
+
+    if (std::isnan(cam_movement.x) || std::isnan(cam_movement.y) || std::isnan(cam_movement.z)) {
+        cam_movement = glm::vec3(0.0f);
+    }
 
     // Update camera facing direction
     cam->update(mouse_xpos, mouse_ypos);
@@ -344,32 +400,11 @@ void Client::idleCallback() {
 
             // send one event
             if ((is_held_down || is_held_i || is_held_left || is_held_right || is_held_up || is_held_o) && is_pressed_p)
-                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected-1]);
         }
 
         if (this->session->getInfo().is_dungeon_master.value() && is_pressed_p && is_left_mouse_down) {
-            auto self = this->gameState.objects.at(eid);
-
-            auto selectedTrap = self->trapInventoryInfo->inventory[self->trapInventoryInfo->selected - 1];
-
-            switch (selectedTrap) {
-            case ModelType::FloorSpikeFull:
-                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, false, true)));
-                break;
-            case ModelType::FloorSpikeVertical:
-                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeVertical, false, true)));
-                break;
-            case ModelType::FloorSpikeHorizontal:
-                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeHorizontal, false, true)));
-                break;
-            case ModelType::SunGod:
-                // TODO: allow for direction selection
-                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrapLeft, false, true)));
-                break;
-            case ModelType::SpikeTrap:
-                this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, false, true)));
-                break;
-            }
+            sendTrapEvent(false, true, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected-1]);
         }
 
         // If movement 0, send stopevent
@@ -412,18 +447,27 @@ void Client::processServerInput(bool allow_defer) {
             GamePhase old_phase = this->gameState.phase;
             this->gameState.update(boost::get<LoadGameStateEvent>(event.data).state);
 
-            // Change the UI to the game hud UI whenever we change into the GAME game phase
-            if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
-                // set to Dungeon Master POV if DM
-                if (this->session->getInfo().is_dungeon_master.has_value() && this->session->getInfo().is_dungeon_master.value()) {
-                    this->cam = std::make_unique<DungeonMasterCamera>();
-                    // TODO: fix race condition where this doesn't get received in time when reconnecting because the server is doing way more stuff and is delayed
+            if (!this->session->getInfo().is_dungeon_master.has_value()) {
+                if (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME) {
+                    phase_change = true;
                 }
+            }
+            else {
+                if (phase_change || (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME)) {
+                    std::cout << "game phase change!" << std::endl;
+                    // set to Dungeon Master POV if DM
+                    if (this->session->getInfo().is_dungeon_master.value()) {
+                        std::cout << "dungeon master cam!" << std::endl;
+                        this->cam = std::make_unique<DungeonMasterCamera>();
+                        // TODO: fix race condition where this doesn't get received in time when reconnecting because the server is doing way more stuff and is delayed
+                    }
 
-                this->gui_state = GUIState::GAME_HUD;
+                    this->gui_state = GUIState::GAME_HUD;
 
-                audioManager->stopMusic(ClientMusic::TitleTheme);
-                audioManager->playMusic(ClientMusic::GameTheme);
+                    audioManager->stopMusic(ClientMusic::TitleTheme);
+                    audioManager->playMusic(ClientMusic::GameTheme);
+                    phase_change = false;
+                }
             }
         } else if (event.type == EventType::LoadSoundCommands) {
             auto self_eid = this->session->getInfo().client_eid;
@@ -589,11 +633,34 @@ void Client::draw() {
                     true);
                 break;
             }
+            case ObjectType::Minotaur: {
+                auto cube = std::make_unique<Cube>(glm::vec3(0.1f));
+                cube->scaleAbsolute(sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader.get(),
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    {},
+                    true);
+                break;
+            }
+            case ObjectType::Python: {
+                auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.2f));
+                cube->scaleAbsolute(sharedObject->physics.dimensions);
+                cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                cube->draw(this->cube_shader.get(),
+                    this->cam->getViewProj(),
+                    this->cam->getPos(),
+                    {},
+                    true);
+                break;
+            }
             case ObjectType::SolidSurface: {
                 if (is_dm && sharedObject->solidSurface->surfaceType == SurfaceType::Ceiling) {
                     // don't render ceiling as DM
                     break;
                 }
+
                 if (!is_dm && sharedObject->solidSurface->is_internal) {
                     // dont render internal walls as non DM
                     break;
@@ -601,6 +668,7 @@ void Client::draw() {
 
                 Model* model = this->wall_model.get();
                 Shader* shader = this->wall_shader.get();
+
                 switch (sharedObject->solidSurface->surfaceType) {
                     case SurfaceType::Wall:
                         model = this->wall_model.get();
@@ -621,23 +689,18 @@ void Client::draw() {
                 }
 
                 if (is_dm) {
-                    // if the DM, override
+                    // if the DM, override shader
                     if (sharedObject->solidSurface->surfaceType != SurfaceType::Floor) {
                         shader = this->dm_cube_shader.get();
                     }
                     else {
                         shader = this->solid_surface_shader.get();
                     }
-
-                    if (sharedObject->solidSurface->dm_highlight) {
-                        model->overrideSolidColor(glm::vec3(1.0f, 0.0f, 0.0f));
-                    } else {
-                        model->overrideSolidColor({});
-                    }
                 }
 
                 model->setDimensions(sharedObject->physics.dimensions);
                 model->translateAbsolute(sharedObject->physics.getCenterPosition());
+
                 if (is_dm) { // 
                     model->draw(shader,
                         this->cam->getViewProj(),
@@ -673,6 +736,11 @@ void Client::draw() {
                 break;
             }
             case ObjectType::SpikeTrap: {
+                // if not DM and this is a ghost trap, break
+                if (!is_dm && sharedObject->trapInfo->dm_hover) {
+                    break;
+                }
+
                 auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 0.1f, 0.1f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
@@ -701,6 +769,11 @@ void Client::draw() {
                 break;
             }
             case ObjectType::FireballTrap: {
+                // if not DM and this is a ghost trap, break
+                if (!is_dm && sharedObject->trapInfo->dm_hover) {
+                    break;
+                }
+
                 this->sungod_model->setDimensions(sharedObject->physics.dimensions);
                 this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
@@ -713,6 +786,11 @@ void Client::draw() {
                 break;
             }
             case ObjectType::ArrowTrap: {
+                // if not DM and this is a ghost trap, break
+                if (!is_dm && sharedObject->trapInfo->dm_hover) {
+                    break;
+                }
+
                 auto cube = std::make_unique<Cube>(glm::vec3(0.5f, 0.3f, 0.2f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
@@ -736,6 +814,11 @@ void Client::draw() {
                 break;
             }
             case ObjectType::FloorSpike: {
+                // if not DM and this is a ghost trap, break
+                if (!is_dm && sharedObject->trapInfo->dm_hover) {
+                    break;
+                }
+
                 auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 0.0f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
@@ -807,6 +890,11 @@ void Client::draw() {
                 break;
             }
             case ObjectType::TeleporterTrap: {
+                // if not DM and this is a ghost trap, break
+                if (!is_dm && sharedObject->trapInfo->dm_hover) {
+                    break;
+                }
+
                 auto cube = std::make_unique<Cube>(glm::vec3(0.0f, 1.0f, 1.0f));
                 cube->scaleAbsolute( sharedObject->physics.dimensions);
                 cube->translateAbsolute(sharedObject->physics.getCenterPosition());
@@ -842,15 +930,38 @@ void Client::draw() {
                 break;
             }
             case ObjectType::WeaponCollider: {
-                if (sharedObject->weaponInfo->attacked) {
-                    auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
-                    cube->scaleAbsolute(sharedObject->physics.dimensions);
-                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader.get(),
-                        this->cam->getViewProj(),
-                        this->cam->getPos(),
-                        {},
-                        false);
+                if (sharedObject->weaponInfo->lightning) {
+                    if (!sharedObject->weaponInfo->attacked) {
+                        auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 1.0f, 0.0f));
+                        cube->scaleAbsolute(sharedObject->physics.dimensions);
+                        cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        cube->draw(this->cube_shader.get(),
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            {},
+                            false);
+                    } else {
+                        auto cube = std::make_unique<Cube>(glm::vec3(1.0f, 1.0f, 0.0f));
+                        cube->scaleAbsolute(sharedObject->physics.dimensions);
+                        cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        cube->draw(this->cube_shader.get(),
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            {},
+                            true);
+                    }
+                }
+                else {
+                    if (sharedObject->weaponInfo->attacked) {
+                        auto cube = std::make_unique<Cube>(glm::vec3(1.0f));
+                        cube->scaleAbsolute(sharedObject->physics.dimensions);
+                        cube->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        cube->draw(this->cube_shader.get(),
+                            this->cam->getViewProj(),
+                            this->cam->getPos(),
+                            {},
+                            false);
+                    }
                 }
                 break;
             }
@@ -952,36 +1063,11 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
 
         case GLFW_KEY_1:
-            if (eid.has_value()) {
-                if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
-                }
-            }
-            break;
-
         case GLFW_KEY_2:
-            if (eid.has_value()) {
-                if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 2)));
-                }
-            }
-            break;
-
         case GLFW_KEY_3:
-            if (eid.has_value()) {
-                if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 3)));
-                }
-            }
+        case GLFW_KEY_4:
             break;
 
-        case GLFW_KEY_4:
-            if (eid.has_value()) {
-                if (is_dm.has_value() && !is_dm.value()) {
-                    this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 4)));
-                }
-            }
-            break;
         case GLFW_KEY_RIGHT:
             if (eid.has_value()) {
                 if (is_dm.has_value() && is_dm.value()) {
@@ -1033,11 +1119,11 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
                 // unhighlight hover
                 if (eid.has_value()) {
                     // nothing being placed, so the CellType we pass shouldn't matter!
-                    this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                    sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
                 }
             }
             else {
-                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, false, false)));
+                sendTrapEvent(false, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
         /* Send an event to start 'shift' movement (i.e. sprint) */
@@ -1046,6 +1132,12 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
                 this->session->sendEvent(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
             is_held_i = true;
+            break;
+        case GLFW_KEY_LEFT_CONTROL:
+            if (this->session->getInfo().is_dungeon_master.has_value() && this->session->getInfo().is_dungeon_master.value()) {
+                this->session->sendEvent(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
+            }
+
             break;
 
         default:
@@ -1058,28 +1150,28 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_S:
             is_held_down = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
 
         case GLFW_KEY_W:
             is_held_up = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
 
         case GLFW_KEY_A:
             is_held_left = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
 
         case GLFW_KEY_D:
             is_held_right = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
             
@@ -1098,14 +1190,20 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
         case GLFW_KEY_O: // zoom out
             is_held_o = false;
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             break;
         case GLFW_KEY_I: // zoom out
             if (eid.has_value() && this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
-                this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::ArrowTrapUp, true, false)));
+                sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
             }
             is_held_i = false;
+            break;
+        case GLFW_KEY_LEFT_CONTROL:
+            if (this->session->getInfo().is_dungeon_master.has_value() && this->session->getInfo().is_dungeon_master.value()) {
+                this->session->sendEvent(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
+            }
+
             break;
         default:
             break;
@@ -1114,24 +1212,60 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
     if (action == GLFW_REPEAT) {
         switch (key) {
-       /* case GLFW_KEY_S:
-            this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
-            break;
-        case GLFW_KEY_W:
-            this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
-            break;
-        case GLFW_KEY_A:
-            this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
-            break;
-        case GLFW_KEY_D:
-            this->session->sendEvent(Event(eid.value(), EventType::TrapPlacement, TrapPlacementEvent(eid.value(), this->world_pos, CellType::FloorSpikeFull, true, false)));
-            break;*/
         case GLFW_KEY_BACKSPACE:
             auto ms_since_epoch = getMsSinceEpoch();
             if (Client::time_of_last_keystroke + 100 < ms_since_epoch) {
                 Client::time_of_last_keystroke = ms_since_epoch;
                 this->gui.captureBackspace();
             }
+        }
+    }
+}
+
+void Client::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    std::optional<EntityID> eid;
+
+    if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
+        eid = this->session->getInfo().client_eid.value();
+    }
+
+    std::optional<bool> is_dm;
+
+    if (this->session != nullptr && this->session->getInfo().is_dungeon_master.has_value()) {
+        is_dm = this->session->getInfo().is_dungeon_master.value();
+    }
+
+    auto self = this->gameState.objects.at(eid.value());
+
+    if (yoffset >= 1) {
+        if (eid.has_value()) {
+            this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), -1)));
+        }
+
+        if (is_dm.has_value() && is_dm.value() && is_pressed_p) {
+            // optimistic update on scroll, otherwise will lag
+            int idx = self->trapInventoryInfo->selected;
+
+            if (self->trapInventoryInfo->selected - 1 == 0)
+                idx = TRAP_INVENTORY_SIZE;
+
+            sendTrapEvent(true, false, self->trapInventoryInfo->inventory[idx - 1]);
+        }
+    }
+
+    if (yoffset <= -1) {
+        if (eid.has_value()) {
+            this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
+        }
+
+        if (is_dm.has_value() && is_dm.value() && is_pressed_p) {
+            // optimistic update on scroll, otherwise will lag
+            int idx = self->trapInventoryInfo->selected;
+
+            if (self->trapInventoryInfo->selected + 1 > TRAP_INVENTORY_SIZE)
+                idx = 1;
+
+            sendTrapEvent(true, false, self->trapInventoryInfo->inventory[idx - 1]);
         }
     }
 }
@@ -1150,7 +1284,7 @@ void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { /
         auto eid = this->session->getInfo().client_eid.value();
 
         // the actual trap doesn't matter, this is just for highlighting purposes
-        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeFull, true, false)));
+        sendTrapEvent(true, false, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected-1]);
     }
 }
 

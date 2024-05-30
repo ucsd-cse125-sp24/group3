@@ -23,6 +23,7 @@ ObjectManager::ObjectManager() { // cppcheck-suppress uninitMemberVar
 	////	Initialize type-specific SmartVectors
 	//this->base_objects = SmartVector<Object*>();
 	//this->items = SmartVector<Item*>();
+	this->dm = nullptr;
 }
 
 ObjectManager::~ObjectManager() {
@@ -32,8 +33,23 @@ ObjectManager::~ObjectManager() {
 /*	Object CRUD methods	*/
 
 SpecificID ObjectManager::createObject(Object* object) {
+	return this->_createObject(object);
+}
+
+SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID> id) {
 	//	Create a new object with the given type
-	EntityID globalID = this->objects.push(object);
+	EntityID globalID;
+
+	//	If an EntityID is specified, put object at the specific EntityID
+	if (id.has_value()) {
+		std::cout << "OPTIONAL PARAMETER TO _createObject() id has value!" << std::endl;
+		globalID = id.get();
+		this->objects.set(object, globalID);
+	}
+	else {
+		globalID = this->objects.push(object);
+	}
+
 	object->globalID = globalID;
 
 	object->gridCellPositions = this->objectGridCells(object);
@@ -58,6 +74,9 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
 			break;
+		case ObjectType::Item:
+			object->typeID = this->items.push(dynamic_cast<Item*>(object));
+			break;
 		case ObjectType::Weapon:
 			object->typeID = this->items.push(dynamic_cast<Weapon*>(object));
 			break;
@@ -80,6 +99,8 @@ SpecificID ObjectManager::createObject(Object* object) {
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
 			break;
+		case ObjectType::Python:
+		case ObjectType::Minotaur:
         case ObjectType::Slime:
 			object->typeID = this->enemies.push(dynamic_cast<Enemy*>(object));
 			break;
@@ -110,6 +131,10 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	//	Check that the given object exists
 	Object* object = this->objects.get(globalID);
 
+	//	DEBUG
+	//std::cout << "Object to be deleted: " << object->to_string() << std::endl;
+	//	DEBUG
+
 	if (object == nullptr) {
 		//	Object with the given index doesn't exist
 		std::cout << "obj doesn't exist? in ObjectManager::removeObject" << std::endl;
@@ -134,21 +159,21 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::TeleporterTrap:
 		this->traps.remove(object->typeID);
 		break;
-	case ObjectType::Item:
-		this->items.remove(object->typeID);
-		break;
 	case ObjectType::Player:
 		this->players.remove(object->typeID);
 		break;
 	case ObjectType::Projectile:
 		this->projectiles.remove(object->typeID);
 		break;
+	case ObjectType::Python:
+	case ObjectType::Minotaur:
 	case ObjectType::Slime:
 		this->enemies.remove(object->typeID);
 		break;
 	case ObjectType::WeaponCollider:
 		this->weaponColliders.remove(object->typeID);
 		break;
+	case ObjectType::Item:
 	case ObjectType::Weapon:
 	case ObjectType::Spell:
 	case ObjectType::Potion:
@@ -213,6 +238,24 @@ bool ObjectManager::removeObject(Object** object_dbl_ptr) {
 
 	//	Failed to remove object
 	return false;
+}
+
+bool ObjectManager::replaceObject(EntityID id, Object* object) {
+	//	Get current object
+	Object* currentObject = this->getObject(id);
+
+	if (currentObject == nullptr) {
+		//	No object with the given EntityID exists; can't replace
+		return false;
+	}
+
+	//	Remove current object
+	this->removeObject(id);
+
+	//	Add new object at the given EntityID
+	this->_createObject(object, id);
+
+	return true;
 }
 
 Object* ObjectManager::getObject(EntityID globalID) {

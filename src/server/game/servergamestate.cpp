@@ -17,6 +17,7 @@
 #include "server/game/orb.hpp"
 #include "server/game/weapon.hpp"
 #include "server/game/weaponcollider.hpp"
+#include "server/game/spawner.hpp"
 
 #include "shared/game/celltype.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -39,6 +40,7 @@ ServerGameState::ServerGameState() : ServerGameState(getDefaultConfig()) {}
 ServerGameState::ServerGameState(GameConfig config) {
 	this->phase = GamePhase::LOBBY;
 	this->timestep = FIRST_TIMESTEP;
+	this->lobby = Lobby(config.server.max_players);
 	this->lobby.max_players = config.server.max_players;
 	this->lobby.name = config.server.lobby_name;
 
@@ -55,6 +57,10 @@ ServerGameState::ServerGameState(GameConfig config) {
 
 	//	No player died yet
 	this->numPlayerDeaths = 0;
+
+	this->currentGhostTrap = nullptr;
+	this->spawner = std::make_unique<Spawner>();
+	this->spawner->spawnDummy(*this);
 
     MazeGenerator generator(config);
     int attempts = 1;
@@ -139,7 +145,9 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 			}
 		}
 
-		if (num_in_curr_update > 0) {
+		//	Make sure that SharedGameState updates are sent while the server is in the
+		//	Lobby phase (to ensure players can see other players lobby status updates)
+		if (num_in_curr_update > 0 || this->getPhase() == GamePhase::LOBBY) {
 			partial_updates.push_back(curr_update);
 		}
 
@@ -147,6 +155,13 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 		std::unordered_set<EntityID> empty;
 		std::swap(this->updated_entities, empty);
 	}
+
+	//	DEBUG
+	/*if (partial_updates.size() > 0) {
+		std::cout << "Number of partial updates: " << std::to_string(partial_updates.size()) << std::endl;
+		std::cout << "Partial update's lobby (in server):" << std::endl;
+		std::cout << partial_updates[0].lobby.to_string() << std::endl;
+	}*/
 
 	return partial_updates;
 }
@@ -204,8 +219,13 @@ void ServerGameState::update(const EventList& events) {
 				break;
 			}
 			case ActionType::Sprint: {
-				obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
-				obj->animState = (obj->animState == AnimState::WalkAnim) ? AnimState::SprintAnim : obj->animState;
+				if (obj->type == ObjectType::DungeonMaster) {
+					obj->physics.velocityMultiplier = glm::vec3(5.0f, 1.1f, 5.0f);
+				}
+				else {
+					obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
+					obj->animState = (obj->animState == AnimState::WalkAnim) ? AnimState::SprintAnim : obj->animState;
+				}
 				break;
 			}
 			case ActionType::Zoom: { // only for DM
@@ -280,7 +300,13 @@ void ServerGameState::update(const EventList& events) {
 				this->updated_entities.insert(dm->globalID);
 			}
 			else {
-				player->sharedInventory.selected = selectItemEvent.itemNum;
+				if (player->sharedInventory.selected + selectItemEvent.itemNum == 0)
+					player->sharedInventory.selected = INVENTORY_SIZE;
+				else if (player->sharedInventory.selected + selectItemEvent.itemNum == INVENTORY_SIZE + 1)
+					player->sharedInventory.selected = 1;
+				else
+					player->sharedInventory.selected = player->sharedInventory.selected + selectItemEvent.itemNum;
+
 				this->updated_entities.insert(player->globalID);
 			}
 			break;
@@ -331,19 +357,6 @@ void ServerGameState::update(const EventList& events) {
 
 			glm::vec3 dir = glm::normalize(trapPlacementEvent.world_pos-dm->physics.shared.corner);
 
-			//if (trapPlacementEvent.world_pos.z < glm::floor(trapPlacementEvent.world_pos.z) + 0.5) {
-			//	trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z) - DM_Z_DISCOUNT;
-			//} else {
-			//	trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z + DM_Z_DISCOUNT);
-			//}
-
-			//if (trapPlacementEvent.world_pos.x > glm::floor(trapPlacementEvent.world_pos.x) + 0.5) {
-			//	trapPlacementEvent.world_pos.x = glm::ceil(trapPlacementEvent.world_pos.x) + DM_Z_DISCOUNT;
-			//}
-			//else {
-			//	trapPlacementEvent.world_pos.x = glm::ceil(trapPlacementEvent.world_pos.x - DM_Z_DISCOUNT);
-			//}
-
 			trapPlacementEvent.world_pos += (dir*(float)DM_Z_DISCOUNT);
 
 			glm::ivec2 gridCellPos = currGrid.getGridCellFromPosition(trapPlacementEvent.world_pos);
@@ -353,24 +366,34 @@ void ServerGameState::update(const EventList& events) {
 			if (cell == nullptr)
 				break;
 
+			this->updated_entities.insert(dm->globalID);
 
-			// unhighlight if highlighted
-			for (SolidSurface* surface : this->previouslyHighlighted) {
-				this->updated_entities.insert(surface->globalID);
-				surface->setDMHighlight(false);
+			// mark previous ghost trap for deletion, if exists
+			if (this->currentGhostTrap != nullptr) {
+				markForDeletion(this->currentGhostTrap->globalID);
+				this->currentGhostTrap = nullptr; // reset ghost trap variable
 			}
-
-			// std::vector<SolidSurface*> surfaces = solidSurfaceInGridCells[{cell->x, cell->y}];
-
-			// this->previouslyHighlighted = surfaces;
 
 			if (trapPlacementEvent.hover) {
-				/*for (SolidSurface* surface : surfaces) {
-					this->updated_entities.insert(surface->globalID);
-					surface->setDMHighlight(true);
-				}*/
+				// only for traps, not lightning
+				if (trapPlacementEvent.cell == CellType::Lightning) {
+					break;
+				}
+
+				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
+
+				if (trap == nullptr)
+					break;
+
+				this->currentGhostTrap = trap;
+
+				this->currentGhostTrap->setIsDMTrapHover(true);
+
+				this->updated_entities.insert(trap->globalID);
 			}
 			else if(trapPlacementEvent.place) {
+				auto curr_time = std::chrono::system_clock::now();
+
 				int trapsPlaced = dm->getPlacedTraps();
 
 				if (trapsPlaced == MAX_TRAPS) {
@@ -379,13 +402,24 @@ void ServerGameState::update(const EventList& events) {
 
 				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
 
-				// in cooldown and haven't elapsed enough time yet
-				if (it != dm->sharedTrapInventory.trapsInCooldown.end() && 
-					std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(it->second)) < std::chrono::seconds(TRAP_COOL_DOWN)) {
+				// in cooldown map sadly
+				if (it != dm->sharedTrapInventory.trapsInCooldown.end()) {
 					break;
 				}
+				
+				if(trapPlacementEvent.cell == CellType::Lightning){
+					Weapon* lightning = dm->lightning;
+					glm::vec3 corner(
+						cell->x * Grid::grid_cell_width,
+						0.0f,
+						cell->y * Grid::grid_cell_width
+					);
 
-				auto curr_time = std::chrono::system_clock::now();
+					lightning->useLightning(dm, *this, corner);
+
+					dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
+					break;
+				}
 
 				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
@@ -401,6 +435,8 @@ void ServerGameState::update(const EventList& events) {
 				dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
 
 				dm->setPlacedTraps(trapsPlaced + 1);
+
+				dm->sharedTrapInventory.trapsPlaced = trapsPlaced + 1;
 			}
 			break;
 		}
@@ -422,7 +458,8 @@ void ServerGameState::update(const EventList& events) {
 	handleDeaths();
 	handleRespawns();
 	deleteEntities();
-	// spawnEnemies();
+	spawnEnemies();
+	handleTickVelocity();
 	tickStatuses();
 	
 	//	Increment timestep
@@ -484,7 +521,7 @@ void ServerGameState::updateMovement() {
 
 		//	Object is movable - compute total movement step
 		glm::vec3 totalMovementStep = 
-			object->physics.velocity * object->physics.velocityMultiplier;
+			object->physics.velocity * object->physics.velocityMultiplier + object->physics.currTickVelocity;
 		totalMovementStep.x *= object->physics.nauseous;
 		totalMovementStep.z *= object->physics.nauseous;
 
@@ -698,7 +735,9 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 			//	doesn't have a collider
 			if (object->globalID == otherObj->globalID
 				|| otherObj->physics.collider == Collider::None
-				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Player)) {
+				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Player)
+				|| (object->type == ObjectType::Item && otherObj->type == ObjectType::Player)
+				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Item)) {
 				continue;
 			}
 
@@ -727,7 +766,8 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 					otherObj->type == ObjectType::Weapon ||
 					otherObj->type == ObjectType::Orb ||
 					otherObj->type == ObjectType::WeaponCollider ||
-					otherObj->type == ObjectType::Slime) {
+					otherObj->type == ObjectType::Slime ||
+					otherObj->type == ObjectType::Torchlight) {
 					continue;
 				}
 
@@ -740,31 +780,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 }
 
 void ServerGameState::spawnEnemies() {
-	// temp numbers, to tune later...
-	// 1/300 chance every 30ms -> expected spawn every 9s 
-	// TODO 1: small slimes are weighted the same as large slimes
-	// TODO 2: check that no collision in the cell you are spawning in
-	if (randomInt(1, 300) == 1 && this->objects.getEnemies().numElements() < MAX_ALIVE_ENEMIES) {
-		int cols = this->grid.getColumns();
-		int rows = this->grid.getRows();
-
-		glm::ivec2 random_cell;
-		while (true) {
-			random_cell.x = randomInt(0, cols - 1);
-			random_cell.y = randomInt(0, rows - 1); // corresponds to z in the world
-
-			if (this->grid.getCell(random_cell.x, random_cell.y)->type == CellType::Empty) {
-				break;
-			}
-		}
-
-		int size = randomInt(2, 4);
-		this->objects.createObject(new Slime(
-			glm::vec3(random_cell.x * Grid::grid_cell_width, 0, random_cell.y * Grid::grid_cell_width),
-			glm::vec3(0, 0, 0),
-			size
-		));
-	}
+	this->spawner->spawn(*this);
 }
 
 void ServerGameState::updateItems() {
@@ -826,7 +842,7 @@ void ServerGameState::updateAttacks() {
 		auto weaponCollider = weaponColliders.get(i);
 		if (weaponCollider == nullptr) { continue; }
 		weaponCollider->updateMovement(*this);
-		if(weaponCollider->readyTime()){
+		if(weaponCollider->readyTime(*this)){
 			if (weaponCollider->timeOut(*this)) {
 				this->markForDeletion(weaponCollider->globalID);
 			}
@@ -850,7 +866,25 @@ void ServerGameState::doTorchlightTicks() {
 }
 
 void ServerGameState::updateTraps() {
-	// check for activations
+	// get current time when calling this function
+	auto current_time = std::chrono::system_clock::now();
+	DungeonMaster* dm = this->objects.getDM();
+
+	// update DM trap cooldown
+	if (this->objects.getDM() != nullptr) {
+		auto& coolDownMap = dm->sharedTrapInventory.trapsInCooldown;
+
+		//std::cout << coolDownMap << " cooldown map size" << std::endl;
+
+		for (auto it = dm->sharedTrapInventory.trapsInCooldown.cbegin(); it != dm->sharedTrapInventory.trapsInCooldown.cend();) {
+			if (std::chrono::round<std::chrono::seconds>(current_time - std::chrono::system_clock::from_time_t(it->second)) >= std::chrono::seconds(TRAP_COOL_DOWN)) {
+				it = dm->sharedTrapInventory.trapsInCooldown.erase(it);
+			}
+			else {
+				it++;
+			}
+		}
+	}
 
 	// This object moved, so we should check to see if a trap should trigger because of it
 	auto traps = this->objects.getTraps();
@@ -858,10 +892,9 @@ void ServerGameState::updateTraps() {
 		auto trap = traps.get(i);
 		if (trap == nullptr) { continue; } // unsure if i need this?
 		if (trap->getIsDMTrap()) {
-			auto current_time = std::chrono::system_clock::now();
 			
 			if (current_time >= trap->getExpiration()) {
-				DungeonMaster* dm = this->objects.getDM();
+				
 				int trapsPlaced = dm->getPlacedTraps();
 
 				this->markForDeletion(trap->globalID);
@@ -870,6 +903,7 @@ void ServerGameState::updateTraps() {
 			}
 		}
 
+		// check for activations
 		if (trap->shouldTrigger(*this)) {
 			trap->trigger(*this);
 			this->updated_entities.insert(trap->globalID);
@@ -945,7 +979,6 @@ void ServerGameState::handleDeaths() {
 			this->updated_entities.insert(enemy->globalID);
 			if (enemy->doDeath(*this)) {
 				this->entities_to_delete.insert(enemy->globalID);
-				this->alive_enemy_weight--;
 			}
 		}
 	}
@@ -997,6 +1030,88 @@ void ServerGameState::tickStatuses() {
 	}
 }
 
+void ServerGameState::handleTickVelocity() {
+	auto players = this->objects.getPlayers();
+	for (auto p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		// is this actually the best i can do...?
+		if (player->physics.currTickVelocity != glm::vec3(0.0f)) {
+			if (player->physics.currTickVelocity.x > 0) {
+				player->physics.currTickVelocity.x -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.x < 0) {
+				player->physics.currTickVelocity.x += 0.05f;
+			}
+
+			if (player->physics.currTickVelocity.y > 0) {
+				player->physics.currTickVelocity.y -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.y < 0) {
+				player->physics.currTickVelocity.y += 0.05f;
+			}
+
+			if (player->physics.currTickVelocity.z > 0) {
+				player->physics.currTickVelocity.z -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.z < 0) {
+				player->physics.currTickVelocity.z += 0.05f;
+			}
+
+			if (abs(player->physics.currTickVelocity.x) <= 0.05f) {
+				player->physics.currTickVelocity.x = 0.0f;
+			}
+			if (abs(player->physics.currTickVelocity.y) <= 0.05f) {
+				player->physics.currTickVelocity.y = 0.0f;
+			}
+			if (abs(player->physics.currTickVelocity.z) <= 0.05f) {
+				player->physics.currTickVelocity.z = 0.0f;
+			}
+		}
+	}
+
+	auto enemies = this->objects.getEnemies();
+	for (auto e = 0; e < enemies.size(); e++) {
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		if (enemy->physics.currTickVelocity != glm::vec3(0.0f)) {
+			if (enemy->physics.currTickVelocity.x > 0) {
+				enemy->physics.currTickVelocity.x -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.x < 0) {
+				enemy->physics.currTickVelocity.x += 0.05f;
+			}
+
+			if (enemy->physics.currTickVelocity.y > 0) {
+				enemy->physics.currTickVelocity.y -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.y < 0) {
+				enemy->physics.currTickVelocity.y += 0.05f;
+			}
+
+			if (enemy->physics.currTickVelocity.z > 0) {
+				enemy->physics.currTickVelocity.z -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.z < 0) {
+				enemy->physics.currTickVelocity.z += 0.05f;
+			}
+
+			if (abs(enemy->physics.currTickVelocity.x) <= 0.05f) {
+				enemy->physics.currTickVelocity.x = 0.0f;
+			}
+			if (abs(enemy->physics.currTickVelocity.y) <= 0.05f) {
+				enemy->physics.currTickVelocity.y = 0.0f;
+			}
+			if (abs(enemy->physics.currTickVelocity.z) <= 0.05f) {
+				enemy->physics.currTickVelocity.z = 0.0f;
+			}
+		}
+	}
+}
+
+
 unsigned int ServerGameState::getTimestep() const {
 	return this->timestep;
 }
@@ -1035,12 +1150,68 @@ void ServerGameState::setPlayerVictory(bool playerVictory) {
 	this->playerVictory = playerVictory;
 }
 
-void ServerGameState::addPlayerToLobby(EntityID id, const std::string& name) {
-	this->lobby.players[id] = name;
+void ServerGameState::addPlayerToLobby(LobbyPlayer player) {
+	//this->lobby.players[id] = name;
+
+	//	Only add the player if a player with the given EntityID doesn't exist
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (this->lobby.players[i].has_value()
+			&& this->lobby.players[i].get().id == player.id)
+		{
+			//	A player with this EntityID already exists in this
+			//	ServerGameState's Lobby - return without adding player
+			//	again to this server's Lobby
+			return;
+		}
+	}
+
+	bool freeIndex = false;
+
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (!this->lobby.players[i].has_value()) {
+			//	Found a free index! Adding player here
+			freeIndex = true;
+			this->lobby.players[i] = player;
+			std::cout << "Added new player in index " << std::to_string(i) << std::endl;
+			std::cout << "Player's eid: " << player.id << std::endl;
+			break;
+		}
+	}
+
+	//	Crash server if no free index was found
+	assert(freeIndex);
+}
+
+void ServerGameState::updateLobbyPlayer(EntityID id, LobbyPlayer player) {
+	//	Iterate through the players vector and update the player with the given
+	//	EntityID
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (!this->lobby.players[i].has_value())
+			continue;
+
+		if (this->lobby.players[i].get().id == id) {
+			//	Update player
+			this->lobby.players[i] = player;
+		}
+	}
 }
 
 void ServerGameState::removePlayerFromLobby(EntityID id) {
-	this->lobby.players.erase(id);
+	//	Iterate through the players vector and remove the player with the given
+	//	EntityID
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (!this->lobby.players[i].has_value())
+			continue;
+
+		if (this->lobby.players[i].get().id == id) {
+			//	Remove player
+			this->lobby.players[i] = boost::none;
+		}
+	}
+
+	//	Note: this method doesn't check that the removal was successful. It's
+	//	possible that an EntityID was passed in that no player in the lobby has
+	//	and so the removal had no effect
 }
 
 const Lobby& ServerGameState::getLobby() const {
@@ -1072,7 +1243,7 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 			MAZE_CEILING_HEIGHT - HEIGHT_SHOWING,
 			cell->y * Grid::grid_cell_width
 		);
-		
+
 		SpikeTrap* spikeTrap = new SpikeTrap(corner, dimensions);
 		this->objects.createObject(spikeTrap);
 		return spikeTrap;
@@ -1100,10 +1271,7 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 	case CellType::FloorSpikeHorizontal:
 	case CellType::FloorSpikeVertical: {
 		if (cell->type != CellType::Empty) {
-
-			std::cout << "trying to place in non empty cell\n";
 			return nullptr;
-
 		}
 
 		glm::vec3 corner(

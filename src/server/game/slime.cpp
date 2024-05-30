@@ -4,6 +4,7 @@
 #include "shared/utilities/rng.hpp"
 #include "shared/game/status.hpp"
 #include "shared/audio/constants.hpp"
+#include "server/game/potion.hpp"
 
 #include <chrono>
 
@@ -135,8 +136,21 @@ bool Slime::doDeath(ServerGameState& state) {
             slime2->physics.velocity.x += 0.5f;
             slime2->physics.velocity.z += 0.5f;
         }
-        state.objects.createObject(slime1);
-        state.objects.createObject(slime2);
+        SpecificID id1 = state.objects.createObject(slime1);
+        SpecificID id2 = state.objects.createObject(slime2);
+
+        state.spawner->addEnemy(state, id1);
+        state.spawner->addEnemy(state, id2);
+    }
+
+    Enemy::doDeath(state);
+
+    // Drop health potion upon death
+    auto newCorner = this->physics.shared.corner;
+    newCorner.y *= 0;
+    // size 4 slime = 15 kills -> every 2 slime kill, get a potion
+    if (randomInt(1,30) == 30) {
+        state.objects.createObject(new Potion(newCorner, glm::vec3(1), PotionType::Health));
     }
 
     return true;

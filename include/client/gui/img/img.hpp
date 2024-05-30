@@ -17,8 +17,6 @@ namespace gui::img {
 enum class ImgID {
     Yoshi,
     AwesomeSauce,
-    ItemFrame,
-    SelectedFrame,
     HealthPotion,
     UnknownPotion,
     InvisPotion,
@@ -31,11 +29,22 @@ enum class ImgID {
     Sword,
     Hammer,
     Title,
+    LeftHotbar,
+    RightHotbar,
+    MiddleHotbar,
+    MiddleSelected,
+    HealthBar,
+    HealthTickEmpty,
+    HealthTickFull,
+    Blank,
 };
 #define GET_ALL_IMG_IDS() \
-    {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::ItemFrame, ImgID::SelectedFrame, ImgID::HealthPotion, \
-        ImgID::UnknownPotion, ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
-        ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer, ImgID::Title}
+    {ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::HealthPotion, ImgID::UnknownPotion, \
+        ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
+        ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer, \
+        ImgID::LeftHotbar, ImgID::RightHotbar, ImgID::MiddleHotbar, ImgID::Blank, ImgID::Title, \
+        ImgID::MiddleSelected, ImgID::HealthBar, ImgID::HealthTickEmpty, ImgID::HealthTickFull \
+    }
 
 /**
  * Representation of a loaded image

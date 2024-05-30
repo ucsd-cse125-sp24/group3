@@ -12,6 +12,44 @@ std::string objectTypeString(ObjectType type) {
         return "Player";
     case ObjectType::Slime:
         return "Slime";
+    case ObjectType::Potion:
+        return "Potion";
+    case ObjectType::Enemy:
+        return "Enemy";
+    case ObjectType::Torchlight:
+        return "Torchlight";
+    case ObjectType::SpikeTrap:
+        return "SpikeTrap";
+    case ObjectType::DungeonMaster:
+        return "DungeonMaster";
+    case ObjectType::FireballTrap:
+        return "FireballTrap";
+    case ObjectType::Projectile:
+        return "Projectile";
+    case ObjectType::FloorSpike:
+        return "FloorSpike";
+    case ObjectType::FakeWall:
+        return "FakeWall";
+    case ObjectType::ArrowTrap:
+        return "ArrowTrap";
+    case ObjectType::TeleporterTrap:
+        return "TeleporterTrap";
+    case ObjectType::Spell:
+        return "Spell";
+    case ObjectType::Minotaur:
+        return "Minotaur";
+    case ObjectType::Python:
+        return "Python";
+    case ObjectType::Item:
+        return "Item";
+    case ObjectType::Exit:
+        return "Exit";
+    case ObjectType::Orb:
+        return "Orb";
+    case ObjectType::Weapon:
+        return "Weapon";
+    case ObjectType::WeaponCollider:
+        return "WeaponCollider";
 	default:
 		return "Unknown";
 	}

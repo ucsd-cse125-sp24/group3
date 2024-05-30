@@ -22,7 +22,7 @@ FireballTrap::FireballTrap(glm::vec3 corner, Direction dir):
 }
 
 bool FireballTrap::shouldTrigger(ServerGameState& state) {
-    if (this->info.triggered) {
+    if (this->info.triggered || this->info.dm_hover) {
         return false;
     }
 

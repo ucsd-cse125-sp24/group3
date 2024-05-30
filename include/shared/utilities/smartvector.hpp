@@ -57,6 +57,31 @@ public:
 	}
 
 	/**
+	 * @brief Overwrites the object at the specified index with the
+	 * given object.
+	 * @param object object to place at the given index.
+	 * @param index Index at which the new object will be placed.
+	 * @return true if successfully placed the object at the given
+	 * index, and false if the index is out of bounds.
+	*/
+	bool set(T object, size_t index) {
+		if (index >= wrapped_vector.size())
+			return false;
+
+		//	Remove index from free list if the specified index is currently
+		//	empty
+		auto it = freelist.find(index);
+
+		if (it != freelist.end()) {
+			freelist.erase(*it);
+		}
+
+		wrapped_vector[index] = object;
+
+		return true;
+	}
+
+	/**
 	 * @brief Adds an empty object to the end of the wrapped vector (by adding
 	 * the new index to the freelist.
 	 * @return Index at which the empty object is added (last index in the

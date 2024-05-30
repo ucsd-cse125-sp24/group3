@@ -142,6 +142,8 @@ std::optional<Grid> MazeGenerator::generate() {
             auto room = _pullRoomByPolicy();
 
             if ( (room->rclass.entries & required_entryway) == 0) {
+                // we don't want to skip this room type, so put back at the front of the frontier
+                _policy.push_front(room->rclass.type);
                 continue; // can't connect, so pull again
             }
 
@@ -806,7 +808,7 @@ void MazeGenerator::_generatePolicy() {
 
     using RatioMapping = const std::pair<int, RoomType>;
 
-    RatioMapping NUM_EASY   = {7, RoomType::EASY}; // X easy
+    RatioMapping NUM_EASY   = {15, RoomType::EASY}; // X easy
     RatioMapping NUM_MEDIUM = {5, RoomType::MEDIUM}; // for every Y mediums
     RatioMapping NUM_HARD   = {3, RoomType::HARD}; // for every Z hards
     RatioMapping NUM_LOOT   = {1, RoomType::LOOT}; // for every alpha loots

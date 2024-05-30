@@ -119,6 +119,8 @@ public:
      */
     void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
+    void scrollCallback(GLFWwindow* window, double xposIn, double yposIn);
+
     /**
      * @brief Callback which handles mouse button presses.
      * 
@@ -170,6 +172,8 @@ public:
     AnimationManager* getAnimManager() { return animManager; }
 
     void setWorldPos();
+
+    void sendTrapEvent(bool hover, bool place, ModelType trapType);
 
     int curr_fps;
 private:
@@ -223,6 +227,38 @@ private:
     gui::GUI gui;
     gui::GUIState gui_state;
 
+    /**
+     * @brief Enum that describes this client's player's lobby player state 
+     * (only relevant when GUIState is set to GUIState::Lobby)
+     */
+    enum class LobbyPlayerState {
+        Connected,
+        SelectedRole,
+        Ready
+    };
+
+    /**
+     * @brief This client's player's lobby player state
+     * (only relevant when GUIState is set to GUIState::Lobby)
+     */
+    LobbyPlayerState lobbyPlayerState;
+
+    /**
+     * @brief Radio button state enum for a radio button GUI
+     * (represents currently selected radio button)
+     */
+    enum class RadioButtonState {
+        NoneSelected,
+        FirstOption,
+        SecondOption
+    };
+
+    /**
+     * @brief This client's player's lobby player role radio
+     * button selection
+     */
+    RadioButtonState roleSelection;
+
     AudioManager* audioManager;
     AnimationManager* animManager;
 
@@ -268,5 +304,7 @@ private:
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> closest_light_sources;
 
     std::deque<Event> events_received;
+
+    bool phase_change;
 };
 
