@@ -424,13 +424,13 @@ void ServerGameState::update(const EventList& events) {
 				dm->sharedTrapInventory.trapsPlaced = trapsPlaced + 1;
 
 				// SPAWN AN ITEM FOR EACH PLAYER
-				for (int i = 0; i < this->objects.getPlayers().numElements(); i++) {
-					auto player = this->objects.getPlayers().get(i);
+				//for (int i = 0; i < this->objects.getPlayers().numElements(); i++) {
+				//	Player* _player = this->objects.getPlayers().get(i);
 
-					GridCell* cell = this->grid.getCell((int)ceil(player->physics.shared.corner.x / Grid::grid_cell_width), (int)ceil(player->physics.shared.corner.z / Grid::grid_cell_width));
-				
-					
-				}
+				//	GridCell* _cell = this->grid.getCell((int)ceil(_player->physics.shared.corner.x / Grid::grid_cell_width), (int)ceil(_player->physics.shared.corner.z / Grid::grid_cell_width));
+				//
+				//	
+				//}
 			}
 			break;
 		}
@@ -439,7 +439,6 @@ void ServerGameState::update(const EventList& events) {
 		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
 		}
 	}
-
 
 	//	TODO: fill update() method with updating object movement
 	doProjectileTicks();

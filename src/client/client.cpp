@@ -301,7 +301,7 @@ void Client::sendTrapEvent(bool hover, bool place, ModelType trapType) {
     case ModelType::FireballTrapRight:
         this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrapRight, hover, place)));
         break;
-    break; case ModelType::SpikeTrap:
+    case ModelType::SpikeTrap:
         this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, hover, place)));
         break;
     case ModelType::TeleporterTrap:
@@ -407,13 +407,13 @@ void Client::idleCallback() {
             }
 
             if (model == ModelType::SunGod) {
-                ModelType sunGodCellType[] = { ModelType::FireballTrapLeft, ModelType::FireballTrapRight, ModelType::FireballTrapUp, ModelType::FireballTrapDown };
+                const ModelType sunGodCellType[] = { ModelType::FireballTrapLeft, ModelType::FireballTrapRight, ModelType::FireballTrapUp, ModelType::FireballTrapDown };
 
                 model = sunGodCellType[this->orientation];
             }
 
             if (model == ModelType::ArrowTrap) {
-                ModelType arrowTrapCellType[] = { ModelType::ArrowTrapLeft, ModelType::ArrowTrapRight, ModelType::ArrowTrapUp, ModelType::ArrowTrapDown };
+                const ModelType arrowTrapCellType[] = { ModelType::ArrowTrapLeft, ModelType::ArrowTrapRight, ModelType::ArrowTrapUp, ModelType::ArrowTrapDown };
 
                 model = arrowTrapCellType[this->orientation];
             }
@@ -427,13 +427,13 @@ void Client::idleCallback() {
             auto model = obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected - 1];
 
             if (model == ModelType::SunGod) {
-                ModelType sunGodCellType[] = { ModelType::FireballTrapLeft, ModelType::FireballTrapRight, ModelType::FireballTrapUp, ModelType::FireballTrapDown };
+                const ModelType sunGodCellType[] = { ModelType::FireballTrapLeft, ModelType::FireballTrapRight, ModelType::FireballTrapUp, ModelType::FireballTrapDown };
 
                 model = sunGodCellType[this->orientation];
             }
 
             if (model == ModelType::ArrowTrap) {
-                ModelType arrowTrapCellType[] = { ModelType::ArrowTrapLeft, ModelType::ArrowTrapRight, ModelType::ArrowTrapUp, ModelType::ArrowTrapDown };
+                const ModelType arrowTrapCellType[] = { ModelType::ArrowTrapLeft, ModelType::ArrowTrapRight, ModelType::ArrowTrapUp, ModelType::ArrowTrapDown };
 
                 model = arrowTrapCellType[this->orientation];
             }
