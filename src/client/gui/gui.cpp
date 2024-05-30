@@ -51,6 +51,8 @@ bool GUI::init()
     if (!this->logo.init()) {
         return false;
     }
+    
+    this->recentEvents.push_back("");
 
     std::cout << "Initialized GUI\n";
     return true;
@@ -1282,10 +1284,27 @@ void GUI::_layoutGameHUD() {
 
     auto self = client->gameState.objects.at(*self_eid);
 
-    auto matchPhaseFlex = widget::Flexbox::make(
-        glm::vec2(font::getRelativePixels(20), font::getRelativePixels(20)),
+    auto matchPhaseBGFlex = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(5), 0),
         glm::vec2(0, 0),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(10))
+    );
+    auto bgSize = 2;
+    if (!this->config.client.fullscreen) {
+        bgSize = 2.5;
+    }
+    if (!is_dm.value()) {
+        matchPhaseBGFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::EventBG), bgSize));
+    }
+    else {
+        matchPhaseBGFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMEventBG), bgSize));
+    }
+    this->addWidget(std::move(matchPhaseBGFlex));
+
+    auto matchPhaseFlex = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(25), font::getRelativePixels(25)),
+        glm::vec2(0, 0),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(7))
     );
 
     std::optional<glm::vec3> orb_pos;
@@ -1360,16 +1379,37 @@ void GUI::_layoutGameHUD() {
 
             glm::vec3 color = (dist_frac * far_color) + ((1 - dist_frac) * close_color);
 
+            
             matchPhaseFlex->push(widget::DynText::make(ss.str(), fonts,
-                widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, color))
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALLMEDIUM, color))
             );
         }
     }
-    matchPhaseFlex->push(widget::DynText::make(
-        orbStateString,
-        fonts,
-        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
-    ));
+
+    auto eventSize = this->recentEvents.size();
+    if (this->recentEvents[eventSize - 1] != orbStateString) {
+        if (eventSize >= 5) {
+            this->recentEvents.erase(this->recentEvents.begin());
+        }
+        this->recentEvents.push_back(orbStateString);
+    }
+    
+    for (int i = this->recentEvents.size() - 1; i >= 0; i--) {
+        if (i == this->recentEvents.size() - 1) {
+            matchPhaseFlex->push(widget::DynText::make(
+                this->recentEvents[i],
+                fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALLMEDIUM, font::Color::WHITE)
+            ));
+        }
+        else {
+            matchPhaseFlex->push(widget::DynText::make(
+                this->recentEvents[i],
+                fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::GRAY)
+            ));
+        }
+    }
     this->addWidget(std::move(matchPhaseFlex));
 
     // Show death or timer on the top

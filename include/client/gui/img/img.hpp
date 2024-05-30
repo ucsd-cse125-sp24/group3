@@ -47,6 +47,8 @@ enum class ImgID {
     Compass,
     ItemBG,
     DMTrapBG,
+    EventBG,
+    DMEventBG,
     Compass0,
     Compass90,
     Compass180,
@@ -61,7 +63,7 @@ enum class ImgID {
         ImgID::MiddleSelected, ImgID::HealthBar, ImgID::HealthTickEmpty, ImgID::HealthTickFull, \
         ImgID::ManaBar, ImgID::ManaTickEmpty, ImgID::ManaTickFull, ImgID::ItemBG, \
         ImgID::DMTrapBG, ImgID::Needle, ImgID::Compass, ImgID::Compass0, \
-        ImgID::Compass90, ImgID::Compass180, ImgID::Compass270, \
+        ImgID::Compass90, ImgID::Compass180, ImgID::Compass270, ImgID::EventBG, ImgID::DMEventBG, \
         ImgID::DMLeftHotbar, ImgID::DMRightHotbar, ImgID::DMMiddleHotbar, ImgID::DMMiddleSelected, \
     }
 
