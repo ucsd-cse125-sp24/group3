@@ -129,8 +129,12 @@ public:
      * is down. Note: this is a reference so that if a click is captured it can toggle the
      * mouse down flag to false, so that click doesn't get "double counted" in subsequent
      * frames.
+     * @param is_right_mouse_down reference to flag which stores whether or not the right mouse
+     * is down. Note: this is a reference so that if a click is captured it can toggle the
+     * mouse down flag to false, so that click doesn't get "double counted" in subsequent
+     * frames.
      */
-    void handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down);
+    void handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down, bool& is_right_mouse_down);
     /**
      * Renders the current state of the GUI to the screen, based on all of the widgets
      * that have been added and any changes caused by inputs.

@@ -77,12 +77,15 @@ void GUI::renderFrame() {
     glDisable(GL_BLEND);
 }
 
-void GUI::handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down) {
+void GUI::handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down, bool& is_right_mouse_down) {
     // convert to gui coords, where (0,0) is bottome left
     mouse_ypos = WINDOW_HEIGHT - mouse_ypos;
     if (is_left_mouse_down) {
         this->_handleClick(mouse_xpos, mouse_ypos);
         is_left_mouse_down = false;
+    }
+    if (is_right_mouse_down) {
+        is_right_mouse_down = false;
     }
     this->_handleHover(mouse_xpos, mouse_ypos);
 }
