@@ -25,7 +25,7 @@ class Renderable {
      * @param
      */
     virtual void draw(Shader* shader,
-            glm::mat4 viewProj,
+            
             glm::vec3 camPos, 
             bool fill) = 0;
 

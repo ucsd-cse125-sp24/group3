@@ -19,7 +19,6 @@
 #include "client/constants.hpp"
 #include <boost/dll/runtime_symbol_info.hpp>
 
-#include "client/lightsource.hpp"
 #include "client/shader.hpp"
 #include "client/model.hpp"
 #include "glm/fwd.hpp"
@@ -188,13 +187,14 @@ bool Client::init() {
     auto deferred_light_box_frag_path = shaders_dir / "deferred_light_box.frag";
     this->deferred_light_box_shader = std::make_shared<Shader>(deferred_light_box_vert_path.string(), deferred_light_box_frag_path.string());
 
-    auto wall_model_path = graphics_assets_dir / "wall.obj";
+    auto wall_model_path = graphics_assets_dir / "wall2.obj";
     this->wall_model = std::make_unique<Model>(wall_model_path.string());
 
-    auto pillar_model_path = graphics_assets_dir / "pillar.obj";
+    auto pillar_model_path = graphics_assets_dir / "pillar2.obj";
     this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
 
-    this->torchlight_model = std::make_unique<LightSource>();
+    auto torchlight_model_path = graphics_assets_dir / "exit.obj";
+    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
 
     auto slime_model_path = graphics_assets_dir / "slime.obj";
     this->slime_model = std::make_unique<Model>(slime_model_path.string());
@@ -610,7 +610,6 @@ void Client::geometryPass() {
                 this->player_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->player_model->draw(
                     this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -633,7 +632,6 @@ void Client::geometryPass() {
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
                     this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -642,7 +640,6 @@ void Client::geometryPass() {
                 this->slime_model->setDimensions(sharedObject->physics.dimensions);
                 this->slime_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->slime_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -651,7 +648,6 @@ void Client::geometryPass() {
                 this->minotaur_model->setDimensions(sharedObject->physics.dimensions);
                 this->minotaur_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->minotaur_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -660,7 +656,6 @@ void Client::geometryPass() {
                 this->python_model->setDimensions(sharedObject->physics.dimensions);
                 this->python_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->python_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -697,7 +692,6 @@ void Client::geometryPass() {
                 model->setDimensions(sharedObject->physics.dimensions);
                 model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 model->draw(shader,
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -708,7 +702,6 @@ void Client::geometryPass() {
                     this->wall_model->setDimensions(sharedObject->physics.dimensions);
                     this->wall_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                     this->wall_model->draw(this->deferred_geometry_shader.get(),
-                        this->cam->getViewProj(),
                         this->cam->getPos(),
                         true);
                 } else {
@@ -724,7 +717,6 @@ void Client::geometryPass() {
                 this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
                 this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -739,7 +731,6 @@ void Client::geometryPass() {
                 this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->sungod_model->rotateAbsolute(sharedObject->physics.facing);
                 this->sungod_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -753,7 +744,6 @@ void Client::geometryPass() {
                 this->python_model->setDimensions(sharedObject->physics.dimensions);
                 this->python_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->python_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -762,7 +752,6 @@ void Client::geometryPass() {
                 this->spike_trap_model->scaleAbsolute(sharedObject->physics.dimensions);
                 this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -776,7 +765,6 @@ void Client::geometryPass() {
                 this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
                 this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -786,7 +774,6 @@ void Client::geometryPass() {
                     this->orb_model->scaleAbsolute(sharedObject->physics.dimensions);
                     this->orb_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                     this->orb_model->draw(this->deferred_geometry_shader.get(),
-                        this->cam->getViewProj(),
                         this->cam->getPos(),
                         true);
                 }
@@ -806,7 +793,6 @@ void Client::geometryPass() {
                     model->setDimensions(sharedObject->physics.dimensions);
                     model->translateAbsolute(sharedObject->physics.getCenterPosition());
                     model->draw(this->deferred_geometry_shader.get(),
-                        this->cam->getViewProj(),
                         this->cam->getPos(),
                         true);
                 }
@@ -828,7 +814,6 @@ void Client::geometryPass() {
                     this->item_model->scaleAbsolute(sharedObject->physics.dimensions);
                     this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                     this->item_model->draw(this->deferred_geometry_shader.get(),
-                        this->cam->getViewProj(),
                         this->cam->getPos(),
                         true);
                 }
@@ -843,7 +828,6 @@ void Client::geometryPass() {
                 this->orb_model->scaleAbsolute( sharedObject->physics.dimensions);
                 this->orb_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->orb_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -852,7 +836,6 @@ void Client::geometryPass() {
                 this->exit_model->scaleAbsolute( sharedObject->physics.dimensions);
                 this->exit_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->exit_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getViewProj(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -862,7 +845,6 @@ void Client::geometryPass() {
                     this->item_model->scaleAbsolute(sharedObject->physics.dimensions);
                     this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                     this->item_model->draw(this->deferred_geometry_shader.get(),
-                        this->cam->getViewProj(),
                         this->cam->getPos(),
                         true);
                 }
@@ -874,14 +856,12 @@ void Client::geometryPass() {
                         this->item_model->scaleAbsolute(sharedObject->physics.dimensions);
                         this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                         this->item_model->draw(this->deferred_geometry_shader.get(),
-                            this->cam->getViewProj(),
                             this->cam->getPos(),
                             false);
                     } else {
                         this->item_model->scaleAbsolute(sharedObject->physics.dimensions);
                         this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                         this->item_model->draw(this->deferred_geometry_shader.get(),
-                            this->cam->getViewProj(),
                             this->cam->getPos(),
                             true);
                     }
@@ -891,7 +871,6 @@ void Client::geometryPass() {
                         this->item_model->scaleAbsolute(sharedObject->physics.dimensions);
                         this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                         this->item_model->draw(this->deferred_geometry_shader.get(),
-                            this->cam->getViewProj(),
                             this->cam->getPos(),
                             false);
                     }
@@ -988,7 +967,6 @@ void Client::lightingPass() {
         glm::vec3 pos = curr_source->physics.getCenterPosition();
         auto model = glm::mat4(1.0f);
         model = glm::translate(model, pos);
-        // model = glm::scale(model, glm::vec3(0.125f));
 
         this->deferred_light_box_shader->setMat4("model", model);
         this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);
@@ -1077,7 +1055,6 @@ void Client::drawBbox(boost::optional<SharedObject> object) {
         item_model->setDimensions(object->physics.dimensions);
         item_model->translateAbsolute(bbox_pos);
         item_model->draw(this->deferred_geometry_shader.get(),
-            this->cam->getViewProj(),
             this->cam->getPos(),
             false);
     }

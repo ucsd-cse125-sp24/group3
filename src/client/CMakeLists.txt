@@ -22,7 +22,6 @@ set(FILES
 
     shader.cpp
     model.cpp
-    lightsource.cpp
     renderable.cpp
 )
 

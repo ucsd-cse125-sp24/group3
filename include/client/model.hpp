@@ -88,7 +88,7 @@ class Mesh : public Renderable {
      * mesh
      */
     void draw(Shader* shader,
-            glm::mat4 viewProj,
+            
             glm::vec3 camPos, 
             
             bool fill) override;
@@ -124,7 +124,7 @@ class Model : public Renderable {
      * meshes of the model
      */
     void draw(Shader* shader,
-            glm::mat4 viewProj,
+            
             glm::vec3 camPos, 
             
             bool fill) override;

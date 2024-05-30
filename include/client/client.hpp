@@ -11,7 +11,6 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/filesystem.hpp>
 
-#include "client/lightsource.hpp"
 #include "client/shader.hpp"
 #include "client/model.hpp"
 #include "client/util.hpp"
@@ -226,7 +225,7 @@ private:
     /* Character models and lighting objects, might need to move to different classes later */
     std::unique_ptr<Model> player_model;
     std::unique_ptr<Model> bear_model;
-    std::unique_ptr<LightSource> torchlight_model;
+    std::unique_ptr<Model> torchlight_model;
     std::unique_ptr<Model> wall_model;
     std::unique_ptr<Model> pillar_model;
     std::unique_ptr<Model> sungod_model;

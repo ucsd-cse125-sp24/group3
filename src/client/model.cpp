@@ -14,7 +14,6 @@
 #include <iostream>
 #include <filesystem>
 
-#include "client/lightsource.hpp"
 #include "client/renderable.hpp"
 #include "client/constants.hpp"
 #include "client/util.hpp"
@@ -83,7 +82,6 @@ Mesh::Mesh(
 
 void Mesh::draw(
     Shader* shader,
-    glm::mat4 viewProj,
     glm::vec3 camPos,
     bool fill) {
     // vertex shader uniforms
@@ -147,13 +145,11 @@ Model::Model(const std::string& filepath) {
 }
 
 void Model::draw(Shader* shader,
-    glm::mat4 viewProj,
     glm::vec3 camPos, 
-    
     bool fill) {
 
     for(Mesh& mesh : this->meshes) {
-        mesh.draw(shader, viewProj, camPos, fill);
+        mesh.draw(shader, camPos, fill);
     }
 }
 
