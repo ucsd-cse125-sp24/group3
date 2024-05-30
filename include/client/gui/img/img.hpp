@@ -37,6 +37,7 @@ enum class ImgID {
     DMRightHotbar,
     DMMiddleHotbar,
     DMMiddleSelected,
+    DMMiddleCooldown,
     HealthBar,
     HealthTickEmpty,
     HealthTickFull,
@@ -64,7 +65,7 @@ enum class ImgID {
         ImgID::ManaBar, ImgID::ManaTickEmpty, ImgID::ManaTickFull, ImgID::ItemBG, \
         ImgID::DMTrapBG, ImgID::Needle, ImgID::Compass, ImgID::Compass0, \
         ImgID::Compass90, ImgID::Compass180, ImgID::Compass270, ImgID::EventBG, ImgID::DMEventBG, \
-        ImgID::DMLeftHotbar, ImgID::DMRightHotbar, ImgID::DMMiddleHotbar, ImgID::DMMiddleSelected, \
+        ImgID::DMLeftHotbar, ImgID::DMRightHotbar, ImgID::DMMiddleHotbar, ImgID::DMMiddleSelected, ImgID::DMMiddleCooldown \
     }
 
 /**

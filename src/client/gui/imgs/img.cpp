@@ -30,6 +30,7 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::DMRightHotbar: return (img_root / "dm_right.png").string();
         case ImgID::DMMiddleHotbar: return (img_root / "dm_middle.png").string();
         case ImgID::DMMiddleSelected: return (img_root / "dm_selected.png").string();
+        case ImgID::DMMiddleCooldown: return (img_root / "dm_cooldown.png").string();
         case ImgID::Blank: return (img_root / "blank.png").string();
         case ImgID::HealthBar: return (img_root / "healthbar.png").string();
         case ImgID::HealthTickEmpty: return (img_root / "healthtick_empty.png").string();

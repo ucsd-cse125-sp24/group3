@@ -1130,13 +1130,81 @@ void GUI::_sharedGameHUD() {
         frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightHotbar), 2));
     } else {
         frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMLeftHotbar), 2));
-        for (int i = 0; i < inventory_size; i++) {
-            if (selected == i) {
-                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleSelected), 2));
 
+        for (int i = 0; i < inventory_size; i++) {
+            bool idxInCooldown = false;
+
+            if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
+                switch (self->trapInventoryInfo->inventory[i]) {
+                    case ModelType::FloorSpikeFull: {
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeFull) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleCooldown), 2));
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::SunGod: {
+                        itemString = "Fireball Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()) 
+                        {
+                            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleCooldown), 2));
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::SpikeTrap: {
+                        itemString = "Ceiling Spike Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::SpikeTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleCooldown), 2));
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::Lightning: {
+                        itemString = "Lightning Bolt (10)";
+
+                        break;
+                    }
+                    case ModelType::TeleporterTrap: {
+                        itemString = "Teleporter Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::TeleporterTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleCooldown), 2));
+                            idxInCooldown = true;
+                        }
+
+                        break;
+                    }
+                    case ModelType::ArrowTrap: {
+                        itemString = "Arrow Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()) 
+                        {
+                            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleCooldown), 2));
+                            idxInCooldown = true;
+                        }
+
+                        break;
+                    }
+                }
             }
-            else {
-                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleHotbar), 2));
+            
+            if (!idxInCooldown) {
+                if (selected == i) {
+                    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleSelected), 2));
+
+                }
+                else {
+                    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleHotbar), 2));
+                }
             }
         }
         frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMRightHotbar), 2));
