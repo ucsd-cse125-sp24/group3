@@ -422,6 +422,15 @@ void ServerGameState::update(const EventList& events) {
 				dm->setPlacedTraps(trapsPlaced + 1);
 
 				dm->sharedTrapInventory.trapsPlaced = trapsPlaced + 1;
+
+				// SPAWN AN ITEM FOR EACH PLAYER
+				for (int i = 0; i < this->objects.getPlayers().numElements(); i++) {
+					auto player = this->objects.getPlayers().get(i);
+
+					GridCell* cell = this->grid.getCell((int)ceil(player->physics.shared.corner.x / Grid::grid_cell_width), (int)ceil(player->physics.shared.corner.z / Grid::grid_cell_width));
+				
+					
+				}
 			}
 			break;
 		}
@@ -1204,7 +1213,39 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 	case CellType::FireballTrapDown: {
 		if (cell->type != CellType::Empty)
 			return nullptr;
-        return spawnFireballTrap(cell);
+
+		glm::vec3 dimensions = Object::models.at(ModelType::SunGod);
+		glm::vec3 corner(
+			(cell->x * Grid::grid_cell_width),
+			0.0f,
+			(cell->y * Grid::grid_cell_width)
+		);
+		Direction dir;
+		switch (type) {
+		case CellType::FireballTrapLeft:
+			dir = Direction::LEFT;
+			// corner.z -= (dimensions.z / 2.0f);
+			break;
+		case CellType::FireballTrapRight:
+			dir = Direction::RIGHT;
+			// corner.z -= (dimensions.z / 2.0f);
+			break;
+		case CellType::FireballTrapUp:
+			dir = Direction::UP;
+			corner.x += (dimensions.x / 2.0f);
+			break;
+		case CellType::FireballTrapDown:
+			corner.x += (dimensions.x / 2.0f);
+			dir = Direction::DOWN;
+			break;
+		default:
+			dir = Direction::LEFT;
+			break;
+		}
+
+		FireballTrap* fireBallTrap = new FireballTrap(corner, dir);
+		this->objects.createObject(fireBallTrap);
+		return fireBallTrap;
 	}
 	case CellType::SpikeTrap: {
 		if (cell->type != CellType::Empty)

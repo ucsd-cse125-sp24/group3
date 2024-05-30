@@ -1021,7 +1021,10 @@ void GUI::_sharedGameHUD() {
                 case ModelType::SunGod: {
                     itemString = "Fireball Trap";
 
-                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()) {
                         itemString += " (IN COOLDOWN)";
                     }
                     break;
@@ -1042,6 +1045,18 @@ void GUI::_sharedGameHUD() {
                     }
 
                     
+                    break;
+                }
+                case ModelType::ArrowTrap: {
+                    itemString = "Arrow Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+
                     break;
                 }
             }
@@ -1167,6 +1182,10 @@ void GUI::_sharedGameHUD() {
                     break;
                 }
                 case ModelType::Lightning: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    break;
+                }
+                case ModelType::ArrowTrap: {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
                     break;
                 }

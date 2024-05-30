@@ -281,8 +281,9 @@ private:
     bool is_pressed_p = false;
 
     bool is_left_mouse_down = false;
+    bool is_right_mouse_down = false;
 
-    /* DM Trap Orientation */
+    /* DM Trap Orientation Traps With Directions */
     int orientation = 0;
 
     /* Mouse position coordinates */

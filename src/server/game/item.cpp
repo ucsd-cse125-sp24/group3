@@ -57,7 +57,7 @@ void Item::doCollision(Object* other, ServerGameState& state) {
 
 		cell->type = CellType::Empty;
 
-		std::cout << "item row: " << cell->x << " item col: " << cell->y << std::endl;
+
 	}
 }
 

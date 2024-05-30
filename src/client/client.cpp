@@ -289,10 +289,19 @@ void Client::sendTrapEvent(bool hover, bool place, ModelType trapType) {
     case ModelType::FloorSpikeHorizontal:
         this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FloorSpikeHorizontal, hover, place)));
         break;
-    case ModelType::SunGod:
+    case ModelType::FireballTrapUp:
         this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrapUp, hover, place)));
         break;
-    case ModelType::SpikeTrap:
+    case ModelType::FireballTrapDown:
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrapDown, hover, place)));
+        break;
+    case ModelType::FireballTrapLeft:
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrapLeft, hover, place)));
+        break; 
+    case ModelType::FireballTrapRight:
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::FireballTrapRight, hover, place)));
+        break;
+    break; case ModelType::SpikeTrap:
         this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::SpikeTrap, hover, place)));
         break;
     case ModelType::Lightning:
@@ -378,12 +387,55 @@ void Client::idleCallback() {
             }
 
             // send one event
-            if ((is_held_down || is_held_i || is_held_left || is_held_right || is_held_up || is_held_o) && is_pressed_p)
-                sendTrapEvent(true, false, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected-1]);
+            if ((is_held_down || is_held_i || is_held_left || is_held_right || is_held_up || is_held_o) && is_pressed_p) {
+                auto obj = this->gameState.objects.at(eid);
+                sendTrapEvent(true, false, obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected - 1]);
+            }
+        }
+
+        if (this->session->getInfo().is_dungeon_master.value() && is_pressed_p) {
+            auto obj = this->gameState.objects.at(eid);
+
+            auto model = obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected - 1];
+
+            // udpate orientation
+            if (is_right_mouse_down) {
+                this->orientation = (this->orientation + 1) % 4; // 4 possible directions
+            }
+
+            if (model == ModelType::SunGod) {
+                ModelType sunGodCellType[] = { ModelType::FireballTrapLeft, ModelType::FireballTrapRight, ModelType::FireballTrapUp, ModelType::FireballTrapDown };
+
+                model = sunGodCellType[this->orientation];
+            }
+
+            if (model == ModelType::ArrowTrap) {
+                ModelType arrowTrapCellType[] = { ModelType::ArrowTrapLeft, ModelType::ArrowTrapRight, ModelType::ArrowTrapUp, ModelType::ArrowTrapDown };
+
+                model = arrowTrapCellType[this->orientation];
+            }
+            
+            sendTrapEvent(true, false, model);
         }
 
         if (this->session->getInfo().is_dungeon_master.value() && is_pressed_p && is_left_mouse_down) {
-            sendTrapEvent(false, true, (this->gameState.objects.at(eid))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid))->trapInventoryInfo->selected-1]);
+            auto obj = this->gameState.objects.at(eid);
+
+            auto model = obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected - 1];
+
+            if (model == ModelType::SunGod) {
+                ModelType sunGodCellType[] = { ModelType::FireballTrapLeft, ModelType::FireballTrapRight, ModelType::FireballTrapUp, ModelType::FireballTrapDown };
+
+                model = sunGodCellType[this->orientation];
+            }
+
+            if (model == ModelType::ArrowTrap) {
+                ModelType arrowTrapCellType[] = { ModelType::ArrowTrapLeft, ModelType::ArrowTrapRight, ModelType::ArrowTrapUp, ModelType::ArrowTrapDown };
+
+                model = arrowTrapCellType[this->orientation];
+            }
+
+            sendTrapEvent(false, true, model);
         }
 
         // If movement 0, send stopevent
@@ -1280,17 +1332,10 @@ void Client::mouseButtonCallback(GLFWwindow* window, int button, int action, int
 
     if (button == GLFW_MOUSE_BUTTON_RIGHT) {
         if (action == GLFW_PRESS) {
-            if (this->session != nullptr && this->session->getInfo().client_eid.has_value()) {
-                if (is_pressed_p) {
-                    auto eid = this->session->getInfo().client_eid.value();
-
-                    auto obj = this->gameState.objects.at(eid);
-
-                    auto model = obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected - 1];
-
-
-                }
-            }
+            is_right_mouse_down = true;
+        }
+        else {
+            is_right_mouse_down = false;
         }
     }
 
