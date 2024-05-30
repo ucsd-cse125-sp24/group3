@@ -342,14 +342,9 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
                 mesh->mVertices[i].x,
                 mesh->mVertices[i].y,
                 mesh->mVertices[i].z);
-        // std::cout << "mNumVertices: " << mesh->mNumVertices << std::endl;
-        // std::cout << i << std::endl;
 
         glm::vec3 normal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
         if (mesh->mNormals) {
-            // std::cout << "Process vertex[" << i << "]: " << mesh->mNormals[i].x << ", ";
-            // std::cout << mesh->mNormals[i].y << ", ";
-            // std::cout << mesh->mNormals[i].z << std::endl;
             normal = glm::vec3(
                     mesh->mNormals[i].x,
                     mesh->mNormals[i].y,
@@ -389,7 +384,6 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     float shininess = 0.0f;
 
     if(mesh->mMaterialIndex >= 0) {
-        // std::cout << "processing material of id: " << mesh->mMaterialIndex << std::endl;
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
         std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
@@ -416,17 +410,6 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     }
 
     extractBoneWeight(vertices, mesh, scene);
-
-    // std::cout << "vertex bone data" << std::endl;
-
-    // for (int i = 0; i < vertices.size(); i++) {
-    //     auto v = vertices[i];
-    //     for (int j = 0; j < 4; j++) {
-    //         if (v.m_boneIDs[j] >= 0) {
-    //             std::cout << "v[" << i << "]: " << v.m_boneIDs[j] << ", " << v.m_weights[j] << std::endl;
-    //         }
-    //     }
-    // }
 
     return Mesh(
         vertices,

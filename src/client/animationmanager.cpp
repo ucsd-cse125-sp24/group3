@@ -61,9 +61,6 @@ void AnimationManager::setAnimation(EntityID id, ObjectType objType, AnimState a
         entityAnimMap[id] = std::make_pair(0.0f, objAnimMap[objType][animState]);
     }
     currEntity = id;
-    
-    // m_currentTime = entityAnimMap[id].first;
-    // m_currentAnimation = entityAnimMap[id].second;
 }
 
 void AnimationManager::addAnimation(Animation* anim, ObjectType objType, AnimState animState) {

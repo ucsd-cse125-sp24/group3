@@ -8,7 +8,6 @@ Animation::Animation(const std::string& animationPath, Model* model) {
     auto animation = scene->mAnimations[0];
     m_duration = animation->mDuration;
     m_ticksPerSecond = animation->mTicksPerSecond;
-    // std::cout << "duration: " << m_duration << ", ticks: " << m_ticksPerSecond << std::endl;
     aiMatrix4x4 globalTransformation = scene->mRootNode->mTransformation;
     globalTransformation = globalTransformation.Inverse();
     readHierarchyData(m_rootNode, scene->mRootNode);
@@ -30,7 +29,7 @@ Bone* Animation::findBone(const std::string& name) {
 void Animation::readMissingBones(const aiAnimation* animation, Model& model) {
     int size = animation->mNumChannels;
 
-    auto& boneInfoMap = model.getBoneInfoMap();//getting m_BoneInfoMap from Model class
+    auto& boneInfoMap = model.getBoneInfoMap(); //getting m_BoneInfoMap from Model class
     int& boneCount = model.getBoneCount(); //getting the m_BoneCounter from Model class
 
     //reading channels(bones engaged in an animation and their keyframes)

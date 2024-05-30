@@ -208,25 +208,9 @@ bool Client::init() {
     this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
     this->light_source = std::make_unique<LightSource>();
 
-    // auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
-    // this->bear_model = std::make_unique<Model>(bear_model_path.string());
-    // // this->bear_model->scaleAbsolute(0.25);
-
-    // auto bear_model_path = graphics_assets_dir / "Taunt.fbx";
-    // auto bear_anim_path = graphics_assets_dir / "Taunt.fbx";
-
-    // this->bear_model = std::make_unique<Model>(bear_model_path.string());
-    // this->bear_model->scaleAbsolute(0.004);
-    // Animation* bear = new Animation(bear_anim_path.string(), bear_model.get());
-    // animManager = new AnimationManager(bear);
-
-    auto player_model_path = graphics_assets_dir / "model_m2/model_m2_text_path.fbx";
-    // auto player_model_path = graphics_assets_dir / "char2/obj/Char2_b/firema 1.obj";
+    // auto player_model_path = graphics_assets_dir / "model_m2/model_m2_text_path.fbx";
+    auto player_model_path = graphics_assets_dir / "char3/Char3/model_f.fbx";
     auto player_walk_path = graphics_assets_dir / "animations/walk-test.fbx";
-    // auto player_model_path = graphics_assets_dir / "model_m2_test_1/model_m2_test_1.dae";
-    // auto player_walk_path = graphics_assets_dir / "animations/walk_test_2.dae";
-    // auto player_model_path = graphics_assets_dir / "animations/model_m2.glb";
-    // auto player_walk_path = graphics_assets_dir / "animations/walk.glb";
     auto player_jump_path = graphics_assets_dir / "animations/jump-test.fbx";
     auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
     auto player_run_path = graphics_assets_dir / "animations/run.fbx";
@@ -251,11 +235,7 @@ bool Client::init() {
     animManager->addAnimation(player_atk, ObjectType::Player, AnimState::AttackAnim);
     animManager->addAnimation(player_use_potion, ObjectType::Player, AnimState::DrinkPotionAnim);
 
-    // auto sungod_model_path = graphics_assets_dir / "sungod.obj";
-    // auto sungod_model_path = graphics_assets_dir / "model_m2/model_m2.dae";
-    auto sungod_model_path = graphics_assets_dir / "model_m2/model_m2_text_path.fbx";
-    // auto sungod_model_path = graphics_assets_dir / "char3/Char3/girl1 1_og.obj";
-    // auto sungod_model_path = graphics_assets_dir / "char2/obj/Char2_b/firema 1.obj";
+    auto sungod_model_path = graphics_assets_dir / "sungod.obj";
     this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
 
     this->audioManager->init();
@@ -515,41 +495,12 @@ void Client::draw() {
         
         switch (sharedObject->type) {
             case ObjectType::Player: {
-                // AnimState animState = sharedObject->animState;
-                // switch (sharedObject->animState) {
-                //     case AnimState::WalkAnim:
-                //         std::cout << "walk" << std::endl;
-                //         break;
-                //     case AnimState::JumpAnim:
-                //         std::cout << "jump" << std::endl;
-                //         break;
-                //     case AnimState::IdleAnim:
-                //         std::cout << "idle" << std::endl;
-                //         break;
-                //     case AnimState::LandAnim:
-                //         std::cout << "land" << std::endl;
-                //         break;
-                //     case AnimState::SprintAnim:
-                //         std::cout << "sprint" << std::endl;
-                //         break;
-                //     case AnimState::DeathAnim:
-                //         std::cout << "death" << std::endl;
-                //         break;
-                //     case AnimState::AttackAnim:
-                //         std::cout << "attack" << std::endl;
-                //         break;
-                //     default:
-                //         std::cout << "undef" << std::endl;
-                //         break;
-                // }
-
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
                     //  TODO: Update the player eye level to an acceptable level
 
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
-                    pos.z += 4.0f;
                     cam->updatePos(pos);
 
                     // update listener position & facing
@@ -565,18 +516,16 @@ void Client::draw() {
                     if (!sharedObject->playerInfo->is_alive) {
                         this->gui_state = GUIState::DEAD_SCREEN;
                     }
-                    // break;
+                    break;
                 }
                 animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
 
                 /* Update model animation */
                 animManager->updateAnimation(0.025f);
                 auto transforms = animManager->getFinalBoneMatrices();
-                // std::cout << transforms.size() << std::endl;
                 this->model_shader->use();
 
                 for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
-                    // std::cout << "[" << i << "]: " << glm::to_string(transforms[i]) << std::endl;
                     model_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
                 }
 
@@ -752,9 +701,9 @@ void Client::draw() {
                 break;
             }
             case ObjectType::FireballTrap: {
-                // this->sungod_model->setDimensions(sharedObject->physics.dimensions);
+                this->sungod_model->setDimensions(sharedObject->physics.dimensions);
                 this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition() - glm::vec3(0.0f, 8.5f, 0.0f));
+                this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->sungod_model->rotateAbsolute(sharedObject->physics.facing);
                 this->sungod_model->draw(this->sungod_shader.get(),
                     this->cam->getViewProj(),
