@@ -49,7 +49,7 @@ glm::vec3 getRGB(Color color) {
 }
 
 float getRelativePixels(float pixels) {
-    float screen_factor = static_cast<float>(WINDOW_WIDTH) / static_cast<float>(UNIT_WINDOW_WIDTH);
+    float screen_factor = static_cast<float>(WINDOW_HEIGHT) / static_cast<float>(UNIT_WINDOW_HEIGHT);
     return pixels * screen_factor;
 }
 
