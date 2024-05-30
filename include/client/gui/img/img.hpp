@@ -56,7 +56,7 @@ enum class ImgID {
     Blank,
 };
 #define GET_ALL_IMG_IDS() \
-    { ImgID::AwesomeSauce, ImgID::HealthPotion, ImgID::UnknownPotion, \
+    { ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::HealthPotion, ImgID::UnknownPotion, \
         ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
         ImgID::Crosshair, ImgID::Scroll, ImgID::Dagger, ImgID::Sword, ImgID::Hammer, \
         ImgID::LeftHotbar, ImgID::RightHotbar, ImgID::MiddleHotbar, ImgID::Blank, ImgID::Title, \
