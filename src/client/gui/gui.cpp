@@ -1146,6 +1146,20 @@ void GUI::_sharedGameHUD() {
                         }
                         break;
                     }
+                    case ModelType::FloorSpikeVertical: {
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeVertical) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleCooldown), 2));
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::FloorSpikeHorizontal: {
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeHorizontal) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleCooldown), 2));
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
                     case ModelType::SunGod: {
                         itemString = "Fireball Trap";
 

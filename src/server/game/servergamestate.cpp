@@ -865,8 +865,6 @@ void ServerGameState::updateTraps() {
 	if (this->objects.getDM() != nullptr) {
 		auto& coolDownMap = dm->sharedTrapInventory.trapsInCooldown;
 
-		//std::cout << coolDownMap << " cooldown map size" << std::endl;
-
 		for (auto it = dm->sharedTrapInventory.trapsInCooldown.cbegin(); it != dm->sharedTrapInventory.trapsInCooldown.cend();) {
 			if (std::chrono::round<std::chrono::seconds>(current_time - std::chrono::system_clock::from_time_t(it->second)) >= std::chrono::seconds(TRAP_COOL_DOWN)) {
 				it = dm->sharedTrapInventory.trapsInCooldown.erase(it);
@@ -875,7 +873,10 @@ void ServerGameState::updateTraps() {
 				it++;
 			}
 		}
+
 	}
+
+	bool dmUpdated = false;
 
 	// This object moved, so we should check to see if a trap should trigger because of it
 	auto traps = this->objects.getTraps();
@@ -883,13 +884,14 @@ void ServerGameState::updateTraps() {
 		auto trap = traps.get(i);
 		if (trap == nullptr) { continue; } // unsure if i need this?
 		if (trap->getIsDMTrap()) {
-			
 			if (current_time >= trap->getExpiration()) {
-				
-				int trapsPlaced = dm->getPlacedTraps();
+				dmUpdated = true;
 
+				int trapsPlaced = dm->getPlacedTraps();
 				this->markForDeletion(trap->globalID);
-				dm->setPlacedTraps(trapsPlaced - 1);
+				dm->setPlacedTraps(trapsPlaced - 1);				
+				dm->sharedTrapInventory.trapsPlaced = trapsPlaced - 1;
+
 				continue;
 			}
 		}
@@ -903,6 +905,10 @@ void ServerGameState::updateTraps() {
             trap->reset(*this);
 			this->updated_entities.insert(trap->globalID);
         }
+	}
+
+	if (dmUpdated) {
+		this->updated_entities.insert(dm->globalID);
 	}
 }
 

@@ -427,13 +427,13 @@ void Client::idleCallback() {
             auto model = obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected - 1];
 
             if (model == ModelType::SunGod) {
-                const ModelType sunGodCellType[] = { ModelType::FireballTrapLeft, ModelType::FireballTrapRight, ModelType::FireballTrapUp, ModelType::FireballTrapDown };
+                const ModelType sunGodCellType[] = { ModelType::FireballTrapUp, ModelType::FireballTrapRight, ModelType::FireballTrapDown, ModelType::FireballTrapLeft };
 
                 model = sunGodCellType[this->orientation];
             }
 
             if (model == ModelType::ArrowTrap) {
-                const ModelType arrowTrapCellType[] = { ModelType::ArrowTrapLeft, ModelType::ArrowTrapRight, ModelType::ArrowTrapUp, ModelType::ArrowTrapDown };
+                const ModelType arrowTrapCellType[] = { ModelType::ArrowTrapUp, ModelType::ArrowTrapRight, ModelType::ArrowTrapDown, ModelType::ArrowTrapLeft };
 
                 model = arrowTrapCellType[this->orientation];
             }
