@@ -218,9 +218,9 @@ bool Client::init() {
     this->light_source = std::make_unique<LightSource>();
 
     // auto player_model_path = graphics_assets_dir / "model_m2/model_m2_text_path.fbx";
-    auto player_model_path = graphics_assets_dir / "char3/Char3/model_f.fbx";
-    auto player_walk_path = graphics_assets_dir / "animations/walk-test.fbx";
-    auto player_jump_path = graphics_assets_dir / "animations/jump-test.fbx";
+    auto player_model_path = graphics_assets_dir / "player_models/char_2/model_char_2.fbx";
+    auto player_walk_path = graphics_assets_dir / "animations/walk.fbx";
+    auto player_jump_path = graphics_assets_dir / "animations/jump.fbx";
     auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
     auto player_run_path = graphics_assets_dir / "animations/run.fbx";
     auto player_atk_path = graphics_assets_dir / "animations/slash.fbx";
