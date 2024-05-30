@@ -85,6 +85,8 @@ CellType charToCellType(char c) {
 		return CellType::TeleporterTrap;
 	case 'o':
 		return CellType::Exit;
+	case 'M':
+		return CellType::Mirror;
 	default:
 		std::cerr << "Unknown cell type: " << c << "\n";
 		return CellType::Unknown;
@@ -171,6 +173,8 @@ char cellTypeToChar(CellType type) {
 		return 'T';
 	case CellType::Exit:
 		return 'o';
+	case CellType::Mirror:
+		return 'M';
 	default:
 		return '?';
 	}

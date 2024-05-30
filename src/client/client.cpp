@@ -922,6 +922,9 @@ void Client::draw() {
                 }
                 break;
             }
+            case ObjectType::Mirror: {
+                break;
+            }
             default:
                 break;
         }

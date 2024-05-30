@@ -41,5 +41,6 @@ enum class CellType {
 	TeleporterTrap,
 	Exit,
 	Lightning,
+	Mirror,
 	Unknown
 };
