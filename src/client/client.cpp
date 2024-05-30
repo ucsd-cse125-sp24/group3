@@ -190,10 +190,10 @@ bool Client::init() {
     auto floor_model_path = graphics_assets_dir / "floor.obj";
     this->floor_model = std::make_unique<Model>(floor_model_path.string());
 
-    auto wall_model_path = graphics_assets_dir / "wall2.obj";
+    auto wall_model_path = graphics_assets_dir / "wall.obj";
     this->wall_model = std::make_unique<Model>(wall_model_path.string());
 
-    auto pillar_model_path = graphics_assets_dir / "pillar2.obj";
+    auto pillar_model_path = graphics_assets_dir / "pillar.obj";
     this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
 
     auto torchlight_model_path = graphics_assets_dir / "exit.obj";
