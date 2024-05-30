@@ -206,8 +206,6 @@ private:
      */
     void lightingPass();
 
-    void renderLightCube();
-
     /**
      * @brief Draw bounding box around a given SharedObject
      * only if the client.draw_bboxes field is set to true
