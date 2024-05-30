@@ -236,6 +236,7 @@ private:
     std::unique_ptr<Model> spike_trap_model;
     std::unique_ptr<Model> orb_model;
     std::unique_ptr<Model> exit_model;
+    std::unique_ptr<Model> floor_model;
 
     GLFWwindow *window;
 

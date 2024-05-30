@@ -187,6 +187,9 @@ bool Client::init() {
     auto deferred_light_box_frag_path = shaders_dir / "deferred_light_box.frag";
     this->deferred_light_box_shader = std::make_shared<Shader>(deferred_light_box_vert_path.string(), deferred_light_box_frag_path.string());
 
+    auto floor_model_path = graphics_assets_dir / "floor.obj";
+    this->floor_model = std::make_unique<Model>(floor_model_path.string());
+
     auto wall_model_path = graphics_assets_dir / "wall2.obj";
     this->wall_model = std::make_unique<Model>(wall_model_path.string());
 
@@ -680,10 +683,10 @@ void Client::geometryPass() {
                         model = this->pillar_model.get();
                         break;
                     case SurfaceType::Ceiling:
-                        model = this->wall_model.get();
+                        model = this->floor_model.get();
                         break;
                     case SurfaceType::Floor:
-                        model = this->wall_model.get();
+                        model = this->floor_model.get();
                         break;
                 }
 
