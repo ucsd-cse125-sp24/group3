@@ -28,7 +28,7 @@ Weapon::Weapon(glm::vec3 corner, glm::vec3 dimensions, WeaponType weaponType):
         break;
     case WeaponType::Lightning:
         this->modelType = ModelType::Lightning;
-        this->delay = LIGHTNING_TOTAL;
+        this->delay = 0;
         break;
     }
 }

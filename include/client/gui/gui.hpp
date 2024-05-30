@@ -19,6 +19,7 @@
 #include "shared/utilities/config.hpp"
 
 #include <iostream>
+#include <vector>
 #include <memory>
 #include <map>
 #include <boost/optional/optional.hpp>
@@ -291,6 +292,8 @@ private:
     Client* client;
 
     GameConfig config;
+
+    std::vector<std::string> recentEvents;
 
     img::Logo logo;
 
