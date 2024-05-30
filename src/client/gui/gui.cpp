@@ -28,14 +28,12 @@ bool GUI::init()
     widget::DynText::shader = std::make_unique<Shader>(
         (shader_path / "text.vert").string(), (shader_path / "text.frag").string());
     if (widget::DynText::shader->getID() == 0) {
-        std::cerr << __LINE__ << std::endl;
         return false;
     }
 
     widget::StaticImg::shader = std::make_unique<Shader>(
         (shader_path / "img.vert").string(), (shader_path / "img.frag").string());
     if (widget::StaticImg::shader->getID() == 0) {
-        std::cerr << __LINE__ << std::endl;
         return false;
     }
 
@@ -43,17 +41,14 @@ bool GUI::init()
     this->capture_keystrokes = false;
 
     if (!this->fonts->init()) {
-        std::cerr << __LINE__ << std::endl;
         return false;
     }
 
     if (!this->images.init()) {
-        std::cerr << __LINE__ << std::endl;
         return false;
     }
 
     if (!this->logo.init()) {
-        std::cerr << __LINE__ << std::endl;
         return false;
     }
     
