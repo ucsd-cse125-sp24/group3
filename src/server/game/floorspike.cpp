@@ -28,6 +28,10 @@ bool FloorSpike::shouldReset(ServerGameState& state) {
 }
 
 void FloorSpike::doCollision(Object* obj, ServerGameState& state) {
+    if (this->info.dm_hover) {
+        return;
+    }
+
     auto creature = dynamic_cast<Creature*>(obj);
     if (creature == nullptr) return;
 

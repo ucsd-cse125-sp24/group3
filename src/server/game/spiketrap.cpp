@@ -14,14 +14,15 @@ const std::chrono::seconds SpikeTrap::TIME_UNTIL_RESET = 10s;
 SpikeTrap::SpikeTrap(glm::vec3 corner, glm::vec3 dimensions):
     Trap(ObjectType::SpikeTrap, true, corner, Collider::Box, ModelType::Cube, dimensions) 
 {
-    this->dropped_time = std::chrono::system_clock::now();
+    this->dropped_time = std::chrono::system_clock::now() - TIME_UNTIL_RESET;
     this->physics.feels_gravity = false;
 }
 
 bool SpikeTrap::shouldTrigger(ServerGameState& state) {
-    if (this->info.triggered) {
+    if (this->info.triggered || this->info.dm_hover) {
         return false;
     }
+
 
     auto now = std::chrono::system_clock::now();
     // only drop if it isn't currently triggered, and it has been at least 5 seconds since the 
@@ -29,6 +30,7 @@ bool SpikeTrap::shouldTrigger(ServerGameState& state) {
     if (now - this->dropped_time < TIME_UNTIL_RESET) {
         return false;
     }
+
 
     auto players = state.objects.getPlayers();
     for (int p = 0; p < players.size(); p++) {
@@ -41,6 +43,7 @@ bool SpikeTrap::shouldTrigger(ServerGameState& state) {
             return true;
         }
     }
+
 
     return false;
 }

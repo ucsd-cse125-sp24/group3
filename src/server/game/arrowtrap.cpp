@@ -19,7 +19,7 @@ ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir):
 }
 
 bool ArrowTrap::shouldTrigger(ServerGameState& state) {
-    if (this->info.triggered) {
+    if (this->info.triggered || this->info.dm_hover) {
         return false;
     }
 

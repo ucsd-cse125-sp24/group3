@@ -33,6 +33,8 @@ enum class ObjectType {
 	TeleporterTrap,
 	Spell,
 	Slime,
+	Minotaur,
+	Python,
 	Item,
 	Exit,
 	Orb,
@@ -124,9 +126,10 @@ struct SharedTrapInventory {
 	int inventory_size;
 	std::vector<ModelType> inventory;
 	std::unordered_map<CellType, std::time_t> trapsInCooldown;
+	int trapsPlaced;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& selected& inventory_size& inventory& trapsInCooldown;
+		ar& selected& inventory_size& inventory& trapsInCooldown& trapsPlaced;
 	}
 };
 
@@ -142,9 +145,10 @@ struct SharedItemInfo {
 
 struct SharedWeaponInfo {
 	bool attacked;
+	bool lightning;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& attacked;
+		ar& attacked& lightning;
 	}
 };
 
@@ -162,11 +166,10 @@ struct SharedSolidSurface {
 	 */
 	SurfaceType surfaceType;
 
-	bool dm_highlight;
 	bool is_internal;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & surfaceType & dm_highlight & is_internal;
+		ar & surfaceType & is_internal;
 	}
 };
 
@@ -203,9 +206,10 @@ struct SharedPhysics {
 
 struct SharedTrapInfo {
 	bool triggered;
+	bool dm_hover;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & triggered;
+		ar & triggered & dm_hover;
 	}
 };
 

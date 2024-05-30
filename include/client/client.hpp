@@ -11,7 +11,6 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/filesystem.hpp>
 
-#include "client/cube.hpp"
 #include "client/lightsource.hpp"
 #include "client/shader.hpp"
 #include "client/model.hpp"
@@ -116,6 +115,8 @@ public:
      */
     void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
+    void scrollCallback(GLFWwindow* window, double xposIn, double yposIn);
+
     /**
      * @brief Callback which handles mouse button presses.
      * 
@@ -167,6 +168,8 @@ public:
 
     void setWorldPos();
 
+    void sendTrapEvent(bool hover, bool place, ModelType trapType);
+
     int curr_fps;
 private:
     /**
@@ -204,7 +207,7 @@ private:
      */
     void lightingPass();
 
-    void renderCube();
+    void renderLightCube();
 
     /**
      * @brief Draw bounding box around a given SharedObject
@@ -216,27 +219,24 @@ private:
     SharedGameState gameState;
 
     /* Shader objects for various */
-    std::shared_ptr<Shader> cube_shader;
-    std::shared_ptr<Shader> dm_cube_shader;
-    std::shared_ptr<Shader> model_shader;
-    std::shared_ptr<Shader> light_source_shader;
-    std::shared_ptr<Shader> solid_surface_shader;
-    std::shared_ptr<Shader> wall_shader;
-    std::shared_ptr<Shader> sungod_shader;
     std::shared_ptr<Shader> deferred_geometry_shader;
     std::shared_ptr<Shader> deferred_lighting_shader;
     std::shared_ptr<Shader> deferred_light_box_shader;
 
     /* Character models and lighting objects, might need to move to different classes later */
-    std::unique_ptr<Model> cube_model;
     std::unique_ptr<Model> player_model;
     std::unique_ptr<Model> bear_model;
-    std::unique_ptr<LightSource> light_source;
-    std::unique_ptr<Model> torchlight_model;
+    std::unique_ptr<LightSource> torchlight_model;
     std::unique_ptr<Model> wall_model;
     std::unique_ptr<Model> pillar_model;
     std::unique_ptr<Model> sungod_model;
     std::unique_ptr<Model> slime_model;
+    std::unique_ptr<Model> minotaur_model;
+    std::unique_ptr<Model> python_model;
+    std::unique_ptr<Model> item_model;
+    std::unique_ptr<Model> spike_trap_model;
+    std::unique_ptr<Model> orb_model;
+    std::unique_ptr<Model> exit_model;
 
     GLFWwindow *window;
 
@@ -244,6 +244,38 @@ private:
     friend class gui::GUI;
     gui::GUI gui;
     gui::GUIState gui_state;
+
+    /**
+     * @brief Enum that describes this client's player's lobby player state 
+     * (only relevant when GUIState is set to GUIState::Lobby)
+     */
+    enum class LobbyPlayerState {
+        Connected,
+        SelectedRole,
+        Ready
+    };
+
+    /**
+     * @brief This client's player's lobby player state
+     * (only relevant when GUIState is set to GUIState::Lobby)
+     */
+    LobbyPlayerState lobbyPlayerState;
+
+    /**
+     * @brief Radio button state enum for a radio button GUI
+     * (represents currently selected radio button)
+     */
+    enum class RadioButtonState {
+        NoneSelected,
+        FirstOption,
+        SecondOption
+    };
+
+    /**
+     * @brief This client's player's lobby player role radio
+     * button selection
+     */
+    RadioButtonState roleSelection;
 
     AudioManager* audioManager;
 
@@ -289,5 +321,7 @@ private:
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> closest_light_sources;
 
     std::deque<Event> events_received;
+
+    bool phase_change;
 };
 

@@ -11,6 +11,7 @@
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"
 #include "server/game/objectmanager.hpp"
+#include "server/game/spawner.hpp"
 
 #include <string>
 #include <vector>
@@ -45,6 +46,11 @@ public:
 	 * instance at the current timestep.
 	 */
 	ObjectManager objects;
+
+	/**
+	 * @brief Controls the spawns for the enemies
+	 */
+	std::unique_ptr<Spawner> spawner;
 
 	/**
 	 * @brief Creates a ServerGameState instance. The intial GamePhase is set to
@@ -127,6 +133,8 @@ public:
 
 	void spawnEnemies();
 
+	void handleTickVelocity();
+
 	void deleteEntities();
 
 	/*	SharedGameState generation	*/
@@ -195,7 +203,27 @@ public:
 	 * player is already in the mapping, as nothing will happen. If a player's name
 	 * has changed, then this will update their name as well.
 	 */
-	void addPlayerToLobby(EntityID id, const std::string& name);
+
+	/**
+	 * @brief Adds a new LobbyPlayer to this ServerGameState's Lobby struct.
+	 * This method will assign the new player's LobbyPlayer to the first free
+	 * index in the Lobby.players vector.
+	 * Note: this method will CAUSE THE SERVER TO CRASH if all LobbyPlayer indices
+	 * are currently in use (i.e., if Lobby.max_players players have already
+	 * connected to this server's lobby).
+	 * @param player LobbyPlayer struct of the new player to add to this
+	 * ServerGameState instance's Lobby.
+	 */
+	void addPlayerToLobby(LobbyPlayer player);
+
+	/**
+	 * @brief Updates the LobbyPlayer with the given EntityID to the given
+	 * LobbyPlayer struct
+	 * @param id EntityID of the LobbyPlayer to update
+	 * @param player LobbyPlayer struct to copy to the current lobby player
+	*/
+	void updateLobbyPlayer(EntityID id, LobbyPlayer player);
+
 	/**
 	 * Removes a player from the lobby with the specified id.
 	 */
@@ -310,7 +338,7 @@ private:
 
 	std::unordered_map<std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
 
-	std::vector<SolidSurface*> previouslyHighlighted;
+	Trap* currentGhostTrap;
 
 	/**
     /**
@@ -349,8 +377,4 @@ private:
 	 * @brief table of all currently playing sounds
 	 */
 	SoundTable sound_table;
-	/**
-	 * @brief number of enemies currently in the maze
-	 */
-	int alive_enemy_weight;
 };

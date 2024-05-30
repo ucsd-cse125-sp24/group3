@@ -17,7 +17,6 @@ set(FILES
     audio/audiomanager.cpp
     camera.cpp
     client.cpp
-    cube.cpp
     util.cpp
     lobbyfinder.cpp
 

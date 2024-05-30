@@ -38,8 +38,8 @@ void LobbyBroadcaster::setLobbyInfo(const Lobby& lobby_info) {
     std::unique_lock<std::mutex> lock(this->mut);
     this->bcast_info = ServerLobbyBroadcastPacket {
         .lobby_name = lobby_info.name,
-        .slots_taken = static_cast<int>(lobby_info.players.size()),
-        .slots_avail = static_cast<int>(lobby_info.max_players - lobby_info.players.size())
+        .slots_taken = static_cast<int>(lobby_info.numPlayersInLobby()),
+        .slots_avail = static_cast<int>(lobby_info.max_players - lobby_info.numPlayersInLobby())
     };
 }
 

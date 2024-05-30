@@ -3,7 +3,7 @@
       "maze": {
         "directory": "maps",
         "procedural": true,
-        "maze_file": "test/maze6.maze"
+        "maze_file": "test/itemRoom.maze"
       }
     },
     "network": {
@@ -14,12 +14,12 @@
         "lobby_name": "Hope you're doing well!1",
         "lobby_broadcast": true,
         "max_players": 1,
-        "disable_dm": true
+        "disable_dm": false 
     },
     "client": {
         "default_name": "Conan O'Brien",
         "lobby_discovery": true,
-        "window_width": 2000,
+        "fullscreen": true,
         "draw_bboxes": false,
         "fps_counter": true
     }

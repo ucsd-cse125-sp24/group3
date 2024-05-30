@@ -9,14 +9,22 @@
 #include "client/gui/widget/staticimg.hpp"
 #include "client/gui/widget/centertext.hpp"
 #include "client/gui/widget/textinput.hpp"
+#include "client/gui/widget/empty.hpp"
 #include "client/gui/font/font.hpp"
 #include "client/gui/font/loader.hpp"
 #include "client/gui/img/img.hpp"
 #include "client/gui/img/loader.hpp"
+#include "server/game/constants.hpp"
+#include "client/gui/img/logo.hpp"
+#include "shared/utilities/config.hpp"
 
 #include <iostream>
 #include <memory>
-#include <unordered_map>
+#include <map>
+#include <boost/optional/optional.hpp>
+
+//  Forward declarration of LobbyPlayer struct
+struct LobbyPlayer;
 
 class Client;
 
@@ -67,7 +75,7 @@ public:
      * @param client Pointer to the client object. Note that GUI is a friend class to client, so GUI can
      * access private client data members for ease of use.
      */
-    explicit GUI(Client* client);
+    explicit GUI(Client* client, const GameConfig& config);
     /**
      * @brief Initializes all of the necessary file loading for all of the GUI elements, and
      * registers all of the static shader variables for each of the derived widget classes
@@ -272,7 +280,7 @@ public:
 
 private:
     widget::Handle next_handle {0};
-    std::unordered_map<widget::Handle, widget::Widget::Ptr> widgets;
+    std::map<widget::Handle, widget::Widget::Ptr> widgets;
 
     std::shared_ptr<font::Loader> fonts;
     img::Loader images;
@@ -281,6 +289,10 @@ private:
     std::string keyboard_input;
 
     Client* client;
+
+    GameConfig config;
+
+    img::Logo logo;
 
     /// =<INTERNAL HELPERS>==========================================================
     /**
@@ -347,6 +359,19 @@ private:
      * Displays the lobby name and all of the players who are currently in the lobby.
      */
     void _layoutLobby();
+
+    /**
+     * @brief Creates a player status row (which is represented as a Flexbox widget) for the
+     * given player. This function generates the player status row such that the 3 columns
+     * have the specified width (this is done using the Empty widget).
+     * @param lobbyPlayer Player for whom the player status row is created.
+     * @param columnWidths Widths for the 3 columns of the player status row.
+     * @param origin Origin for this player status row's Flexbox.
+     * @param playerIndex 1-indexed player index for the given LobbyPlayer.
+     * @return gui::widget::Flexbox::Ptr of a Flexbox storing the generated player status row.
+    */
+    gui::widget::Flexbox::Ptr _createPlayerStatusRow(boost::optional<LobbyPlayer> lobbyPlayer,
+        glm::vec3 columnWidths, glm::vec2 origin, int playerIndex);
     /**
      * @brief Displays the Game HUD layout
      * 

@@ -107,7 +107,14 @@ void Mesh::draw(
             shader->setInt(shaderTextureName, i);
             glBindTexture(GL_TEXTURE_2D, textures[i].getID());
         }
+    } else {
+        // shader->setFloat("shininess", this->material.shininess);
     }
+    // if (solidColor.has_value()) {
+    //     shader->setVec3("diffuse", solidColor.value());
+    //     float s = 1.0f;
+    //     shader->setFloat("shininess", s);
+    // }
 
     // draw mesh
     glBindVertexArray(VAO);

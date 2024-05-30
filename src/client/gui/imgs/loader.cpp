@@ -28,8 +28,12 @@ bool Loader::_loadImg(ImgID img_id) {
     glBindTexture(GL_TEXTURE_2D, texture_id);
 
     // set Texture wrap and filter modes
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // changed for hotbar
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -41,8 +45,10 @@ bool Loader::_loadImg(ImgID img_id) {
     std::cout << "Loading " << path << "...\n";
     unsigned char* img_data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 
-    if (stbi_failure_reason())
+    if (stbi_failure_reason()) {
         std::cout << "failure: " << stbi_failure_reason() << std::endl;
+        return false;
+    }
 
     if (img_data == 0 || width == 0 || height == 0) {
         std::cerr << "Error loading " << path << std::endl;
@@ -62,7 +68,6 @@ bool Loader::_loadImg(ImgID img_id) {
     }});
 
     stbi_image_free(img_data);
-
     return true;
 }
 
