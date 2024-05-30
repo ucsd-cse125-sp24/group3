@@ -40,6 +40,7 @@ enum class ObjectType {
 	Orb,
 	Weapon,
 	WeaponCollider,
+	Mirror
 };
 
 /**

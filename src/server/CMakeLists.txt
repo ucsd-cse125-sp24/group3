@@ -36,6 +36,7 @@ set(FILES
     game/spawner.cpp
     game/minotaur.cpp
     game/python.cpp
+    game/mirror.cpp
     audio/soundtable.cpp
 )
 
