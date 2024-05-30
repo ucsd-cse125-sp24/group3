@@ -277,9 +277,6 @@ private:
     bool is_held_i = false;
     bool is_held_o = false;
 
-    /* DM wants to place something flag */
-    bool is_pressed_p = false;
-
     bool is_left_mouse_down = false;
     bool is_right_mouse_down = false;
 

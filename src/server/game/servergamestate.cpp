@@ -1379,25 +1379,26 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 		this->objects.createObject(floorSpike);
 		return floorSpike;
 	}
-	/*
-	TODO: ADD BACK ARROWS!
-
 	case CellType::ArrowTrapDown:
 	case CellType::ArrowTrapLeft:
 	case CellType::ArrowTrapRight:
 	case CellType::ArrowTrapUp: {
-		ArrowTrap::Direction dir;
+		if (cell->type != CellType::Empty) {
+			return nullptr;
+		}
+
+		Direction dir;
 		if (cell->type == CellType::ArrowTrapDown) {
-			dir = ArrowTrap::Direction::DOWN;
+			dir = Direction::DOWN;
 		}
 		else if (cell->type == CellType::ArrowTrapUp) {
-
+			dir = Direction::UP;
 		}
 		else if (cell->type == CellType::ArrowTrapLeft) {
-			dir = ArrowTrap::Direction::LEFT;
+			dir = Direction::LEFT;
 		}
 		else {
-			dir = ArrowTrap::Direction::RIGHT;
+			dir = Direction::RIGHT;
 		}
 
 		glm::vec3 dimensions(
@@ -1405,16 +1406,19 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 			MAZE_CEILING_HEIGHT,
 			Grid::grid_cell_width
 		);
+
 		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
+			(cell->x* Grid::grid_cell_width),
 			0.0f,
-			cell->y * Grid::grid_cell_width
+			(cell->y* Grid::grid_cell_width)
 		);
 
-		this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
-		break;
-	}*/
+		ArrowTrap* arrowTrap = new ArrowTrap(corner, dimensions, dir);
 
+		this->objects.createObject(arrowTrap);
+		
+		return arrowTrap;
+	}
 	case CellType::TeleporterTrap: {
 		if (cell->type != CellType::Empty)
 			return nullptr;
@@ -1524,7 +1528,6 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					cell->type = CellType::TeleportSpell;
 				}
 			} else if (cell->type == CellType::RandomWeapon) {
-				std::cout << "weapon row: " << cell->x << " weapon col: " << cell->y << std::endl;
 				int r = randomInt(1, 3);
 				if (r == 1) {
 					cell->type = CellType::Dagger;
@@ -1622,7 +1625,6 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				case CellType::HealthPotion: {
-					std::cout << "health potion row: " << cell->x << " health potion col: " << cell->y << std::endl;
 					glm::vec3 dimensions(1.0f);
 
 					glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
