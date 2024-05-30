@@ -6,7 +6,6 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <unordered_map>
-#include <mutex>
 
 class ServerGameState;
 class Item;
@@ -60,5 +59,4 @@ private:
     int currentEnemyValue;
     std::vector<int> valueMap;
     std::unordered_map<SpecificID, int> enemiesAlive;
-    std::mutex valueLock;
 };
