@@ -196,13 +196,15 @@ private:
     void draw();
 
     /**
-     *
-     *
+     * @brief Goes through all objects and render them to 
+     * G-Buffer. Does not handle lighting. Only stores
+     * each object's positions, normals and textures.
      */
     void geometryPass();
 
     /**
-     *
+     * @brief Loop through visible pixels and render 
+     * lighting effects for the object at each pixel.
      */
     void lightingPass();
 
