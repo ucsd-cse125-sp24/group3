@@ -34,8 +34,8 @@ void Mirror::useItem(Object* other, ServerGameState& state, int itemSelected) {
 }
 
 void Mirror::dropItem(Object* other, ServerGameState& state, int itemSelected, float dropDistance) {
-	//	Set used to false (to ensure that the mirror item renders on the ground)
-	this->iteminfo.used = false;
+	//	Stop mirror's effect
+	this->revertEffect(state);
 
 	Item::dropItem(other, state, itemSelected, dropDistance);
 }

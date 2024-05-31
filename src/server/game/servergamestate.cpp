@@ -316,6 +316,20 @@ void ServerGameState::update(const EventList& events) {
 				this->updated_entities.insert(dm->globalID);
 			}
 			else {
+				//	If the current selected item is a Mirror, set it to not be used
+				SpecificID currentItemSelected = player->inventory[player->sharedInventory.selected - 1];
+
+				if (currentItemSelected != -1) {
+					Item* selectedItem = this->objects.getItem(currentItemSelected);
+
+					if (selectedItem->type == ObjectType::Mirror) {
+						//	Set mirror to be unused
+						Mirror* mirror = dynamic_cast<Mirror*>(selectedItem);
+					
+						mirror->revertEffect(*this);
+					}
+				}
+
 				if (player->sharedInventory.selected + selectItemEvent.itemNum == 0)
 					player->sharedInventory.selected = INVENTORY_SIZE;
 				else if (player->sharedInventory.selected + selectItemEvent.itemNum == INVENTORY_SIZE + 1)
@@ -479,7 +493,10 @@ void ServerGameState::update(const EventList& events) {
 	tickStatuses();
 	updateCompass();
 	updatePlayerLightningInvulnerabilityStatus();
-	updateDungeonMasterParalysis();
+
+	//	Only do this if the DM exists
+	if (this->objects.getDM() != nullptr)
+		updateDungeonMasterParalysis();
 	
 	//	Increment timestep
 	this->timestep++;
