@@ -574,6 +574,8 @@ void Client::geometryPass() {
             return; // haven't received cutscene packet yet
         }
 
+        this->cam->update(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+
         // use different values for the intro cutscene
         is_dm = false;
         self_eid = this->intro_cutscene->pov_eid;
@@ -925,8 +927,6 @@ void Client::lightingPass() {
         closest_lights = &this->intro_cutscene->lights;
     }
 
-
-
     this->deferred_lighting_shader->use();
     auto camPos = this->cam->getPos();
     this->deferred_lighting_shader->setVec3("viewPos", camPos);
@@ -997,8 +997,10 @@ void Client::lightingPass() {
         }
         SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
 
+        glm::vec3 v(1.0f);
+
         this->deferred_light_box_shader->use();
-        this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);
+        this->deferred_light_box_shader->setVec3("lightColor", v);
         this->torchlight_model->setDimensions(2.0f * curr_source->physics.dimensions);
         this->torchlight_model->translateAbsolute(curr_source->physics.getCenterPosition());
         this->torchlight_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);

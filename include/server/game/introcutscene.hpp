@@ -25,8 +25,8 @@ public:
 
     LoadIntroCutsceneEvent toNetwork();
 
-    ServerGameState state;
 private:
+    ServerGameState state;
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lights;
     EntityID pov_eid;
 };

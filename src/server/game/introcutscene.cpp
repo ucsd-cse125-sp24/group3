@@ -21,7 +21,7 @@ IntroCutscene::IntroCutscene():
     Player* player = new Player(this->state.getGrid().getRandomSpawnPoint(), directionToFacing(Direction::RIGHT));
     this->state.objects.createObject(player);
     this->pov_eid = player->globalID;
-    player->physics.velocity = glm::normalize(player->physics.shared.facing);
+    player->physics.velocity = glm::normalize(player->physics.shared.facing) * 0.25f;
 
     std::size_t lights_idx = 0;
     for (int i = 0; i < this->state.objects.getObjects().size(); i++) {
@@ -32,7 +32,7 @@ IntroCutscene::IntroCutscene():
             this->lights[lights_idx] = object->toShared();
             lights_idx++;
         }
-        if (lights_idx >= MAX_POINT_LIGHTS) {
+        if (lights_idx > MAX_POINT_LIGHTS) {
             std::cerr << "WARNING: can't fit all lights in intro cutscene world.\n";
         }
     }
