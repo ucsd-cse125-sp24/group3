@@ -229,8 +229,8 @@ void ServerGameState::update(const EventList& events) {
 			}
 			case ActionType::Zoom: { // only for DM
 				DungeonMaster * dm = this->objects.getDM();
-				if (dm != nullptr) break;
-				if ((dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f))
+
+				if (dm != nullptr && (dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f))
 					dm->physics.shared.corner += startAction.movement;
 
 				break;
@@ -335,7 +335,10 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::TrapPlacement: 
 		{
 			DungeonMaster* dm = this->objects.getDM();
-			if (dm != nullptr) break;
+
+			// exit if DM is null?
+			if (dm == nullptr) 
+				break;
 
 			auto trapPlacementEvent = boost::get<TrapPlacementEvent>(event.data);
 
@@ -363,7 +366,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 
 			if (trapPlacementEvent.hover) {
-				// only for traps, not lightning
+				// only hover for traps, not lightning
 				if (trapPlacementEvent.cell == CellType::Lightning) {
 					break;
 				}
@@ -384,6 +387,8 @@ void ServerGameState::update(const EventList& events) {
 
 				// Lightning now has its own mana system
 				if (trapPlacementEvent.cell == CellType::Lightning) {
+					std::cout << "USING LIGHTNING" << std::endl;
+
 					if (dm->dmInfo.mana_remaining >= LIGHTNING_MANA) {
 						Weapon* lightning = dm->lightning;
 						glm::vec3 corner(
