@@ -181,13 +181,13 @@ std::chrono::milliseconds Server::doTick() {
             //  Handle ready and start game events
             EventList clientEvents = getAllClientEvents();
 
+            
             for (const auto& [src_eid, event] : clientEvents) {
                 //  Skip non-lobby action events
+                // std::cout << event << "\n";
                 if (event.type != EventType::LobbyAction) {
                     continue;
                 }
-
-                std::cout << "Received a LobbyAction event!" << std::endl;
 
                 LobbyActionEvent lobbyEvent = boost::get<LobbyActionEvent>(event.data);
 
@@ -309,8 +309,8 @@ std::chrono::milliseconds Server::doTick() {
                                 sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
                             }
 
-                            std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
-                            std::cout << "Starting game!" << std::endl;
+                            //std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
+                            //std::cout << "Starting game!" << std::endl;
                             // TODO: more permanent way to wait until DM has received their is_dungeon_master value
                             // from the assign eid packet
                             std::this_thread::sleep_for(2s);
