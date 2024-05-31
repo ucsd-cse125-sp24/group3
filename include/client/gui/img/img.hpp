@@ -54,8 +54,13 @@ enum class ImgID {
     Compass90,
     Compass180,
     Compass270,
+    DMCD_10, DMCD_9, DMCD_8, DMCD_7, DMCD_6, DMCD_5, DMCD_4, DMCD_3, DMCD_2, DMCD_1, 
+    DMCD_Selected_10, DMCD_Selected_9, DMCD_Selected_8, DMCD_Selected_7, DMCD_Selected_6, 
+    DMCD_Selected_5, DMCD_Selected_4, DMCD_Selected_3, DMCD_Selected_2, DMCD_Selected_1,
     Blank,
 };
+
+// Sorry for whoever has to look at this :) - ted
 #define GET_ALL_IMG_IDS() \
     { ImgID::Yoshi, ImgID::AwesomeSauce, ImgID::HealthPotion, ImgID::UnknownPotion, \
         ImgID::InvisPotion, ImgID::FireSpell, ImgID::HealSpell, ImgID::Orb, \
@@ -65,7 +70,11 @@ enum class ImgID {
         ImgID::ManaBar, ImgID::ManaTickEmpty, ImgID::ManaTickFull, ImgID::ItemBG, \
         ImgID::DMTrapBG, ImgID::Needle, ImgID::Compass, ImgID::Compass0, \
         ImgID::Compass90, ImgID::Compass180, ImgID::Compass270, ImgID::EventBG, ImgID::DMEventBG, \
-        ImgID::DMLeftHotbar, ImgID::DMRightHotbar, ImgID::DMMiddleHotbar, ImgID::DMMiddleSelected, ImgID::DMMiddleCooldown \
+        ImgID::DMLeftHotbar, ImgID::DMRightHotbar, ImgID::DMMiddleHotbar, ImgID::DMMiddleSelected, ImgID::DMMiddleCooldown, \
+        ImgID::DMCD_10, ImgID::DMCD_9, ImgID::DMCD_8, ImgID::DMCD_7, ImgID::DMCD_6, \
+        ImgID::DMCD_5, ImgID::DMCD_4, ImgID::DMCD_3, ImgID::DMCD_2, ImgID::DMCD_1, \
+        ImgID::DMCD_Selected_10, ImgID::DMCD_Selected_9, ImgID::DMCD_Selected_8, ImgID::DMCD_Selected_7, ImgID::DMCD_Selected_6, \
+        ImgID::DMCD_Selected_5, ImgID::DMCD_Selected_4, ImgID::DMCD_Selected_3, ImgID::DMCD_Selected_2, ImgID::DMCD_Selected_1, \
     }
 
 /**

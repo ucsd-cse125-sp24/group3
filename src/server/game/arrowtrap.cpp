@@ -33,9 +33,9 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
     glm::ivec2 curr_grid_pos = state.getGrid().getGridCellFromPosition(this->physics.shared.getCenterPosition());
     int dist = 0;
     while (dist < ArrowTrap::SIGHTLINE_M) { // max sightline
-        if (state.getGrid().getCell(curr_grid_pos.x, curr_grid_pos.y)->type == CellType::Wall) {
-            return false; // didnt find a player before a wall
-        }
+        //if (state.getGrid().getCell(curr_grid_pos.x, curr_grid_pos.y)->type == CellType::Wall) {
+        //    return false; // didnt find a player before a wall
+        //}
 
         for (const auto& curr_player_pos : player_grid_positions) {
             if (curr_grid_pos == curr_player_pos) { // cppcheck-suppress useStlAlgorithm
