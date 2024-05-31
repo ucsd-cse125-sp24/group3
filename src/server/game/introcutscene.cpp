@@ -1,6 +1,8 @@
 #include "server/game/introcutscene.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/utilities/config.hpp"
+#include "server/game/weaponcollider.hpp"
+#include "shared/audio/constants.hpp"
 
 #include <vector>
 
@@ -21,7 +23,7 @@ IntroCutscene::IntroCutscene():
     Player* player = new Player(this->state.getGrid().getRandomSpawnPoint(), directionToFacing(Direction::RIGHT));
     this->state.objects.createObject(player);
     this->pov_eid = player->globalID;
-    player->physics.velocity = glm::normalize(player->physics.shared.facing) * 0.25f;
+    player->physics.velocity = glm::normalize(player->physics.shared.facing) * 0.10f;
 
     std::size_t lights_idx = 0;
     for (int i = 0; i < this->state.objects.getObjects().size(); i++) {
@@ -49,7 +51,34 @@ bool IntroCutscene::update() {
     
     static int ticks = 0;
     ticks++;
-    return (ticks > 100); // stop after 100 ticks, hard coded for now
+
+    Player* player = this->state.objects.getPlayer(0);
+
+    if (ticks == 200) {
+        player->physics.velocity = glm::vec3(0.0f);
+    }
+
+    if (ticks == 250) {
+        glm::vec3 lightning_pos = player->physics.shared.corner + glm::normalize(player->physics.shared.facing) * 10.0f;
+
+        this->state.objects.createObject(new Lightning(lightning_pos, player->physics.shared.facing));
+    }
+
+    if (ticks == 320) {
+        this->state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::PlayersStartTheme, 
+            player->physics.shared.getCenterPosition(),
+            FULL_VOLUME,
+            FAR_DIST,
+            FAR_ATTEN
+        ));
+    }
+
+    if (ticks == 600) {
+        return true;
+    }
+
+    return false;
 }
 
 LoadIntroCutsceneEvent IntroCutscene::toNetwork() {

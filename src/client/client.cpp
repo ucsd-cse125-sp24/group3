@@ -480,6 +480,8 @@ void Client::processServerInput(bool allow_defer) {
         } else if (event.type == EventType::LoadIntroCutscene) {
             const auto& data = boost::get<LoadIntroCutsceneEvent>(event.data);
             this->intro_cutscene = data;
+            this->gui_state = GUIState::INTRO_CUTSCENE;
+            this->audioManager->stopMusic(ClientMusic::TitleTheme);
         }
 
         this->events_received.pop_front();

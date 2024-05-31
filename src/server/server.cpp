@@ -346,36 +346,7 @@ std::chrono::milliseconds Server::doTick() {
             std::exit(1);
     }
 
-
-    // TODO: send sound effects to DM?
-    std::vector<Object*> players; // hold players and DM
-    for (int i = 0; i < this->state.objects.getPlayers().size(); i++) {
-        auto player = this->state.objects.getPlayer(i);
-        if (player != nullptr) {
-            players.push_back(player);
-        }
-    }
-    if (this->state.objects.getDM() != nullptr) {
-        players.push_back(this->state.objects.getDM());
-    }
-    auto audio_commands_per_player = this->state.soundTable().getCommandsPerPlayer(players);
-
-    for (auto& session_entry : this->sessions) {
-        if (!audio_commands_per_player.contains(session_entry.id)) {
-            continue; // no sounds to send to that player
-        }
-
-        auto session = session_entry.session;
-        if (!session->isOkay()) {
-            continue; // lost connection with this session, so can't send audio updates to it
-        }
-
-        session->sendEvent(Event(this->world_eid, EventType::LoadSoundCommands, LoadSoundCommandsEvent(
-            audio_commands_per_player.at(session_entry.id)
-        )));
-    }
-
-    this->state.soundTable().tickSounds();
+    this->sendSoundCommands();
 
     // send partial updates to the clients
     // ALSO where the packets actually get sent
@@ -462,4 +433,43 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         << player->globalID << std::endl;
 
     return session;
+}
+
+void Server::sendSoundCommands() {
+    bool is_intro_cutscene = this->state.getPhase() == GamePhase::INTRO_CUTSCENE;    
+
+    ServerGameState& curr_state = (is_intro_cutscene) ? this->intro_cutscene.state : this->state;
+
+    // TODO: send sound effects to DM?
+    std::vector<Object*> players; // hold players and DM
+    for (int i = 0; i < curr_state.objects.getPlayers().size(); i++) {
+        auto player = curr_state.objects.getPlayer(i);
+        if (player != nullptr) {
+            players.push_back(player);
+        }
+    }
+    if (curr_state.objects.getDM() != nullptr) {
+        players.push_back(curr_state.objects.getDM());
+    }
+
+    auto audio_commands_per_player = curr_state.soundTable().getCommandsPerPlayer(players);
+
+    for (auto& session_entry : this->sessions) {
+        EntityID eid = (is_intro_cutscene) ? this->intro_cutscene.pov_eid : session_entry.id;
+
+        if (!audio_commands_per_player.contains(eid)) {
+            continue; // no sounds to send to that player
+        }
+
+        auto session = session_entry.session;
+        if (!session->isOkay()) {
+            continue; // lost connection with this session, so can't send audio updates to it
+        }
+
+        session->sendEvent(Event(this->world_eid, EventType::LoadSoundCommands, LoadSoundCommandsEvent(
+            audio_commands_per_player.at(eid)
+        )));
+    }
+
+    curr_state.soundTable().tickSounds();
 }

@@ -159,6 +159,10 @@ void GUI::layoutFrame(GUIState state) {
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             this->_layoutLobbyBrowser();
             break;
+        case GUIState::INTRO_CUTSCENE:
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            // draw nothing
+            break;
         case GUIState::GAME_HUD:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 

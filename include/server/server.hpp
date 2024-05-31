@@ -42,6 +42,8 @@ public:
 
     void sendLightSourceUpdates(EntityID playerID);
 
+    void sendSoundCommands();
+
 private:
     /// @brief EID that is reserved for the Server / World itself.
     EntityID world_eid;

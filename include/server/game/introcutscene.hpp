@@ -25,8 +25,9 @@ public:
 
     LoadIntroCutsceneEvent toNetwork();
 
-private:
+
+    // just making everything public bc lazy
     ServerGameState state;
-    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lights;
     EntityID pov_eid;
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lights;
 };
