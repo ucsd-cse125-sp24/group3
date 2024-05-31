@@ -423,6 +423,9 @@ void ServerGameState::update(const EventList& events) {
 
 				dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
 
+				// Store remaining CD in milliseconds
+				dm->sharedTrapInventory.trapsCooldown[trapPlacementEvent.cell] = TRAP_COOL_DOWN * 1000;
+
 				dm->setPlacedTraps(trapsPlaced + 1);
 
 				dm->sharedTrapInventory.trapsPlaced = trapsPlaced + 1;
@@ -909,7 +912,15 @@ void ServerGameState::updateTraps() {
 		auto& coolDownMap = dm->sharedTrapInventory.trapsInCooldown;
 
 		for (auto it = dm->sharedTrapInventory.trapsInCooldown.cbegin(); it != dm->sharedTrapInventory.trapsInCooldown.cend();) {
+			auto key = it->first;
+			auto passedTime = std::chrono::round<std::chrono::milliseconds>(current_time - std::chrono::system_clock::from_time_t(it->second));
+			auto diff = std::chrono::milliseconds(TRAP_COOL_DOWN * 1000) - passedTime;
+
+			// update remaining time
+			dm->sharedTrapInventory.trapsCooldown[key] = diff.count();
+
 			if (std::chrono::round<std::chrono::seconds>(current_time - std::chrono::system_clock::from_time_t(it->second)) >= std::chrono::seconds(TRAP_COOL_DOWN)) {
+				dm->sharedTrapInventory.trapsCooldown.erase(key);
 				it = dm->sharedTrapInventory.trapsInCooldown.erase(it);
 			}
 			else {
@@ -919,8 +930,6 @@ void ServerGameState::updateTraps() {
 
 	}
 
-	bool dmUpdated = false;
-
 	// This object moved, so we should check to see if a trap should trigger because of it
 	auto traps = this->objects.getTraps();
 	for (int i = 0; i < traps.size(); i++) {
@@ -928,8 +937,6 @@ void ServerGameState::updateTraps() {
 		if (trap == nullptr) { continue; } // unsure if i need this?
 		if (trap->getIsDMTrap()) {
 			if (current_time >= trap->getExpiration()) {
-				dmUpdated = true;
-
 				int trapsPlaced = dm->getPlacedTraps();
 				this->markForDeletion(trap->globalID);
 				dm->setPlacedTraps(trapsPlaced - 1);				
@@ -950,9 +957,7 @@ void ServerGameState::updateTraps() {
         }
 	}
 
-	if (dmUpdated) {
-		this->updated_entities.insert(dm->globalID);
-	}
+	this->updated_entities.insert(dm->globalID);
 }
 
 void ServerGameState::handleDeaths() {
