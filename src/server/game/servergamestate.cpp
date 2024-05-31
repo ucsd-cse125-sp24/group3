@@ -452,6 +452,7 @@ void ServerGameState::update(const EventList& events) {
 	handleDM();
 	tickStatuses();
 	updateCompass();
+	updatePlayerLightningInvulnerabilityStatus();
 	
 	//	Increment timestep
 	this->timestep++;
@@ -1153,6 +1154,30 @@ void ServerGameState::handleTickVelocity() {
 			}
 			if (abs(enemy->physics.currTickVelocity.z) <= 0.05f) {
 				enemy->physics.currTickVelocity.z = 0.0f;
+			}
+		}
+	}
+}
+
+void ServerGameState::updatePlayerLightningInvulnerabilityStatus() {
+	//	Iterate through all players. If one of the players has a
+	//	lightning invulernability, check whether it should be turned
+	//	off, and if so, turn it off.
+	for (int i = 0; i < this->objects.getPlayers().size(); i++) {
+		Player* player = this->objects.getPlayers().get(i);
+
+		if (player == nullptr)
+			continue;
+
+		if (player->isInvulnerableToLightning()) {
+			//	Player is invulnerable to lightning - check whether timeout
+			//	has occurred and if so, set as vulnerable to lightning again
+			auto now = std::chrono::system_clock::now();
+			std::chrono::duration<double> elapsed_seconds{ now - player->getLightningInvulnerabilityStartTime()};
+
+			if (elapsed_seconds.count() > player->getLightningInvulnerabilityDuration()) {
+				std::cout << "Removing a player's lightning invulnerability." << std::endl;
+				player->setInvulnerableToLightning(false, -1);
 			}
 		}
 	}

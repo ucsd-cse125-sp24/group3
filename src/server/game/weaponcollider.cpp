@@ -3,6 +3,7 @@
 #include "server/game/constants.hpp"
 #include "server/game/creature.hpp"
 #include "server/game/weaponcollider.hpp"
+#include "server/game/mirror.hpp"
 #include "server/game/servergamestate.hpp"
 #include "shared/audio/constants.hpp"
 #include <chrono>
@@ -33,6 +34,51 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
     if (this->usedPlayer != nullptr) {
         if (creature->globalID == this->usedPlayer->globalID) return;
     }
+
+    //  If this weapon collider is a lightning bolt and it collides with
+    //  a Player whose currently using a Mirror, then don't do any damage
+    //  to the player and destroy the player's mirror.
+    //  Also, paralyze the DM for some amount of time.
+    if (this->info.lightning && creature->type == ObjectType::Player) {
+        std::cout << "Applying lightning damage!" << std::endl;
+        Player* player = dynamic_cast<Player*>(creature);
+
+        //  Return early if this player is currently invulnerable to lightning
+        if (player->isInvulnerableToLightning()) {
+            std::cout << "Player is invulnerable to lightning - applying no damage." << std::endl;
+            return;
+        }
+        
+        for (int i = 0; i < player->inventory.size(); i++) {
+            if (player->inventory[i] == -1)
+                continue;
+
+            //  Get item
+            Item* item = state.objects.getItem(player->inventory[i]);
+
+            //  If the item is a mirror and is used, then apply special
+            //  behavior
+            if (item->type == ObjectType::Mirror && item->iteminfo.used) {
+                std::cout << "Player using a mirror got hit by a lightning bolt!" << std::endl;
+                std::cout << "Deleting mirror!" << std::endl;
+
+                //  Mark player as invulnerable to lightning for 1 second
+                player->setInvulnerableToLightning(true, 1);
+
+                //  Destroy the mirror that the player is holding
+                item->dropItem(player, state, i, 0.0f);
+                state.markForDeletion(item->globalID);
+
+                //  Remove mirror from player's list of used items
+                player->sharedInventory.usedItems.erase(item->typeID);
+
+                //  TODO: Paralyze the DM
+
+                //  Don't apply damage to the player
+                return;
+            }
+        }
+    }
     
     // do damage if creature
     creature->stats.health.decrease(this->opt.damage);
@@ -48,23 +94,6 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
             other->physics.shared.getCenterPosition() - this->usedPlayer->physics.shared.getCenterPosition());
 
         creature->physics.currTickVelocity = 0.4f * knockback;
-    }
-
-    //  If this weapon collider is a lightning bolt and it collides with
-    //  a Player whose currently using a Mirror, then don't do any damage
-    //  to the player and destroy the player's mirror.
-    //  Also, paralyze the DM for some amount of time.
-    if (this->info.lightning && creature->type == ObjectType::Player) {
-        Player* player = dynamic_cast<Player*>(creature);
-
-        for (const auto & [itemID, remaining_use_time] : player->sharedInventory.usedItems) {
-            Item * item = state.objects.getItem(itemID);
-            if (item->type == ObjectType::Mirror) {
-                std::cout << "Player using a mirror got hit by a lightning bolt!";
-
-                //  TODO: Don't apply damage here
-            }
-        }
     }
 }
 

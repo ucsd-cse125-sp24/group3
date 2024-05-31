@@ -74,7 +74,7 @@
 
 /*	Mirror Item	*/
 //	Mirror use duration in seconds
-#define	MIRROR_USE_DURATION		3
+#define	MIRROR_USE_DURATION		30
 
 /*	Game	*/
 #define	GRAVITY					0.03f

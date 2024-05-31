@@ -141,6 +141,13 @@ public:
 
 	void deleteEntities();
 
+	/**
+	 * @brief Updates player's lightning invulnerability status
+	 * (sets to false once the player's lightning invulnerability duration
+	 * is past)
+	 */
+	void updatePlayerLightningInvulnerabilityStatus();
+
 	/*	SharedGameState generation	*/
 
 	//	TODO: Modify this function to dynamically allocate a SharedGameState
