@@ -880,13 +880,10 @@ void Client::geometryPass() {
             }
             case ObjectType::Mirror: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    auto cube = std::make_unique<Cube>(glm::vec3(0.5f));
-                    cube->scaleAbsolute(sharedObject->physics.dimensions);
-                    cube->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    cube->draw(this->cube_shader.get(),
-                        this->cam->getViewProj(),
+                    this->item_model->setDimensions(sharedObject->physics.dimensions);
+                    this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    this->item_model->draw(this->deferred_geometry_shader.get(),
                         this->cam->getPos(),
-                        {},
                         true);
                 }
                 break;
