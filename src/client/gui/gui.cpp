@@ -1348,6 +1348,9 @@ void GUI::_layoutGameHUD() {
         }
 
         for (const auto& [eid, obj] : client->gameState.objects) {
+            if (!obj.has_value()) {
+                continue;
+            }
             if (obj->type == ObjectType::Player && obj->inventoryInfo->hasOrb) {
                 orb_pos = obj->physics.corner;
                 orb_pos->y = 0;
@@ -1357,6 +1360,9 @@ void GUI::_layoutGameHUD() {
 
         if (!orb_pos.has_value()) {
             for (const auto& [eid, obj] : client->gameState.objects) {
+                if (!obj.has_value()) {
+                    continue;
+                }
                 if (obj->type == ObjectType::Orb) {
                     orb_pos = obj->physics.corner;
                     orb_pos->y = 0;

@@ -26,28 +26,28 @@ Torchlight::Torchlight(
 		ModelType::Torchlight)
 {
     // for amber orange lights
-    // this->properties = TorchlightProperties {
-    //     .flickering = true,
-        // .min_intensity = 0.3f,
-        // .max_intensity = 1.0f,
-        // .ambient_color = glm::vec3(0.5f, 0.25f, 0.015f),
-        // .diffuse_color = glm::vec3(1.0f, 0.5f, 0.03f),
-        // .specular_color = glm::vec3(0.5f, 0.25f, 0.015f),
-    //     .attenuation_linear = 0.07f,
-    //     .attenuation_quadratic = 0.017f
-    // };
-    
-    // for blue lights
     this->properties = TorchlightProperties {
         .flickering = true,
-        .min_intensity = 0.1f,
-        .max_intensity = 0.5f,
-        .ambient_color = glm::vec3(0.0f, 0.75f, 0.67f),
-        .diffuse_color = glm::vec3(0.0f, 0.75f, 0.67f),
-        .specular_color = glm::vec3(0.0f, 0.35f, 0.33f),
+        .min_intensity = 0.3f,
+        .max_intensity = 1.0f,
+        .ambient_color = glm::vec3(0.5f, 0.25f, 0.015f),
+        .diffuse_color = glm::vec3(1.0f, 0.5f, 0.03f),
+        .specular_color = glm::vec3(0.5f, 0.25f, 0.015f),
         .attenuation_linear = 0.07f,
         .attenuation_quadratic = 0.017f
     };
+    
+    // for blue lights
+    // this->properties = TorchlightProperties {
+    //     .flickering = true,
+    //     .min_intensity = 0.1f,
+    //     .max_intensity = 0.5f,
+    //     .ambient_color = glm::vec3(0.0f, 0.75f, 0.67f),
+    //     .diffuse_color = glm::vec3(0.0f, 0.75f, 0.67f),
+    //     .specular_color = glm::vec3(0.0f, 0.35f, 0.33f),
+    //     .attenuation_linear = 0.07f,
+    //     .attenuation_quadratic = 0.017f
+    // };
     init();
 }
 
