@@ -189,6 +189,11 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::ChangeFacing: {
 			auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
 			obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster
+				&& dynamic_cast<DungeonMaster*>(obj)->isParalyzed()) break;
+
 			obj->physics.shared.facing = changeFacingEvent.facing;
 			this->updated_entities.insert({ obj->globalID });
 			break;
@@ -197,6 +202,11 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StartAction: {
 			auto startAction = boost::get<StartActionEvent>(event.data);
 			obj = this->objects.getObject(startAction.entity_to_act);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster 
+				&& dynamic_cast<DungeonMaster *>(obj)->isParalyzed()) break;
+
 			this->updated_entities.insert({ obj->globalID });
 
 			//switch case for action (currently using keys)
@@ -243,6 +253,11 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StopAction: {
 			auto stopAction = boost::get<StopActionEvent>(event.data);
 			obj = this->objects.getObject(stopAction.entity_to_act);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster
+				&& dynamic_cast<DungeonMaster*>(obj)->isParalyzed()) break;
+
 			this->updated_entities.insert({ obj->globalID });
 			//switch case for action (currently using keys)
 			switch (stopAction.action) {
@@ -265,6 +280,11 @@ void ServerGameState::update(const EventList& events) {
 			//currently just sets the velocity to given 
 			auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
 			obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster
+				&& dynamic_cast<DungeonMaster*>(obj)->isParalyzed()) break;
+
 			obj->physics.velocity += moveRelativeEvent.movement;
 			this->updated_entities.insert(obj->globalID);
 			break;
@@ -282,6 +302,9 @@ void ServerGameState::update(const EventList& events) {
 
 			if (obj->type == ObjectType::DungeonMaster) {
 				DungeonMaster* dm = this->objects.getDM();
+
+				//	If the dungeon master is paralyzed, do nothing
+				if (dm->isParalyzed()) break;
 
 				if (dm->sharedTrapInventory.selected + selectItemEvent.itemNum == 0)
 					dm->sharedTrapInventory.selected = TRAP_INVENTORY_SIZE;
@@ -341,6 +364,9 @@ void ServerGameState::update(const EventList& events) {
 			float cellWidth = currGrid.grid_cell_width;
 
 			DungeonMaster* dm = this->objects.getDM();
+
+			//	If the DM is paralyzed, do nothing
+			if (dm->isParalyzed()) break;
 
 			glm::vec3 dir = glm::normalize(trapPlacementEvent.world_pos-dm->physics.shared.corner);
 
@@ -453,6 +479,7 @@ void ServerGameState::update(const EventList& events) {
 	tickStatuses();
 	updateCompass();
 	updatePlayerLightningInvulnerabilityStatus();
+	updateDungeonMasterParalysis();
 	
 	//	Increment timestep
 	this->timestep++;
@@ -1179,6 +1206,21 @@ void ServerGameState::updatePlayerLightningInvulnerabilityStatus() {
 				std::cout << "Removing a player's lightning invulnerability." << std::endl;
 				player->setInvulnerableToLightning(false, -1);
 			}
+		}
+	}
+}
+
+void ServerGameState::updateDungeonMasterParalysis() {
+	//	Check whether the DM is paralyzed
+	DungeonMaster* dm = this->objects.getDM();
+	if (dm->isParalyzed()) {
+		//	Check whether timeout has occurred and if so, set as not paralyzed
+		auto now = std::chrono::system_clock::now();
+		std::chrono::duration<double> elapsed_seconds{ now - dm->getParalysisStartTime() };
+
+		if (elapsed_seconds.count() > dm->getParalysisDuration()) {
+			std::cout << "Ending DM's paralysis" << std::endl;
+			dm->setParalysis(false, -1);
 		}
 	}
 }

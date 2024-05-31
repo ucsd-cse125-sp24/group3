@@ -72,7 +72,8 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
                 //  Remove mirror from player's list of used items
                 player->sharedInventory.usedItems.erase(item->typeID);
 
-                //  TODO: Paralyze the DM
+                //  Paralyze the DM for 5 seconds
+                state.objects.getDM()->setParalysis(true, 5);
 
                 //  Don't apply damage to the player
                 return;

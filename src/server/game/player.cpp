@@ -33,6 +33,10 @@ Player::Player(glm::vec3 corner, glm::vec3 facing):
     //  Player lightning invulnerability is initially false
     this->invulnerableToLightning = false;
 
+    //  Set invulnerability duration to -1 (this will be overwritten when the player
+    //  actually gains lightning invulnerability using setInvulnerableToLightning())
+    this->lightningInvulnerabilityDuration = -1;
+
     //  Set invulnerability time to right now (this will be overwritten when the player
     //  actually gains lightning invulnerability using setInvulnerableToLightning())
     this->lightning_invulnerability_start_time = std::chrono::system_clock::now();

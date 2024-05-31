@@ -254,6 +254,13 @@ struct SharedExit {
 };
 
 struct SharedDMInfo {
+	/**
+	 * @brief The Dungeon Master can become paralyzed if a player used a Mirror
+	 * object to reflect a lightning bolt back at the Dungeon Master.
+	 * When the Dungeon Master is paralyzed, all input events from the DM should
+	 * be ignored for the duration of the paralysis.
+	 */
+	bool paralyzed;
 
 	int mana_remaining;
 

@@ -148,6 +148,12 @@ public:
 	 */
 	void updatePlayerLightningInvulnerabilityStatus();
 
+	/**
+	 * @brief Updates the DungeonMaster's paralysis status
+	 * (sets to false once the DungeonMaster's paralysis duration is past)
+	 */
+	void updateDungeonMasterParalysis();
+
 	/*	SharedGameState generation	*/
 
 	//	TODO: Modify this function to dynamically allocate a SharedGameState
