@@ -265,7 +265,7 @@ struct SharedDMInfo {
 	int mana_remaining;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& mana_remaining;
+		ar & paralyzed & mana_remaining;
 	}
 };
 

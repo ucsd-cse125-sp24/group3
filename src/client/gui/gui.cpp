@@ -1579,6 +1579,22 @@ void GUI::_layoutGameHUD() {
         );
     }
     this->addWidget(std::move(needleFlex));
+
+    //  Show a large splash text at the center of the screen for the DM if the DM is paralyzed
+    if (is_dm.has_value() && is_dm.value() && self.has_value() && self.get().DMInfo.has_value()
+        && self.get().DMInfo.get().paralyzed) {
+        std::cout << "DM is paralyzed!" << std::endl;
+        auto paralyzedSplashText = widget::CenterText::make(
+            "PARALYZED!",
+            gui::font::Font::TITLE,
+            gui::font::Size::LARGE,
+            gui::font::Color::RED,
+            this->fonts,
+            WINDOW_HEIGHT / 2
+        );
+
+        this->addWidget(std::move(paralyzedSplashText));
+    }
 }
 
 void GUI::_layoutGameEscMenu() {
