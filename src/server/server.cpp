@@ -277,7 +277,19 @@ std::chrono::milliseconds Server::doTick() {
                             if (session_entry != by_id.end()) {
                                 std::weak_ptr<Session> session_ref = session_entry->session;
                                 std::shared_ptr<Session> session = session_ref.lock();
+
+
                                 if (session != nullptr) {
+                                    auto& by_ip = this->sessions.get<IndexByIP>();
+
+                                    auto addr = session_entry->ip;
+
+                                    auto old_session = by_ip.find(addr);
+
+                                    by_ip.modify(old_session, [](SessionEntry& entry) {
+                                        entry.is_dungeon_master = true;
+                                    });
+
                                     session->sendPacket(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                                         ServerAssignEIDPacket{ .eid = dm->globalID, .is_dungeon_master = true }));
                                 }
@@ -450,6 +462,9 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
             auto new_session = std::make_shared<Session>(std::move(this->socket),
                 SessionInfo({}, old_id, old_session->is_dungeon_master));
+
+            std::cout << "OLD ID: " << old_id <<  " OLD IS DM: " << old_session->is_dungeon_master << std::endl;
+
             by_ip.replace(old_session, SessionEntry(old_id, old_session->is_dungeon_master, addr, new_session));
 
             std::cout << "Reestablished connection with " << addr 
