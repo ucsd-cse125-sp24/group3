@@ -42,7 +42,6 @@ SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID
 
 	//	If an EntityID is specified, put object at the specific EntityID
 	if (id.has_value()) {
-		std::cout << "OPTIONAL PARAMETER TO _createObject() id has value!" << std::endl;
 		globalID = id.get();
 		this->objects.set(object, globalID);
 	}

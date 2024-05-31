@@ -48,7 +48,9 @@ IntroCutscene::IntroCutscene():
 bool IntroCutscene::update() {
     this->state.updateMovement();
     this->state.doTorchlightTicks();
-    
+    this->state.updateItems();
+    this->state.deleteEntities();
+
     static int ticks = 0;
     ticks++;
 
@@ -58,13 +60,38 @@ bool IntroCutscene::update() {
         player->physics.velocity = glm::vec3(0.0f);
     }
 
-    if (ticks == 250) {
-        glm::vec3 lightning_pos = player->physics.shared.corner + glm::normalize(player->physics.shared.facing) * 10.0f;
+    if (ticks >= 220 && ticks <= 400) {
+        auto walls = this->state.objects.getSolidSurfaces();
+        for (int i = 0; i < walls.size(); i++) {
+            auto wall = walls.get(i);
+            if (wall == nullptr || wall->shared.surfaceType != SurfaceType::Pillar) continue;
 
-        this->state.objects.createObject(new Lightning(lightning_pos, player->physics.shared.facing));
+            wall->physics.shared.corner.y += 0.040f;
+        }
     }
 
-    if (ticks == 320) {
+    glm::vec3 lightning_pos1 = player->physics.shared.corner + glm::normalize(player->physics.shared.facing) * 10.0f;
+
+    if (ticks == 100) {
+
+        this->state.objects.createObject(new Lightning(lightning_pos1, player->physics.shared.facing));
+    }
+
+    // if (ticks == 560) {
+    //     glm::vec3 lightning_pos2 = lightning_pos1 + glm::vec3(3.0f, 0.0f, -3.0f);
+
+    //     this->state.objects.createObject(new Lightning(lightning_pos2, player->physics.shared.facing));
+    // }
+
+    // if (ticks == 600) {
+    //     glm::vec3 lightning_pos3 = lightning_pos1 + glm::vec3(-3.0f, 0.0f, 6.0f);
+
+    //     this->state.objects.createObject(new Lightning(lightning_pos3, player->physics.shared.facing));
+    // }
+
+    this->state.updateAttacks();
+
+    if (ticks == 800) {
         this->state.soundTable().addNewSoundSource(SoundSource(
             ServerSFX::PlayersStartTheme, 
             player->physics.shared.getCenterPosition(),
@@ -74,9 +101,10 @@ bool IntroCutscene::update() {
         ));
     }
 
-    if (ticks == 600) {
+    if (ticks == 970) {
         return true;
     }
+
 
     return false;
 }

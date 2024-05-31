@@ -105,7 +105,9 @@ void AudioManager::doTick(glm::vec3 player_pos,
         auto source = light_sources.at(i);
         if (source.has_value() && source->type == ObjectType::Torchlight) {
             this->serverLightSFXs.at(i)->setPosition(source->physics.corner.x, source->physics.corner.y, source->physics.corner.z);
-            this->serverLightSFXs.at(i)->play();
+            if (this->serverLightSFXs.at(i)->getStatus() != sf::SoundSource::Status::Playing) {
+                this->serverLightSFXs.at(i)->play();
+            }
         } else {
             this->serverLightSFXs.at(i)->stop();
         }
