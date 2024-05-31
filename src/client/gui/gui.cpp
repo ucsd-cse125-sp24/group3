@@ -1525,27 +1525,51 @@ void GUI::_layoutGameHUD() {
     this->addWidget(std::move(durationFlex));
 
     auto compassFlex = widget::Flexbox::make(
-        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(120), font::getRelativePixels(10)),
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(700), font::getRelativePixels(10)),
         glm::vec2(0.0f, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );
 
-    if (self->compass->angle > 270) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass270), 2));
+    if (self->compass->angle > 345 || self->compass->angle <= 15) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass0), 2));
     }
-    else if (self->compass->angle > 180) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass180), 2));
+    else if (self->compass->angle > 15 && self->compass->angle <= 45) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass30), 2));
     }
-    else if (self->compass->angle > 90) {
+    else if (self->compass->angle > 45 && self->compass->angle <= 75) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass60), 2));
+    }
+    else if (self->compass->angle > 75 && self->compass->angle <= 105) {
         compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass90), 2));
     }
+    else if (self->compass->angle > 105 && self->compass->angle <= 135) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass120), 2));
+    }
+    else if (self->compass->angle > 135 && self->compass->angle <= 165) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass150), 2));
+    }
+    else if (self->compass->angle > 165 && self->compass->angle <= 195) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass180), 2));
+    }
+    else if (self->compass->angle > 195 && self->compass->angle <= 225) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass210), 2));
+    }
+    else if (self->compass->angle > 225 && self->compass->angle <= 255) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass240), 2));
+    }
+    else if (self->compass->angle > 255 && self->compass->angle <= 285) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass270), 2));
+    } 
+    else if (self->compass->angle > 285 && self->compass->angle <= 315) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass300), 2));
+    }
     else {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass0), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass330), 2));
     }
     this->addWidget(std::move(compassFlex));
 
     auto needleFlex = widget::Flexbox::make(
-        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(120), font::getRelativePixels(10)),
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(700), font::getRelativePixels(10)),
         glm::vec2(0.0f, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );
