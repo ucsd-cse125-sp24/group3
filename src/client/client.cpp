@@ -261,7 +261,7 @@ void Client::displayCallback() {
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     } else if (this->gameState.phase == GamePhase::LOBBY) {
-        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     } else if (this->gameState.phase == GamePhase::INTRO_CUTSCENE) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         this->draw();
