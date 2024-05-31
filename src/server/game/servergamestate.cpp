@@ -229,7 +229,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			case ActionType::Zoom: { // only for DM
 				DungeonMaster * dm = this->objects.getDM();
-
+				if (dm != nullptr) break;
 				if ((dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f))
 					dm->physics.shared.corner += startAction.movement;
 
@@ -334,13 +334,14 @@ void ServerGameState::update(const EventList& events) {
 		}
 		case EventType::TrapPlacement: 
 		{
+			DungeonMaster* dm = this->objects.getDM();
+			if (dm != nullptr) break;
+
 			auto trapPlacementEvent = boost::get<TrapPlacementEvent>(event.data);
 
 			Grid& currGrid = this->getGrid();
 
 			float cellWidth = currGrid.grid_cell_width;
-
-			DungeonMaster* dm = this->objects.getDM();
 
 			glm::vec3 dir = glm::normalize(trapPlacementEvent.world_pos-dm->physics.shared.corner);
 
@@ -430,6 +431,7 @@ void ServerGameState::update(const EventList& events) {
 
 				dm->sharedTrapInventory.trapsPlaced = trapsPlaced + 1;
 
+				/*
 				// SPAWN AN ITEM FOR EACH PLAYER
 				// CURRENTLY SPAWNS ON EACH PLACEMENT
 				for (int i = 0; i < this->objects.getPlayers().numElements(); i++) {
@@ -479,7 +481,7 @@ void ServerGameState::update(const EventList& events) {
 							break;
 						}
 					}
-				}
+				}*/
 			}
 			break;
 		}
@@ -928,36 +930,34 @@ void ServerGameState::updateTraps() {
 			}
 		}
 
-	}
+		// This object moved, so we should check to see if a trap should trigger because of it
+		auto traps = this->objects.getTraps();
+		for (int i = 0; i < traps.size(); i++) {
+			auto trap = traps.get(i);
+			if (trap == nullptr) { continue; } // unsure if i need this?
+			if (trap->getIsDMTrap()) {
+				if (current_time >= trap->getExpiration()) {
+					int trapsPlaced = dm->getPlacedTraps();
+					this->markForDeletion(trap->globalID);
+					dm->setPlacedTraps(trapsPlaced - 1);
+					dm->sharedTrapInventory.trapsPlaced = trapsPlaced - 1;
 
-	// This object moved, so we should check to see if a trap should trigger because of it
-	auto traps = this->objects.getTraps();
-	for (int i = 0; i < traps.size(); i++) {
-		auto trap = traps.get(i);
-		if (trap == nullptr) { continue; } // unsure if i need this?
-		if (trap->getIsDMTrap()) {
-			if (current_time >= trap->getExpiration()) {
-				int trapsPlaced = dm->getPlacedTraps();
-				this->markForDeletion(trap->globalID);
-				dm->setPlacedTraps(trapsPlaced - 1);				
-				dm->sharedTrapInventory.trapsPlaced = trapsPlaced - 1;
+					continue;
+				}
+			}
 
-				continue;
+			// check for activations
+			if (trap->shouldTrigger(*this)) {
+				trap->trigger(*this);
+				this->updated_entities.insert(trap->globalID);
+			}
+			if (trap->shouldReset(*this)) {
+				trap->reset(*this);
+				this->updated_entities.insert(trap->globalID);
 			}
 		}
-
-		// check for activations
-		if (trap->shouldTrigger(*this)) {
-			trap->trigger(*this);
-			this->updated_entities.insert(trap->globalID);
-		}
-        if (trap->shouldReset(*this)) {
-            trap->reset(*this);
-			this->updated_entities.insert(trap->globalID);
-        }
+		this->updated_entities.insert(dm->globalID);
 	}
-
-	this->updated_entities.insert(dm->globalID);
 }
 
 void ServerGameState::handleDeaths() {
