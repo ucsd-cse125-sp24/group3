@@ -62,6 +62,7 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->currentGhostTrap = nullptr;
 	this->spawner = std::make_unique<Spawner>();
 	this->spawner->spawnDummy(*this);
+	this->spawner->spawnSmallDummy(*this);
 
     MazeGenerator generator(config);
     int attempts = 1;
@@ -427,13 +428,55 @@ void ServerGameState::update(const EventList& events) {
 				dm->sharedTrapInventory.trapsPlaced = trapsPlaced + 1;
 
 				// SPAWN AN ITEM FOR EACH PLAYER
-				//for (int i = 0; i < this->objects.getPlayers().numElements(); i++) {
-				//	Player* _player = this->objects.getPlayers().get(i);
+				// CURRENTLY SPAWNS ON EACH PLACEMENT
+				for (int i = 0; i < this->objects.getPlayers().numElements(); i++) {
+					Player* _player = this->objects.getPlayers().get(i);
 
-				//	GridCell* _cell = this->grid.getCell((int)ceil(_player->physics.shared.corner.x / Grid::grid_cell_width), (int)ceil(_player->physics.shared.corner.z / Grid::grid_cell_width));
-				//
-				//	
-				//}
+					GridCell* _cell = this->getGrid().getCell(_player->physics.shared.corner.x / Grid::grid_cell_width, _player->physics.shared.corner.z / Grid::grid_cell_width);
+				
+					// explore 10x10 around the player and find first empty cell
+					for (int c = std::max(_cell->x - 5, 0); c < std::min(this->grid.getColumns()-1, _cell->x + 5); c++) {
+						bool found = false;
+
+						for (int r = std::max(_cell->y - 5, 0); r < std::min(this->grid.getColumns() - 1, _cell->y + 5); r++) {
+							CellType celltype = grid.getCell(c, r)->type;
+
+							// Manually check where spawning should always not happen
+							if (celltype == CellType::OutsideTheMaze || celltype == CellType::Wall || celltype == CellType::Pillar || \
+								celltype == CellType::FireballTrapLeft || celltype == CellType::FireballTrapRight || \
+								celltype == CellType::FireballTrapDown || celltype == CellType::FireballTrapUp || \
+								celltype == CellType::FloorSpikeFull || celltype == CellType::FloorSpikeVertical || \
+								celltype == CellType::FloorSpikeHorizontal || celltype == CellType::FakeWall ||
+								celltype == CellType::ArrowTrapUp || celltype == CellType::ArrowTrapDown || \
+								celltype == CellType::ArrowTrapRight || celltype == CellType::ArrowTrapLeft || \
+								celltype == CellType::TeleporterTrap || celltype == CellType::Exit
+								) {
+								continue;
+							}
+
+							if (!this->hasObjectCollided(this->spawner->smallDummyItem,
+								glm::vec3(c * Grid::grid_cell_width + 0.01f, 0, r * Grid::grid_cell_width + 0.01f))) {
+								this->objects.moveObject(this->spawner->smallDummyItem, glm::vec3(-1, 0, -1));
+
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x* Grid::grid_cell_width + 1,
+									0,
+									cell->y* Grid::grid_cell_width + 1);
+
+								// just test placing sword for now
+								this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Sword));
+
+								found = true;
+							}
+						}
+
+						if (found) {
+							break;
+						}
+					}
+				}
 			}
 			break;
 		}
