@@ -431,7 +431,6 @@ void ServerGameState::update(const EventList& events) {
 
 				dm->sharedTrapInventory.trapsPlaced = trapsPlaced + 1;
 
-				/*
 				// SPAWN AN ITEM FOR EACH PLAYER
 				// CURRENTLY SPAWNS ON EACH PLACEMENT
 				for (int i = 0; i < this->objects.getPlayers().numElements(); i++) {
@@ -481,7 +480,7 @@ void ServerGameState::update(const EventList& events) {
 							break;
 						}
 					}
-				}*/
+				}
 			}
 			break;
 		}
