@@ -13,8 +13,8 @@
     "server": {
         "lobby_name": "Tyler's Lobby",
         "lobby_broadcast": true,
-        "max_players": 1,
-        "disable_dm": true
+        "max_players": 2,
+        "disable_dm": false
     },
     "client": {
         "default_name": "Conan O'Brien",

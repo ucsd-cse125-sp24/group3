@@ -316,13 +316,13 @@ void ServerGameState::update(const EventList& events) {
 				this->updated_entities.insert(dm->globalID);
 			}
 			else {
-				//	If the current selected item is a Mirror, set it to not be used
+				//	If the current selected item is a Mirror and it is used, set it to not be used
 				SpecificID currentItemSelected = player->inventory[player->sharedInventory.selected - 1];
 
 				if (currentItemSelected != -1) {
 					Item* selectedItem = this->objects.getItem(currentItemSelected);
 
-					if (selectedItem->type == ObjectType::Mirror) {
+					if (selectedItem->type == ObjectType::Mirror && selectedItem->iteminfo.used) {
 						//	Set mirror to be unused
 						Mirror* mirror = dynamic_cast<Mirror*>(selectedItem);
 					

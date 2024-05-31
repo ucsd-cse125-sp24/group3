@@ -62,11 +62,13 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
                 std::cout << "Player using a mirror got hit by a lightning bolt!" << std::endl;
                 std::cout << "Deleting mirror!" << std::endl;
 
+                Mirror* mirror = dynamic_cast<Mirror*>(item);
+
                 //  Mark player as invulnerable to lightning for 1 second
                 player->setInvulnerableToLightning(true, 1);
 
                 //  Destroy the mirror that the player is holding
-                item->dropItem(player, state, i, 0.0f);
+                mirror->dropItem(player, state, i, 0.0f);
                 state.markForDeletion(item->globalID);
 
                 //  Remove mirror from player's list of used items
