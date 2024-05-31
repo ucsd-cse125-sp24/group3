@@ -11,6 +11,7 @@
 #include <boost/archive/text_iarchive.hpp>
 
 #include <iostream>
+#include <string>
 #include <thread>
 #include <sstream>
 
@@ -24,6 +25,7 @@
 #include "glm/fwd.hpp"
 #include "server/game/object.hpp"
 #include "server/game/solidsurface.hpp"
+#include "shared/game/dir_light.hpp"
 #include "shared/game/event.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/network/constants.hpp"
@@ -181,7 +183,9 @@ bool Client::init() {
 
     auto deferred_lighting_vert_path = shaders_dir / "deferred_lighting.vert";
     auto deferred_lighting_frag_path = shaders_dir / "deferred_lighting.frag";
+    auto dm_deferred_lighting_frag_path = shaders_dir / "dm_deferred_lighting.frag";
     this->deferred_lighting_shader = std::make_shared<Shader>(deferred_lighting_vert_path.string(), deferred_lighting_frag_path.string());
+    this->dm_deferred_lighting_shader = std::make_shared<Shader>(deferred_lighting_vert_path.string(), dm_deferred_lighting_frag_path.string());
 
     auto deferred_light_box_vert_path = shaders_dir / "deferred_light_box.vert";
     auto deferred_light_box_frag_path = shaders_dir / "deferred_light_box.frag";
@@ -540,6 +544,11 @@ void Client::configureGBuffer() {
     this->deferred_lighting_shader->setInt("gPosition", 0);
     this->deferred_lighting_shader->setInt("gNormal", 1);
     this->deferred_lighting_shader->setInt("gAlbedoSpec", 2);
+
+    this->dm_deferred_lighting_shader->use();
+    this->dm_deferred_lighting_shader->setInt("gPosition", 0);
+    this->dm_deferred_lighting_shader->setInt("gNormal", 1);
+    this->dm_deferred_lighting_shader->setInt("gAlbedoSpec", 2);
 }
 
 void Client::draw() {
@@ -895,9 +904,32 @@ void Client::lightingPass() {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
 
-    this->deferred_lighting_shader->use();
+    bool is_dm = this->session->getInfo().is_dungeon_master.value();
+    std::shared_ptr<Shader> lighting_shader = is_dm ? dm_deferred_lighting_shader: deferred_lighting_shader;
+
+    lighting_shader->use();
     auto camPos = this->cam->getPos();
-    this->deferred_lighting_shader->setVec3("viewPos", camPos);
+    lighting_shader->setVec3("viewPos", camPos);
+
+    if (is_dm) {
+        auto ambient = glm::vec3(0.1, 0.1, 0.1);
+        auto diffuse = glm::vec3(0.1, 0.1, 0.1);
+        auto specular = glm::vec3(0.1, 0.1, 0.1);
+        std::array<DirLight, 4> dirLights = {
+            DirLight{glm::vec3(1.0f, 0.0f, 0.0f), ambient, diffuse, specular},
+            DirLight{glm::vec3(-1.0f, 1.0f, 0.0f), ambient, diffuse, specular},
+            DirLight{glm::vec3(0.0f, 1.0f, 1.0f), ambient, diffuse, specular},
+            DirLight{glm::vec3(0.0f, 1.0f, -1.0f), ambient, diffuse, specular},
+        };
+
+        for (int i = 0; i < dirLights.size(); i++) {
+            std::string i_s = std::to_string(i);
+            lighting_shader->setVec3("dirLights[" + i_s + "].direction", dirLights[i].direction);
+            lighting_shader->setVec3("dirLights[" + i_s + "].ambient_color", ambient);
+            lighting_shader->setVec3("dirLights[" + i_s + "].diffuse_color", diffuse);
+            lighting_shader->setVec3("dirLights[" + i_s + "].specular_color", specular);
+        }
+    }
     for (int i = 0; i < this->closest_light_sources.size(); i++) {
         boost::optional<SharedObject>& curr_source = this->closest_light_sources.at(i);
         if (!curr_source.has_value()) {
@@ -907,11 +939,16 @@ void Client::lightingPass() {
 
         glm::vec3 pos = curr_source->physics.getCenterPosition();
 
-        this->deferred_lighting_shader->setVec3("lights[" + std::to_string(i) + "].Position", pos);
-        this->deferred_lighting_shader->setVec3("lights[" + std::to_string(i) + "].Color", properties.diffuse_color);
-        // update attenuation parameters and calculate radius
-        this->deferred_lighting_shader->setFloat("lights[" + std::to_string(i) + "].Linear", properties.attenuation_linear);
-        this->deferred_lighting_shader->setFloat("lights[" + std::to_string(i) + "].Quadratic", properties.attenuation_quadratic);
+
+        lighting_shader->setFloat("pointLights[" + std::to_string(i) + "].intensity", properties.intensity);
+        lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", pos);
+
+        lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].ambient_color", properties.ambient_color);
+        lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].diffuse_color", properties.diffuse_color);
+        lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].specular_color", properties.specular_color);
+
+        lighting_shader->setFloat("pointLights[" + std::to_string(i) + "].attn_linear", properties.attenuation_linear);
+        lighting_shader->setFloat("pointLights[" + std::to_string(i) + "].attn_quadratic", properties.attenuation_quadratic);
     }
 
     if (quadVAO == 0) {
