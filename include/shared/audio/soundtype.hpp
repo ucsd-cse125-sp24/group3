@@ -55,6 +55,9 @@ enum class ServerSFX {
     Python,
     TEMP,
     PlayersStartTheme,
+    ZeusStartTheme,
+    ElectricHum,
+    IntroGateOpen,
     // make sure to add to server sfx len map!
     // make sure to add to macro below!
 };
@@ -73,8 +76,8 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     {ServerSFX::PlayerWalk3,         500ms},
     {ServerSFX::PlayerWalk4,         500ms},
     {ServerSFX::PlayerWalk5,         500ms},
-    {ServerSFX::Dagger,             500ms},
-    {ServerSFX::Sword,              500ms},
+    {ServerSFX::Dagger,              500ms},
+    {ServerSFX::Sword,               500ms},
     {ServerSFX::Hammer,             1000ms},
     {ServerSFX::Minotaur,           1000ms},
     {ServerSFX::Python,             1000ms},
@@ -82,7 +85,10 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     {ServerSFX::CeilingSpikeImpact, 1180ms},
     {ServerSFX::Thunder,            2500ms},
     {ServerSFX::TorchLoop,          9999ms}, // wont actually be used because it loops
-    {ServerSFX::PlayersStartTheme,  8000ms}
+    {ServerSFX::PlayersStartTheme,  8000ms},
+    {ServerSFX::ElectricHum,        1500ms},
+    {ServerSFX::IntroGateOpen,      9000ms},
+    {ServerSFX::ZeusStartTheme,    12000ms}
     // dont forget macro below!
 };
 
@@ -92,7 +98,7 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     ServerSFX::PlayerWalk1, ServerSFX::PlayerWalk2, ServerSFX::PlayerWalk3, ServerSFX::PlayerWalk4, ServerSFX::PlayerWalk5, \
     ServerSFX::CeilingSpikeTrigger, ServerSFX::CeilingSpikeImpact, ServerSFX::TorchLoop, ServerSFX::Thunder,\
     ServerSFX::Dagger, ServerSFX::Sword, ServerSFX::Hammer, ServerSFX::Minotaur, ServerSFX::Python, \
-    ServerSFX::PlayersStartTheme \
+    ServerSFX::PlayersStartTheme, ServerSFX::ElectricHum, ServerSFX::IntroGateOpen, ServerSFX::ZeusStartTheme \
 }
 
 // const std::unordered_map<ServerSound, size_t> serverSoundTickLengths = {

@@ -50,48 +50,75 @@ bool IntroCutscene::update() {
     this->state.doTorchlightTicks();
     this->state.updateItems();
     this->state.deleteEntities();
+    this->state.updateAttacks();
 
     static int ticks = 0;
     ticks++;
 
     Player* player = this->state.objects.getPlayer(0);
 
-    if (ticks == 200) {
+    const int START_TICK = 1;
+    const int STOP_MOVING_TICK = START_TICK + 250;
+    const int GATE_RAISE_TICK = STOP_MOVING_TICK + 30;
+    const int GATE_STOP_RAISE_TICK = GATE_RAISE_TICK + 210;
+    const int LIGHTNING_1_TICK = GATE_STOP_RAISE_TICK + 80;
+    const int LIGHTNING_2_TICK = LIGHTNING_1_TICK + 50;
+    const int LIGHTNING_3_TICK = LIGHTNING_2_TICK + 40;
+    const int START_PLAYER_THEME_TICK = LIGHTNING_3_TICK + 110;
+    const int EXIT_CUTSCENE_TICK = START_PLAYER_THEME_TICK + 240;
+
+    if (ticks == START_TICK) {
+        this->state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::ZeusStartTheme, 
+            player->physics.shared.getCenterPosition(),
+            FULL_VOLUME,
+            FAR_DIST,
+            FAR_ATTEN
+        ));
+    }
+
+    if (ticks == STOP_MOVING_TICK) {
         player->physics.velocity = glm::vec3(0.0f);
     }
 
-    if (ticks >= 220 && ticks <= 400) {
+    if (ticks >= GATE_RAISE_TICK && ticks <= GATE_STOP_RAISE_TICK) {
+        bool played_sound = false;
+
         auto walls = this->state.objects.getSolidSurfaces();
         for (int i = 0; i < walls.size(); i++) {
             auto wall = walls.get(i);
             if (wall == nullptr || wall->shared.surfaceType != SurfaceType::Pillar) continue;
 
-            wall->physics.shared.corner.y += 0.040f;
+            wall->physics.shared.corner.y += 0.041f;
+
+            if (!played_sound && ticks == GATE_RAISE_TICK) {
+                this->state.soundTable().addNewSoundSource(SoundSource(
+                    ServerSFX::IntroGateOpen,
+                    wall->physics.shared.getCenterPosition(),
+                    QUIET_VOLUME, // the sound effect is already so fucking loud geez
+                    FAR_DIST,
+                    FAR_ATTEN
+                ));
+            }
         }
     }
 
     glm::vec3 lightning_pos1 = player->physics.shared.corner + glm::normalize(player->physics.shared.facing) * 10.0f;
 
-    if (ticks == 100) {
-
+    if (ticks == LIGHTNING_1_TICK) {
         this->state.objects.createObject(new Lightning(lightning_pos1, player->physics.shared.facing));
     }
 
-    // if (ticks == 560) {
-    //     glm::vec3 lightning_pos2 = lightning_pos1 + glm::vec3(3.0f, 0.0f, -3.0f);
+    if (ticks == LIGHTNING_2_TICK) {
+        glm::vec3 lightning_pos2 = lightning_pos1 + glm::vec3(3.0f, 0.0f, -3.0f);
+        this->state.objects.createObject(new Lightning(lightning_pos2, player->physics.shared.facing));
+    }
 
-    //     this->state.objects.createObject(new Lightning(lightning_pos2, player->physics.shared.facing));
-    // }
+    if (ticks == LIGHTNING_3_TICK) {
+        this->state.objects.createObject(new Lightning(lightning_pos1, player->physics.shared.facing));
+    }
 
-    // if (ticks == 600) {
-    //     glm::vec3 lightning_pos3 = lightning_pos1 + glm::vec3(-3.0f, 0.0f, 6.0f);
-
-    //     this->state.objects.createObject(new Lightning(lightning_pos3, player->physics.shared.facing));
-    // }
-
-    this->state.updateAttacks();
-
-    if (ticks == 800) {
+    if (ticks == START_PLAYER_THEME_TICK) {
         this->state.soundTable().addNewSoundSource(SoundSource(
             ServerSFX::PlayersStartTheme, 
             player->physics.shared.getCenterPosition(),
@@ -101,10 +128,9 @@ bool IntroCutscene::update() {
         ));
     }
 
-    if (ticks == 970) {
+    if (ticks == EXIT_CUTSCENE_TICK) {
         return true;
     }
-
 
     return false;
 }

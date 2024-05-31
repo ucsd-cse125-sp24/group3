@@ -64,6 +64,12 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "torch_loop_mono.wav").string();
         case ServerSFX::PlayersStartTheme:
             return (dir / "players_start_theme.mp3").string();
+        case ServerSFX::ElectricHum:
+            return (dir / "electric_hum.wav").string();
+        case ServerSFX::IntroGateOpen:
+            return (dir / "cutscene_gate_open.wav").string();
+        case ServerSFX::ZeusStartTheme:
+            return (dir / "zeus_start_theme.mp3").string();
         
         default:
             std::cerr << "FATAL: no known path for ServerSFX " << static_cast<int>(sfx) << std::endl;

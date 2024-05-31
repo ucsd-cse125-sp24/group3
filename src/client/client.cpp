@@ -879,11 +879,15 @@ void Client::geometryPass() {
             case ObjectType::WeaponCollider: {
                 if (sharedObject->weaponInfo->lightning) {
                     if (!sharedObject->weaponInfo->attacked) {
-                        this->item_model->setDimensions(sharedObject->physics.dimensions);
-                        this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        glm::vec3 preview_dims = sharedObject->physics.dimensions;
+                        preview_dims.y = 0.01f;
+                        this->item_model->setDimensions(preview_dims);
+                        glm::vec3 preview_pos = sharedObject->physics.getCenterPosition();
+                        preview_pos.y = 0.0f;
+                        this->item_model->translateAbsolute(preview_pos);
                         this->item_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(),
-                            false);
+                            true);
                     } else {
                         this->item_model->setDimensions(sharedObject->physics.dimensions);
                         this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());

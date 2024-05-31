@@ -80,11 +80,11 @@ bool WeaponCollider::readyTime(ServerGameState& state) {
 
     if (!this->playSound && this->info.lightning) {
         state.soundTable().addNewSoundSource(SoundSource(
-            ServerSFX::Thunder,
+            ServerSFX::ElectricHum,
             this->physics.shared.getCenterPosition(),
             DEFAULT_VOLUME,
-            FAR_DIST,
-            FAR_ATTEN
+            MEDIUM_DIST,
+            MEDIUM_ATTEN 
         ));
         this->playSound = true;
     }
@@ -105,6 +105,14 @@ bool WeaponCollider::readyTime(ServerGameState& state) {
         this->info.attacked = true;
         this->attacked_time = now;
         this->physics.collider = Collider::Box;
+        state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::Thunder,
+            this->physics.shared.getCenterPosition(),
+            DEFAULT_VOLUME,
+            FAR_DIST,
+            FAR_ATTEN
+        ));
+        this->playSound = true;
         return true;
     }
     return false;
