@@ -84,7 +84,8 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     {ServerSFX::CeilingSpikeTrigger, 380ms},
     {ServerSFX::CeilingSpikeImpact, 1180ms},
     {ServerSFX::Thunder,            2500ms},
-    {ServerSFX::TorchLoop,          9999ms}, // wont actually be used because it loops
+    // used not for in game, but for the intro cutscene, so this is the duration of torch sound in intro cutscene
+    {ServerSFX::TorchLoop,         30000ms}, 
     {ServerSFX::PlayersStartTheme,  8000ms},
     {ServerSFX::ElectricHum,        1500ms},
     {ServerSFX::IntroGateOpen,      9000ms},

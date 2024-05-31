@@ -24,6 +24,8 @@ IntroCutscene::IntroCutscene():
     this->state.objects.createObject(player);
     this->pov_eid = player->globalID;
     player->physics.velocity = glm::normalize(player->physics.shared.facing) * 0.10f;
+    // move half a grid cell down to be in center of 4 wide hall
+    player->physics.shared.corner += directionToFacing(Direction::DOWN) * (Grid::grid_cell_width / 2.0f);
 
     std::size_t lights_idx = 0;
     for (int i = 0; i < this->state.objects.getObjects().size(); i++) {
@@ -60,7 +62,7 @@ bool IntroCutscene::update() {
     const int START_TICK = 1;
     const int STOP_MOVING_TICK = START_TICK + 250;
     const int GATE_RAISE_TICK = STOP_MOVING_TICK + 30;
-    const int GATE_STOP_RAISE_TICK = GATE_RAISE_TICK + 210;
+    const int GATE_STOP_RAISE_TICK = GATE_RAISE_TICK + 200;
     const int LIGHTNING_1_TICK = GATE_STOP_RAISE_TICK + 80;
     const int LIGHTNING_2_TICK = LIGHTNING_1_TICK + 50;
     const int LIGHTNING_3_TICK = LIGHTNING_2_TICK + 40;
@@ -69,11 +71,11 @@ bool IntroCutscene::update() {
 
     if (ticks == START_TICK) {
         this->state.soundTable().addNewSoundSource(SoundSource(
-            ServerSFX::ZeusStartTheme, 
+            ServerSFX::TorchLoop, 
             player->physics.shared.getCenterPosition(),
             FULL_VOLUME,
-            FAR_DIST,
-            FAR_ATTEN
+            MEDIUM_DIST,
+            MEDIUM_ATTEN 
         ));
     }
 
@@ -89,7 +91,7 @@ bool IntroCutscene::update() {
             auto wall = walls.get(i);
             if (wall == nullptr || wall->shared.surfaceType != SurfaceType::Pillar) continue;
 
-            wall->physics.shared.corner.y += 0.041f;
+            wall->physics.shared.corner.y += 0.042f;
 
             if (!played_sound && ticks == GATE_RAISE_TICK) {
                 this->state.soundTable().addNewSoundSource(SoundSource(
