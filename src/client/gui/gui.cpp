@@ -37,6 +37,7 @@ bool GUI::init()
         return false;
     }
 
+    this->controlDisplayed = false;
     this->fonts = std::make_shared<font::Loader>();
     this->capture_keystrokes = false;
 
@@ -193,6 +194,10 @@ void GUI::_layoutFPSCounter() {
         fonts,
         widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::WHITE)
     ));
+}
+
+void GUI::displayControl() {
+    this->controlDisplayed = this->controlDisplayed ? false : true;
 }
 
 void GUI::_layoutLoadingScreen() {
@@ -934,8 +939,58 @@ void GUI::_sharedGameHUD() {
         return;
     }
 
-    auto self = client->gameState.objects.at(*self_eid);
 
+    // Add controls Help
+    if (this->controlDisplayed) {
+        auto controlsFlex = widget::Flexbox::make(
+            glm::vec2(WINDOW_WIDTH - font::getRelativePixels(350), FRAC_WINDOW_HEIGHT(1, 2)),
+            glm::vec2(0.0f, 0.0f),
+            widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(10))
+        );
+        auto actionsFlex = widget::Flexbox::make(
+            glm::vec2(WINDOW_WIDTH - font::getRelativePixels(150), FRAC_WINDOW_HEIGHT(1, 2)),
+            glm::vec2(0.0f, 0.0f),
+            widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(10))
+        );
+
+        std::vector<std::pair<std::string, std::string>> controls;
+        // Controls for Player
+        if (!is_dm.value()) {
+            controls.push_back({ "CONTROLS", "" });
+            controls.push_back({ "WASD:", "Move" });
+            controls.push_back({ "Left Shift:", "Sprint" });
+            controls.push_back({ "Spacebar:", "Jump" });
+            controls.push_back({ "Q:", "Drop Item" });
+            controls.push_back({ "Left Click:", "Use Item" });
+            controls.push_back({ "Mouse Wheel:", "Select Item" });
+            controls.push_back({ "ESC:", "Menu" });
+        }
+        // Controls for DM
+        else {
+            controls.push_back({ "CONTROLS", "" });
+            controls.push_back({ "WASD:", "Move" });
+            controls.push_back({ "Left Shift:", "Zoom In" });
+            controls.push_back({ "Spacebar:", "Zoom Out" });
+            controls.push_back({ "Left Control:", "Boost" });
+            controls.push_back({ "Left Click:", "Place Trap" });
+            controls.push_back({ "Mouse Wheel:", "Select Trap" });
+            controls.push_back({ "ESC:", "Menu" });
+        }
+
+        for (int i = controls.size() - 1; i >= 0; i--) {
+            controlsFlex->push(widget::DynText::make(controls[i].first, fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::WHITE))
+            );
+            actionsFlex->push(widget::DynText::make(controls[i].second, fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::WHITE))
+            );
+        }
+        
+        this->addWidget(std::move(controlsFlex));
+        this->addWidget(std::move(actionsFlex));
+    }
+
+    auto self = client->gameState.objects.at(*self_eid);
     auto inventory_size = !is_dm.value() ? self->inventoryInfo->inventory_size : self->trapInventoryInfo->inventory_size;
     auto selected = !is_dm.value() ? self->inventoryInfo->selected - 1 : self->trapInventoryInfo->selected - 1;
 

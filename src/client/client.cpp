@@ -1099,6 +1099,10 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             is_held_right = true;
             break;
 
+        case GLFW_KEY_H:
+            gui.displayControl();
+            break;
+
         /* Space also uses a flag to constantly send events when key is held */
         case GLFW_KEY_SPACE:
             is_held_space = true;

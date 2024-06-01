@@ -261,6 +261,10 @@ public:
      */
     void clearCapturedKeyboardInput();
     /**
+     * @brief Displays controls for the player
+     */
+    void displayControl();
+    /**
      * @brief Returns all of the captured keyboard input without clearing it. 
      * 
      * @returns all of the captured keyboard input as an std::string
@@ -292,6 +296,7 @@ private:
     Client* client;
 
     GameConfig config;
+    bool controlDisplayed;
 
     std::vector<std::string> recentEvents;
 
