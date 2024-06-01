@@ -269,8 +269,9 @@ std::chrono::milliseconds Server::doTick() {
                             auto session_entry = by_id.find(dm->globalID);
 
                             if (session_entry != by_id.end()) {
-                                std::weak_ptr<Session> session_ref = session_entry->session;
-                                std::shared_ptr<Session> session = session_ref.lock();
+                                auto& session = session_entry->session;
+                                by_id.modify(session_entry, [](SessionEntry& entry) { entry.is_dungeon_master = true;});
+                                session_entry->session->setDM(true);
                                 if (session != nullptr) {
                                     session->sendPacket(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                                         ServerAssignEIDPacket{ .eid = dm->globalID, .is_dungeon_master = true }));
@@ -455,7 +456,20 @@ void Server::sendSoundCommands() {
     auto audio_commands_per_player = curr_state.soundTable().getCommandsPerPlayer(players);
 
     for (auto& session_entry : this->sessions) {
-        EntityID eid = (is_intro_cutscene) ? this->intro_cutscene.pov_eid : session_entry.id;
+        EntityID eid;
+        if (is_intro_cutscene) {
+            if (!session_entry.session->getInfo().is_dungeon_master.has_value()){
+                continue;
+            }
+
+            if (session_entry.session->getInfo().is_dungeon_master.value()) {
+                eid = this->intro_cutscene.dm_eid; 
+            } else {
+                eid = this->intro_cutscene.pov_eid;
+            }
+        } else {
+            eid = session_entry.id;
+        }
 
         if (!audio_commands_per_player.contains(eid)) {
             continue; // no sounds to send to that player

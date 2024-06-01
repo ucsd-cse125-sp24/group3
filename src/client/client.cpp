@@ -576,11 +576,17 @@ void Client::geometryPass() {
             return; // haven't received cutscene packet yet
         }
 
-        this->cam->update(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
 
         // use different values for the intro cutscene
-        is_dm = false;
-        self_eid = this->intro_cutscene->pov_eid;
+        if (is_dm) {
+            self_eid = this->intro_cutscene->dm_eid;
+            // look down
+            this->cam->update(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 5);
+        } else {
+            self_eid = this->intro_cutscene->pov_eid;
+            // look straight ahead
+            this->cam->update(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+        }
         objects = &this->intro_cutscene->state.objects;
     }
 
@@ -650,7 +656,6 @@ void Client::geometryPass() {
                     cam->updatePos(pos);
                     break;
                 }
-                auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
 
                 auto player_pos = sharedObject->physics.corner;
 

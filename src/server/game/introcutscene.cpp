@@ -27,6 +27,12 @@ IntroCutscene::IntroCutscene():
     // move half a grid cell down to be in center of 4 wide hall
     player->physics.shared.corner += directionToFacing(Direction::DOWN) * (Grid::grid_cell_width / 2.0f);
 
+    DungeonMaster* dm = new DungeonMaster(player->physics.shared.corner + glm::vec3(-20.0f, 10.0f, 0), directionToFacing(Direction::RIGHT));
+    dm->physics.velocity = player->physics.velocity;
+    dm->physics.velocityMultiplier = player->physics.velocityMultiplier;
+    this->state.objects.createObject(dm);
+    this->dm_eid = dm->globalID;
+
     std::size_t lights_idx = 0;
     for (int i = 0; i < this->state.objects.getObjects().size(); i++) {
         auto object = this->state.objects.getObject(i);
@@ -58,6 +64,7 @@ bool IntroCutscene::update() {
     ticks++;
 
     Player* player = this->state.objects.getPlayer(0);
+    DungeonMaster* dm = this->state.objects.getDM();
 
     const int START_TICK = 1;
     const int STOP_MOVING_TICK = START_TICK + 250;
@@ -81,6 +88,7 @@ bool IntroCutscene::update() {
 
     if (ticks == STOP_MOVING_TICK) {
         player->physics.velocity = glm::vec3(0.0f);
+        dm->physics.velocity = glm::vec3(0.0f);
     }
 
     if (ticks >= GATE_RAISE_TICK && ticks <= GATE_STOP_RAISE_TICK) {
@@ -108,6 +116,13 @@ bool IntroCutscene::update() {
     glm::vec3 lightning_pos1 = player->physics.shared.corner + glm::normalize(player->physics.shared.facing) * 10.0f;
 
     if (ticks == LIGHTNING_1_TICK) {
+        this->state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::ZeusStartTheme, 
+            player->physics.shared.getCenterPosition(),
+            FULL_VOLUME,
+            FAR_DIST,
+            FAR_ATTEN
+        ));
         this->state.objects.createObject(new Lightning(lightning_pos1, player->physics.shared.facing));
     }
 
@@ -117,7 +132,8 @@ bool IntroCutscene::update() {
     }
 
     if (ticks == LIGHTNING_3_TICK) {
-        this->state.objects.createObject(new Lightning(lightning_pos1, player->physics.shared.facing));
+        glm::vec3 lightning_pos3 = player->physics.shared.corner + glm::normalize(player->physics.shared.facing) * 4.0f;
+        this->state.objects.createObject(new Lightning(lightning_pos3, player->physics.shared.facing));
     }
 
     if (ticks == START_PLAYER_THEME_TICK) {
@@ -145,7 +161,7 @@ LoadIntroCutsceneEvent IntroCutscene::toNetwork() {
     }
 
 
-    auto evt = LoadIntroCutsceneEvent(updates.at(0), this->pov_eid, this->lights);
+    auto evt = LoadIntroCutsceneEvent(updates.at(0), this->pov_eid, this->dm_eid, this->lights);
 
     return evt;
 }

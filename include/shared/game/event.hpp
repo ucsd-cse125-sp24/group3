@@ -305,15 +305,17 @@ struct LoadIntroCutsceneEvent {
     explicit LoadIntroCutsceneEvent(
         const SharedGameState& state,
         EntityID pov_eid,
+        EntityID dm_eid,
         const std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS>& lights
-    ) : state(state), pov_eid(pov_eid), lights(lights) {}
+    ) : state(state), pov_eid(pov_eid), dm_eid(dm_eid), lights(lights) {}
 
     SharedGameState state;
     EntityID pov_eid;
+    EntityID dm_eid;
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lights;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar & state & lights & pov_eid;
+        ar & state & lights & pov_eid & dm_eid;
     }
 };
 

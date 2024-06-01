@@ -29,5 +29,6 @@ public:
     // just making everything public bc lazy
     ServerGameState state;
     EntityID pov_eid;
+    EntityID dm_eid;
     std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lights;
 };
