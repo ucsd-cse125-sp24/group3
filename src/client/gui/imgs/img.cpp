@@ -54,6 +54,12 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::Compass270: return (img_root / "compasses/compass_270.png").string();
         case ImgID::Compass300: return (img_root / "compasses/compass_300.png").string();
         case ImgID::Compass330: return (img_root / "compasses/compass_330.png").string();
+        case ImgID::Sungod: return (img_root / "sungod.png").string();
+        case ImgID::Lightning: return (img_root / "lightning.png").string();
+        case ImgID::Teleporter: return (img_root / "teleporter.png").string();
+        case ImgID::FloorSpikeTrap: return (img_root / "floorspiketrap.png").string();
+        case ImgID::ArrowTrap: return (img_root / "arrowtrap.png").string();
+        case ImgID::SpikeTrap: return (img_root / "spiketrap.png").string();
     }
 }
 

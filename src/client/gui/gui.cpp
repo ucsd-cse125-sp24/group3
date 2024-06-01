@@ -1178,27 +1178,27 @@ void GUI::_sharedGameHUD() {
             if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
                 switch (self->trapInventoryInfo->inventory[i]) {
                 case ModelType::FloorSpikeFull: { // TODO: CHANGE images
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FloorSpikeTrap), 2));
                     break;
                 }
                 case ModelType::FloorSpikeHorizontal: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Teleporter), 2));
                     break;
                 }
                 case ModelType::FloorSpikeVertical: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ArrowTrap), 2));
                     break;
                 }
                 case ModelType::SunGod: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Sungod), 2));
                     break;
                 }
                 case ModelType::SpikeTrap: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SpikeTrap), 2));
                     break;
                 }
                 case ModelType::Lightning: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Lightning), 2));
                     break;
                 }
                 }

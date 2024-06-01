@@ -52,6 +52,12 @@ enum class ImgID {
     Compass90, Compass120, Compass150,
     Compass180, Compass210, Compass240,
     Compass270, Compass300, Compass330,
+    FloorSpikeTrap,
+    Sungod,
+    Teleporter,
+    Lightning,
+    ArrowTrap,
+    SpikeTrap,
     Blank,
 };
 #define GET_ALL_IMG_IDS() \
@@ -66,6 +72,8 @@ enum class ImgID {
         ImgID::Compass120, ImgID::Compass150, ImgID::Compass180, ImgID::Compass210, \
         ImgID::Compass240, ImgID::Compass270, ImgID::Compass300, ImgID::Compass330, \
         ImgID::DMLeftHotbar, ImgID::DMRightHotbar, ImgID::DMMiddleHotbar, ImgID::DMMiddleSelected, \
+        ImgID::FloorSpikeTrap, ImgID::Sungod, ImgID::Teleporter, ImgID::Lightning, \
+        ImgID::ArrowTrap, ImgID::SpikeTrap, \
     }
 
 /**
