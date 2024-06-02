@@ -1610,7 +1610,7 @@ void GUI::_layoutGameHUD() {
             "Reflected Lightning using Mirror!",
             gui::font::Font::TITLE,
             gui::font::Size::MEDIUM,
-            gui::font::Color::BLUE,
+            gui::font::Color::WHITE,
             this->fonts,
             WINDOW_HEIGHT / 2
         );
