@@ -17,6 +17,7 @@ namespace gui {
 GUI::GUI(Client* client, const GameConfig& config): capture_keystrokes(false), logo() {
     this->client = client;
     this->config = config;
+    this->controlDisplayed = true; // start with help on
 }
 
 bool GUI::init()
@@ -37,7 +38,6 @@ bool GUI::init()
         return false;
     }
 
-    this->controlDisplayed = false;
     this->fonts = std::make_shared<font::Loader>();
     this->capture_keystrokes = false;
 
@@ -964,6 +964,7 @@ void GUI::_sharedGameHUD() {
             controls.push_back({ "Left Click:", "Use Item" });
             controls.push_back({ "Mouse Wheel:", "Select Item" });
             controls.push_back({ "ESC:", "Menu" });
+            controls.push_back({ "H to Close", "" });
         }
         // Controls for DM
         else {
@@ -975,6 +976,7 @@ void GUI::_sharedGameHUD() {
             controls.push_back({ "Left Click:", "Place Trap" });
             controls.push_back({ "Mouse Wheel:", "Select Trap" });
             controls.push_back({ "ESC:", "Menu" });
+            controls.push_back({ "H to Close", "" });
         }
 
         for (int i = controls.size() - 1; i >= 0; i--) {
