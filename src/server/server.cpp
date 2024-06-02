@@ -344,14 +344,12 @@ std::chrono::milliseconds Server::doTick() {
 
             updateGameState(allClientEvents);
 
-            for (auto& player : this->state.getLobby().players) {
-                //  Note: this assumes the lobby's player vector is full!
-                //  Also note that it assumes that the length of the vector
-                //  equals max_players!
-                EntityID playerID = player.get().id;
+            static int curr_player_idx = 0;
 
-                sendLightSourceUpdates(playerID);
-            }
+            EntityID player_id = this->state.getLobby().players.at(curr_player_idx).get().id;
+
+            sendLightSourceUpdates(player_id);
+            curr_player_idx = (curr_player_idx + 1) % this->state.getLobby().max_players;
 
             break;
         }

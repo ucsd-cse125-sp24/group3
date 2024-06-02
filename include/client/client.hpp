@@ -11,8 +11,6 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/filesystem.hpp>
 
-#include "client/cube.hpp"
-#include "client/lightsource.hpp"
 #include "client/shader.hpp"
 #include "client/model.hpp"
 #include "client/util.hpp"
@@ -187,10 +185,32 @@ private:
      */
     void processServerInput(bool allow_defer);
 
+    GLuint gBuffer;
+    GLuint gPosition, gNormal, gAlbedoSpec;
+    GLuint quadVAO = 0;
+    GLuint quadVBO;
+    GLuint cubeVAO = 0;
+    GLuint cubeVBO = 0;
+
+    void configureGBuffer();
+
     /**
      * @brief Draws all objects in the SharedGameState.
      */
     void draw();
+
+    /**
+     * @brief Goes through all objects and render them to 
+     * G-Buffer. Does not handle lighting. Only stores
+     * each object's positions, normals and textures.
+     */
+    void geometryPass();
+
+    /**
+     * @brief Loop through visible pixels and render 
+     * lighting effects for the object at each pixel.
+     */
+    void lightingPass();
 
     /**
      * @brief Draw bounding box around a given SharedObject
@@ -202,23 +222,25 @@ private:
     SharedGameState gameState;
 
     /* Shader objects for various */
-    std::shared_ptr<Shader> cube_shader;
-    std::shared_ptr<Shader> dm_cube_shader;
-    std::shared_ptr<Shader> model_shader;
-    std::shared_ptr<Shader> light_source_shader;
-    std::shared_ptr<Shader> solid_surface_shader;
-    std::shared_ptr<Shader> wall_shader;
-    std::shared_ptr<Shader> sungod_shader;
+    std::shared_ptr<Shader> deferred_geometry_shader;
+    std::shared_ptr<Shader> deferred_lighting_shader;
+    std::shared_ptr<Shader> deferred_light_box_shader;
 
     /* Character models and lighting objects, might need to move to different classes later */
-    std::unique_ptr<Model> cube_model;
     std::unique_ptr<Model> player_model;
     std::unique_ptr<Model> bear_model;
-    std::unique_ptr<LightSource> light_source;
     std::unique_ptr<Model> torchlight_model;
     std::unique_ptr<Model> wall_model;
     std::unique_ptr<Model> pillar_model;
     std::unique_ptr<Model> sungod_model;
+    std::unique_ptr<Model> slime_model;
+    std::unique_ptr<Model> minotaur_model;
+    std::unique_ptr<Model> python_model;
+    std::unique_ptr<Model> item_model;
+    std::unique_ptr<Model> spike_trap_model;
+    std::unique_ptr<Model> orb_model;
+    std::unique_ptr<Model> exit_model;
+    std::unique_ptr<Model> floor_model;
 
     GLFWwindow *window;
 

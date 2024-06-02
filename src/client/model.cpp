@@ -14,7 +14,6 @@
 #include <iostream>
 #include <filesystem>
 
-#include "client/lightsource.hpp"
 #include "client/renderable.hpp"
 #include "client/constants.hpp"
 #include "client/util.hpp"
@@ -68,33 +67,16 @@ Mesh::Mesh(
     glEnableVertexAttribArray(2);	
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, textureCoords)));
 
-    // vertex tangent
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tangent)));
-    
-    // vertex bitangent
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, bitangent)));
-   
     // vertex bone ids
-    glEnableVertexAttribArray(5);
-    glVertexAttribIPointer(5, 4, GL_INT, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, m_boneIDs)));
+    glEnableVertexAttribArray(3);
+    glVertexAttribIPointer(3, 4, GL_INT, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, m_boneIDs)));
 
     // vertex bone weights
-    glEnableVertexAttribArray(6);
-    glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, m_weights)));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, m_weights)));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-    // for (int i = 0; i < vertices.size(); i++) {
-    //     auto v = vertices[i];
-    //     for (int j = 0; j < 4; j++) {
-    //         if (v.m_boneIDs[j] >= 0) {
-    //             std::cout << "v[" << i << "]: " << v.m_boneIDs[j] << ", " << v.m_weights[j] << std::endl;
-    //         }
-    //     }
-    // }
 
     // std::cout << "Loaded mesh with " << vertices.size() << " vertices, and " << textures.size() << " textures" << std::endl;
     // std::cout << "\t diffuse " << glm::to_string(this->material.diffuse) << std::endl;
@@ -105,66 +87,14 @@ Mesh::Mesh(
 
 void Mesh::draw(
     Shader* shader,
-    glm::mat4 viewProj,
     glm::vec3 camPos,
-    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
     bool fill) {
-    // activate the shader program
-    shader->use();
-
     // vertex shader uniforms
-    shader->setMat4("viewProj", viewProj);
     auto model = this->getModelMat();
     
     shader->setMat4("model", model);
 
-    if (this->solidColor.has_value()) {
-        shader->setVec3("material.ambient", this->solidColor.value());
-    }
-    else {
-        shader->setVec3("material.ambient", this->material.ambient);
-    }
-
-
-    // fragment shader uniforms
-    shader->setVec3("material.diffuse", this->material.diffuse);
-    shader->setVec3("material.specular", this->material.specular);
-    shader->setFloat("material.shininess", this->material.shininess);
-
-    shader->setVec3("viewPos", camPos);
-
-    // set lightsource uniforms 
-    unsigned int curr_light_num = 0;
-    for (auto curr_source : lightSources) {
-        if (curr_light_num > MAX_POINT_LIGHTS) {
-            break;
-        }
-        if (!curr_source.has_value()) {
-            continue;
-        }
-
-        SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
-        glm::vec3 pos = curr_source->physics.getCenterPosition();
-
-        std::string pointLight = "pointLights[" + std::to_string(curr_light_num) + "]";
-        shader->setBool(pointLight + ".enabled", true);
-        shader->setFloat(pointLight + ".intensity", properties.intensity);
-        shader->setVec3(pointLight + ".position", pos);
-        // needed for attenuation
-        shader->setFloat(pointLight + ".constant", 1.0f);
-        shader->setFloat(pointLight + ".linear", properties.attenuation_linear);
-        shader->setFloat(pointLight + ".quadratic", properties.attenuation_quadratic);
-
-        // light color
-        shader->setVec3(pointLight + ".ambient", properties.ambient_color);
-        shader->setVec3(pointLight + ".diffuse", properties.diffuse_color);
-        shader->setVec3(pointLight + ".specular", properties.specular_color);
-
-        curr_light_num++;
-    }
-
-    if (textures.size() == 0) {
-    } else {
+    if (textures.size() != 0) {
         unsigned int diffuseNr = 1;
         unsigned int specularNr = 1;
         for(unsigned int i = 0; i < textures.size(); i++) {
@@ -177,12 +107,18 @@ void Mesh::draw(
             else if(name == "texture_specular")
                 number = std::to_string(specularNr++);
 
-            std::string shaderTextureName = "material." + name + number;
+            std::string shaderTextureName = name + number;
             shader->setInt(shaderTextureName, i);
             glBindTexture(GL_TEXTURE_2D, textures[i].getID());
         }
-        glActiveTexture(GL_TEXTURE0);
+    } else {
+        // shader->setFloat("shininess", this->material.shininess);
     }
+    // if (solidColor.has_value()) {
+    //     shader->setVec3("diffuse", solidColor.value());
+    //     float s = 1.0f;
+    //     shader->setFloat("shininess", s);
+    // }
 
     // draw mesh
     glBindVertexArray(VAO);
@@ -191,9 +127,8 @@ void Mesh::draw(
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
-    glUseProgram(0);
 }
 
 Model::Model(const std::string& filepath) {
@@ -216,13 +151,11 @@ Model::Model(const std::string& filepath) {
 }
 
 void Model::draw(Shader* shader,
-    glm::mat4 viewProj,
     glm::vec3 camPos, 
-    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
     bool fill) {
 
     for(Mesh& mesh : this->meshes) {
-        mesh.draw(shader, viewProj, camPos, lightSources, fill);
+        mesh.draw(shader, camPos, fill);
     }
 }
 
