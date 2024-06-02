@@ -78,7 +78,7 @@ std::string getAudioPath(ClientMusic music) {
         case ClientMusic::TitleTheme:
             return (dir / "piano.wav").string();
         case ClientMusic::GameTheme:
-            return (dir / "maze.mp3").string();
+            return (dir / "dm_maze.flac").string();
         default:
             std::cerr << "FATAL: no known path for ClientMusic " << static_cast<int>(music) << std::endl;
             std::exit(1);

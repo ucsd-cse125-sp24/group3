@@ -35,9 +35,8 @@ public:
 	 * @note This should be called when the use duration times out OR when the player
 	 * selects a different item in their inventory.
 	 * @param state Reference to the server's ServerGameState instance
-	 * @return
 	*/
-	UsedItemsMap::iterator revertEffect(ServerGameState& state);
+	void revertEffect(ServerGameState& state);
 private:
 	/**
 	 * @brief The time at which the mirror was last used

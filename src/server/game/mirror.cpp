@@ -34,7 +34,7 @@ void Mirror::useItem(Object* other, ServerGameState& state, int itemSelected) {
 }
 
 void Mirror::dropItem(Object* other, ServerGameState& state, int itemSelected, float dropDistance) {
-	//	Stop mirror's effect
+	//	Stop mirror's effect (returns immediately if mirror wasn't used)
 	this->revertEffect(state);
 
 	Item::dropItem(other, state, itemSelected, dropDistance);
@@ -61,8 +61,12 @@ bool Mirror::timeOut() {
 	return elapsed_seconds.count() > MIRROR_USE_DURATION;
 }
 
-UsedItemsMap::iterator Mirror::revertEffect(ServerGameState& state) {
-	//	Mak as no longer used (but still held)
+void Mirror::revertEffect(ServerGameState& state) {
+	if (!this->iteminfo.used) {
+		return;
+	}
+
+	//	Mark as no longer used (but still held)
 	this->iteminfo.used = false;
 
 	//	Update used items list to mark mirror as no longer used
@@ -71,6 +75,4 @@ UsedItemsMap::iterator Mirror::revertEffect(ServerGameState& state) {
 	if (it != this->used_player->sharedInventory.usedItems.end()) {
 		it = this->used_player->sharedInventory.usedItems.erase(it);
 	}
-
-	return it;
 }
