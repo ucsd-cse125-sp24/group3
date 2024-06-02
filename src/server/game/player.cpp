@@ -26,6 +26,7 @@ Player::Player(glm::vec3 corner, glm::vec3 facing):
     this->info.is_alive = true;
     this->info.respawn_time = NULL;
     this->info.render = true;
+    this->info.used_mirror_to_reflect_lightning = false;
 
     // initialize inventory as empty
     this->inventory = std::vector<SpecificID>(INVENTORY_SIZE, -1);

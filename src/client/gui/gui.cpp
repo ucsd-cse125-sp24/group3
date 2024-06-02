@@ -1601,6 +1601,22 @@ void GUI::_layoutGameHUD() {
         );
     }
     this->addWidget(std::move(needleFlex));
+
+    //  Show a large splash text at the center of the screen for the player if the player
+    //  successfully reflected a lightning bolt
+    if (self.get().playerInfo.get().used_mirror_to_reflect_lightning) {
+        std::cout << "Player used a mirror to reflect a lightning bolt!" << std::endl;
+        auto reflectedLightningSplashText = widget::CenterText::make(
+            "Reflected Lightning using Mirror!",
+            gui::font::Font::TITLE,
+            gui::font::Size::MEDIUM,
+            gui::font::Color::BLUE,
+            this->fonts,
+            WINDOW_HEIGHT / 2
+        );
+
+        this->addWidget(std::move(reflectedLightningSplashText));
+    }
 }
 
 void GUI::_layoutGameEscMenu() {

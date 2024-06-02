@@ -1222,6 +1222,10 @@ void ServerGameState::updatePlayerLightningInvulnerabilityStatus() {
 			if (elapsed_seconds.count() > player->getLightningInvulnerabilityDuration()) {
 				std::cout << "Removing a player's lightning invulnerability." << std::endl;
 				player->setInvulnerableToLightning(false, -1);
+
+				//	If the player gained invulnerability due to reflecting a
+				//	lightning bolt with a mirror, undo that boolean
+				player->info.used_mirror_to_reflect_lightning = false;
 			}
 		}
 	}

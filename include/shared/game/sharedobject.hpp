@@ -218,9 +218,10 @@ struct SharedPlayerInfo {
 	bool is_alive;
 	time_t respawn_time; // unix timestamp in ms when the player will be respawned
 	bool render; // for invis potion
+	bool used_mirror_to_reflect_lightning;	//	To tell the player that they successfully reflected lightning
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & is_alive & respawn_time & render;
+		ar & is_alive & respawn_time & render & used_mirror_to_reflect_lightning;
 	}
 };
 

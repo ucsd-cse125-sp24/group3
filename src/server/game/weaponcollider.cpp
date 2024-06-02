@@ -67,6 +67,10 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
                 //  Mark player as invulnerable to lightning for 1 second
                 player->setInvulnerableToLightning(true, 1);
 
+                //  Inform player they successfully relfected a lightning bolt
+                //  using a mirror
+                player->info.used_mirror_to_reflect_lightning = true;
+
                 //  Destroy the mirror that the player is holding
                 mirror->dropItem(player, state, i, 0.0f);
                 state.markForDeletion(item->globalID);
