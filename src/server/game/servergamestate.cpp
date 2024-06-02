@@ -387,8 +387,6 @@ void ServerGameState::update(const EventList& events) {
 
 				// Lightning now has its own mana system
 				if (trapPlacementEvent.cell == CellType::Lightning) {
-					std::cout << "USING LIGHTNING" << std::endl;
-
 					if (dm->dmInfo.mana_remaining >= LIGHTNING_MANA) {
 						Weapon* lightning = dm->lightning;
 						glm::vec3 corner(
@@ -400,6 +398,7 @@ void ServerGameState::update(const EventList& events) {
 						lightning->useLightning(dm, *this, corner);
 						dm->useMana();
 					}
+
 					break;
 				}
 
@@ -437,56 +436,220 @@ void ServerGameState::update(const EventList& events) {
 				dm->sharedTrapInventory.trapsPlaced = trapsPlaced + 1;
 
 				// SPAWN AN ITEM FOR EACH PLAYER
-				// CURRENTLY SPAWNS ON EACH PLACEMENT
-				for (int i = 0; i < this->objects.getPlayers().numElements(); i++) {
-					Player* _player = this->objects.getPlayers().get(i);
+				float randFloat = randomDouble(0.0, 1.0);
 
-					GridCell* _cell = this->getGrid().getCell(_player->physics.shared.corner.x / Grid::grid_cell_width, _player->physics.shared.corner.z / Grid::grid_cell_width);
-				
-					// explore 10x10 around the player and find first empty cell
-					for (int c = std::max(_cell->x - 5, 0); c < std::min(this->grid.getColumns()-1, _cell->x + 5); c++) {
-						bool found = false;
+				if (randFloat <= ITEM_SPAWN_PROB) {
+					for (int i = 0; i < this->objects.getPlayers().numElements(); i++) {
+						Player* _player = this->objects.getPlayers().get(i);
 
-						for (int r = std::max(_cell->y - 5, 0); r < std::min(this->grid.getColumns() - 1, _cell->y + 5); r++) {
-							CellType celltype = grid.getCell(c, r)->type;
+						GridCell* _cell = this->getGrid().getCell(_player->physics.shared.corner.x / Grid::grid_cell_width, _player->physics.shared.corner.z / Grid::grid_cell_width);
 
-							// Manually check where spawning should always not happen
-							if (celltype == CellType::OutsideTheMaze || celltype == CellType::Wall || celltype == CellType::Pillar || \
-								celltype == CellType::FireballTrapLeft || celltype == CellType::FireballTrapRight || \
-								celltype == CellType::FireballTrapDown || celltype == CellType::FireballTrapUp || \
-								celltype == CellType::FloorSpikeFull || celltype == CellType::FloorSpikeVertical || \
-								celltype == CellType::FloorSpikeHorizontal || celltype == CellType::FakeWall ||
-								celltype == CellType::ArrowTrapUp || celltype == CellType::ArrowTrapDown || \
-								celltype == CellType::ArrowTrapRight || celltype == CellType::ArrowTrapLeft || \
-								celltype == CellType::TeleporterTrap || celltype == CellType::Exit
-								) {
-								continue;
+						// explore 5x5 around the player and find first empty cell
+						for (int c = std::max(_cell->x - ITEM_SPAWN_BOUND, 0); c < std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND); c++) {
+							bool found = false;
+
+							for (int r = std::max(_cell->y - ITEM_SPAWN_BOUND, 0); r < std::min(this->grid.getColumns() - 1, _cell->y + ITEM_SPAWN_BOUND); r++) {
+								GridCell* cell = grid.getCell(c, r);
+								CellType celltype = cell->type;
+
+								// Manually check where spawning should always not happen
+								if (celltype == CellType::OutsideTheMaze || celltype == CellType::Wall || celltype == CellType::Pillar || \
+									celltype == CellType::FireballTrapLeft || celltype == CellType::FireballTrapRight || \
+									celltype == CellType::FireballTrapDown || celltype == CellType::FireballTrapUp || \
+									celltype == CellType::FloorSpikeFull || celltype == CellType::FloorSpikeVertical || \
+									celltype == CellType::FloorSpikeHorizontal || celltype == CellType::FakeWall ||
+									celltype == CellType::ArrowTrapUp || celltype == CellType::ArrowTrapDown || \
+									celltype == CellType::ArrowTrapRight || celltype == CellType::ArrowTrapLeft || \
+									celltype == CellType::TeleporterTrap || celltype == CellType::Exit) 
+								{
+									continue;
+								}
+
+								if (!this->hasObjectCollided(this->spawner->smallDummyItem,
+									glm::vec3(c * Grid::grid_cell_width + 0.01f, 0, r * Grid::grid_cell_width + 0.01f)))
+								{
+
+									this->objects.moveObject(this->spawner->smallDummyItem, glm::vec3(-1, 0, -1));
+
+									glm::vec3 dimensions(1.0f);
+
+									glm::vec3 corner(
+										cell->x * Grid::grid_cell_width + 1,
+										0,
+										cell->y * Grid::grid_cell_width + 1);
+
+									GridCell* cell = this->grid.getCell(c, r);
+
+									int randomCellType = randomInt(1, 3);
+
+									if (randomCellType == 1) {
+										int r = randomInt(1, 3);
+										if (r == 1) {
+											cell->type = CellType::HealthPotion;
+										}
+										else if (r == 2) {
+											cell->type = CellType::InvisibilityPotion;
+										}
+										else {
+											cell->type = CellType::InvincibilityPotion;
+										}
+									}
+									else if (randomCellType == 2) {
+										int r = randomInt(1, 3);
+										if (r == 1) {
+											cell->type = CellType::FireSpell;
+										}
+										else if (r == 2) {
+											cell->type = CellType::HealSpell;
+										}
+										else {
+											cell->type = CellType::TeleportSpell;
+										}
+									}
+									else {
+										int r = randomInt(1, 3);
+										if (r == 1) {
+											cell->type = CellType::Dagger;
+										}
+										else if (r == 2) {
+											cell->type = CellType::Sword;
+										}
+										else {
+											cell->type = CellType::Hammer;
+										}
+									}
+
+									switch (cell->type) {
+									case CellType::Dagger: {
+										glm::vec3 dimensions(1.0f);
+
+										glm::vec3 corner(
+											cell->x * Grid::grid_cell_width + 1,
+											0,
+											cell->y * Grid::grid_cell_width + 1);
+
+										this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Dagger));
+										break;
+									}
+									case CellType::Sword: {
+										glm::vec3 dimensions(1.0f);
+
+										glm::vec3 corner(
+											cell->x * Grid::grid_cell_width + 1,
+											0,
+											cell->y * Grid::grid_cell_width + 1);
+
+										this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Sword));
+										break;
+									}
+									case CellType::Hammer: {
+										glm::vec3 dimensions(1.0f);
+
+										glm::vec3 corner(
+											cell->x * Grid::grid_cell_width + 1,
+											0,
+											cell->y * Grid::grid_cell_width + 1);
+
+										this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Hammer));
+										break;
+									}
+									case CellType::TeleportSpell: {
+										glm::vec3 dimensions(1.0f);
+
+										glm::vec3 corner(
+											cell->x * Grid::grid_cell_width + 1,
+											0,
+											cell->y * Grid::grid_cell_width + 1);
+
+										this->objects.createObject(new Spell(corner, dimensions, SpellType::Teleport));
+										break;
+									}
+									case CellType::FireSpell: {
+										glm::vec3 dimensions(1.0f);
+
+										glm::vec3 corner(
+											cell->x * Grid::grid_cell_width + 1,
+											0,
+											cell->y * Grid::grid_cell_width + 1);
+
+										this->objects.createObject(new Spell(corner, dimensions, SpellType::Fireball));
+										break;
+									}
+									case CellType::HealSpell: {
+										glm::vec3 dimensions(1.0f);
+
+										glm::vec3 corner(
+											cell->x * Grid::grid_cell_width + 1,
+											0,
+											cell->y * Grid::grid_cell_width + 1);
+
+										this->objects.createObject(new Spell(corner, dimensions, SpellType::HealOrb));
+										break;
+									}
+									case CellType::HealthPotion: {
+										glm::vec3 dimensions(1.0f);
+
+										glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+											0,
+											cell->y * Grid::grid_cell_width + 1);
+
+										this->objects.createObject(new Potion(corner, dimensions, PotionType::Health));
+										break;
+									}
+									case CellType::NauseaPotion: {
+										glm::vec3 dimensions(1.0f);
+
+										glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+											0,
+											cell->y * Grid::grid_cell_width + 1);
+
+										this->objects.createObject(new Potion(corner, dimensions, PotionType::Nausea));
+										break;
+									}
+									case CellType::InvisibilityPotion: {
+										glm::vec3 dimensions(1.0f);
+
+										glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+											0,
+											cell->y * Grid::grid_cell_width + 1);
+
+										this->objects.createObject(new Potion(corner, dimensions, PotionType::Invisibility));
+										break;
+									}
+									case CellType::InvincibilityPotion: {
+										glm::vec3 dimensions(1.0f);
+
+										glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+											0,
+											cell->y * Grid::grid_cell_width + 1);
+
+										this->objects.createObject(new Potion(corner, dimensions, PotionType::Invincibility));
+										break;
+									}
+									case CellType::TeleporterTrap: {
+										glm::vec3 corner(
+											cell->x * Grid::grid_cell_width,
+											0.0f,
+											cell->y * Grid::grid_cell_width
+										);
+
+										this->objects.createObject(new TeleporterTrap(corner));
+										break;
+									}
+									}
+
+									found = true;
+								}
 							}
 
-							if (!this->hasObjectCollided(this->spawner->smallDummyItem,
-								glm::vec3(c * Grid::grid_cell_width + 0.01f, 0, r * Grid::grid_cell_width + 0.01f))) {
-								this->objects.moveObject(this->spawner->smallDummyItem, glm::vec3(-1, 0, -1));
-
-								glm::vec3 dimensions(1.0f);
-
-								glm::vec3 corner(
-									cell->x* Grid::grid_cell_width + 1,
-									0,
-									cell->y* Grid::grid_cell_width + 1);
-
-								// just test placing sword for now
-								this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Sword));
-
-								found = true;
+							if (found) {
+								break;
 							}
-						}
-
-						if (found) {
-							break;
 						}
 					}
 				}
 			}
+
 			break;
 		}
 
