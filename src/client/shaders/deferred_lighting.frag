@@ -35,7 +35,7 @@ vec3 CalcPointLight(in PointLight light, in vec3 fragPos, in vec3 normal, in vec
     vec3 halfwayDir = normalize(lightDir + viewDir);  
     float diff = max(dot(normal, lightDir), 0.0);
     
-    // vec3 ambient = light.ambient_color * mat_diffuse;
+    vec3 ambient = light.ambient_color * mat_diffuse;
     vec3 diffuse = light.diffuse_color * diff * mat_diffuse;
     float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
     vec3 specular = light.specular_color * spec * mat_shininess;
@@ -44,10 +44,10 @@ vec3 CalcPointLight(in PointLight light, in vec3 fragPos, in vec3 normal, in vec
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (1.0 + light.attn_linear * distance +
         light.attn_quadratic * (distance * distance));
-    // ambient *= attenuation;
+    ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
-    return (diffuse + specular);        
+    return (ambient + diffuse + specular) * light.intensity;
 }
 
 void main() {             
