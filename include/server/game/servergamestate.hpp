@@ -381,9 +381,4 @@ private:
 	 * @brief table of all currently playing sounds
 	 */
 	SoundTable sound_table;
-
-    /**
-     * @brief global directional light source for the entire maze
-     */
-    DirLight dirLight;
 };
