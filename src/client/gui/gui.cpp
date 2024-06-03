@@ -1582,7 +1582,7 @@ void GUI::_layoutGameHUD() {
     this->addWidget(std::move(durationFlex));
 
     auto compassFlex = widget::Flexbox::make(
-        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(700), font::getRelativePixels(10)),
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixelsHorizontal(700), font::getRelativePixels(10)),
         glm::vec2(0.0f, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );
@@ -1626,7 +1626,7 @@ void GUI::_layoutGameHUD() {
     this->addWidget(std::move(compassFlex));
 
     auto needleFlex = widget::Flexbox::make(
-        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(700), font::getRelativePixels(10)),
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixelsHorizontal(700), font::getRelativePixels(10)),
         glm::vec2(0.0f, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );
