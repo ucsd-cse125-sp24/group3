@@ -53,4 +53,9 @@ float getRelativePixels(float pixels) {
     return pixels * screen_factor;
 }
 
+float getRelativePixelsHorizontal(float pixels) {
+    float screen_factor = static_cast<float>(WINDOW_WIDTH) / static_cast<float>(UNIT_WINDOW_WIDTH);
+    return pixels * screen_factor;
+}
+
 }

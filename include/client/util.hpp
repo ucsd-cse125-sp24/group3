@@ -6,6 +6,9 @@
 
 #include "shared/game/sharedobject.hpp"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtc/quaternion.hpp>
+
 /**
  * Convert ASSIMP color to a glm::vec3
  *
@@ -14,6 +17,9 @@
  */
 glm::vec3 aiColorToGLM(const aiColor3D& color);
 
+glm::mat4 matrixToGLM(const aiMatrix4x4& from);
+
+glm::vec3 getGLMVec(const aiVector3D& vec);
 /**
  * Bbox struct which stores the bounding box 
  * of an object.
@@ -41,3 +47,5 @@ Bbox aiBboxToGLM(const aiAABB& bbox);
  */
 Bbox combineBboxes(const Bbox& bbox1, const Bbox& bbox2);
 
+
+glm::quat getGLMQuat(const aiQuaternion& pOrientation);

@@ -2,8 +2,11 @@
 #include "glm/fwd.hpp"
 
 #include <glm/glm.hpp>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/string_cast.hpp>
+
 
 Renderable::Renderable() : model(1.0f), rotation(1.0f, 0.0f, 0.0f, 0.0f) { }
 

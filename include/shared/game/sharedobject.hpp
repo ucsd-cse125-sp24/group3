@@ -252,6 +252,17 @@ struct SharedExit {
 	}
 };
 
+enum class AnimState {
+	IdleAnim,
+	WalkAnim,
+	SprintAnim,
+	JumpAnim,
+	LandAnim,
+	AttackAnim,
+	DrinkPotionAnim,
+	DeathAnim
+};
+
 struct SharedDMInfo {
 
 	int mana_remaining;
@@ -271,7 +282,6 @@ struct SharedCompass {
 	}
 };
 
-
 /**
  * @brief Representation of the Object class used by ServerGameState, containing
  * exactly the subset of Object data required by the client.
@@ -282,6 +292,7 @@ public:
 	ObjectType type;
 	SharedPhysics physics;
 	ModelType modelType;
+	AnimState animState;
 
 	boost::optional<SharedStats> stats;
 	boost::optional<SharedItemInfo> iteminfo;
@@ -301,7 +312,7 @@ public:
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & 
+		ar & globalID & type & physics & modelType & animState & stats & 
 			 iteminfo & solidSurface & trapInfo & playerInfo & 
 			 inventoryInfo & statuses & trapInventoryInfo & pointLightInfo &
              exit & weaponInfo & DMInfo & compass;
