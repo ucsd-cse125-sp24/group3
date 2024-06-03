@@ -160,7 +160,6 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		this->traps.remove(object->typeID);
 		break;
 	case ObjectType::Player:
-		std::cout << "REMOVE PLAYER OF TYPEID " << object->typeID << std::endl;
 		this->players.remove(object->typeID);
 		break;
 	case ObjectType::Projectile:

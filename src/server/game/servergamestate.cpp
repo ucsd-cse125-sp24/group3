@@ -492,6 +492,12 @@ void ServerGameState::update(const EventList& events) {
 							}
 						}
 
+						// early exit, just couldn't place anything sadly
+						if ((randomC == _cell->x && randomR == _cell->y) || celltype != CellType::Empty) {
+							std::cout << "COULDNT PLACE ANY ITEMS!" << std::endl;
+							break;
+						}
+
 						if (!this->hasObjectCollided(this->spawner->smallDummyItem,
 							glm::vec3(randomC * Grid::grid_cell_width + 0.01f, 0, randomR * Grid::grid_cell_width + 0.01f)))
 						{
@@ -697,6 +703,7 @@ void ServerGameState::update(const EventList& events) {
 						}
 					}
 				}
+
 			}
 
 			break;
