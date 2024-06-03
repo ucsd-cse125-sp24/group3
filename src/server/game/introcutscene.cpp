@@ -84,6 +84,13 @@ bool IntroCutscene::update() {
             MEDIUM_DIST,
             MEDIUM_ATTEN 
         ));
+        this->state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::Wind, 
+            dm->physics.shared.getCenterPosition(),
+            FULL_VOLUME,
+            MEDIUM_DIST,
+            MEDIUM_ATTEN 
+        ));
     }
 
     if (ticks == STOP_MOVING_TICK) {

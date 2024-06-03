@@ -70,6 +70,8 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "cutscene_gate_open.wav").string();
         case ServerSFX::ZeusStartTheme:
             return (dir / "zeus_start_theme.mp3").string();
+        case ServerSFX::Wind:
+            return (dir / "wind.wav").string();
         
         default:
             std::cerr << "FATAL: no known path for ServerSFX " << static_cast<int>(sfx) << std::endl;

@@ -58,6 +58,7 @@ enum class ServerSFX {
     ZeusStartTheme,
     ElectricHum,
     IntroGateOpen,
+    Wind,
     // make sure to add to server sfx len map!
     // make sure to add to macro below!
 };
@@ -84,8 +85,11 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     {ServerSFX::CeilingSpikeTrigger, 380ms},
     {ServerSFX::CeilingSpikeImpact, 1180ms},
     {ServerSFX::Thunder,            2500ms},
-    // used not for in game, but for the intro cutscene, so this is the duration of torch sound in intro cutscene
+
+    // used not for in game, but for the intro cutscene, so this is the duration of sound in intro cutscene
     {ServerSFX::TorchLoop,         30000ms}, 
+    {ServerSFX::Wind,              14000ms}, 
+
     {ServerSFX::PlayersStartTheme,  8000ms},
     {ServerSFX::ElectricHum,        1500ms},
     {ServerSFX::IntroGateOpen,      9000ms},
@@ -99,7 +103,8 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     ServerSFX::PlayerWalk1, ServerSFX::PlayerWalk2, ServerSFX::PlayerWalk3, ServerSFX::PlayerWalk4, ServerSFX::PlayerWalk5, \
     ServerSFX::CeilingSpikeTrigger, ServerSFX::CeilingSpikeImpact, ServerSFX::TorchLoop, ServerSFX::Thunder,\
     ServerSFX::Dagger, ServerSFX::Sword, ServerSFX::Hammer, ServerSFX::Minotaur, ServerSFX::Python, \
-    ServerSFX::PlayersStartTheme, ServerSFX::ElectricHum, ServerSFX::IntroGateOpen, ServerSFX::ZeusStartTheme \
+    ServerSFX::PlayersStartTheme, ServerSFX::ElectricHum, ServerSFX::IntroGateOpen, ServerSFX::ZeusStartTheme, \
+    ServerSFX::Wind, \
 }
 
 // const std::unordered_map<ServerSound, size_t> serverSoundTickLengths = {
