@@ -12,12 +12,9 @@ std::unique_ptr<Shader> StaticImg::shader = nullptr;
 StaticImg::StaticImg(glm::vec2 origin, gui::img::Img img, float size):
     Widget(Type::StaticImg, origin), img(img)
 {
-    float screen_factor_width = static_cast<float>(WINDOW_WIDTH) / static_cast<float>(UNIT_WINDOW_WIDTH);
+    //float screen_factor_width = static_cast<float>(WINDOW_WIDTH) / static_cast<float>(UNIT_WINDOW_WIDTH);
     float screen_factor_height = static_cast<float>(WINDOW_HEIGHT) / static_cast<float>(UNIT_WINDOW_HEIGHT);
 
-    if (screen_factor_width > 1) {
-        screen_factor_width = 1.5;  // cppcheck-suppress unreadVariable
-    }
     if (screen_factor_height > 1) {
         screen_factor_height = 1.5;
     }

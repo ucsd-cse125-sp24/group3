@@ -72,5 +72,6 @@ float getScaleFactor(Size size);
  */
 float getRelativePixels(float pixels);
 
+float getRelativePixelsHorizontal(float pixels);
 
 }
