@@ -19,6 +19,9 @@
 #include "client/camera.hpp"
 #include "client/audio/audiomanager.hpp"
 #include "client/constants.hpp"
+#include "client/animation.hpp"
+#include "client/animationmanager.hpp"
+#include "client/bone.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/game/sharedobject.hpp"
@@ -164,6 +167,7 @@ public:
     bool connect(std::string ip_addr);
 
     AudioManager* getAudioManager();
+    AnimationManager* getAnimManager() { return animManager; }
 
     void setWorldPos();
 
@@ -279,6 +283,7 @@ private:
     RadioButtonState roleSelection;
 
     AudioManager* audioManager;
+    AnimationManager* animManager;
 
     /* Camera object representing player's current position & orientation */
     std::unique_ptr<Camera> cam;

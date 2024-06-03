@@ -203,11 +203,13 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::MoveCam: {
 				obj->physics.velocity.x = (startAction.movement * PLAYER_SPEED).x;
 				obj->physics.velocity.z = (startAction.movement * PLAYER_SPEED).z;
+				obj->animState = (obj->animState == AnimState::JumpAnim || obj->animState == AnimState::SprintAnim) ? obj->animState : AnimState::WalkAnim;
 				break;
 			}
 			case ActionType::Jump: {
 				if (!obj->physics.feels_gravity || obj->physics.velocity.y != 0) { break; }
 				obj->physics.velocity.y += (startAction.movement * JUMP_SPEED / 2.0f).y;
+				obj->animState = AnimState::JumpAnim;
 				this->sound_table.addNewSoundSource(SoundSource(
 					ServerSFX::PlayerJump,
 					obj->physics.shared.corner,
@@ -223,6 +225,7 @@ void ServerGameState::update(const EventList& events) {
 				}
 				else {
 					obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
+					obj->animState = (obj->animState == AnimState::WalkAnim) ? AnimState::SprintAnim : obj->animState;
 				}
 				break;
 			}
@@ -248,10 +251,16 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::MoveCam: {
 				obj->physics.velocity.x = 0.0f;
 				obj->physics.velocity.z = 0.0f;
+				obj->animState = AnimState::IdleAnim;
 				break;
 			}
 			case ActionType::Sprint: {
 				obj->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
+				if (obj->physics.velocity.x != 0.0f && obj->physics.velocity.z != 0.0f) {
+					obj->animState = AnimState::WalkAnim;
+				} else {
+					obj->animState = AnimState::IdleAnim;
+				}
 				break;
 			}
 			default: { break; }
@@ -311,6 +320,12 @@ void ServerGameState::update(const EventList& events) {
 			if (player->inventory[itemSelected] != -1) {
 				Item* item = this->objects.getItem(player->inventory[itemSelected]);
 				item->useItem(player, *this, itemSelected);
+
+				if (dynamic_cast<Potion*>(item) != nullptr) {
+					player->animState = AnimState::DrinkPotionAnim;
+				} else if (dynamic_cast<Weapon*>(item) != nullptr) {
+					player->animState = AnimState::AttackAnim;
+				}
 
 				this->updated_entities.insert(player->globalID);
 				this->updated_entities.insert(item->globalID);
@@ -628,6 +643,13 @@ void ServerGameState::updateMovement() {
 		if (object->physics.shared.corner.y < 0) {
 			//	Clamp object to floor if corner's y position is lower than the floor
 			object->physics.shared.corner.y = 0;
+
+			// After landing, set object's animation to non-jump (idle)
+			if (object->physics.velocity.x != 0.0f && object->physics.velocity.z != 0.0f) {
+				object->animState = AnimState::WalkAnim;
+			} else {
+				object->animState = AnimState::IdleAnim;
+			}
 
 			// Play relevant landing sounds
 			if (starting_corner_pos.y != 0.0f) {
