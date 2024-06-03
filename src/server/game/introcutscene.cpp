@@ -136,6 +136,7 @@ bool IntroCutscene::update() {
             wall->physics.shared.corner.y += 0.042f;
 
             if (!played_sound && ticks == GATE_RAISE_TICK) {
+                played_sound = true;
                 this->state.soundTable().addNewSoundSource(SoundSource(
                     ServerSFX::IntroGateOpen,
                     wall->physics.shared.getCenterPosition(),
