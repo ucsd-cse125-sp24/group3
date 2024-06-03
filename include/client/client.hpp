@@ -19,6 +19,9 @@
 #include "client/camera.hpp"
 #include "client/audio/audiomanager.hpp"
 #include "client/constants.hpp"
+#include "client/animation.hpp"
+#include "client/animationmanager.hpp"
+#include "client/bone.hpp"
 
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/game/sharedobject.hpp"
@@ -164,6 +167,7 @@ public:
     bool connect(std::string ip_addr);
 
     AudioManager* getAudioManager();
+    AnimationManager* getAnimManager() { return animManager; }
 
     void setWorldPos();
 
@@ -223,6 +227,7 @@ private:
     /* Shader objects for various */
     std::shared_ptr<Shader> deferred_geometry_shader;
     std::shared_ptr<Shader> deferred_lighting_shader;
+    std::shared_ptr<Shader> dm_deferred_lighting_shader;
     std::shared_ptr<Shader> deferred_light_box_shader;
 
     /* Character models and lighting objects, might need to move to different classes later */
@@ -281,6 +286,7 @@ private:
     RadioButtonState roleSelection;
 
     AudioManager* audioManager;
+    AnimationManager* animManager;
 
     /* Camera object representing player's current position & orientation */
     std::unique_ptr<Camera> cam;

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include <memory>
 #include <optional>
 #include <set>
@@ -16,6 +17,9 @@
 #include "client/renderable.hpp"
 #include "client/shader.hpp"
 #include "client/util.hpp"
+#include "client/bone.hpp"
+
+#define MAX_BONE_INFLUENCE 4
 
 /**
  * Stores position, normal vector, and coordinates 
@@ -25,6 +29,8 @@ struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 textureCoords;
+    int m_boneIDs[MAX_BONE_INFLUENCE]; /* Bone indices which influence the vertex */
+    float m_weights[MAX_BONE_INFLUENCE]; /* Weights for each bone */
 };
 
 class Texture {
@@ -58,6 +64,14 @@ struct Material {
     glm::vec3 diffuse;
     glm::vec3 specular;
     float shininess;
+};
+
+struct BoneInfo {
+	/*id is index in finalBoneMatrices*/
+	int id;
+
+	/*offset matrix transforms vertex from model space to bone space*/
+	glm::mat4 offset;
 };
 
 /**
@@ -113,7 +127,7 @@ class Model : public Renderable {
      *
      * @param Filepath to model file.
      */
-    explicit Model(const std::string& filepath);
+    explicit Model(const std::string& filepath, bool flip_uvs);
 
     /**
      * Draws all the meshes of a given model
@@ -239,13 +253,26 @@ class Model : public Renderable {
 
     void overrideSolidColor(std::optional<glm::vec3> color);
 
+
+	auto& getBoneInfoMap() { return m_boneInfoMap; }
+	int& getBoneCount() { return m_boneCounter; }
+	
+
  private:
     std::vector<Mesh> meshes;
     Bbox bbox;
     glm::vec3 dimensions;
+    
+	std::map<std::string, BoneInfo> m_boneInfoMap;
+	int m_boneCounter = 0;
+
 
     void processNode(aiNode* node, const aiScene* scene);
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+	void setDefaultVertexBoneData(Vertex& vertex);
+	void setVertexBoneData(Vertex& vertex, int boneID, float weight);
+	void extractBoneWeight(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene);
+
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, const aiTextureType& type);
 
 

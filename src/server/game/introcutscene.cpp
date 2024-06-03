@@ -37,6 +37,10 @@ IntroCutscene::IntroCutscene():
     player_left->physics.velocity = VELOCITY;
     player_right->physics.velocity = VELOCITY;
 
+    player->animState = AnimState::WalkAnim;
+    player_left->animState = AnimState::WalkAnim;
+    player_right->animState = AnimState::WalkAnim;
+
     // move half a grid cell down to be in center of 4 wide hall
     player->physics.shared.corner += directionToFacing(Direction::DOWN) * (Grid::grid_cell_width / 2.0f);
 
@@ -123,6 +127,10 @@ bool IntroCutscene::update() {
         player_left->physics.velocity = glm::vec3(0.0f);
         player_right->physics.velocity = glm::vec3(0.0f);
         dm->physics.velocity = glm::vec3(0.0f);
+
+        player->animState = AnimState::IdleAnim;
+        player_left->animState = AnimState::IdleAnim;
+        player_right->animState = AnimState::IdleAnim;
     }
 
     if (ticks >= GATE_RAISE_TICK && ticks <= GATE_STOP_RAISE_TICK) {
@@ -191,10 +199,14 @@ bool IntroCutscene::update() {
 LoadIntroCutsceneEvent IntroCutscene::toNetwork() {
     std::vector<SharedGameState> updates = this->state.generateSharedGameState(true);
     if (updates.size() != 1) {
-        std::cerr << "FATAL: Cutscene state can't fit in one packet... Would have to refactor to make this work.\n";
-        std::exit(1);
+        // just put them all in one packet and pray it works...
+        SharedGameState& main = updates.at(0);
+        for (int i = 1; i < updates.size(); i++) {
+            for (const auto& [eid, obj] : updates.at(i).objects) {
+                main.objects.insert({eid, obj});
+            }
+        }
     }
-
 
     auto evt = LoadIntroCutsceneEvent(updates.at(0), this->pov_eid, this->dm_eid, this->lights);
 

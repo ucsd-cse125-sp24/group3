@@ -7,6 +7,7 @@
 #include "server/game/object.hpp"
 #include "server/game/projectile.hpp"
 #include "shared/utilities/rng.hpp"
+#include "shared/audio/constants.hpp"
 
 Spell::Spell(glm::vec3 corner, glm::vec3 dimensions, SpellType spelltype):
     Item(ObjectType::Spell, false, corner, ModelType::Cube, dimensions)
@@ -42,6 +43,7 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
 
     spell_origin += player->physics.shared.facing * 2.0f;
 
+    auto sound = ServerSFX::Spell;
     switch (this->spellType) {
     case SpellType::Fireball: {
         state.objects.createObject(new SpellOrb(spell_origin, player->physics.shared.facing, SpellType::Fireball));
@@ -52,6 +54,7 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
         break;
     }
     case SpellType::Teleport: {
+        sound = ServerSFX::Teleport;
         auto players = state.objects.getPlayers();
         Player* rand_player;
         while (true) {
@@ -87,6 +90,15 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
     }
     }
 
+    // Play sound
+    state.soundTable().addNewSoundSource(SoundSource(
+        sound,
+        player->physics.shared.getCenterPosition(),
+        DEFAULT_VOLUME,
+        SHORT_DIST,
+        SHORT_ATTEN
+    ));
+
     this->castLimit -= 1;
     player->sharedInventory.usesRemaining[itemSelected] = this->castLimit;
 
@@ -118,5 +130,12 @@ void Spell::doCollision(Object* other, ServerGameState& state) {
     if (pickedUp) {
         this->iteminfo.held = true;
         this->physics.collider = Collider::None;
+        state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::ItemPickUp,
+            other->physics.shared.getCenterPosition(),
+            DEFAULT_VOLUME,
+            SHORT_DIST,
+            SHORT_ATTEN
+        ));
     }
 }

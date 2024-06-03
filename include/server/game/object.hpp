@@ -129,6 +129,13 @@ public:
 	ModelType modelType;
 
 	/**
+	 * @brief Object's animation state and current action. For non-animated
+	 * objects, this defaults as AnimState::IdleAnim.
+	 * 
+	 */
+	AnimState animState;
+
+	/**
 	 * @brief Vector of (x, y) positions of GridCells currently occupied by this
 	 * object
 	 */

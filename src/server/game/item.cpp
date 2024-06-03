@@ -2,6 +2,7 @@
 #include "shared/game/sharedobject.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/objectmanager.hpp"
+#include "shared/audio/constants.hpp"
 
 /*  Constructors and Destructors    */
 Item::Item(ObjectType type, bool movable, glm::vec3 corner, ModelType model, glm::vec3 dimensions):
@@ -31,6 +32,14 @@ void Item::dropItem(Object* other, ServerGameState& state, int itemSelected, flo
 
 	player->inventory[itemSelected] = -1;
 	player->sharedInventory.inventory[itemSelected] = ModelType::Frame;
+
+	state.soundTable().addNewSoundSource(SoundSource(
+		ServerSFX::ItemDrop,
+		other->physics.shared.getCenterPosition(),
+		DEFAULT_VOLUME,
+		SHORT_DIST,
+		SHORT_ATTEN
+	));
 }
 
 void Item::doCollision(Object* other, ServerGameState& state) {
@@ -51,6 +60,13 @@ void Item::doCollision(Object* other, ServerGameState& state) {
 	if (pickedUp) {
 		this->iteminfo.held = true;
 		this->physics.collider = Collider::None;
+		state.soundTable().addNewSoundSource(SoundSource(
+			ServerSFX::ItemPickUp,
+			other->physics.shared.getCenterPosition(),
+			DEFAULT_VOLUME,
+			SHORT_DIST,
+			SHORT_ATTEN
+		));
 	}
 }
 

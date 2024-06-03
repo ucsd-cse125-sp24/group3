@@ -19,10 +19,11 @@ struct Material {
 uniform Material material;
 uniform vec3 viewPos;
 
-// uniform vec3 lightPos;
-// uniform vec3 lightColor;
+uniform vec3 lightPos;
+uniform vec3 lightColor;
 
-struct PointLight {    
+struct PointLight {  
+    bool enabled;  
     vec3 position;
     
     float constant;
@@ -32,18 +33,57 @@ struct PointLight {
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
-};
-#define NR_POINT_LIGHTS 8
-uniform PointLight pointLights[NR_POINT_LIGHTS];
 
-uniform PointLight light;
+    // from 0-1
+    float intensity;
+};
+#define NR_POINT_LIGHTS 16
+uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 out vec4 fragColor;
 
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
+    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
+    // attenuation
+    float distance    = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + 
+  			     light.quadratic * (distance * distance));    
+    // combine results 
+    // TODO: put textures here once we want textured surfaces
+    vec3 ambient  = light.ambient  * vec3(texture(material.texture_diffuse1, TexCoords));
+    vec3 diffuse  = light.diffuse  * diff * vec3(texture(material.texture_diffuse1, TexCoords));
+    vec3 specular = light.specular * spec;
+    ambient  *= attenuation;
+    diffuse  *= attenuation;
+    specular *= attenuation;
+    return (ambient + diffuse + specular) * light.intensity;
+}
 
+void main() {
+    vec3 norm = normalize(fragNormal);
+    vec3 viewDir = normalize(viewPos - fragPos);
+
+    vec3 result = vec3(0.0, 0.0, 0.0);
+    for(int i = 0; i < NR_POINT_LIGHTS; i++) {
+        if (!pointLights[i].enabled) {
+            continue;
+        }
+        result += CalcPointLight(pointLights[i], norm, fragPos, viewDir);
+    }
+    fragColor = vec4(result, 1.0);
+}
+
+/*
 void main() {
     fragColor = vec4(0.0, 1.0, 1.0, 1.0);
 }
+*/
 
 // #version 330 core
 // 

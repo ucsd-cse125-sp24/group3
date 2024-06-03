@@ -53,6 +53,11 @@ enum class ServerSFX {
     Hammer,
     Minotaur,
     Python,
+    Teleport,
+    Potion,
+    Spell,
+    ItemPickUp,
+    ItemDrop,
     TEMP,
     PlayersStartTheme,
     ZeusStartTheme,
@@ -93,7 +98,12 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     {ServerSFX::PlayersStartTheme,  8000ms},
     {ServerSFX::ElectricHum,        1500ms},
     {ServerSFX::IntroGateOpen,      9000ms},
-    {ServerSFX::ZeusStartTheme,    12000ms}
+    {ServerSFX::ZeusStartTheme,    12000ms},
+    {ServerSFX::Teleport,           500ms},
+    {ServerSFX::Potion,             500ms},
+    {ServerSFX::Spell,              500ms},
+    {ServerSFX::ItemPickUp,         500ms},
+    {ServerSFX::ItemDrop,           500ms}
     // dont forget macro below!
 };
 
@@ -105,6 +115,7 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     ServerSFX::Dagger, ServerSFX::Sword, ServerSFX::Hammer, ServerSFX::Minotaur, ServerSFX::Python, \
     ServerSFX::PlayersStartTheme, ServerSFX::ElectricHum, ServerSFX::IntroGateOpen, ServerSFX::ZeusStartTheme, \
     ServerSFX::Wind, \
+    ServerSFX::Teleport, ServerSFX::Potion, ServerSFX::Spell, ServerSFX::ItemPickUp, ServerSFX::ItemDrop \
 }
 
 // const std::unordered_map<ServerSound, size_t> serverSoundTickLengths = {

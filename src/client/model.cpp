@@ -24,9 +24,6 @@
 #include "assimp/types.h"
 #include "assimp/aabb.h"
 #include "assimp/material.h"
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -70,6 +67,14 @@ Mesh::Mesh(
     glEnableVertexAttribArray(2);	
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, textureCoords)));
 
+    // vertex bone ids
+    glEnableVertexAttribArray(3);
+    glVertexAttribIPointer(3, 4, GL_INT, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, m_boneIDs)));
+
+    // vertex bone weights
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, m_weights)));
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -86,6 +91,7 @@ void Mesh::draw(
     bool fill) {
     // vertex shader uniforms
     auto model = this->getModelMat();
+    
     shader->setMat4("model", model);
 
     if (textures.size() != 0) {
@@ -125,16 +131,26 @@ void Mesh::draw(
     glBindVertexArray(0);
 }
 
-Model::Model(const std::string& filepath) {
+Model::Model(const std::string& filepath, bool flip_uvs) {
     this->directory = std::filesystem::path(filepath).parent_path().string();
 
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(filepath, 
-            aiProcess_Triangulate | // flag to only creates geometry made of triangles
-            aiProcess_FlipUVs | 
-            aiProcess_SplitLargeMeshes | 
-            aiProcess_OptimizeMeshes | 
-            aiProcess_GenBoundingBoxes); // needed to query bounding box of the model later
+    const aiScene *scene;
+    if (flip_uvs) {
+        scene = importer.ReadFile(filepath, 
+                aiProcess_Triangulate | // flag to only creates geometry made of triangles
+                aiProcess_FlipUVs | 
+                aiProcess_SplitLargeMeshes | 
+                aiProcess_OptimizeMeshes | 
+                aiProcess_GenBoundingBoxes); // needed to query bounding box of the model later
+    } else {
+        scene = importer.ReadFile(filepath, 
+                aiProcess_Triangulate | // flag to only creates geometry made of triangles
+                aiProcess_SplitLargeMeshes | 
+                aiProcess_OptimizeMeshes | 
+                aiProcess_GenBoundingBoxes); // needed to query bounding box of the model later
+    }
+
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         throw std::invalid_argument(std::string("ERROR::ASSIMP::") + importer.GetErrorString());
     }
@@ -243,6 +259,7 @@ void Model::processNode(aiNode *node, const aiScene *scene) {
     // process all the node's meshes (if any)
     for(unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]]; 
+        // std::cout << "processing mesh at index[" << i << "]" << std::endl;
         meshes.push_back(processMesh(mesh, scene));			
 
         // update model's bounding box with new mesh
@@ -268,11 +285,16 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
                 mesh->mVertices[i].x,
                 mesh->mVertices[i].y,
                 mesh->mVertices[i].z);
-        glm::vec3 normal(
-                mesh->mNormals[i].x,
-                mesh->mNormals[i].y,
-                mesh->mNormals[i].z);
-        
+
+        glm::vec3 normal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
+        if (mesh->mNormals) {
+            normal = glm::vec3(
+                    mesh->mNormals[i].x,
+                    mesh->mNormals[i].y,
+                    mesh->mNormals[i].z);
+
+        }
+
         // check if the mesh contain texture coordinates
         glm::vec2 texture(0.0f, 0.0f);
         if(mesh->mTextureCoords[0]) {
@@ -286,6 +308,11 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
             texture
         });
     }
+
+    for (int i = 0; i < vertices.size(); i++) {
+        setDefaultVertexBoneData(vertices[i]);
+    }
+
     // process indices
     for(unsigned int i = 0; i < mesh->mNumFaces; i++) {
         aiFace face = mesh->mFaces[i];
@@ -300,7 +327,6 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     float shininess = 0.0f;
 
     if(mesh->mMaterialIndex >= 0) {
-        // std::cout << "processing material of id: " << mesh->mMaterialIndex << std::endl;
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
         std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
@@ -326,6 +352,8 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         }
     }
 
+    extractBoneWeight(vertices, mesh, scene);
+
     return Mesh(
         vertices,
         indices,
@@ -339,6 +367,58 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     );
 }  
 
+void Model::setDefaultVertexBoneData(Vertex& vertex) {
+    for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
+        vertex.m_boneIDs[i] = -1;
+        vertex.m_weights[i] = 0.0f;
+    }
+}
+
+void Model::setVertexBoneData(Vertex& vertex, int boneID, float weight) {
+    // std::cout << "setting vertex bone data" << std::endl;
+    for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
+        if (vertex.m_boneIDs[i] < 0) {
+            vertex.m_boneIDs[i] = boneID;
+            vertex.m_weights[i] = weight;
+            return;
+        }
+    }
+}
+
+void Model::extractBoneWeight(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene) {
+    auto& boneInfoMap = m_boneInfoMap;
+    int& boneCount = m_boneCounter;
+
+    for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
+    {
+        int boneID = -1;
+        std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+        if (boneInfoMap.find(boneName) == boneInfoMap.end())
+        {
+            BoneInfo newBoneInfo;
+            newBoneInfo.id = boneCount;
+            newBoneInfo.offset = matrixToGLM(mesh->mBones[boneIndex]->mOffsetMatrix);
+            boneInfoMap[boneName] = newBoneInfo;
+            boneID = boneCount;
+            boneCount++;
+        }
+        else
+        {
+            boneID = boneInfoMap[boneName].id;
+        }
+        assert(boneID != -1);
+        auto weights = mesh->mBones[boneIndex]->mWeights;
+        int numWeights = mesh->mBones[boneIndex]->mNumWeights;
+
+        for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex)
+        {
+            int vertexId = weights[weightIndex].mVertexId;
+            float weight = weights[weightIndex].mWeight;
+            assert(vertexId <= vertices.size());
+            setVertexBoneData(vertices[vertexId], boneID, weight);
+        }
+    }
+}
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, const aiTextureType& type) {
     std::vector<Texture> textures;
@@ -383,7 +463,7 @@ Texture::Texture(const std::string& filepath, const aiTextureType& type) {
         stbi_image_free(data);
         throw std::exception();
     }
-    // std::cout << "Succesfully loaded texture at " << filepath << std::endl;
+    // std::cout << "Succesfully loaded " << this->type << " texture at " << filepath << std::endl;
     GLenum format = GL_RED;
     if (nrComponents == 1)
         format = GL_RED;

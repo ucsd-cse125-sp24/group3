@@ -23,6 +23,10 @@ set(FILES
     shader.cpp
     model.cpp
     renderable.cpp
+
+    animation.cpp
+    animationmanager.cpp
+    bone.cpp
 )
 
 # OpenGL

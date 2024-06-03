@@ -74,5 +74,4 @@ float getRelativePixels(float pixels);
 
 float getRelativePixelsHorizontal(float pixels);
 
-
 }

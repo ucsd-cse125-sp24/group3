@@ -17,6 +17,7 @@ namespace gui {
 GUI::GUI(Client* client, const GameConfig& config): capture_keystrokes(false), logo() {
     this->client = client;
     this->config = config;
+    this->controlDisplayed = true; // start with help on
 }
 
 bool GUI::init()
@@ -197,6 +198,10 @@ void GUI::_layoutFPSCounter() {
         fonts,
         widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::WHITE)
     ));
+}
+
+void GUI::displayControl() {
+    this->controlDisplayed = this->controlDisplayed ? false : true;
 }
 
 void GUI::_layoutLoadingScreen() {
@@ -921,8 +926,60 @@ void GUI::_sharedGameHUD() {
         return;
     }
 
-    auto self = client->gameState.objects.at(*self_eid);
 
+    // Add controls Help
+    if (this->controlDisplayed) {
+        auto controlsFlex = widget::Flexbox::make(
+            glm::vec2(WINDOW_WIDTH - font::getRelativePixels(350), FRAC_WINDOW_HEIGHT(1, 2)),
+            glm::vec2(0.0f, 0.0f),
+            widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(10))
+        );
+        auto actionsFlex = widget::Flexbox::make(
+            glm::vec2(WINDOW_WIDTH - font::getRelativePixels(150), FRAC_WINDOW_HEIGHT(1, 2)),
+            glm::vec2(0.0f, 0.0f),
+            widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(10))
+        );
+
+        std::vector<std::pair<std::string, std::string>> controls;
+        // Controls for Player
+        if (!is_dm.value()) {
+            controls.push_back({ "CONTROLS", " " });
+            controls.push_back({ "WASD:", "Move" });
+            controls.push_back({ "Left Shift:", "Sprint" });
+            controls.push_back({ "Spacebar:", "Jump" });
+            controls.push_back({ "Q:", "Drop Item" });
+            controls.push_back({ "Left Click:", "Use Item" });
+            controls.push_back({ "Mouse Wheel:", "Select Item" });
+            controls.push_back({ "ESC:", "Menu" });
+            controls.push_back({ "H:", "Controls" });
+        }
+        // Controls for DM
+        else {
+            controls.push_back({ "CONTROLS", " " });
+            controls.push_back({ "WASD:", "Move" });
+            controls.push_back({ "Left Shift:", "Zoom In" });
+            controls.push_back({ "Spacebar:", "Zoom Out" });
+            controls.push_back({ "Left Control:", "Boost" });
+            controls.push_back({ "Left Click:", "Place Trap" });
+            controls.push_back({ "Mouse Wheel:", "Select Trap" });
+            controls.push_back({ "ESC:", "Menu" });
+            controls.push_back({ "H:", "Controls" });
+        }
+
+        for (int i = controls.size() - 1; i >= 0; i--) {
+            controlsFlex->push(widget::DynText::make(controls[i].first, fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::WHITE))
+            );
+            actionsFlex->push(widget::DynText::make(controls[i].second, fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::WHITE))
+            );
+        }
+        
+        this->addWidget(std::move(controlsFlex));
+        this->addWidget(std::move(actionsFlex));
+    }
+
+    auto self = client->gameState.objects.at(*self_eid);
     auto inventory_size = !is_dm.value() ? self->inventoryInfo->inventory_size : self->trapInventoryInfo->inventory_size;
     auto selected = !is_dm.value() ? self->inventoryInfo->selected - 1 : self->trapInventoryInfo->selected - 1;
 
@@ -1165,27 +1222,27 @@ void GUI::_sharedGameHUD() {
             if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
                 switch (self->trapInventoryInfo->inventory[i]) {
                 case ModelType::FloorSpikeFull: { // TODO: CHANGE images
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FloorSpikeTrap), 2));
                     break;
                 }
                 case ModelType::FloorSpikeHorizontal: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Teleporter), 2));
                     break;
                 }
                 case ModelType::FloorSpikeVertical: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ArrowTrap), 2));
                     break;
                 }
                 case ModelType::SunGod: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Sungod), 2));
                     break;
                 }
                 case ModelType::SpikeTrap: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SpikeTrap), 2));
                     break;
                 }
                 case ModelType::Lightning: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Lightning), 2));
                     break;
                 }
                 }
@@ -1512,27 +1569,51 @@ void GUI::_layoutGameHUD() {
     this->addWidget(std::move(durationFlex));
 
     auto compassFlex = widget::Flexbox::make(
-        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(120), font::getRelativePixels(10)),
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixelsHorizontal(700), font::getRelativePixels(10)),
         glm::vec2(0.0f, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );
 
-    if (self->compass->angle > 270) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass270), 2));
+    if (self->compass->angle > 345 || self->compass->angle <= 15) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass0), 2));
     }
-    else if (self->compass->angle > 180) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass180), 2));
+    else if (self->compass->angle > 15 && self->compass->angle <= 45) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass30), 2));
     }
-    else if (self->compass->angle > 90) {
+    else if (self->compass->angle > 45 && self->compass->angle <= 75) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass60), 2));
+    }
+    else if (self->compass->angle > 75 && self->compass->angle <= 105) {
         compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass90), 2));
     }
+    else if (self->compass->angle > 105 && self->compass->angle <= 135) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass120), 2));
+    }
+    else if (self->compass->angle > 135 && self->compass->angle <= 165) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass150), 2));
+    }
+    else if (self->compass->angle > 165 && self->compass->angle <= 195) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass180), 2));
+    }
+    else if (self->compass->angle > 195 && self->compass->angle <= 225) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass210), 2));
+    }
+    else if (self->compass->angle > 225 && self->compass->angle <= 255) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass240), 2));
+    }
+    else if (self->compass->angle > 255 && self->compass->angle <= 285) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass270), 2));
+    } 
+    else if (self->compass->angle > 285 && self->compass->angle <= 315) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass300), 2));
+    }
     else {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass0), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass330), 2));
     }
     this->addWidget(std::move(compassFlex));
 
     auto needleFlex = widget::Flexbox::make(
-        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(120), font::getRelativePixels(10)),
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixelsHorizontal(700), font::getRelativePixels(10)),
         glm::vec2(0.0f, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );
