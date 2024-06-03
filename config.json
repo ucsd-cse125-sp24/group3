@@ -2,7 +2,7 @@
   "game": {
     "maze": {
       "directory": "maps",
-      "procedural": false,
+      "procedural": true,
       "maze_file": "test/itemRoom.maze"
     }
   },

@@ -402,8 +402,10 @@ std::chrono::milliseconds Server::doTick() {
     }
 
 
+
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
+    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << "\n";
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(
         TIMESTEP_LEN - (stop - start));
     return wait;
