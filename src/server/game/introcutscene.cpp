@@ -3,6 +3,7 @@
 #include "shared/utilities/config.hpp"
 #include "server/game/weaponcollider.hpp"
 #include "shared/audio/constants.hpp"
+#include "shared/utilities/rng.hpp"
 
 #include <vector>
 
@@ -21,11 +22,33 @@ IntroCutscene::IntroCutscene():
 
     // hard code direction to face right based on the intro cutscene maze orientation
     Player* player = new Player(this->state.getGrid().getRandomSpawnPoint(), directionToFacing(Direction::RIGHT));
+    Player* player_left = new Player(this->state.getGrid().getRandomSpawnPoint(), directionToFacing(Direction::RIGHT));
+    Player* player_right = new Player(this->state.getGrid().getRandomSpawnPoint(), directionToFacing(Direction::RIGHT));
+
     this->state.objects.createObject(player);
+    this->state.objects.createObject(player_left);
+    this->state.objects.createObject(player_right);
+
     this->pov_eid = player->globalID;
-    player->physics.velocity = glm::normalize(player->physics.shared.facing) * 0.10f;
+
+    const glm::vec3 VELOCITY = glm::normalize(player->physics.shared.facing) * 0.10f;
+
+    player->physics.velocity = VELOCITY;
+    player_left->physics.velocity = VELOCITY;
+    player_right->physics.velocity = VELOCITY;
+
     // move half a grid cell down to be in center of 4 wide hall
     player->physics.shared.corner += directionToFacing(Direction::DOWN) * (Grid::grid_cell_width / 2.0f);
+
+    // adjust left and up a bit, and a random offset forward/back
+    player_left->physics.shared.corner = player->physics.shared.corner;
+    player_left->physics.shared.corner.z += Grid::grid_cell_width;
+    player_left->physics.shared.corner.x += Grid::grid_cell_width;
+
+    // adjust right and down a bit, and a random offset forward/back
+    player_right->physics.shared.corner = player->physics.shared.corner;
+    player_right->physics.shared.corner.z -= Grid::grid_cell_width;
+    player_right->physics.shared.corner.x += Grid::grid_cell_width;
 
     DungeonMaster* dm = new DungeonMaster(player->physics.shared.corner + glm::vec3(-20.0f, 10.0f, 0), directionToFacing(Direction::RIGHT));
     dm->physics.velocity = player->physics.velocity;
@@ -64,6 +87,8 @@ bool IntroCutscene::update() {
     ticks++;
 
     Player* player = this->state.objects.getPlayer(0);
+    Player* player_left = this->state.objects.getPlayer(1);
+    Player* player_right = this->state.objects.getPlayer(2);
     DungeonMaster* dm = this->state.objects.getDM();
 
     const int START_TICK = 1;
@@ -95,6 +120,8 @@ bool IntroCutscene::update() {
 
     if (ticks == STOP_MOVING_TICK) {
         player->physics.velocity = glm::vec3(0.0f);
+        player_left->physics.velocity = glm::vec3(0.0f);
+        player_right->physics.velocity = glm::vec3(0.0f);
         dm->physics.velocity = glm::vec3(0.0f);
     }
 
@@ -139,7 +166,7 @@ bool IntroCutscene::update() {
     }
 
     if (ticks == LIGHTNING_3_TICK) {
-        glm::vec3 lightning_pos3 = player->physics.shared.corner + glm::normalize(player->physics.shared.facing) * 4.0f;
+        glm::vec3 lightning_pos3 = player->physics.shared.getCenterPosition() + directionToFacing(Direction::RIGHT) * Grid::grid_cell_width * 1.5f;
         this->state.objects.createObject(new Lightning(lightning_pos3, player->physics.shared.facing));
     }
 
