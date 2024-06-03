@@ -63,6 +63,7 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->spawner = std::make_unique<Spawner>();
 	this->spawner->spawnDummy(*this);
 
+
     MazeGenerator generator(config);
     int attempts = 1;
     auto grid = generator.generate();
@@ -1454,23 +1455,41 @@ void ServerGameState::loadMaze(const Grid& grid) {
 	}
 
 	//	Step 5:	Add floor and ceiling SolidSurfaces.
-
-	// Create Ceiling
-	this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Ceiling, 
-		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),
-		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
-			this->grid.getRows() * Grid::grid_cell_width)
-	));
-
-	SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
-		glm::vec3(0.0f, -0.1f, 0.0f),
-		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
-			this->grid.getRows() * Grid::grid_cell_width)
-	);
-	this->objects.createObject(floor);
-
-	// this is for floor highlighting
 	std::vector<std::vector<bool>> freeSpots(grid.getRows(), std::vector<bool>(grid.getColumns(), false));
+
+    // create multiple floor and ceiling objects to populate the size of the entire maze. 
+    // currently doing this to stretch out the floor texture by the desired factor. here
+    // in the maze generation we can have a lot of control over how frequently the floor texture
+    // will repeat. I'd like to have this done on the client side instead and repeat the texture
+    // many times across one huge floor, but unfortuantely I cannot figure out how to get
+    // OpenGL to repeat the texture that many times.
+	for (int c = 0; c < this->grid.getColumns(); c+=GRIDS_PER_FLOOR_OBJECT) {
+		for (int r = 0; r < this->grid.getRows(); r+=GRIDS_PER_FLOOR_OBJECT) {
+            auto type = this->grid.getCell(c, r)->type;
+			if(type == CellType::OutsideTheMaze) {
+				continue;
+            }
+
+			glm::vec3 floor_corner = glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width);
+			SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
+				floor_corner,
+				glm::vec3(Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT, 0.1,
+					Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT)
+			);
+			this->objects.createObject(floor);
+
+			glm::vec3 ceiling_corner = glm::vec3(c * Grid::grid_cell_width, MAZE_CEILING_HEIGHT, r * Grid::grid_cell_width);
+			SolidSurface* ceiling = new SolidSurface(false, Collider::Box, SurfaceType::Ceiling,
+                ceiling_corner,
+                glm::vec3(Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT, 0.1,
+                    Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT)
+			);
+			this->objects.createObject(ceiling);
+
+			if(freeSpots[r][c])
+                solidSurfaceInGridCells.insert({{c, r}, {floor}});
+		}
+	}
 
 	//	Step 6:	For each GridCell, add an object (if not empty) at the 
 	//	GridCell's position.
@@ -1760,30 +1779,6 @@ void ServerGameState::loadMaze(const Grid& grid) {
 			}
 		}
 	}
-
-	// Create Floor
-	//for (int c = 0; c < this->grid.getColumns(); c++) {
-	//	for (int r = 0; r < this->grid.getRows(); r++) {
-	//		auto type = this->grid.getCell(c, r)->type;
-	//		if (isWallLikeCell(type) || type == CellType::OutsideTheMaze) {
-	//			continue;
-	//		}
-
-	//		glm::vec3 corner = glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width);
-
-	//		SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
-	//			corner,
-	//			glm::vec3(Grid::grid_cell_width, 0.1,
-	//				Grid::grid_cell_width)
-	//		);
-
-	//		this->objects.createObject(floor);
-
-	//		if(freeSpots[r][c]) {
-	//			solidSurfaceInGridCells.insert({{c, r}, {floor}});
-	//		}
-	//	}
-	//}
 
 }
 
