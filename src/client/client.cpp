@@ -725,7 +725,11 @@ void Client::geometryPass() {
                 auto player_pos = sharedObject->physics.getCenterPosition();
                 auto player_dir = sharedObject->physics.facing;
 
-                this->player_model->rotateAbsolute(player_dir);
+                if (player_dir == glm::vec3(0.0f)) {
+                    player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
+                }
+                player_dir.y = 0.0f;
+                this->player_model->rotateAbsolute(glm::normalize(player_dir), true);
                 this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
                     this->deferred_geometry_shader.get(),
@@ -754,7 +758,7 @@ void Client::geometryPass() {
                     player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
                 }
                 player_dir.y = 0.0f;
-                this->player_model->rotateAbsolute(glm::normalize(player_dir));
+                this->player_model->rotateAbsolute(glm::normalize(player_dir), true);
                 this->player_model->draw(
                     this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
