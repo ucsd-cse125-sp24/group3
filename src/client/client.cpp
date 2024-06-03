@@ -852,6 +852,7 @@ void Client::geometryPass() {
                 break;
             }
             case ObjectType::WeaponCollider: {
+                /*
                 if (sharedObject->weaponInfo->lightning) {
                     if (!sharedObject->weaponInfo->attacked) {
                         this->item_model->setDimensions(sharedObject->physics.dimensions);
@@ -875,7 +876,7 @@ void Client::geometryPass() {
                             this->cam->getPos(),
                             false);
                     }
-                }
+                }*/
                 break;
             }
             default:
@@ -1096,6 +1097,10 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
         case GLFW_KEY_D:
             is_held_right = true;
+            break;
+
+        case GLFW_KEY_H:
+            gui.displayControl();
             break;
 
         /* Space also uses a flag to constantly send events when key is held */
