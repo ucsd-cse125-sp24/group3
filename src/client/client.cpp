@@ -175,6 +175,11 @@ bool Client::init() {
     auto shaders_dir = getRepoRoot() / "src/client/shaders";
     auto graphics_assets_dir = getRepoRoot() / "assets/graphics";
 
+    auto player_models_dir = graphics_assets_dir / "player_models";
+    auto item_models_dir = graphics_assets_dir / "item_models";
+    auto env_models_dir = graphics_assets_dir / "env_models";
+    auto entity_models_dir = graphics_assets_dir / "entity_models";
+
     auto deferred_geometry_vert_path = shaders_dir / "deferred_geometry.vert";
     auto deferred_geometry_frag_path = shaders_dir / "deferred_geometry.frag";
     this->deferred_geometry_shader = std::make_shared<Shader>(deferred_geometry_vert_path.string(), deferred_geometry_frag_path.string());
@@ -187,47 +192,47 @@ bool Client::init() {
     auto deferred_light_box_frag_path = shaders_dir / "deferred_light_box.frag";
     this->deferred_light_box_shader = std::make_shared<Shader>(deferred_light_box_vert_path.string(), deferred_light_box_frag_path.string());
 
-    auto floor_model_path = graphics_assets_dir / "floor.obj";
+    auto floor_model_path = env_models_dir / "floor.obj";
     this->floor_model = std::make_unique<Model>(floor_model_path.string());
 
-    auto wall_model_path = graphics_assets_dir / "wall.obj";
+    auto wall_model_path = env_models_dir / "wall.obj";
     this->wall_model = std::make_unique<Model>(wall_model_path.string());
 
-    auto pillar_model_path = graphics_assets_dir / "pillar.obj";
+    auto pillar_model_path = env_models_dir / "pillar.obj";
     this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
 
-    auto torchlight_model_path = graphics_assets_dir / "exit.obj";
+    auto torchlight_model_path = env_models_dir / "exit.obj";
     this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
 
-    auto slime_model_path = graphics_assets_dir / "slime.obj";
+    auto slime_model_path = entity_models_dir / "slime.obj";
     this->slime_model = std::make_unique<Model>(slime_model_path.string());
 
-    auto bear_model_path = graphics_assets_dir / "bear-sp22.obj";
+    auto bear_model_path = entity_models_dir / "bear-sp22.obj";
     this->bear_model = std::make_unique<Model>(bear_model_path.string());
 
-    auto player_model_path = graphics_assets_dir / "Fire-testing.obj";
+    auto player_model_path = player_models_dir / "Fire-testing.obj";
     this->player_model = std::make_unique<Model>(player_model_path.string());
     this->player_model->scaleAbsolute(0.25);
 
-    auto sungod_model_path = graphics_assets_dir / "sungod.obj";
+    auto sungod_model_path = entity_models_dir / "sungod.obj";
     this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
 
-    auto minotaur_model_path = graphics_assets_dir / "minotaur.obj";
+    auto minotaur_model_path = entity_models_dir / "minotaur.obj";
     this->minotaur_model = std::make_unique<Model>(minotaur_model_path.string());
 
-    auto python_model_path = graphics_assets_dir / "python.obj";
+    auto python_model_path = entity_models_dir / "python.obj";
     this->python_model = std::make_unique<Model>(python_model_path.string());
 
-    auto item_model_path = graphics_assets_dir / "item.obj";
+    auto item_model_path = item_models_dir / "item.obj";
     this->item_model = std::make_unique<Model>(item_model_path.string());
 
-    auto spike_trap_model_path = graphics_assets_dir / "spike_trap.obj";
+    auto spike_trap_model_path = env_models_dir / "spike_trap.obj";
     this->spike_trap_model = std::make_unique<Model>(spike_trap_model_path.string());
 
-    auto orb_model_path = graphics_assets_dir / "orb.obj";
+    auto orb_model_path = item_models_dir / "orb.obj";
     this->orb_model = std::make_unique<Model>(orb_model_path.string());
 
-    auto exit_model_path = graphics_assets_dir / "exit.obj";
+    auto exit_model_path = env_models_dir / "exit.obj";
     this->exit_model = std::make_unique<Model>(exit_model_path.string());
 
     this->configureGBuffer();
