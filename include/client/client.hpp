@@ -224,6 +224,7 @@ private:
     /* Shader objects for various */
     std::shared_ptr<Shader> deferred_geometry_shader;
     std::shared_ptr<Shader> deferred_lighting_shader;
+    std::shared_ptr<Shader> dm_deferred_lighting_shader;
     std::shared_ptr<Shader> deferred_light_box_shader;
 
     /* Character models and lighting objects, might need to move to different classes later */
