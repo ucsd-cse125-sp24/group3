@@ -22,6 +22,7 @@
 /*	GridCell Constants	*/
 #define DEFAULT_GRIDCELL_WIDTH	3
 #define DM_Z_DISCOUNT 0.2
+#define GRIDS_PER_FLOOR_OBJECT 5
 
 // Player Stat Constants
 #define INITIAL_HEALTH 100

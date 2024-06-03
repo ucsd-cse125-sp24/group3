@@ -29,6 +29,8 @@ class Shader {
      */
     void use();
 
+    static void clear() { glUseProgram(0); }
+
     /*
      * Sets a boolean unform variable of the shader program 
      * with the specified value

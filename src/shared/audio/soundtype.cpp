@@ -64,6 +64,16 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "thunder.wav").string();
         case ServerSFX::TorchLoop:
             return (dir / "torch_loop_mono.wav").string();
+        case ServerSFX::Teleport:
+            return (dir / "teleport.wav").string();
+        case ServerSFX::Potion:
+            return (dir / "potion.wav").string();
+        case ServerSFX::Spell:
+            return (dir / "spell.wav").string();
+        case ServerSFX::ItemPickUp:
+            return (dir / "itempickup.wav").string();
+        case ServerSFX::ItemDrop:
+            return (dir / "itemdrop.wav").string();
         
         default:
             std::cerr << "FATAL: no known path for ServerSFX " << static_cast<int>(sfx) << std::endl;

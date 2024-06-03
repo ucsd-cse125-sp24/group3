@@ -83,5 +83,7 @@ public:
     Lightning(glm::vec3 corner, glm::vec3 facing) :
         WeaponCollider(nullptr, corner, facing, DIMENSION, ModelType::Cube,
             WeaponOptions(LIGHTNING_DMG, LIGHTNING_PREP, LIGHTNING_DUR, false))
-    {}
+    {
+        this->sound = ServerSFX::Thunder;
+    }
 };

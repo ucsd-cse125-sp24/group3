@@ -30,7 +30,7 @@ Torchlight::Torchlight(
         .flickering = true,
         .min_intensity = 0.3f,
         .max_intensity = 1.0f,
-        .ambient_color = glm::vec3(0.5f, 0.25f, 0.015f),
+        .ambient_color = glm::vec3(0.05f, 0.05f, 0.05f),
         .diffuse_color = glm::vec3(1.0f, 0.5f, 0.03f),
         .specular_color = glm::vec3(0.5f, 0.25f, 0.015f),
         .attenuation_linear = 0.07f,
@@ -72,7 +72,7 @@ void Torchlight::init() {
         // if flickering randomize initial  
         // animation step to offset flickering
         this->curr_step = randomDouble(0.0f, 1.0f);
-        this->flickering_speed = randomDouble(0.005f, 0.01f);
+        this->flickering_speed = randomDouble(0.008, 0.014f);
     }
 }
 

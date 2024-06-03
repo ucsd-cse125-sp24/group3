@@ -2,6 +2,7 @@
 #include "server/game/servergamestate.hpp"
 #include "shared/utilities/rng.hpp"
 #include "server/game/objectmanager.hpp"
+#include "shared/audio/constants.hpp"
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -46,4 +47,12 @@ void TeleporterTrap::doCollision(Object* other, ServerGameState& state) {
     }
 
     state.objects.moveObject(other, glm::vec3(r_col * grid.grid_cell_width, 0.0f, r_row * grid.grid_cell_width));
+
+    state.soundTable().addNewSoundSource(SoundSource(
+        ServerSFX::Teleport,
+        other->physics.shared.getCenterPosition(),
+        DEFAULT_VOLUME,
+        SHORT_DIST,
+        SHORT_ATTEN
+    ));
 }
