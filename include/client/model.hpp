@@ -127,7 +127,7 @@ class Model : public Renderable {
      *
      * @param Filepath to model file.
      */
-    explicit Model(const std::string& filepath);
+    explicit Model(const std::string& filepath, bool flip_uvs);
 
     /**
      * Draws all the meshes of a given model

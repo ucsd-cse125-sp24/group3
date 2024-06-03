@@ -190,21 +190,20 @@ bool Client::init() {
     this->deferred_light_box_shader = std::make_shared<Shader>(deferred_light_box_vert_path.string(), deferred_light_box_frag_path.string());
 
     auto floor_model_path = graphics_assets_dir / "floor.obj";
-    this->floor_model = std::make_unique<Model>(floor_model_path.string());
+    this->floor_model = std::make_unique<Model>(floor_model_path.string(), true);
 
     auto wall_model_path = graphics_assets_dir / "wall.obj";
-    this->wall_model = std::make_unique<Model>(wall_model_path.string());
+    this->wall_model = std::make_unique<Model>(wall_model_path.string(), true);
 
     auto pillar_model_path = graphics_assets_dir / "pillar.obj";
-    this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
+    this->pillar_model = std::make_unique<Model>(pillar_model_path.string(), true);
 
     auto torchlight_model_path = graphics_assets_dir / "exit.obj";
-    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
+    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string(), true);
 
     auto slime_model_path = graphics_assets_dir / "slime.obj";
-    this->slime_model = std::make_unique<Model>(slime_model_path.string());
+    this->slime_model = std::make_unique<Model>(slime_model_path.string(), true);
 
-    // auto player_model_path = graphics_assets_dir / "model_m2/model_m2_text_path.fbx";
     auto player_model_path = graphics_assets_dir / "player_models/char_3/model_char_3.fbx";
     auto player_walk_path = graphics_assets_dir / "animations/walk.fbx";
     auto player_jump_path = graphics_assets_dir / "animations/jump.fbx";
@@ -213,7 +212,7 @@ bool Client::init() {
     auto player_atk_path = graphics_assets_dir / "animations/slash.fbx";
     auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
 
-    this->player_model = std::make_unique<Model>(player_model_path.string());
+    this->player_model = std::make_unique<Model>(player_model_path.string(), false);
     this->player_model->scaleAbsolute(0.0025);
     Animation* player_walk = new Animation(player_walk_path.string(), this->player_model.get());
     Animation* player_jump = new Animation(player_jump_path.string(), this->player_model.get());
@@ -232,25 +231,25 @@ bool Client::init() {
     animManager->addAnimation(player_use_potion, ObjectType::Player, AnimState::DrinkPotionAnim);
 
     auto sungod_model_path = graphics_assets_dir / "sungod.obj";
-    this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
+    this->sungod_model = std::make_unique<Model>(sungod_model_path.string(), true);
 
     auto minotaur_model_path = graphics_assets_dir / "minotaur.obj";
-    this->minotaur_model = std::make_unique<Model>(minotaur_model_path.string());
+    this->minotaur_model = std::make_unique<Model>(minotaur_model_path.string(), true);
 
     auto python_model_path = graphics_assets_dir / "python.obj";
-    this->python_model = std::make_unique<Model>(python_model_path.string());
+    this->python_model = std::make_unique<Model>(python_model_path.string(), true);
 
     auto item_model_path = graphics_assets_dir / "item.obj";
-    this->item_model = std::make_unique<Model>(item_model_path.string());
+    this->item_model = std::make_unique<Model>(item_model_path.string(), true);
 
     auto spike_trap_model_path = graphics_assets_dir / "spike_trap.obj";
-    this->spike_trap_model = std::make_unique<Model>(spike_trap_model_path.string());
+    this->spike_trap_model = std::make_unique<Model>(spike_trap_model_path.string(), true);
 
     auto orb_model_path = graphics_assets_dir / "orb.obj";
-    this->orb_model = std::make_unique<Model>(orb_model_path.string());
+    this->orb_model = std::make_unique<Model>(orb_model_path.string(), true);
 
     auto exit_model_path = graphics_assets_dir / "exit.obj";
-    this->exit_model = std::make_unique<Model>(exit_model_path.string());
+    this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
 
     this->configureGBuffer();
 
@@ -612,7 +611,6 @@ void Client::geometryPass() {
 
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
-                    // pos.z += 4.0f;
                     cam->updatePos(pos);
 
                     // update listener position & facing

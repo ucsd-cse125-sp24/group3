@@ -131,16 +131,26 @@ void Mesh::draw(
     glBindVertexArray(0);
 }
 
-Model::Model(const std::string& filepath) {
+Model::Model(const std::string& filepath, bool flip_uvs) {
     this->directory = std::filesystem::path(filepath).parent_path().string();
 
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(filepath, 
-            aiProcess_Triangulate | // flag to only creates geometry made of triangles
-            aiProcess_FlipUVs | 
-            aiProcess_SplitLargeMeshes | 
-            aiProcess_OptimizeMeshes | 
-            aiProcess_GenBoundingBoxes); // needed to query bounding box of the model later
+    const aiScene *scene;
+    if (flip_uvs) {
+        scene = importer.ReadFile(filepath, 
+                aiProcess_Triangulate | // flag to only creates geometry made of triangles
+                aiProcess_FlipUVs | 
+                aiProcess_SplitLargeMeshes | 
+                aiProcess_OptimizeMeshes | 
+                aiProcess_GenBoundingBoxes); // needed to query bounding box of the model later
+    } else {
+        scene = importer.ReadFile(filepath, 
+                aiProcess_Triangulate | // flag to only creates geometry made of triangles
+                aiProcess_SplitLargeMeshes | 
+                aiProcess_OptimizeMeshes | 
+                aiProcess_GenBoundingBoxes); // needed to query bounding box of the model later
+    }
+
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         throw std::invalid_argument(std::string("ERROR::ASSIMP::") + importer.GetErrorString());
     }
@@ -453,7 +463,7 @@ Texture::Texture(const std::string& filepath, const aiTextureType& type) {
         stbi_image_free(data);
         throw std::exception();
     }
-    // std::cout << "Succesfully loaded texture at " << filepath << std::endl;
+    // std::cout << "Succesfully loaded " << this->type << " texture at " << filepath << std::endl;
     GLenum format = GL_RED;
     if (nrComponents == 1)
         format = GL_RED;
