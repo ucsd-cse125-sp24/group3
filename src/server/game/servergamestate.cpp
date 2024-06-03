@@ -437,6 +437,11 @@ void ServerGameState::update(const EventList& events) {
 					break;
 				}
 
+				std::cout << "placing trap in cell: " << cell->x << "," << cell->y << std::endl;
+
+				// change cell type
+				cell->type = trapPlacementEvent.cell;
+
 				trap->setIsDMTrap(true);
 				trap->setExpiration(curr_time + std::chrono::seconds(10));
 
@@ -456,29 +461,31 @@ void ServerGameState::update(const EventList& events) {
 
 				if (randFloat <= ITEM_SPAWN_PROB) {
 					auto players = this->objects.getPlayers();
+
 					for (int p = 0; p < players.size(); p++) {
 						auto _player = players.get(p);
+
+						if (_player == nullptr)
+							continue;
 
 						GridCell* _cell = this->getGrid().getCell(_player->physics.shared.corner.x / Grid::grid_cell_width, _player->physics.shared.corner.z / Grid::grid_cell_width);
 
 						// explore 5x5 around the player and find first empty cell
-						for (int c = std::max(_cell->x - ITEM_SPAWN_BOUND, 0); c < std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND); c++) {
+						for (int c = std::max(_cell->x - ITEM_SPAWN_BOUND, 0); c <= std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND); c++) {
 							bool found = false;
 
-							for (int r = std::max(_cell->y - ITEM_SPAWN_BOUND, 0); r < std::min(this->grid.getColumns() - 1, _cell->y + ITEM_SPAWN_BOUND); r++) {
+							for (int r = std::max(_cell->y - ITEM_SPAWN_BOUND, 0); r <= std::min(this->grid.getRows() - 1, _cell->y + ITEM_SPAWN_BOUND); r++) {
+								// skip player's current pos
+								if (c == _cell->x && r == _cell->y)
+									continue;
+
 								GridCell* cell = grid.getCell(c, r);
 								CellType celltype = cell->type;
 
 								// Manually check where spawning should always not happen
-								if (celltype == CellType::OutsideTheMaze || celltype == CellType::Wall || celltype == CellType::Pillar || \
-									celltype == CellType::FireballTrapLeft || celltype == CellType::FireballTrapRight || \
-									celltype == CellType::FireballTrapDown || celltype == CellType::FireballTrapUp || \
-									celltype == CellType::FloorSpikeFull || celltype == CellType::FloorSpikeVertical || \
-									celltype == CellType::FloorSpikeHorizontal || celltype == CellType::FakeWall ||
-									celltype == CellType::ArrowTrapUp || celltype == CellType::ArrowTrapDown || \
-									celltype == CellType::ArrowTrapRight || celltype == CellType::ArrowTrapLeft || \
-									celltype == CellType::TeleporterTrap || celltype == CellType::Exit) 
+								if (celltype != CellType::Empty) 
 								{
+									std::cout << "SKIPPED ITEM SPAWN" << std::endl;
 									continue;
 								}
 
@@ -493,7 +500,8 @@ void ServerGameState::update(const EventList& events) {
 									glm::vec3 corner(
 										cell->x * Grid::grid_cell_width + 1,
 										0,
-										cell->y * Grid::grid_cell_width + 1);
+										cell->y * Grid::grid_cell_width + 1
+									);
 
 									GridCell* cell = this->grid.getCell(c, r);
 
@@ -545,7 +553,11 @@ void ServerGameState::update(const EventList& events) {
 											0,
 											cell->y * Grid::grid_cell_width + 1);
 
-										this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Dagger));
+										Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Dagger);
+
+										this->objects.createObject(weapon);
+
+										this->updated_entities.insert(weapon->globalID);
 										break;
 									}
 									case CellType::Sword: {
@@ -556,7 +568,13 @@ void ServerGameState::update(const EventList& events) {
 											0,
 											cell->y * Grid::grid_cell_width + 1);
 
-										this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Sword));
+
+										Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Sword);
+
+										this->objects.createObject(weapon);
+
+										this->updated_entities.insert(weapon->globalID);
+
 										break;
 									}
 									case CellType::Hammer: {
@@ -567,7 +585,13 @@ void ServerGameState::update(const EventList& events) {
 											0,
 											cell->y * Grid::grid_cell_width + 1);
 
-										this->objects.createObject(new Weapon(corner, dimensions, WeaponType::Hammer));
+
+										Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Hammer);
+
+										this->objects.createObject(weapon);
+
+										this->updated_entities.insert(weapon->globalID);
+
 										break;
 									}
 									case CellType::TeleportSpell: {
@@ -578,7 +602,13 @@ void ServerGameState::update(const EventList& events) {
 											0,
 											cell->y * Grid::grid_cell_width + 1);
 
-										this->objects.createObject(new Spell(corner, dimensions, SpellType::Teleport));
+										Spell* spell = new Spell(corner, dimensions, SpellType::Teleport);
+
+										this->objects.createObject(spell);
+
+										this->updated_entities.insert(spell->globalID);
+
+
 										break;
 									}
 									case CellType::FireSpell: {
@@ -589,7 +619,13 @@ void ServerGameState::update(const EventList& events) {
 											0,
 											cell->y * Grid::grid_cell_width + 1);
 
-										this->objects.createObject(new Spell(corner, dimensions, SpellType::Fireball));
+										Spell* spell = new Spell(corner, dimensions, SpellType::Fireball);
+
+										this->objects.createObject(spell);
+
+										this->updated_entities.insert(spell->globalID);
+
+
 										break;
 									}
 									case CellType::HealSpell: {
@@ -600,7 +636,13 @@ void ServerGameState::update(const EventList& events) {
 											0,
 											cell->y * Grid::grid_cell_width + 1);
 
-										this->objects.createObject(new Spell(corner, dimensions, SpellType::HealOrb));
+
+										Spell* spell = new Spell(corner, dimensions, SpellType::HealOrb);
+
+										this->objects.createObject(spell);
+
+										this->updated_entities.insert(spell->globalID);
+
 										break;
 									}
 									case CellType::HealthPotion: {
@@ -610,17 +652,12 @@ void ServerGameState::update(const EventList& events) {
 											0,
 											cell->y * Grid::grid_cell_width + 1);
 
-										this->objects.createObject(new Potion(corner, dimensions, PotionType::Health));
-										break;
-									}
-									case CellType::NauseaPotion: {
-										glm::vec3 dimensions(1.0f);
+										Potion* potion = new Potion(corner, dimensions, PotionType::Health);
 
-										glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
-											0,
-											cell->y * Grid::grid_cell_width + 1);
+										this->objects.createObject(potion);
 
-										this->objects.createObject(new Potion(corner, dimensions, PotionType::Nausea));
+										this->updated_entities.insert(potion->globalID);
+
 										break;
 									}
 									case CellType::InvisibilityPotion: {
@@ -630,7 +667,13 @@ void ServerGameState::update(const EventList& events) {
 											0,
 											cell->y * Grid::grid_cell_width + 1);
 
-										this->objects.createObject(new Potion(corner, dimensions, PotionType::Invisibility));
+
+										Potion* potion = new Potion(corner, dimensions, PotionType::Invisibility);
+
+										this->objects.createObject(potion);
+
+										this->updated_entities.insert(potion->globalID);
+
 										break;
 									}
 									case CellType::InvincibilityPotion: {
@@ -640,22 +683,22 @@ void ServerGameState::update(const EventList& events) {
 											0,
 											cell->y * Grid::grid_cell_width + 1);
 
-										this->objects.createObject(new Potion(corner, dimensions, PotionType::Invincibility));
-										break;
-									}
-									case CellType::TeleporterTrap: {
-										glm::vec3 corner(
-											cell->x * Grid::grid_cell_width,
-											0.0f,
-											cell->y * Grid::grid_cell_width
-										);
+										Potion* potion = new Potion(corner, dimensions, PotionType::Invincibility);
 
-										this->objects.createObject(new TeleporterTrap(corner));
+										this->objects.createObject(potion);
+
+										this->updated_entities.insert(potion->globalID);
+
 										break;
 									}
+									default:
+										std::cout << "what item is this??" << std::endl;
 									}
 
 									found = true;
+									std::cout << "ITEM PLACED in " << cell->x << "," << cell->y << std::endl;
+
+									break; //break out
 								}
 							}
 
@@ -1133,6 +1176,13 @@ void ServerGameState::updateTraps() {
 					dm->setPlacedTraps(trapsPlaced - 1);
 					dm->sharedTrapInventory.trapsPlaced = trapsPlaced - 1;
 
+					// change cell type to empty
+					GridCell* _cell = this->getGrid().getCell(trap->physics.shared.corner.x / Grid::grid_cell_width, trap->physics.shared.corner.z / Grid::grid_cell_width);
+
+					std::cout << "removing trap in cell: " << _cell->x << "," << _cell->y << std::endl;
+
+					_cell->type = CellType::Empty;
+
 					continue;
 				}
 			}
@@ -1167,6 +1217,7 @@ void ServerGameState::handleDeaths() {
 
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
 			//	Player died - increment number of player deaths
+			std::cout << "a player died" << std::endl;
 			this->numPlayerDeaths++;
 
 			if (numPlayerDeaths == PLAYER_DEATHS_TO_RELAY_RACE) {

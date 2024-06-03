@@ -97,6 +97,7 @@ SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID
 		}
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
+			std::cout << "INSERTING A PLAYER of TYPEID " << object->typeID << std::endl;
 			break;
 		case ObjectType::Python:
 		case ObjectType::Minotaur:
@@ -159,6 +160,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 		this->traps.remove(object->typeID);
 		break;
 	case ObjectType::Player:
+		std::cout << "REMOVE PLAYER OF TYPEID " << object->typeID << std::endl;
 		this->players.remove(object->typeID);
 		break;
 	case ObjectType::Projectile:
