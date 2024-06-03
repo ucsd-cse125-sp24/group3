@@ -12,6 +12,7 @@ Object::Object(ObjectType type, Physics physics, ModelType modelType):
 	this->type = type;
 	this->setModel(modelType);
 	this->distance_moved = 0.0f;
+	this->animState = AnimState::IdleAnim;
 }
 
 Object::~Object() {}
@@ -52,6 +53,7 @@ SharedObject Object::toShared() {
 	shared.type = this->type;
 	shared.physics = this->physics.shared;
 	shared.modelType = this->modelType;
+	shared.animState = this->animState;
 
 	return shared;
 }
