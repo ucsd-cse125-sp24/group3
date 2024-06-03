@@ -455,8 +455,9 @@ void ServerGameState::update(const EventList& events) {
 				float randFloat = randomDouble(0.0, 1.0);
 
 				if (randFloat <= ITEM_SPAWN_PROB) {
-					for (int i = 0; i < this->objects.getPlayers().numElements(); i++) {
-						Player* _player = this->objects.getPlayers().get(i);
+					auto players = this->objects.getPlayers();
+					for (int p = 0; p < players.size(); p++) {
+						auto _player = players.get(p);
 
 						GridCell* _cell = this->getGrid().getCell(_player->physics.shared.corner.x / Grid::grid_cell_width, _player->physics.shared.corner.z / Grid::grid_cell_width);
 
