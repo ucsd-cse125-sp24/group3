@@ -17,6 +17,7 @@ namespace gui {
 GUI::GUI(Client* client, const GameConfig& config): capture_keystrokes(false), logo() {
     this->client = client;
     this->config = config;
+    this->controlDisplayed = true; // start with help on
 }
 
 bool GUI::init()
@@ -37,7 +38,6 @@ bool GUI::init()
         return false;
     }
 
-    this->controlDisplayed = false;
     this->fonts = std::make_shared<font::Loader>();
     this->capture_keystrokes = false;
 
@@ -942,7 +942,7 @@ void GUI::_sharedGameHUD() {
         std::vector<std::pair<std::string, std::string>> controls;
         // Controls for Player
         if (!is_dm.value()) {
-            controls.push_back({ "CONTROLS", "" });
+            controls.push_back({ "CONTROLS", " " });
             controls.push_back({ "WASD:", "Move" });
             controls.push_back({ "Left Shift:", "Sprint" });
             controls.push_back({ "Spacebar:", "Jump" });
@@ -950,10 +950,11 @@ void GUI::_sharedGameHUD() {
             controls.push_back({ "Left Click:", "Use Item" });
             controls.push_back({ "Mouse Wheel:", "Select Item" });
             controls.push_back({ "ESC:", "Menu" });
+            controls.push_back({ "H:", "Controls" });
         }
         // Controls for DM
         else {
-            controls.push_back({ "CONTROLS", "" });
+            controls.push_back({ "CONTROLS", " " });
             controls.push_back({ "WASD:", "Move" });
             controls.push_back({ "Left Shift:", "Zoom In" });
             controls.push_back({ "Spacebar:", "Zoom Out" });
@@ -961,6 +962,7 @@ void GUI::_sharedGameHUD() {
             controls.push_back({ "Left Click:", "Place Trap" });
             controls.push_back({ "Mouse Wheel:", "Select Trap" });
             controls.push_back({ "ESC:", "Menu" });
+            controls.push_back({ "H:", "Controls" });
         }
 
         for (int i = controls.size() - 1; i >= 0; i--) {
@@ -1737,7 +1739,7 @@ void GUI::_layoutGameHUD() {
     this->addWidget(std::move(durationFlex));
 
     auto compassFlex = widget::Flexbox::make(
-        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(700), font::getRelativePixels(10)),
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixelsHorizontal(700), font::getRelativePixels(10)),
         glm::vec2(0.0f, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );
@@ -1781,7 +1783,7 @@ void GUI::_layoutGameHUD() {
     this->addWidget(std::move(compassFlex));
 
     auto needleFlex = widget::Flexbox::make(
-        glm::vec2(WINDOW_WIDTH - font::getRelativePixels(700), font::getRelativePixels(10)),
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixelsHorizontal(700), font::getRelativePixels(10)),
         glm::vec2(0.0f, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );

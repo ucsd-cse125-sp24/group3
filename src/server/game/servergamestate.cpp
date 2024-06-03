@@ -64,6 +64,7 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->spawner->spawnDummy(*this);
 	this->spawner->spawnSmallDummy(*this);
 
+
     MazeGenerator generator(config);
     int attempts = 1;
     auto grid = generator.generate();
@@ -204,11 +205,13 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::MoveCam: {
 				obj->physics.velocity.x = (startAction.movement * PLAYER_SPEED).x;
 				obj->physics.velocity.z = (startAction.movement * PLAYER_SPEED).z;
+				obj->animState = (obj->animState == AnimState::JumpAnim || obj->animState == AnimState::SprintAnim) ? obj->animState : AnimState::WalkAnim;
 				break;
 			}
 			case ActionType::Jump: {
 				if (!obj->physics.feels_gravity || obj->physics.velocity.y != 0) { break; }
 				obj->physics.velocity.y += (startAction.movement * JUMP_SPEED / 2.0f).y;
+				obj->animState = AnimState::JumpAnim;
 				this->sound_table.addNewSoundSource(SoundSource(
 					ServerSFX::PlayerJump,
 					obj->physics.shared.corner,
@@ -224,6 +227,7 @@ void ServerGameState::update(const EventList& events) {
 				}
 				else {
 					obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
+					obj->animState = (obj->animState == AnimState::WalkAnim) ? AnimState::SprintAnim : obj->animState;
 				}
 				break;
 			}
@@ -249,10 +253,16 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::MoveCam: {
 				obj->physics.velocity.x = 0.0f;
 				obj->physics.velocity.z = 0.0f;
+				obj->animState = AnimState::IdleAnim;
 				break;
 			}
 			case ActionType::Sprint: {
 				obj->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
+				if (obj->physics.velocity.x != 0.0f && obj->physics.velocity.z != 0.0f) {
+					obj->animState = AnimState::WalkAnim;
+				} else {
+					obj->animState = AnimState::IdleAnim;
+				}
 				break;
 			}
 			default: { break; }
@@ -312,6 +322,12 @@ void ServerGameState::update(const EventList& events) {
 			if (player->inventory[itemSelected] != -1) {
 				Item* item = this->objects.getItem(player->inventory[itemSelected]);
 				item->useItem(player, *this, itemSelected);
+
+				if (dynamic_cast<Potion*>(item) != nullptr) {
+					player->animState = AnimState::DrinkPotionAnim;
+				} else if (dynamic_cast<Weapon*>(item) != nullptr) {
+					player->animState = AnimState::AttackAnim;
+				}
 
 				this->updated_entities.insert(player->globalID);
 				this->updated_entities.insert(item->globalID);
@@ -851,6 +867,13 @@ void ServerGameState::updateMovement() {
 		if (object->physics.shared.corner.y < 0) {
 			//	Clamp object to floor if corner's y position is lower than the floor
 			object->physics.shared.corner.y = 0;
+
+			// After landing, set object's animation to non-jump (idle)
+			if (object->physics.velocity.x != 0.0f && object->physics.velocity.z != 0.0f) {
+				object->animState = AnimState::WalkAnim;
+			} else {
+				object->animState = AnimState::IdleAnim;
+			}
 
 			// Play relevant landing sounds
 			if (starting_corner_pos.y != 0.0f) {
@@ -1696,24 +1719,36 @@ void ServerGameState::loadMaze(const Grid& grid) {
 		}
 	}
 
-	//	Step 5:	Add floor and ceiling SolidSurfaces.
+    // create multiple floor and ceiling objects to populate the size of the entire maze. 
+    // currently doing this to stretch out the floor texture by the desired factor. here
+    // in the maze generation we can have a lot of control over how frequently the floor texture
+    // will repeat. I'd like to have this done on the client side instead and repeat the texture
+    // many times across one huge floor, but unfortuantely I cannot figure out how to get
+    // OpenGL to repeat the texture that many times.
+	for (int c = 0; c < this->grid.getColumns(); c+=GRIDS_PER_FLOOR_OBJECT) {
+		for (int r = 0; r < this->grid.getRows(); r+=GRIDS_PER_FLOOR_OBJECT) {
+            auto type = this->grid.getCell(c, r)->type;
+			if(type == CellType::OutsideTheMaze) {
+				continue;
+            }
 
-	// Create Ceiling
-	this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Ceiling, 
-		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),
-		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
-			this->grid.getRows() * Grid::grid_cell_width)
-	));
+			glm::vec3 floor_corner = glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width);
+			SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
+				floor_corner,
+				glm::vec3(Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT, 0.1,
+					Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT)
+			);
+			this->objects.createObject(floor);
 
-	SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
-		glm::vec3(0.0f, -0.1f, 0.0f),
-		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
-			this->grid.getRows() * Grid::grid_cell_width)
-	);
-	this->objects.createObject(floor);
-
-	// this is for floor highlighting
-	std::vector<std::vector<bool>> freeSpots(grid.getRows(), std::vector<bool>(grid.getColumns(), false));
+			glm::vec3 ceiling_corner = glm::vec3(c * Grid::grid_cell_width, MAZE_CEILING_HEIGHT, r * Grid::grid_cell_width);
+			SolidSurface* ceiling = new SolidSurface(false, Collider::Box, SurfaceType::Ceiling,
+                ceiling_corner,
+                glm::vec3(Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT, 0.1,
+                    Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT)
+			);
+			this->objects.createObject(ceiling);
+		}
+	}
 
 	//	Step 6:	For each GridCell, add an object (if not empty) at the 
 	//	GridCell's position.
@@ -1998,8 +2033,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				default: {
-					// available spot for placement
-					solidSurfaceInGridCells.insert({row, col});
+
 				}
 			}
 		}
@@ -2031,10 +2065,6 @@ void ServerGameState::spawnWall(GridCell* cell, int col, int row, bool is_intern
 		SolidSurface* wall = new SolidSurface(false, Collider::Box, surface_type, corner, dimensions);
 		wall->shared.is_internal = is_internal;
         this->objects.createObject(wall);
-		if (cell->type == CellType::Wall || cell->type == CellType::Pillar) {
-			// don't let the DM select walls with torches
-			solidSurfaceInGridCells.insert({col, row});
-		}	
     }
 }
 

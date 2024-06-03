@@ -339,9 +339,6 @@ private:
 	 */
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
 
-
-	std::unordered_set<std::pair<int, int>, IntPairHash> solidSurfaceInGridCells;
-
 	Trap* currentGhostTrap;
 
 	/**
