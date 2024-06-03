@@ -887,6 +887,11 @@ void Client::geometryPass() {
                 }
                 break;
             }
+            // case ObjectType::Torchlight: {
+            //     this->torchlight_model->setDimensions(2.0f * sharedObject->physics.dimensions);
+            //     this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+            //     this->torchlight_model->draw(this->deferred_geometry_shader.get(), this->cam->getPos(), true);
+            //  }
             default:
                 break;
         }
@@ -905,6 +910,9 @@ void Client::lightingPass() {
     glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
 
     bool is_dm = this->session->getInfo().is_dungeon_master.value();
+    auto eid = this->session->getInfo().client_eid.value();
+    glm::vec3 my_pos = this->gameState.objects[eid]->physics.corner;
+
     std::shared_ptr<Shader> lighting_shader = is_dm ? dm_deferred_lighting_shader: deferred_lighting_shader;
 
     lighting_shader->use();
@@ -974,8 +982,7 @@ void Client::lightingPass() {
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 
-    // 2.5. copy content of geometry's depth buffer to default framebuffer's depth buffer
-    // ----------------------------------------------------------------------------------
+    // copy content of geometry's depth buffer to default framebuffer's depth buffer
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
     // blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
@@ -985,27 +992,34 @@ void Client::lightingPass() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-    // 3. render lights on top of scene
-    // --------------------------------
+    // render torch lights on top of scene
     this->deferred_light_box_shader->use();
     glm::mat4 viewProj = this->cam->getViewProj();
     this->deferred_light_box_shader->setMat4("viewProj", viewProj);
-    for (int i = 0; i < this->closest_light_sources.size(); i++) {
-        boost::optional<SharedObject>& curr_source = this->closest_light_sources.at(i);
-        if (!curr_source.has_value()) {
+    for (auto& [id, sharedObject] : this->gameState.objects) {
+        if (!sharedObject.has_value()) {
             continue;
         }
 
-        if (!curr_source->pointLightInfo.has_value()) {
+        if (sharedObject->type != ObjectType::Torchlight) {
+            continue;
+        }
+
+        auto dist = glm::distance(sharedObject->physics.corner, my_pos);
+        if (!is_dm && dist > RENDER_DISTANCE) {
+            continue;
+        }
+
+        if (!sharedObject->pointLightInfo.has_value()) {
             std::cout << "got a torch without point light info for some reason" << std::endl;
             continue;
         }
-        SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
+        SharedPointLightInfo& properties = sharedObject->pointLightInfo.value();
 
         this->deferred_light_box_shader->use();
         this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);
-        this->torchlight_model->setDimensions(2.0f * curr_source->physics.dimensions);
-        this->torchlight_model->translateAbsolute(curr_source->physics.getCenterPosition());
+        this->torchlight_model->setDimensions(2.0f * sharedObject->physics.dimensions);
+        this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
         this->torchlight_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
     }
 
