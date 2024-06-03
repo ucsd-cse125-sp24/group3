@@ -956,7 +956,7 @@ void GUI::_sharedGameHUD() {
         std::vector<std::pair<std::string, std::string>> controls;
         // Controls for Player
         if (!is_dm.value()) {
-            controls.push_back({ "CONTROLS", "" });
+            controls.push_back({ "CONTROLS", " " });
             controls.push_back({ "WASD:", "Move" });
             controls.push_back({ "Left Shift:", "Sprint" });
             controls.push_back({ "Spacebar:", "Jump" });
@@ -964,11 +964,11 @@ void GUI::_sharedGameHUD() {
             controls.push_back({ "Left Click:", "Use Item" });
             controls.push_back({ "Mouse Wheel:", "Select Item" });
             controls.push_back({ "ESC:", "Menu" });
-            controls.push_back({ "H to Close", "" });
+            controls.push_back({ "H:", "Controls" });
         }
         // Controls for DM
         else {
-            controls.push_back({ "CONTROLS", "" });
+            controls.push_back({ "CONTROLS", " " });
             controls.push_back({ "WASD:", "Move" });
             controls.push_back({ "Left Shift:", "Zoom In" });
             controls.push_back({ "Spacebar:", "Zoom Out" });
@@ -976,7 +976,7 @@ void GUI::_sharedGameHUD() {
             controls.push_back({ "Left Click:", "Place Trap" });
             controls.push_back({ "Mouse Wheel:", "Select Trap" });
             controls.push_back({ "ESC:", "Menu" });
-            controls.push_back({ "H to Close", "" });
+            controls.push_back({ "H:", "Controls" });
         }
 
         for (int i = controls.size() - 1; i >= 0; i--) {
