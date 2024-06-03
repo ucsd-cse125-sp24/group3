@@ -296,7 +296,11 @@ std::chrono::milliseconds Server::doTick() {
                             std::cout << "Starting game!" << std::endl;
                         }
 
-                        this->state.setPhase(GamePhase::INTRO_CUTSCENE);
+                        if (this->config.server.skip_intro) {
+                            this->state.setPhase(GamePhase::GAME);
+                        } else {
+                            this->state.setPhase(GamePhase::INTRO_CUTSCENE);
+                        }
                     }
 
                     break;
