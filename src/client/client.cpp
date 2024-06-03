@@ -50,6 +50,8 @@
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
 
+bool firstPos = true;
+
 // Checker for events sent / later can be made in an array
 glm::vec3 sentCamMovement = glm::vec3(-1.0f);
 
@@ -193,47 +195,69 @@ bool Client::init() {
     this->deferred_light_box_shader = std::make_shared<Shader>(deferred_light_box_vert_path.string(), deferred_light_box_frag_path.string());
 
     auto floor_model_path = env_models_dir / "floor.obj";
-    this->floor_model = std::make_unique<Model>(floor_model_path.string());
+    this->floor_model = std::make_unique<Model>(floor_model_path.string(), true);
 
     auto wall_model_path = env_models_dir / "wall.obj";
-    this->wall_model = std::make_unique<Model>(wall_model_path.string());
+    this->wall_model = std::make_unique<Model>(wall_model_path.string(), true);
 
     auto pillar_model_path = env_models_dir / "pillar.obj";
-    this->pillar_model = std::make_unique<Model>(pillar_model_path.string());
+    this->pillar_model = std::make_unique<Model>(pillar_model_path.string(), true);
 
     auto torchlight_model_path = env_models_dir / "exit.obj";
-    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string());
+    this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string(), true);
 
     auto slime_model_path = entity_models_dir / "slime.obj";
-    this->slime_model = std::make_unique<Model>(slime_model_path.string());
+    this->slime_model = std::make_unique<Model>(slime_model_path.string(), true);
 
     auto bear_model_path = entity_models_dir / "bear-sp22.obj";
-    this->bear_model = std::make_unique<Model>(bear_model_path.string());
-
-    auto player_model_path = player_models_dir / "Fire-testing.obj";
-    this->player_model = std::make_unique<Model>(player_model_path.string());
-    this->player_model->scaleAbsolute(0.25);
+    this->bear_model = std::make_unique<Model>(bear_model_path.string(), true);
 
     auto sungod_model_path = entity_models_dir / "sungod.obj";
-    this->sungod_model = std::make_unique<Model>(sungod_model_path.string());
+    this->sungod_model = std::make_unique<Model>(sungod_model_path.string(), true);
 
     auto minotaur_model_path = entity_models_dir / "minotaur.obj";
-    this->minotaur_model = std::make_unique<Model>(minotaur_model_path.string());
+    this->minotaur_model = std::make_unique<Model>(minotaur_model_path.string(), true);
 
     auto python_model_path = entity_models_dir / "python.obj";
-    this->python_model = std::make_unique<Model>(python_model_path.string());
+    this->python_model = std::make_unique<Model>(python_model_path.string(), true);
 
     auto item_model_path = item_models_dir / "item.obj";
-    this->item_model = std::make_unique<Model>(item_model_path.string());
+    this->item_model = std::make_unique<Model>(item_model_path.string(), true);
 
     auto spike_trap_model_path = env_models_dir / "spike_trap.obj";
-    this->spike_trap_model = std::make_unique<Model>(spike_trap_model_path.string());
+    this->spike_trap_model = std::make_unique<Model>(spike_trap_model_path.string(), true);
 
     auto orb_model_path = item_models_dir / "orb.obj";
-    this->orb_model = std::make_unique<Model>(orb_model_path.string());
+    this->orb_model = std::make_unique<Model>(orb_model_path.string(), true);
 
     auto exit_model_path = env_models_dir / "exit.obj";
-    this->exit_model = std::make_unique<Model>(exit_model_path.string());
+    this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
+
+    auto player_model_path = graphics_assets_dir / "player_models/char_3/model_char_3.fbx";
+    auto player_walk_path = graphics_assets_dir / "animations/walk.fbx";
+    auto player_jump_path = graphics_assets_dir / "animations/jump.fbx";
+    auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
+    auto player_run_path = graphics_assets_dir / "animations/run.fbx";
+    auto player_atk_path = graphics_assets_dir / "animations/slash.fbx";
+    auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
+
+    this->player_model = std::make_unique<Model>(player_model_path.string(), false);
+    this->player_model->scaleAbsolute(0.0025);
+    Animation* player_walk = new Animation(player_walk_path.string(), this->player_model.get());
+    Animation* player_jump = new Animation(player_jump_path.string(), this->player_model.get());
+    Animation* player_idle = new Animation(player_idle_path.string(), this->player_model.get());
+    Animation* player_run = new Animation(player_run_path.string(), this->player_model.get());
+    Animation* player_atk = new Animation(player_atk_path.string(), this->player_model.get());
+    Animation* player_use_potion = new Animation(player_use_potion_path.string(), this->player_model.get());
+
+    animManager = new AnimationManager(player_idle);
+
+    animManager->addAnimation(player_walk, ObjectType::Player, AnimState::WalkAnim);
+    animManager->addAnimation(player_jump, ObjectType::Player, AnimState::JumpAnim);
+    animManager->addAnimation(player_idle, ObjectType::Player, AnimState::IdleAnim);
+    animManager->addAnimation(player_run, ObjectType::Player, AnimState::SprintAnim);
+    animManager->addAnimation(player_atk, ObjectType::Player, AnimState::AttackAnim);
+    animManager->addAnimation(player_use_potion, ObjectType::Player, AnimState::DrinkPotionAnim);
 
     this->configureGBuffer();
 
@@ -561,6 +585,7 @@ void Client::geometryPass() {
     this->deferred_geometry_shader->use();
     auto viewProj = this->cam->getViewProj();
     this->deferred_geometry_shader->setMat4("viewProj", viewProj);
+    // this->deferred_geometry_shader->setMat4("finalBonesMatrices[0]", transforms[i]);
 
     auto eid = this->session->getInfo().client_eid.value();
     bool is_dm = this->session->getInfo().is_dungeon_master.value();
@@ -585,12 +610,13 @@ void Client::geometryPass() {
                 continue;
             }
         }
-
+        
         switch (sharedObject->type) {
             case ObjectType::Player: {
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
                     //  TODO: Update the player eye level to an acceptable level
+
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
@@ -610,10 +636,23 @@ void Client::geometryPass() {
                     }
                     break;
                 }
+                animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
+
+                /* Update model animation */
+                animManager->updateAnimation(0.025f);
+                auto transforms = animManager->getFinalBoneMatrices();
+
+                for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
+                    deferred_geometry_shader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+                }
 
                 if (!sharedObject->playerInfo->render) { break; } // dont render while invisible
 
-                this->player_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                auto player_pos = sharedObject->physics.getCenterPosition();
+                auto player_dir = sharedObject->physics.facing;
+
+                this->player_model->rotateAbsolute(player_dir);
+                this->player_model->translateAbsolute(player_pos);
                 this->player_model->draw(
                     this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
@@ -633,9 +672,15 @@ void Client::geometryPass() {
                 auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
 
                 auto player_pos = sharedObject->physics.corner;
+                auto player_dir = sharedObject->physics.facing;
 
-                this->player_model->setDimensions(sharedObject->physics.dimensions);
+                // this->player_model->setDimensions(sharedObject->physics.dimensions);
                 this->player_model->translateAbsolute(player_pos);
+                if (player_dir == glm::vec3(0.0f)) {
+                    player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
+                }
+                player_dir.y = 0.0f;
+                this->player_model->rotateAbsolute(glm::normalize(player_dir));
                 this->player_model->draw(
                     this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
@@ -734,6 +779,7 @@ void Client::geometryPass() {
                 }
 
                 this->sungod_model->setDimensions(sharedObject->physics.dimensions);
+                this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->sungod_model->rotateAbsolute(sharedObject->physics.facing);
                 this->sungod_model->draw(this->deferred_geometry_shader.get(),
@@ -857,6 +903,7 @@ void Client::geometryPass() {
                 break;
             }
             case ObjectType::WeaponCollider: {
+                /*
                 if (sharedObject->weaponInfo->lightning) {
                     if (!sharedObject->weaponInfo->attacked) {
                         this->item_model->setDimensions(sharedObject->physics.dimensions);
@@ -880,7 +927,7 @@ void Client::geometryPass() {
                             this->cam->getPos(),
                             false);
                     }
-                }
+                }*/
                 break;
             }
             default:
@@ -1101,6 +1148,10 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
 
         case GLFW_KEY_D:
             is_held_right = true;
+            break;
+
+        case GLFW_KEY_H:
+            gui.displayControl();
             break;
 
         /* Space also uses a flag to constantly send events when key is held */

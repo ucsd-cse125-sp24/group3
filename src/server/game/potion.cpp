@@ -3,6 +3,7 @@
 #include "server/game/potion.hpp"
 #include "server/game/constants.hpp"
 #include "shared/game/sharedobject.hpp"
+#include "shared/audio/constants.hpp"
 #include <chrono>
 
 class Player;
@@ -89,6 +90,15 @@ void Potion::useItem(Object* other, ServerGameState& state, int itemSelected) {
         break;
     }
     }
+
+    // Play sound
+    state.soundTable().addNewSoundSource(SoundSource(
+        ServerSFX::Potion,
+        this->usedPlayer->physics.shared.getCenterPosition(),
+        DEFAULT_VOLUME,
+        SHORT_DIST,
+        SHORT_ATTEN
+    ));
 
     this->iteminfo.used = true;
     this->iteminfo.held = false;
