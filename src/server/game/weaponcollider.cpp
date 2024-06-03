@@ -64,6 +64,15 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
 
                 Mirror* mirror = dynamic_cast<Mirror*>(item);
 
+                //  Add mirror shatter sound effect
+                state.soundTable().addNewSoundSource(SoundSource(
+                    ServerSFX::MirrorShatter,
+                    player->physics.shared.corner,
+                    FULL_VOLUME,
+                    FAR_DIST,
+                    FAR_ATTEN
+                ));
+
                 //  Mark player as invulnerable to lightning for 1 second
                 player->setInvulnerableToLightning(true, 1);
 

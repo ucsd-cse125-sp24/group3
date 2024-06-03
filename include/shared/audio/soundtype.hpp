@@ -57,6 +57,7 @@ enum class ServerSFX {
     Spell,
     ItemPickUp,
     ItemDrop,
+    MirrorShatter,
     TEMP,
     // make sure to add to server sfx len map!
     // make sure to add to macro below!
@@ -89,6 +90,7 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     {ServerSFX::Spell,              500ms},
     {ServerSFX::ItemPickUp,         500ms},
     {ServerSFX::ItemDrop,           500ms},
+    {ServerSFX::MirrorShatter,      2000ms},
     {ServerSFX::TorchLoop,          9999ms} // wont actually be used because it loops
     // dont forget macro below!
 };
@@ -99,7 +101,8 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     ServerSFX::PlayerWalk1, ServerSFX::PlayerWalk2, ServerSFX::PlayerWalk3, ServerSFX::PlayerWalk4, ServerSFX::PlayerWalk5, \
     ServerSFX::CeilingSpikeTrigger, ServerSFX::CeilingSpikeImpact, ServerSFX::TorchLoop, ServerSFX::Thunder,\
     ServerSFX::Dagger, ServerSFX::Sword, ServerSFX::Hammer, ServerSFX::Minotaur, ServerSFX::Python, \
-    ServerSFX::Teleport, ServerSFX::Potion, ServerSFX::Spell, ServerSFX::ItemPickUp, ServerSFX::ItemDrop \
+    ServerSFX::Teleport, ServerSFX::Potion, ServerSFX::Spell, ServerSFX::ItemPickUp, ServerSFX::ItemDrop, \
+    ServerSFX::MirrorShatter \
 }
 
 // const std::unordered_map<ServerSound, size_t> serverSoundTickLengths = {
