@@ -437,8 +437,6 @@ void ServerGameState::update(const EventList& events) {
 					break;
 				}
 
-				std::cout << "placing trap in cell: " << cell->x << "," << cell->y << std::endl;
-
 				// change cell type
 				cell->type = trapPlacementEvent.cell;
 
@@ -470,240 +468,231 @@ void ServerGameState::update(const EventList& events) {
 
 						GridCell* _cell = this->getGrid().getCell(_player->physics.shared.corner.x / Grid::grid_cell_width, _player->physics.shared.corner.z / Grid::grid_cell_width);
 
-						// explore 5x5 around the player and find first empty cell
-						for (int c = std::max(_cell->x - ITEM_SPAWN_BOUND, 0); c <= std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND); c++) {
-							bool found = false;
+						int randomC = randomInt(std::max(_cell->x - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND));
+						int randomR = randomInt(std::max(_cell->y - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getRows() - 1, _cell->y + ITEM_SPAWN_BOUND));
 
-							for (int r = std::max(_cell->y - ITEM_SPAWN_BOUND, 0); r <= std::min(this->grid.getRows() - 1, _cell->y + ITEM_SPAWN_BOUND); r++) {
-								// skip player's current pos
-								if (c == _cell->x && r == _cell->y)
-									continue;
+						GridCell* cell = grid.getCell(randomC, randomR);
+						CellType celltype = cell->type;
 
-								GridCell* cell = grid.getCell(c, r);
-								CellType celltype = cell->type;
+						int counter = 0;
 
-								// Manually check where spawning should always not happen
-								if (celltype != CellType::Empty) 
-								{
-									std::cout << "SKIPPED ITEM SPAWN" << std::endl;
-									continue;
+						// keep finding that cell!
+						while ((randomC == _cell->x && randomR == _cell->y) || celltype != CellType::Empty) {
+							randomC = randomInt(std::max(_cell->x - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND));
+							randomR = randomInt(std::max(_cell->y - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getRows() - 1, _cell->y + ITEM_SPAWN_BOUND));
+
+							GridCell* cell = grid.getCell(randomC, randomR);
+							CellType celltype = cell->type;
+
+							counter += 1;
+
+							// this allows us to break out in case infinite loop
+							if (counter >= ((ITEM_SPAWN_BOUND + 1) * (ITEM_SPAWN_BOUND + 1))) {
+								break;
+							}
+						}
+
+						if (!this->hasObjectCollided(this->spawner->smallDummyItem,
+							glm::vec3(randomC * Grid::grid_cell_width + 0.01f, 0, randomR * Grid::grid_cell_width + 0.01f)))
+						{
+							this->objects.moveObject(this->spawner->smallDummyItem, glm::vec3(-1, 0, -1));
+
+							glm::vec3 dimensions(1.0f);
+
+							glm::vec3 corner(
+								cell->x * Grid::grid_cell_width + 1,
+								0,
+								cell->y * Grid::grid_cell_width + 1
+							);
+
+							int randomCellType = randomInt(1, 3);
+
+							if (randomCellType == 1) {
+								int r = randomInt(1, 3);
+								if (r == 1) {
+									cell->type = CellType::HealthPotion;
 								}
-
-								if (!this->hasObjectCollided(this->spawner->smallDummyItem,
-									glm::vec3(c * Grid::grid_cell_width + 0.01f, 0, r * Grid::grid_cell_width + 0.01f)))
-								{
-
-									this->objects.moveObject(this->spawner->smallDummyItem, glm::vec3(-1, 0, -1));
-
-									glm::vec3 dimensions(1.0f);
-
-									glm::vec3 corner(
-										cell->x * Grid::grid_cell_width + 1,
-										0,
-										cell->y * Grid::grid_cell_width + 1
-									);
-
-									GridCell* cell = this->grid.getCell(c, r);
-
-									int randomCellType = randomInt(1, 3);
-
-									if (randomCellType == 1) {
-										int r = randomInt(1, 3);
-										if (r == 1) {
-											cell->type = CellType::HealthPotion;
-										}
-										else if (r == 2) {
-											cell->type = CellType::InvisibilityPotion;
-										}
-										else {
-											cell->type = CellType::InvincibilityPotion;
-										}
-									}
-									else if (randomCellType == 2) {
-										int r = randomInt(1, 3);
-										if (r == 1) {
-											cell->type = CellType::FireSpell;
-										}
-										else if (r == 2) {
-											cell->type = CellType::HealSpell;
-										}
-										else {
-											cell->type = CellType::TeleportSpell;
-										}
-									}
-									else {
-										int r = randomInt(1, 3);
-										if (r == 1) {
-											cell->type = CellType::Dagger;
-										}
-										else if (r == 2) {
-											cell->type = CellType::Sword;
-										}
-										else {
-											cell->type = CellType::Hammer;
-										}
-									}
-
-									switch (cell->type) {
-									case CellType::Dagger: {
-										glm::vec3 dimensions(1.0f);
-
-										glm::vec3 corner(
-											cell->x * Grid::grid_cell_width + 1,
-											0,
-											cell->y * Grid::grid_cell_width + 1);
-
-										Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Dagger);
-
-										this->objects.createObject(weapon);
-
-										this->updated_entities.insert(weapon->globalID);
-										break;
-									}
-									case CellType::Sword: {
-										glm::vec3 dimensions(1.0f);
-
-										glm::vec3 corner(
-											cell->x * Grid::grid_cell_width + 1,
-											0,
-											cell->y * Grid::grid_cell_width + 1);
-
-
-										Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Sword);
-
-										this->objects.createObject(weapon);
-
-										this->updated_entities.insert(weapon->globalID);
-
-										break;
-									}
-									case CellType::Hammer: {
-										glm::vec3 dimensions(1.0f);
-
-										glm::vec3 corner(
-											cell->x * Grid::grid_cell_width + 1,
-											0,
-											cell->y * Grid::grid_cell_width + 1);
-
-
-										Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Hammer);
-
-										this->objects.createObject(weapon);
-
-										this->updated_entities.insert(weapon->globalID);
-
-										break;
-									}
-									case CellType::TeleportSpell: {
-										glm::vec3 dimensions(1.0f);
-
-										glm::vec3 corner(
-											cell->x * Grid::grid_cell_width + 1,
-											0,
-											cell->y * Grid::grid_cell_width + 1);
-
-										Spell* spell = new Spell(corner, dimensions, SpellType::Teleport);
-
-										this->objects.createObject(spell);
-
-										this->updated_entities.insert(spell->globalID);
-
-
-										break;
-									}
-									case CellType::FireSpell: {
-										glm::vec3 dimensions(1.0f);
-
-										glm::vec3 corner(
-											cell->x * Grid::grid_cell_width + 1,
-											0,
-											cell->y * Grid::grid_cell_width + 1);
-
-										Spell* spell = new Spell(corner, dimensions, SpellType::Fireball);
-
-										this->objects.createObject(spell);
-
-										this->updated_entities.insert(spell->globalID);
-
-
-										break;
-									}
-									case CellType::HealSpell: {
-										glm::vec3 dimensions(1.0f);
-
-										glm::vec3 corner(
-											cell->x * Grid::grid_cell_width + 1,
-											0,
-											cell->y * Grid::grid_cell_width + 1);
-
-
-										Spell* spell = new Spell(corner, dimensions, SpellType::HealOrb);
-
-										this->objects.createObject(spell);
-
-										this->updated_entities.insert(spell->globalID);
-
-										break;
-									}
-									case CellType::HealthPotion: {
-										glm::vec3 dimensions(1.0f);
-
-										glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
-											0,
-											cell->y * Grid::grid_cell_width + 1);
-
-										Potion* potion = new Potion(corner, dimensions, PotionType::Health);
-
-										this->objects.createObject(potion);
-
-										this->updated_entities.insert(potion->globalID);
-
-										break;
-									}
-									case CellType::InvisibilityPotion: {
-										glm::vec3 dimensions(1.0f);
-
-										glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
-											0,
-											cell->y * Grid::grid_cell_width + 1);
-
-
-										Potion* potion = new Potion(corner, dimensions, PotionType::Invisibility);
-
-										this->objects.createObject(potion);
-
-										this->updated_entities.insert(potion->globalID);
-
-										break;
-									}
-									case CellType::InvincibilityPotion: {
-										glm::vec3 dimensions(1.0f);
-
-										glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
-											0,
-											cell->y * Grid::grid_cell_width + 1);
-
-										Potion* potion = new Potion(corner, dimensions, PotionType::Invincibility);
-
-										this->objects.createObject(potion);
-
-										this->updated_entities.insert(potion->globalID);
-
-										break;
-									}
-									default:
-										std::cout << "what item is this??" << std::endl;
-									}
-
-									found = true;
-									std::cout << "ITEM PLACED in " << cell->x << "," << cell->y << std::endl;
-
-									break; //break out
+								else if (r == 2) {
+									cell->type = CellType::InvisibilityPotion;
+								}
+								else {
+									cell->type = CellType::InvincibilityPotion;
+								}
+							}
+							else if (randomCellType == 2) {
+								int r = randomInt(1, 3);
+								if (r == 1) {
+									cell->type = CellType::FireSpell;
+								}
+								else if (r == 2) {
+									cell->type = CellType::HealSpell;
+								}
+								else {
+									cell->type = CellType::TeleportSpell;
+								}
+							}
+							else {
+								int r = randomInt(1, 3);
+								if (r == 1) {
+									cell->type = CellType::Dagger;
+								}
+								else if (r == 2) {
+									cell->type = CellType::Sword;
+								}
+								else {
+									cell->type = CellType::Hammer;
 								}
 							}
 
-							if (found) {
+							switch (cell->type) {
+							case CellType::Dagger: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+								Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Dagger);
+
+								this->objects.createObject(weapon);
+
+								this->updated_entities.insert(weapon->globalID);
 								break;
+							}
+							case CellType::Sword: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+
+								Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Sword);
+
+								this->objects.createObject(weapon);
+
+								this->updated_entities.insert(weapon->globalID);
+
+								break;
+							}
+							case CellType::Hammer: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+
+								Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Hammer);
+
+								this->objects.createObject(weapon);
+
+								this->updated_entities.insert(weapon->globalID);
+
+								break;
+							}
+							case CellType::TeleportSpell: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+								Spell* spell = new Spell(corner, dimensions, SpellType::Teleport);
+
+								this->objects.createObject(spell);
+
+								this->updated_entities.insert(spell->globalID);
+
+
+								break;
+							}
+							case CellType::FireSpell: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+								Spell* spell = new Spell(corner, dimensions, SpellType::Fireball);
+
+								this->objects.createObject(spell);
+
+								this->updated_entities.insert(spell->globalID);
+
+
+								break;
+							}
+							case CellType::HealSpell: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+
+								Spell* spell = new Spell(corner, dimensions, SpellType::HealOrb);
+
+								this->objects.createObject(spell);
+
+								this->updated_entities.insert(spell->globalID);
+
+								break;
+							}
+							case CellType::HealthPotion: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+								Potion* potion = new Potion(corner, dimensions, PotionType::Health);
+
+								this->objects.createObject(potion);
+
+								this->updated_entities.insert(potion->globalID);
+
+								break;
+							}
+							case CellType::InvisibilityPotion: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+
+								Potion* potion = new Potion(corner, dimensions, PotionType::Invisibility);
+
+								this->objects.createObject(potion);
+
+								this->updated_entities.insert(potion->globalID);
+
+								break;
+							}
+							case CellType::InvincibilityPotion: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+								Potion* potion = new Potion(corner, dimensions, PotionType::Invincibility);
+
+								this->objects.createObject(potion);
+
+								this->updated_entities.insert(potion->globalID);
+
+								break;
+							}
+							default:
+								std::cout << "what item is this??" << std::endl;
 							}
 						}
 					}
@@ -712,9 +701,6 @@ void ServerGameState::update(const EventList& events) {
 
 			break;
 		}
-
-		// default:
-		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
 		}
 	}
 
@@ -1179,8 +1165,6 @@ void ServerGameState::updateTraps() {
 					// change cell type to empty
 					GridCell* _cell = this->getGrid().getCell(trap->physics.shared.corner.x / Grid::grid_cell_width, trap->physics.shared.corner.z / Grid::grid_cell_width);
 
-					std::cout << "removing trap in cell: " << _cell->x << "," << _cell->y << std::endl;
-
 					_cell->type = CellType::Empty;
 
 					continue;
@@ -1217,7 +1201,6 @@ void ServerGameState::handleDeaths() {
 
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
 			//	Player died - increment number of player deaths
-			std::cout << "a player died" << std::endl;
 			this->numPlayerDeaths++;
 
 			if (numPlayerDeaths == PLAYER_DEATHS_TO_RELAY_RACE) {

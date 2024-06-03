@@ -339,6 +339,9 @@ private:
 	 */
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
 
+	/**
+	 * @brief Field that stores the current trap the DM is hovering (not placed yet)
+	 */
 	Trap* currentGhostTrap;
 
 	/**
