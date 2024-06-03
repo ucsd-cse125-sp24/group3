@@ -615,7 +615,6 @@ void Client::geometryPass() {
             return; // haven't received cutscene packet yet
         }
 
-
         // use different values for the intro cutscene
         if (is_dm) {
             self_eid = this->intro_cutscene->dm_eid;
@@ -994,20 +993,26 @@ void Client::lightingPass() {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
 
-    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS>* closest_lights = &this->closest_light_sources;
+    auto* closest_lights = &this->closest_light_sources;
     auto* gamestate_objects = &this->gameState.objects;
+    auto eid = this->session->getInfo().client_eid.value();
+    bool is_dm = this->session->getInfo().is_dungeon_master.value();
     if (this->gameState.phase == GamePhase::INTRO_CUTSCENE) {
         if (!this->intro_cutscene.has_value()) {
             return; // don't have cutscene info yet
         }
 
+        // replace with intro cutscene state
         closest_lights = &this->intro_cutscene->lights;
         gamestate_objects = &this->intro_cutscene->state.objects;
+        if (is_dm) {
+            eid = this->intro_cutscene->dm_eid;
+        } else {
+            eid = this->intro_cutscene->pov_eid;
+        }
     }
 
-    bool is_dm = this->session->getInfo().is_dungeon_master.value();
-    auto eid = this->session->getInfo().client_eid.value();
-    glm::vec3 my_pos = this->gameState.objects[eid]->physics.corner;
+    glm::vec3 my_pos = gamestate_objects->at(eid)->physics.corner;
 
     std::shared_ptr<Shader> lighting_shader = is_dm ? dm_deferred_lighting_shader: deferred_lighting_shader;
 
@@ -1043,7 +1048,6 @@ void Client::lightingPass() {
         SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
 
         glm::vec3 pos = curr_source->physics.getCenterPosition();
-
 
         lighting_shader->setFloat("pointLights[" + std::to_string(i) + "].intensity", properties.intensity);
         lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", pos);
