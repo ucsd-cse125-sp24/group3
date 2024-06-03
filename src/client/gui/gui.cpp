@@ -401,16 +401,6 @@ void GUI::_layoutLobby() {
         boost::optional<LobbyPlayer> lobbyPlayer =
             this->client->gameState.lobby.players[i];
 
-        //  DEBUG
-        if (!lobbyPlayer.has_value()) {
-            std::cout << "Player " << std::to_string(i + 1) << " is not connected." << std::endl;
-        }
-        else {
-            std::cout << "Player " << std::to_string(i + 1) << ":" << std::endl;
-            std::cout << lobbyPlayer.get().to_string() << std::endl;
-        }
-        //  DEBUG
-
         //  Create a status row for this player
         auto player_status_row = _createPlayerStatusRow(
             lobbyPlayer,
@@ -511,10 +501,6 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         rowSize,
         rowFlexboxOptions
     );
-
-    //  DEBUG
-    std::cout << "client eid has value? " << (this->client->session->getInfo().client_eid.has_value() ? "true" : "false") << std::endl;
-    //  DEBUG
 
     //  Optional: Add a left margin Empty widget here if necessary
     //  at the start of the row
@@ -1591,37 +1577,37 @@ void GUI::_layoutGameHUD() {
         compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass0), 2));
     }
     else if (self->compass->angle > 15 && self->compass->angle <= 45) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass30), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass330), 2));
     }
     else if (self->compass->angle > 45 && self->compass->angle <= 75) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass60), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass300), 2));
     }
     else if (self->compass->angle > 75 && self->compass->angle <= 105) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass90), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass270), 2));
     }
     else if (self->compass->angle > 105 && self->compass->angle <= 135) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass120), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass240), 2));
     }
     else if (self->compass->angle > 135 && self->compass->angle <= 165) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass150), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass210), 2));
     }
     else if (self->compass->angle > 165 && self->compass->angle <= 195) {
         compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass180), 2));
     }
     else if (self->compass->angle > 195 && self->compass->angle <= 225) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass210), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass150), 2));
     }
     else if (self->compass->angle > 225 && self->compass->angle <= 255) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass240), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass120), 2));
     }
     else if (self->compass->angle > 255 && self->compass->angle <= 285) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass270), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass90), 2));
     } 
     else if (self->compass->angle > 285 && self->compass->angle <= 315) {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass300), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass60), 2));
     }
     else {
-        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass330), 2));
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass30), 2));
     }
     this->addWidget(std::move(compassFlex));
 
