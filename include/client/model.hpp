@@ -206,7 +206,7 @@ class Model : public Renderable {
      * @param angle The angle of rotation
      * @param axis The axis of rotation 
      */
-    void rotateAbsolute(const glm::vec3& dir, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f)) override;
+    void rotateAbsolute(const glm::vec3& dir,  bool is_player = false, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f)) override;
 
     /**
      * @brief Rotates the item along the specified axis. If

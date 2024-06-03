@@ -211,10 +211,10 @@ void Model::scaleRelative(const glm::vec3& scale) {
     }
 }
 
-void Model::rotateAbsolute(const glm::vec3& dir, const glm::vec3& axis) {
-    Renderable::rotateAbsolute(dir, axis);
+void Model::rotateAbsolute(const glm::vec3& dir, bool is_player, const glm::vec3& axis) {
+    Renderable::rotateAbsolute(dir, is_player, axis);
     for(Mesh& mesh : this->meshes) {
-        mesh.rotateAbsolute(dir, axis);
+        mesh.rotateAbsolute(dir, is_player, axis);
     }
 }
 
