@@ -14,8 +14,6 @@ std::string getAudioPath(ClientSFX sound) {
         case ClientSFX::VictoryThemeDM:
             //  TODO: Replace with DM Victory theme!
             return (dir / "victory_players.flac").string();
-        case ClientSFX::TEMP:
-            return (dir / "vine-boom-mono.mp3").string();
         default:
             std::cerr << "FATAL: no known path for ClientSFX " << static_cast<int>(sound) << std::endl;
             std::exit(1);

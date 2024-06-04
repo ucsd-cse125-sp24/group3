@@ -26,14 +26,12 @@ enum class ClientMusic {
 enum class ClientSFX {
     // TODO: decide what these are
     VictoryThemePlayers,
-    VictoryThemeDM,
-    TEMP,
+    VictoryThemeDM
     // make sure to add to macro below!
 };
 
 #define GET_CLIENT_SFXS() { \
     ClientSFX::VictoryThemePlayers, ClientSFX::VictoryThemeDM, \
-    ClientSFX::TEMP, \
 }
 
 // Sounds that correspond to something in the game world
