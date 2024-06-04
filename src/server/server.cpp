@@ -402,10 +402,8 @@ std::chrono::milliseconds Server::doTick() {
     }
 
 
-
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << "\n";
     auto wait = std::chrono::duration_cast<std::chrono::milliseconds>(
         TIMESTEP_LEN - (stop - start));
     return wait;
@@ -415,6 +413,7 @@ void Server::_doAccept() {
     this->acceptor.async_accept(this->socket,
         [this](boost::system::error_code ec) {
             if (!ec) {
+                this->socket.set_option(boost::asio::ip::tcp::no_delay(true));
                 auto addr = this->socket.remote_endpoint().address();
                 auto new_session = this->_handleNewSession(addr);
 

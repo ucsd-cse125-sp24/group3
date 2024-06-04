@@ -75,6 +75,8 @@ Client::Client(boost::asio::io_context& io_context, GameConfig config):
     lobby_finder(io_context, config),
     cam(new Camera()) {    
 
+    this->socket.set_option(boost::asio::ip::tcp::no_delay(true));
+
     //  Initialize Client's GUIState::Lobby related state
     //  Initial lobby player state is set to connected (this assumes that whenever
     //  GUIState is set to GUIState::Lobby, the client is connected to a lobby)

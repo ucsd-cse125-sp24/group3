@@ -138,9 +138,14 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 
 		int num_in_curr_update = 0;
 		for (EntityID id : this->updated_entities) {
-			SharedObject shared_obj = this->objects.getObject(id)->toShared();
 
-			curr_update.objects.insert({id, shared_obj});
+			Object* obj = this->objects.getObject(id);
+			if (obj == nullptr) {
+				curr_update.objects.insert({ id, boost::none });
+			} else {
+				curr_update.objects.insert({ id, obj->toShared() });
+			}
+
 			num_in_curr_update++;
 
 			if (num_in_curr_update >= OBJECTS_PER_UPDATE) {
