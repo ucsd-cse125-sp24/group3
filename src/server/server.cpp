@@ -181,13 +181,13 @@ std::chrono::milliseconds Server::doTick() {
             //  Handle ready and start game events
             EventList clientEvents = getAllClientEvents();
 
+            
             for (const auto& [src_eid, event] : clientEvents) {
                 //  Skip non-lobby action events
+                // std::cout << event << "\n";
                 if (event.type != EventType::LobbyAction) {
                     continue;
                 }
-
-                std::cout << "Received a LobbyAction event!" << std::endl;
 
                 LobbyActionEvent lobbyEvent = boost::get<LobbyActionEvent>(event.data);
 
@@ -265,19 +265,24 @@ std::chrono::milliseconds Server::doTick() {
                             lightning->physics.collider = Collider::None;
                             dm->lightning = lightning;
 
-                            //  Spawn player in random spawn point
-
-                            //  TODO: Possibly replace this random spawn point with player assignments?
-                            //  I.e., assign each player a spawn point to avoid multiple players getting
-                            //  the same spawn point?
-
                             auto& by_id = this->sessions.get<IndexByID>();
                             auto session_entry = by_id.find(dm->globalID);
 
                             if (session_entry != by_id.end()) {
-                                std::weak_ptr<Session> session_ref = session_entry->session;
-                                std::shared_ptr<Session> session = session_ref.lock();
+                                auto& session = session_entry->session;
+                                by_id.modify(session_entry, [](SessionEntry& entry) { entry.is_dungeon_master = true;});
+                                session_entry->session->setDM(true);
                                 if (session != nullptr) {
+                                    auto& by_ip = this->sessions.get<IndexByIP>();
+
+                                    auto addr = session_entry->ip;
+
+                                    auto old_session = by_ip.find(addr);
+
+                                    by_ip.modify(old_session, [](SessionEntry& entry) {
+                                        entry.is_dungeon_master = true;
+                                    });
+
                                     session->sendPacket(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                                         ServerAssignEIDPacket{ .eid = dm->globalID, .is_dungeon_master = true }));
                                 }
@@ -299,12 +304,13 @@ std::chrono::milliseconds Server::doTick() {
 
                             std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
                             std::cout << "Starting game!" << std::endl;
-                            // TODO: more permanent way to wait until DM has received their is_dungeon_master value
-                            // from the assign eid packet
-                            std::this_thread::sleep_for(2s);
                         }
 
-                        this->state.setPhase(GamePhase::GAME);
+                        if (this->config.server.skip_intro) {
+                            this->state.setPhase(GamePhase::GAME);
+                        } else {
+                            this->state.setPhase(GamePhase::INTRO_CUTSCENE);
+                        }
                     }
 
                     break;
@@ -318,27 +324,18 @@ std::chrono::milliseconds Server::doTick() {
 
             break;
         }
-
-            /*
-            // Go through sessions and update GameState lobby info
-            // TODO: move this into updateGameState or something else
-            for (const auto& [eid, is_dm, ip, session]: this->sessions) {
-                if (session->isOkay()) {
-                    this->state.addPlayerToLobby(eid, session->getInfo().client_name.value_or("UNKNOWN NAME"));
-                } else {
-                    this->state.removePlayerFromLobby(eid);
-                }
-            }
-
-            if (this->state.getLobby().players.size() >= this->state.getLobby().max_players) {
+        case GamePhase::INTRO_CUTSCENE: {
+            bool finished = this->intro_cutscene.update();
+            if (finished) {
                 this->state.setPhase(GamePhase::GAME);
-                // TODO: figure out how to selectively broadcast to only the players that were already in the lobby
-                // this->lobby_broadcaster.stopBroadcasting();
+            } else {
+                LoadIntroCutsceneEvent update = this->intro_cutscene.toNetwork();
+                sendUpdateToAllClients(Event(this->world_eid, EventType::LoadIntroCutscene, update));
             }
 
-            this->lobby_broadcaster.setLobbyInfo(this->state.getLobby());
             break;
-            */
+        }
+
         case GamePhase::GAME: {
             EventList allClientEvents = getAllClientEvents();
 
@@ -364,43 +361,13 @@ std::chrono::milliseconds Server::doTick() {
             std::exit(1);
     }
 
-
-    // TODO: send sound effects to DM?
-    std::vector<Object*> players; // hold players and DM
-    for (int i = 0; i < this->state.objects.getPlayers().size(); i++) {
-        auto player = this->state.objects.getPlayer(i);
-        if (player != nullptr) {
-            players.push_back(player);
-        }
-    }
-    if (this->state.objects.getDM() != nullptr) {
-        players.push_back(this->state.objects.getDM());
-    }
-    auto audio_commands_per_player = this->state.soundTable().getCommandsPerPlayer(players);
-
-    for (auto& session_entry : this->sessions) {
-        if (!audio_commands_per_player.contains(session_entry.id)) {
-            continue; // no sounds to send to that player
-        }
-
-        auto session = session_entry.session;
-        if (!session->isOkay()) {
-            continue; // lost connection with this session, so can't send audio updates to it
-        }
-
-        session->sendEvent(Event(this->world_eid, EventType::LoadSoundCommands, LoadSoundCommandsEvent(
-            audio_commands_per_player.at(session_entry.id)
-        )));
-    }
-
-    this->state.soundTable().tickSounds();
+    this->sendSoundCommands();
 
     // send partial updates to the clients
     // ALSO where the packets actually get sent
     for (const auto& partial_update: this->state.generateSharedGameState(false)) {
         sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
     }
-
 
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
@@ -413,6 +380,7 @@ void Server::_doAccept() {
     this->acceptor.async_accept(this->socket,
         [this](boost::system::error_code ec) {
             if (!ec) {
+                this->socket.set_option(boost::asio::ip::tcp::no_delay(true));
                 auto addr = this->socket.remote_endpoint().address();
                 auto new_session = this->_handleNewSession(addr);
 
@@ -450,6 +418,9 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
             auto new_session = std::make_shared<Session>(std::move(this->socket),
                 SessionInfo({}, old_id, old_session->is_dungeon_master));
+
+            std::cout << "OLD ID: " << old_id <<  " OLD IS DM: " << old_session->is_dungeon_master << std::endl;
+
             by_ip.replace(old_session, SessionEntry(old_id, old_session->is_dungeon_master, addr, new_session));
 
             std::cout << "Reestablished connection with " << addr 
@@ -481,4 +452,56 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
         << player->globalID << std::endl;
 
     return session;
+}
+
+void Server::sendSoundCommands() {
+    bool is_intro_cutscene = this->state.getPhase() == GamePhase::INTRO_CUTSCENE;    
+
+    ServerGameState& curr_state = (is_intro_cutscene) ? this->intro_cutscene.state : this->state;
+
+    // TODO: send sound effects to DM?
+    std::vector<Object*> players; // hold players and DM
+    for (int i = 0; i < curr_state.objects.getPlayers().size(); i++) {
+        auto player = curr_state.objects.getPlayer(i);
+        if (player != nullptr) {
+            players.push_back(player);
+        }
+    }
+    if (curr_state.objects.getDM() != nullptr) {
+        players.push_back(curr_state.objects.getDM());
+    }
+
+    auto audio_commands_per_player = curr_state.soundTable().getCommandsPerPlayer(players);
+
+    for (auto& session_entry : this->sessions) {
+        EntityID eid;
+        if (is_intro_cutscene) {
+            if (!session_entry.session->getInfo().is_dungeon_master.has_value()){
+                continue;
+            }
+
+            if (session_entry.session->getInfo().is_dungeon_master.value()) {
+                eid = this->intro_cutscene.dm_eid; 
+            } else {
+                eid = this->intro_cutscene.pov_eid;
+            }
+        } else {
+            eid = session_entry.id;
+        }
+
+        if (!audio_commands_per_player.contains(eid)) {
+            continue; // no sounds to send to that player
+        }
+
+        auto session = session_entry.session;
+        if (!session->isOkay()) {
+            continue; // lost connection with this session, so can't send audio updates to it
+        }
+
+        session->sendEvent(Event(this->world_eid, EventType::LoadSoundCommands, LoadSoundCommandsEvent(
+            audio_commands_per_player.at(eid)
+        )));
+    }
+
+    curr_state.soundTable().tickSounds();
 }

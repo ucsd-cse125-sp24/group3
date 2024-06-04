@@ -5,12 +5,6 @@ void SharedGameState::update(const SharedGameState& other) {
     // copy over static data that is sent every update
     this->lobby = other.lobby;
 
-    //  DEBUG
-    /*
-    std::cout << "SharedGameState::update()" << std::endl;
-    std::cout << other.lobby.to_string() << std::endl;
-    */
-
     this->phase = other.phase;
     this->timestep = other.timestep;
     this->matchPhase = other.matchPhase;

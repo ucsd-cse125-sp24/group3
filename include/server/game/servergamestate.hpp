@@ -352,9 +352,9 @@ private:
 	 */
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
 
-
-	std::unordered_map<std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
-
+	/**
+	 * @brief Field that stores the current trap the DM is hovering (not placed yet)
+	 */
 	Trap* currentGhostTrap;
 
 	/**

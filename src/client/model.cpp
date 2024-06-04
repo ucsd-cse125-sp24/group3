@@ -179,7 +179,7 @@ void Model::translateAbsolute(const glm::vec3& new_pos) {
 void Model::translateRelative(const glm::vec3& delta) {
     Renderable::translateRelative(delta);
     for(Mesh& mesh : this->meshes) {
-        mesh.translateAbsolute(delta);
+        mesh.translateRelative(delta);
     }
 }
 
@@ -211,10 +211,10 @@ void Model::scaleRelative(const glm::vec3& scale) {
     }
 }
 
-void Model::rotateAbsolute(const glm::vec3& dir, const glm::vec3& axis) {
-    Renderable::rotateAbsolute(dir, axis);
+void Model::rotateAbsolute(const glm::vec3& dir, bool is_player, const glm::vec3& axis) {
+    Renderable::rotateAbsolute(dir, is_player, axis);
     for(Mesh& mesh : this->meshes) {
-        mesh.rotateAbsolute(dir, axis);
+        mesh.rotateAbsolute(dir, is_player, axis);
     }
 }
 

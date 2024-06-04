@@ -25,12 +25,12 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
     this->placedTraps = 0;
 
     // TODO: fill in rest of traps
-    this->sharedTrapInventory.inventory[0] = ModelType::FloorSpikeFull;
-    this->sharedTrapInventory.inventory[1] = ModelType::FloorSpikeHorizontal;
-    this->sharedTrapInventory.inventory[2] = ModelType::FloorSpikeVertical;
+    this->sharedTrapInventory.inventory[0] = ModelType::Lightning;
+    this->sharedTrapInventory.inventory[1] = ModelType::TeleporterTrap;
+    this->sharedTrapInventory.inventory[2] = ModelType::ArrowTrap;
     this->sharedTrapInventory.inventory[3] = ModelType::SunGod;
     this->sharedTrapInventory.inventory[4] = ModelType::SpikeTrap;
-    this->sharedTrapInventory.inventory[5] = ModelType::Lightning;
+    this->sharedTrapInventory.inventory[5] = ModelType::FloorSpikeFull;
 
     //  DungeonMaster paralysis (relevant when the DM is paralyzed by a Player
     //  reflecting a lightning bolt back at the DM using a Mirror)

@@ -67,6 +67,11 @@ void Item::doCollision(Object* other, ServerGameState& state) {
 			SHORT_DIST,
 			SHORT_ATTEN
 		));
+
+		// update cell type in game state to empty
+		GridCell* cell = state.getGrid().getCell(this->physics.shared.corner.x / Grid::grid_cell_width, this->physics.shared.corner.z / Grid::grid_cell_width);
+
+		cell->type = CellType::Empty;
 	}
 }
 

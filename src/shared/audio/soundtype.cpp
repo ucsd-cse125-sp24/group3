@@ -69,6 +69,16 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "thunder.wav").string();
         case ServerSFX::TorchLoop:
             return (dir / "torch_loop_mono.wav").string();
+        case ServerSFX::PlayersStartTheme:
+            return (dir / "players_start_theme.mp3").string();
+        case ServerSFX::ElectricHum:
+            return (dir / "electric_hum.wav").string();
+        case ServerSFX::IntroGateOpen:
+            return (dir / "cutscene_gate_open.wav").string();
+        case ServerSFX::ZeusStartTheme:
+            return (dir / "zeus_start_theme.mp3").string();
+        case ServerSFX::Wind:
+            return (dir / "wind.wav").string();
         case ServerSFX::Teleport:
             return (dir / "teleport.wav").string();
         case ServerSFX::Potion:

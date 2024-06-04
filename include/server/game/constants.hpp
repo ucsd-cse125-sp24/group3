@@ -84,7 +84,16 @@
 
 /* Default model sizes */
 #define BEAR_DIMENSIONS         glm::vec3(14.163582, 17.914591, 10.655818)
-#define FIRE_PLAYER_DIMENSIONS  glm::vec3(8.008834, 10.069769, 2.198592)
+
+#define FIRE_PLAYER_DIMENSIONS      glm::vec3(4.0f, 10.069769, 4.0f)
+#define LIGHTNING_PLAYER_DIMENSIONS glm::vec3(4.0f, 10.069769, 4.0f)
+#define WATER_PLAYER_DIMENSIONS     glm::vec3(4.0f, 10.069769, 4.0f)
+
+#define PLAYER_BBOX_SCALE           0.35f
+#define PLAYER_MODEL_SCALE          0.004f
+
+
+
 #define SUNGOD_DIMENSIONS       glm::vec3(3.281404, 9.543382, 7.974873) 
 
 /* DM Constants */
@@ -92,3 +101,5 @@
 #define TRAP_INVENTORY_SIZE 10
 #define TRAP_TIME 10
 #define TRAP_COOL_DOWN 5
+#define ITEM_SPAWN_PROB	0.3
+#define ITEM_SPAWN_BOUND 3
