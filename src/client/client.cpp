@@ -247,7 +247,6 @@ bool Client::init() {
     auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
 
     this->player_model = std::make_unique<Model>(player_model_path.string(), false);
-    this->player_model->scaleAbsolute(0.0025);
     Animation* player_walk = new Animation(player_walk_path.string(), this->player_model.get());
     Animation* player_jump = new Animation(player_jump_path.string(), this->player_model.get());
     Animation* player_idle = new Animation(player_idle_path.string(), this->player_model.get());
@@ -769,6 +768,7 @@ void Client::geometryPass() {
                 player_dir.y = 0.0f;
                 this->player_model->rotateAbsolute(glm::normalize(player_dir), true);
                 this->player_model->translateAbsolute(player_pos);
+                this->player_model->setDimensions(sharedObject->physics.dimensions);
                 this->player_model->draw(
                     this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
