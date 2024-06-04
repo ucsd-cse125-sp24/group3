@@ -960,6 +960,7 @@ void GUI::_sharedGameHUD() {
             controls.push_back({ "Spacebar:", "Zoom Out" });
             controls.push_back({ "Left Control:", "Boost" });
             controls.push_back({ "Left Click:", "Place Trap" });
+            controls.push_back({ "Right Click:", "Rotate Trap" });
             controls.push_back({ "Mouse Wheel:", "Select Trap" });
             controls.push_back({ "ESC:", "Menu" });
             controls.push_back({ "H:", "Controls" });
