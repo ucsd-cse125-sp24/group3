@@ -238,7 +238,7 @@ bool Client::init() {
     auto exit_model_path = env_models_dir / "exit.obj";
     this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
 
-    auto player_model_path = graphics_assets_dir / "player_models/char_3/model_char_3.fbx";
+    auto player_model_path = graphics_assets_dir / "player_models/char_1/model_char_1.fbx";
     auto player_walk_path = graphics_assets_dir / "animations/walk.fbx";
     auto player_jump_path = graphics_assets_dir / "animations/jump.fbx";
     auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
@@ -725,8 +725,13 @@ void Client::geometryPass() {
                 if (sharedObject->globalID == self_eid) {
                     //  TODO: Update the player eye level to an acceptable level
 
+                    // glm::vec3 pos = sharedObject->physics.getCenterPosition();
+                    // pos.y -= (sharedObject->physics.dimensions.y / 2.0f);
+                    // pos.y += PLAYER_EYE_LEVEL;
+                    // cam->updatePos(pos);
+
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
-                    pos.y -= (sharedObject->physics.dimensions.y / 2.0f);
+                    pos.y -= sharedObject->physics.dimensions.y / 2.0f;
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
 
@@ -768,11 +773,13 @@ void Client::geometryPass() {
                 player_dir.y = 0.0f;
                 this->player_model->rotateAbsolute(glm::normalize(player_dir), true);
                 this->player_model->translateAbsolute(player_pos);
-                this->player_model->setDimensions(sharedObject->physics.dimensions);
+                // this->player_model->setDimensions(sharedObject->physics.dimensions);
+                this->player_model->scaleAbsolute(PLAYER_MODEL_SCALE);
                 this->player_model->draw(
                     this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
+
                 break;
             }
             // CHANGE THIS
@@ -1215,9 +1222,10 @@ void Client::drawBbox(boost::optional<SharedObject> object) {
 
         item_model->setDimensions(object->physics.dimensions);
         item_model->translateAbsolute(bbox_pos);
+        item_model->rotateAbsolute(glm::normalize(object->physics.facing), true);
         item_model->draw(this->deferred_geometry_shader.get(),
             this->cam->getPos(),
-            false);
+            true);
     }
 }
 

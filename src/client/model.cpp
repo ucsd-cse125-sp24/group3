@@ -179,7 +179,7 @@ void Model::translateAbsolute(const glm::vec3& new_pos) {
 void Model::translateRelative(const glm::vec3& delta) {
     Renderable::translateRelative(delta);
     for(Mesh& mesh : this->meshes) {
-        mesh.translateAbsolute(delta);
+        mesh.translateRelative(delta);
     }
 }
 
