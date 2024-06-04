@@ -696,6 +696,10 @@ void Client::geometryPass() {
 
     glm::vec3 my_pos = (*objects)[self_eid]->physics.corner;
 
+    double currentTime = glfwGetTime();
+    double timeElapsed = currentTime - lastTime;
+    lastTime = currentTime;
+
     // draw all objects to g-buffer
     for (auto& [id, sharedObject] : *objects) {
         if (!sharedObject.has_value()) {
@@ -723,6 +727,7 @@ void Client::geometryPass() {
                     //  TODO: Update the player eye level to an acceptable level
 
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
+                    pos.y -= (sharedObject->physics.dimensions.y / 2.0f);
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
 
@@ -744,7 +749,7 @@ void Client::geometryPass() {
                 animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
 
                 /* Update model animation */
-                animManager->updateAnimation(0.025f);
+                animManager->updateAnimation(timeElapsed);
                 auto transforms = animManager->getFinalBoneMatrices();
 
                 for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
@@ -754,6 +759,8 @@ void Client::geometryPass() {
                 if (!sharedObject->playerInfo->render) { break; } // dont render while invisible
 
                 auto player_pos = sharedObject->physics.getCenterPosition();
+                player_pos.y -= (sharedObject->physics.dimensions.y / 2.0f);
+
                 auto player_dir = sharedObject->physics.facing;
 
                 if (player_dir == glm::vec3(0.0f)) {
