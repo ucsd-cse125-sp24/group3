@@ -343,6 +343,8 @@ private:
     float mouse_xpos = 0.0f;
     float mouse_ypos = 0.0f;
 
+    double lastTime = 0.0;
+
     GameConfig config;
     tcp::resolver resolver;
     tcp::socket socket;
