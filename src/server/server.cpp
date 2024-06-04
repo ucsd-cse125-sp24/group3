@@ -370,6 +370,7 @@ void Server::_doAccept() {
     this->acceptor.async_accept(this->socket,
         [this](boost::system::error_code ec) {
             if (!ec) {
+                this->socket.set_option(boost::asio::ip::tcp::no_delay(true));
                 auto addr = this->socket.remote_endpoint().address();
                 auto new_session = this->_handleNewSession(addr);
 
