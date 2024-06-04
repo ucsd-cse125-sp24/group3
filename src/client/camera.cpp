@@ -97,6 +97,10 @@ void Camera::updatePos(glm::vec3 pos) {
     cameraPos = pos;
 }
 
+void Camera::setPitch(float pitch) {
+    this->pitch = pitch;
+}
+
 DungeonMasterCamera::DungeonMasterCamera() : Camera() {
     pitch = -89.0f;
     this->farClip = 500.0f;
@@ -149,3 +153,4 @@ void DungeonMasterCamera::update(float xpos, float ypos) {
 
     viewProjMat = this->projection * this->view;
 }
+

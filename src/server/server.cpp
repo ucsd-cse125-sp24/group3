@@ -181,13 +181,13 @@ std::chrono::milliseconds Server::doTick() {
             //  Handle ready and start game events
             EventList clientEvents = getAllClientEvents();
 
+            
             for (const auto& [src_eid, event] : clientEvents) {
                 //  Skip non-lobby action events
+                // std::cout << event << "\n";
                 if (event.type != EventType::LobbyAction) {
                     continue;
                 }
-
-                std::cout << "Received a LobbyAction event!" << std::endl;
 
                 LobbyActionEvent lobbyEvent = boost::get<LobbyActionEvent>(event.data);
 
@@ -273,6 +273,16 @@ std::chrono::milliseconds Server::doTick() {
                                 by_id.modify(session_entry, [](SessionEntry& entry) { entry.is_dungeon_master = true;});
                                 session_entry->session->setDM(true);
                                 if (session != nullptr) {
+                                    auto& by_ip = this->sessions.get<IndexByIP>();
+
+                                    auto addr = session_entry->ip;
+
+                                    auto old_session = by_ip.find(addr);
+
+                                    by_ip.modify(old_session, [](SessionEntry& entry) {
+                                        entry.is_dungeon_master = true;
+                                    });
+
                                     session->sendPacket(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                                         ServerAssignEIDPacket{ .eid = dm->globalID, .is_dungeon_master = true }));
                                 }
@@ -408,6 +418,9 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
             auto new_session = std::make_shared<Session>(std::move(this->socket),
                 SessionInfo({}, old_id, old_session->is_dungeon_master));
+
+            std::cout << "OLD ID: " << old_id <<  " OLD IS DM: " << old_session->is_dungeon_master << std::endl;
+
             by_ip.replace(old_session, SessionEntry(old_id, old_session->is_dungeon_master, addr, new_session));
 
             std::cout << "Reestablished connection with " << addr 
