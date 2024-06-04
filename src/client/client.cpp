@@ -479,7 +479,6 @@ void Client::processServerInput(bool allow_defer) {
                     //  Stop play menu theme music
                     audioManager->stopMusic(ClientMusic::MenuTheme);
                     
-
                     // set to Dungeon Master POV if DM
                     if (this->session->getInfo().is_dungeon_master.value()) {
                         std::cout << "dungeon master cam!" << std::endl;
@@ -498,6 +497,65 @@ void Client::processServerInput(bool allow_defer) {
                     this->gui_state = GUIState::GAME_HUD;
                     
                     phase_change = false;
+                }
+                else if (this->gameState.phase == GamePhase::GAME || this->gameState.phase == GamePhase::RESULTS) {
+                    //  TODO: Keep track of the match phase and who won the match to play the correct client
+                    //  music
+
+                    if (this->gameState.phase == GamePhase::GAME) {
+                        //  Keep track of the match phase from the previous tick (though initialize to current tick
+                        //  for initialization)
+                        static MatchPhase previousMatchPhase = this->gameState.matchPhase;
+
+                        if (previousMatchPhase != this->gameState.matchPhase) {
+                            std::cout << "Match phase change!" << std::endl;
+
+                            previousMatchPhase = this->gameState.matchPhase;
+
+                            //  Play relay race theme
+                            if (this->session->getInfo().is_dungeon_master.value()) {
+                                std::cout << "Relay Race - DM!" << std::endl;
+
+                                //  Play DM relay race theme
+                                audioManager->stopMusic(ClientMusic::MazeExplorationDMTheme);
+
+                                audioManager->playMusic(ClientMusic::RelayRaceDMTheme);
+
+                            }
+                            else {
+                                //  Player in Relay Race
+                                std::cout << "Relay Race - Player!" << std::endl;
+
+                                //  Play Player relay race theme
+                                audioManager->stopMusic(ClientMusic::MazeExplorationPlayersTheme);
+
+                                audioManager->playMusic(ClientMusic::RelayRacePlayersTheme);
+                            }
+                        }
+                    }
+                    else {
+                        //  Game has ended - GamePhase::Results
+                        std::cout << "Game has ended! Playing victory music." << std::endl;
+
+                        //  Play victory theme of the team that won
+                        if (this->session->getInfo().is_dungeon_master.value()) {
+                            //  Stop relay race music of the DM
+                            audioManager->stopMusic(ClientMusic::RelayRaceDMTheme);
+                        }
+                        else {
+                            //  Stop relay race music of the Players
+                            audioManager->stopMusic(ClientMusic::RelayRacePlayersTheme);
+                        }
+
+                        //  Play victory theme for team that won
+                        if (this->gameState.playerVictory) {
+                            audioManager->playMusic(ClientMusic::VictoryThemePlayers);
+                        }
+                        else {
+                            audioManager->playMusic(ClientMusic::VictoryThemeDM);
+                        }
+                    }
+
                 }
             }
         } else if (event.type == EventType::LoadSoundCommands) {
