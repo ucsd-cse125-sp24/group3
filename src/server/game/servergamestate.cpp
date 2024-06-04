@@ -1922,12 +1922,15 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					cell->type = CellType::TeleportSpell;
 				}
 			} else if (cell->type == CellType::RandomWeapon) {
-				int r = randomInt(1, 3);
+				int r = randomInt(1, 4);
 				if (r == 1) {
 					cell->type = CellType::Dagger;
 				}
 				else if (r == 2) {
 					cell->type = CellType::Sword;
+				}
+				else if (r == 3) {
+					cell->type = CellType::Mirror;
 				}
 				else {
 					cell->type = CellType::Hammer;
