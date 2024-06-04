@@ -60,24 +60,7 @@ IntroCutscene::IntroCutscene():
     this->state.objects.createObject(dm);
     this->dm_eid = dm->globalID;
 
-    std::size_t lights_idx = 0;
-    for (int i = 0; i < this->state.objects.getObjects().size(); i++) {
-        auto object = this->state.objects.getObject(i);
-        if (object == nullptr) continue;
-
-        if (lights_idx < MAX_POINT_LIGHTS && object->type == ObjectType::Torchlight) {
-            this->lights[lights_idx] = object->toShared();
-            lights_idx++;
-        }
-        if (lights_idx > MAX_POINT_LIGHTS) {
-            std::cerr << "WARNING: can't fit all lights in intro cutscene world.\n";
-        }
-    }
-
-    for (int i = lights_idx; i < MAX_POINT_LIGHTS; i++) {
-        this->lights[i] = {}; // make sure this is initialized, idk if this is needed but just in case
-        // because i dont trust c++ to do anything ever
-    }
+    // load this->lights before sending down so the torch tick stuff works right
 }
 
 bool IntroCutscene::update() {
@@ -206,6 +189,25 @@ LoadIntroCutsceneEvent IntroCutscene::toNetwork() {
                 main.objects.insert({eid, obj});
             }
         }
+    }
+
+    std::size_t lights_idx = 0;
+    for (int i = 0; i < this->state.objects.getObjects().size(); i++) {
+        auto object = this->state.objects.getObject(i);
+        if (object == nullptr) continue;
+
+        if (lights_idx < MAX_POINT_LIGHTS && object->type == ObjectType::Torchlight) {
+            this->lights[lights_idx] = object->toShared();
+            lights_idx++;
+        }
+        if (lights_idx > MAX_POINT_LIGHTS) {
+            std::cerr << "WARNING: can't fit all lights in intro cutscene world.\n";
+        }
+    }
+
+    for (int i = lights_idx; i < MAX_POINT_LIGHTS; i++) {
+        this->lights[i] = {}; // make sure this is initialized, idk if this is needed but just in case
+        // because i dont trust c++ to do anything ever
     }
 
     auto evt = LoadIntroCutsceneEvent(updates.at(0), this->pov_eid, this->dm_eid, this->lights);
