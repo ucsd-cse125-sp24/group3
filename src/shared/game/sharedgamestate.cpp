@@ -8,7 +8,7 @@ void SharedGameState::update(const SharedGameState& other) {
     this->phase = other.phase;
     this->timestep = other.timestep;
     this->matchPhase = other.matchPhase;
-    this->timesteps_left = other.timesteps_left;
+    this->relay_finish_time = other.relay_finish_time;
     this->playerVictory = other.playerVictory;
     this->numPlayerDeaths = other.numPlayerDeaths;
 
