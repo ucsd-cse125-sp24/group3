@@ -87,10 +87,23 @@ std::string getAudioPath(ClientMusic music) {
     static auto dir = audio_dir / "client_music";
 
     switch (music) {
-        case ClientMusic::TitleTheme:
-            return (dir / "piano.wav").string();
-        case ClientMusic::GameTheme:
-            return (dir / "dm_maze.flac").string();
+        case ClientMusic::MenuTheme:
+            //  TODO: Replace with menu theme!
+            return (dir / "relay_race_players.mp3").string();
+        case ClientMusic::MazeExplorationPlayersTheme:
+            return (dir / "maze_exploration_players.flac").string();
+        case ClientMusic::MazeExplorationDMTheme:
+            return (dir / "maze_exploration_dm.flac").string();
+        case ClientMusic::RelayRacePlayersTheme:
+            return (dir / "relay_race_players.mp3").string();
+        case ClientMusic::RelayRaceDMTheme:
+            //  TODO: Replace with DM Relay Race theme!
+            return (dir / "maze_exploration_dm.flac").string();
+        case ClientMusic::VictoryThemePlayers:
+            return (dir / "victory_players.flac").string();
+        case ClientMusic::VictoryThemeDM:
+            //  TODO: Replace with DM Victory theme!
+            return (dir / "victory_players.flac").string();
         default:
             std::cerr << "FATAL: no known path for ClientMusic " << static_cast<int>(music) << std::endl;
             std::exit(1);

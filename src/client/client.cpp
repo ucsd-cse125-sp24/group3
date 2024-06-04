@@ -475,17 +475,28 @@ void Client::processServerInput(bool allow_defer) {
             else {
                 if (phase_change || (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME)) {
                     std::cout << "game phase change!" << std::endl;
+
+                    //  Stop play menu theme music
+                    audioManager->stopMusic(ClientMusic::MenuTheme);
+                    
+
                     // set to Dungeon Master POV if DM
                     if (this->session->getInfo().is_dungeon_master.value()) {
                         std::cout << "dungeon master cam!" << std::endl;
                         this->cam = std::make_unique<DungeonMasterCamera>();
+
+                        //  Play Maze Exploration theme (DM)
+                        audioManager->playMusic(ClientMusic::MazeExplorationDMTheme);
+
                         // TODO: fix race condition where this doesn't get received in time when reconnecting because the server is doing way more stuff and is delayed
+                    }
+                    else {
+                        //  If player, play Maze Exploration theme (players)
+                        audioManager->playMusic(ClientMusic::MazeExplorationPlayersTheme);
                     }
 
                     this->gui_state = GUIState::GAME_HUD;
-
-                    audioManager->stopMusic(ClientMusic::TitleTheme);
-                    audioManager->playMusic(ClientMusic::GameTheme);
+                    
                     phase_change = false;
                 }
             }
@@ -1101,7 +1112,7 @@ void Client::drawBbox(boost::optional<SharedObject> object) {
 // callbacks - for Interaction
 void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (this->gui_state == GUIState::INITIAL_LOAD) {
-        this->audioManager->playMusic(ClientMusic::TitleTheme);
+        this->audioManager->playMusic(ClientMusic::MenuTheme);
         this->gui_state = GUIState::TITLE_SCREEN;
         return;
     }

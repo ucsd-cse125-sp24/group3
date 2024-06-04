@@ -9,13 +9,21 @@ using namespace std::chrono_literals;
 // Sounds that the client can decide to play on its own
 // (e.g. BGM, clicking on UI elements...)
 enum class ClientMusic {
-    TitleTheme,
-    GameTheme,
+    MenuTheme,
+    MazeExplorationPlayersTheme,
+    MazeExplorationDMTheme,
+    RelayRacePlayersTheme,
+    RelayRaceDMTheme,
+    VictoryThemePlayers,
+    VictoryThemeDM
     // make sure to add to macro below!
 };
 
 #define GET_CLIENT_MUSICS() { \
-    ClientMusic::TitleTheme, ClientMusic::GameTheme \
+    ClientMusic::MenuTheme, ClientMusic::MazeExplorationPlayersTheme, \
+    ClientMusic::MazeExplorationDMTheme, ClientMusic::RelayRacePlayersTheme, \
+    ClientMusic::RelayRaceDMTheme, ClientMusic::VictoryThemePlayers, \
+    ClientMusic::VictoryThemeDM \
 }
 
 enum class ClientSFX {
