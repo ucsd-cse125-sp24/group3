@@ -30,6 +30,7 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::DMRightHotbar: return (img_root / "dm_right.png").string();
         case ImgID::DMMiddleHotbar: return (img_root / "dm_middle.png").string();
         case ImgID::DMMiddleSelected: return (img_root / "dm_selected.png").string();
+        case ImgID::DMMiddleCooldown: return (img_root / "dm_cooldown.png").string();
         case ImgID::Blank: return (img_root / "blank.png").string();
         case ImgID::HealthBar: return (img_root / "healthbar.png").string();
         case ImgID::HealthTickEmpty: return (img_root / "healthtick_empty.png").string();
@@ -52,6 +53,26 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::Compass210: return (img_root / "compasses/compass_210.png").string();
         case ImgID::Compass240: return (img_root / "compasses/compass_240.png").string();
         case ImgID::Compass270: return (img_root / "compasses/compass_270.png").string();
+        case ImgID::DMCD_10: return (img_root / "dm_cooldown/dm_cooldown_10.png").string();
+        case ImgID::DMCD_9: return (img_root / "dm_cooldown/dm_cooldown_9.png").string();
+        case ImgID::DMCD_8: return (img_root / "dm_cooldown/dm_cooldown_8.png").string();
+        case ImgID::DMCD_7: return (img_root / "dm_cooldown/dm_cooldown_7.png").string();
+        case ImgID::DMCD_6: return (img_root / "dm_cooldown/dm_cooldown_6.png").string();
+        case ImgID::DMCD_5: return (img_root / "dm_cooldown/dm_cooldown_5.png").string();
+        case ImgID::DMCD_4: return (img_root / "dm_cooldown/dm_cooldown_4.png").string();
+        case ImgID::DMCD_3: return (img_root / "dm_cooldown/dm_cooldown_3.png").string();
+        case ImgID::DMCD_2: return (img_root / "dm_cooldown/dm_cooldown_2.png").string();
+        case ImgID::DMCD_1: return (img_root / "dm_cooldown/dm_cooldown_1.png").string();
+        case ImgID::DMCD_Selected_10: return (img_root / "dm_cooldown/dm_selected_cooldown_10.png").string();
+        case ImgID::DMCD_Selected_9: return (img_root / "dm_cooldown/dm_selected_cooldown_9.png").string();
+        case ImgID::DMCD_Selected_8: return (img_root / "dm_cooldown/dm_selected_cooldown_8.png").string();
+        case ImgID::DMCD_Selected_7: return (img_root / "dm_cooldown/dm_selected_cooldown_7.png").string();
+        case ImgID::DMCD_Selected_6: return (img_root / "dm_cooldown/dm_selected_cooldown_6.png").string();
+        case ImgID::DMCD_Selected_5: return (img_root / "dm_cooldown/dm_selected_cooldown_5.png").string();
+        case ImgID::DMCD_Selected_4: return (img_root / "dm_cooldown/dm_selected_cooldown_4.png").string();
+        case ImgID::DMCD_Selected_3: return (img_root / "dm_cooldown/dm_selected_cooldown_3.png").string();
+        case ImgID::DMCD_Selected_2: return (img_root / "dm_cooldown/dm_selected_cooldown_2.png").string();
+        case ImgID::DMCD_Selected_1: return (img_root / "dm_cooldown/dm_selected_cooldown_1.png").string();
         case ImgID::Compass300: return (img_root / "compasses/compass_300.png").string();
         case ImgID::Compass330: return (img_root / "compasses/compass_330.png").string();
         case ImgID::Sungod: return (img_root / "sungod.png").string();
@@ -62,5 +83,4 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::SpikeTrap: return (img_root / "spiketrap.png").string();
     }
 }
-
 }

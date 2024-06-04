@@ -181,13 +181,13 @@ std::chrono::milliseconds Server::doTick() {
             //  Handle ready and start game events
             EventList clientEvents = getAllClientEvents();
 
+            
             for (const auto& [src_eid, event] : clientEvents) {
                 //  Skip non-lobby action events
+                // std::cout << event << "\n";
                 if (event.type != EventType::LobbyAction) {
                     continue;
                 }
-
-                std::cout << "Received a LobbyAction event!" << std::endl;
 
                 LobbyActionEvent lobbyEvent = boost::get<LobbyActionEvent>(event.data);
 
@@ -277,7 +277,19 @@ std::chrono::milliseconds Server::doTick() {
                             if (session_entry != by_id.end()) {
                                 std::weak_ptr<Session> session_ref = session_entry->session;
                                 std::shared_ptr<Session> session = session_ref.lock();
+
+
                                 if (session != nullptr) {
+                                    auto& by_ip = this->sessions.get<IndexByIP>();
+
+                                    auto addr = session_entry->ip;
+
+                                    auto old_session = by_ip.find(addr);
+
+                                    by_ip.modify(old_session, [](SessionEntry& entry) {
+                                        entry.is_dungeon_master = true;
+                                    });
+
                                     session->sendPacket(PackagedPacket::make_shared(PacketType::ServerAssignEID,
                                         ServerAssignEIDPacket{ .eid = dm->globalID, .is_dungeon_master = true }));
                                 }
@@ -297,8 +309,8 @@ std::chrono::milliseconds Server::doTick() {
                                 sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
                             }
 
-                            std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
-                            std::cout << "Starting game!" << std::endl;
+                            //std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
+                            //std::cout << "Starting game!" << std::endl;
                             // TODO: more permanent way to wait until DM has received their is_dungeon_master value
                             // from the assign eid packet
                             std::this_thread::sleep_for(2s);
@@ -451,6 +463,9 @@ std::shared_ptr<Session> Server::_handleNewSession(boost::asio::ip::address addr
 
             auto new_session = std::make_shared<Session>(std::move(this->socket),
                 SessionInfo({}, old_id, old_session->is_dungeon_master));
+
+            std::cout << "OLD ID: " << old_id <<  " OLD IS DM: " << old_session->is_dungeon_master << std::endl;
+
             by_ip.replace(old_session, SessionEntry(old_id, old_session->is_dungeon_master, addr, new_session));
 
             std::cout << "Reestablished connection with " << addr 

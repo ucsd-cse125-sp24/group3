@@ -78,12 +78,15 @@ void GUI::renderFrame() {
     glDisable(GL_BLEND);
 }
 
-void GUI::handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down) {
+void GUI::handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down, bool& is_right_mouse_down) {
     // convert to gui coords, where (0,0) is bottome left
     mouse_ypos = WINDOW_HEIGHT - mouse_ypos;
     if (is_left_mouse_down) {
         this->_handleClick(mouse_xpos, mouse_ypos);
         is_left_mouse_down = false;
+    }
+    if (is_right_mouse_down) {
+        is_right_mouse_down = false;
     }
     this->_handleHover(mouse_xpos, mouse_ypos);
 }
@@ -429,12 +432,10 @@ void GUI::_layoutLobby() {
     //  Display differently based on whether all players in the lobby are ready
     bool allReady = true;
 
-    std::cout << "players size: " << std::to_string(this->client->gameState.lobby.players.size()) << std::endl;
     for (boost::optional<LobbyPlayer> player : this->client->gameState.lobby.players) {
         if (!player.has_value() || !player.get().ready) {
             //  Either there aren't enough players in the lobby or at least
             //  one player isn't ready
-            std::cout << "Not all players are ready" << std::endl;
             allReady = false;
             break;
         }
@@ -463,7 +464,6 @@ void GUI::_layoutLobby() {
     }
 
     //  Create flexbox to contain dynamic text
-    std::cout << "lobby max players: " << std::to_string(this->client->gameState.lobby.max_players) << std::endl;
     auto start_game_flex = widget::Flexbox::make(
         glm::vec2(0, 200),
         glm::vec2(WINDOW_WIDTH, 0),
@@ -960,6 +960,7 @@ void GUI::_sharedGameHUD() {
             controls.push_back({ "Spacebar:", "Zoom Out" });
             controls.push_back({ "Left Control:", "Boost" });
             controls.push_back({ "Left Click:", "Place Trap" });
+            controls.push_back({ "Right Click:", "Rotate Trap" });
             controls.push_back({ "Mouse Wheel:", "Select Trap" });
             controls.push_back({ "ESC:", "Menu" });
             controls.push_back({ "H:", "Controls" });
@@ -1066,7 +1067,10 @@ void GUI::_sharedGameHUD() {
                 case ModelType::SunGod: {
                     itemString = "Fireball Trap";
 
-                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()) {
                         itemString += " (IN COOLDOWN)";
                     }
                     break;
@@ -1082,6 +1086,28 @@ void GUI::_sharedGameHUD() {
                 case ModelType::Lightning: {
                     itemString = "Lightning Bolt (10)";
                     
+                    break;
+                }
+                case ModelType::TeleporterTrap: {
+                    itemString = "Teleporter Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::TeleporterTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+
+
+                    break;
+                }
+                case ModelType::ArrowTrap: {
+                    itemString = "Arrow Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+
                     break;
                 }
             }
@@ -1148,13 +1174,151 @@ void GUI::_sharedGameHUD() {
         frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightHotbar), 2));
     } else {
         frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMLeftHotbar), 2));
-        for (int i = 0; i < inventory_size; i++) {
-            if (selected == i) {
-                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleSelected), 2));
 
+        for (int i = 0; i < inventory_size; i++) {
+            bool idxInCooldown = false;
+            int cdRemaining = 0;
+
+            if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
+                switch (self->trapInventoryInfo->inventory[i]) {
+                    case ModelType::FloorSpikeFull: {
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeFull) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FloorSpikeFull);
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::FloorSpikeVertical: {
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeVertical) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FloorSpikeVertical);
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::FloorSpikeHorizontal: {
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeHorizontal) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FloorSpikeHorizontal);
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::SunGod: {
+                        itemString = "Fireball Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()) 
+                        {
+                            if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FireballTrapUp);
+                            }
+                            else if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FireballTrapLeft);
+                            }
+                            else if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FireballTrapRight);
+                            }
+                            else {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FireballTrapDown);
+                            }
+                            
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::SpikeTrap: {
+                        itemString = "Ceiling Spike Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::SpikeTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::SpikeTrap);
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::Lightning: {
+                        itemString = "Lightning Bolt (10)";
+
+                        break;
+                    }
+                    case ModelType::TeleporterTrap: {
+                        itemString = "Teleporter Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::TeleporterTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::TeleporterTrap);
+                            idxInCooldown = true;
+                        }
+
+                        break;
+                    }
+                    case ModelType::ArrowTrap: {
+                        itemString = "Arrow Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()) 
+                        {
+                            if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::ArrowTrapUp);
+                            }
+                            else if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::ArrowTrapLeft);
+                            }
+                            else if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::ArrowTrapDown);
+                            }
+                            else {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::ArrowTrapRight);
+                            }
+                            idxInCooldown = true;
+                        }
+
+                        break;
+                    }
+                }
+            }
+            
+            if (!idxInCooldown) {
+                if (selected == i) {
+                    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleSelected), 2));
+
+                }
+                else {
+                    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleHotbar), 2));
+                }
             }
             else {
-                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleHotbar), 2));
+                auto imgSelect = img::ImgID::DMCD_10;
+                if (cdRemaining > 4500) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_10 : img::ImgID::DMCD_Selected_10;
+                } 
+                else if (cdRemaining > 4000) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_9 : img::ImgID::DMCD_Selected_9;
+                }
+                else if (cdRemaining > 3500) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_8 : img::ImgID::DMCD_Selected_8;
+                }
+                else if (cdRemaining > 3000) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_7 : img::ImgID::DMCD_Selected_7;
+                }
+                else if (cdRemaining > 2500) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_6 : img::ImgID::DMCD_Selected_6;
+                }
+                else if (cdRemaining > 2000) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_5 : img::ImgID::DMCD_Selected_5;
+                }
+                else if (cdRemaining > 1500) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_4 : img::ImgID::DMCD_Selected_4;
+                }
+                else if (cdRemaining > 1000) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_3 : img::ImgID::DMCD_Selected_3;
+                }
+                else {
+                    // Doesn't use DMCD_1 b/c it looks better without it
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_2 : img::ImgID::DMCD_Selected_2;
+                }
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(imgSelect), 2));
             }
         }
         frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMRightHotbar), 2));
@@ -1242,6 +1406,14 @@ void GUI::_sharedGameHUD() {
                 }
                 case ModelType::Lightning: {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Lightning), 2));
+                    break;
+                }
+                case ModelType::ArrowTrap: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ArrowTrap), 2));
+                    break;
+                }
+                case ModelType::TeleporterTrap: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Teleporter), 2));
                     break;
                 }
                 }

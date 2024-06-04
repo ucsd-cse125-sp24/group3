@@ -117,6 +117,13 @@ public:
      */
     void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 
+    /**
+     * @brief Callback which handles scrolling movement. 
+     *
+     * @param window The GLFWwindow being monitered.
+     * @param xposIn The current scroll up value.
+     * @param yposIn The current scroll down value.
+     */
     void scrollCallback(GLFWwindow* window, double xposIn, double yposIn);
 
     /**
@@ -166,11 +173,28 @@ public:
      */
     bool connect(std::string ip_addr);
 
+    /**
+     * @brief get the reference to the Audio manager
+     */
     AudioManager* getAudioManager();
+
+    /**
+     * @brief get the reference to the Animation manager
+     */
     AnimationManager* getAnimManager() { return animManager; }
 
+    /**
+     * @brief the current position in the world the player is looking at
+     */
     void setWorldPos();
 
+    /**
+     * @brief Send down a trap event to the server 
+     * 
+     * @param hover boolean to indicate the DM is only hovering and has not placed yet
+     * @param place boolean to indicate the DM would like to place a type
+     * @param trapType ModelType to indicate the type of the trap the DM wants to place
+     */
     void sendTrapEvent(bool hover, bool place, ModelType trapType);
 
     int curr_fps;
@@ -282,7 +306,11 @@ private:
      */
     RadioButtonState roleSelection;
 
+    /**
+     * @brief Audio Manager to play Client sounds
+     */
     AudioManager* audioManager;
+
     AnimationManager* animManager;
 
     /* Camera object representing player's current position & orientation */
@@ -301,12 +329,15 @@ private:
     bool is_held_left = false;
     bool is_held_space = false;
 
+    /* DM zooming in and out flags */
     bool is_held_i = false;
     bool is_held_o = false;
 
-    bool is_pressed_p = false;
-
     bool is_left_mouse_down = false;
+    bool is_right_mouse_down = false;
+
+    /* DM Trap Orientation Traps With Directions */
+    int orientation = 0;
 
     /* Mouse position coordinates */
     float mouse_xpos = 0.0f;
@@ -328,6 +359,9 @@ private:
 
     std::deque<Event> events_received;
 
+    /**
+     * @brief boolean to see if a phase change from LOBBY to GAME already happened
+     */
     bool phase_change;
 };
 

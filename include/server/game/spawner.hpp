@@ -20,6 +20,8 @@ class Spawner {
 public:
     Item* dummyItem;
 
+    Item* smallDummyItem;
+
     Spawner();
 
     /*
@@ -52,6 +54,12 @@ public:
      * General spawn method to manage number of enemies
      */
     void spawnDummy(ServerGameState& state);
+
+
+    /*
+     * Smaller dummy for empty check
+     */
+    void spawnSmallDummy(ServerGameState& state);
 
 
 private:

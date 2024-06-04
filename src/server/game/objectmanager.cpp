@@ -42,17 +42,16 @@ SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID
 
 	//	If an EntityID is specified, put object at the specific EntityID
 	if (id.has_value()) {
-		std::cout << "OPTIONAL PARAMETER TO _createObject() id has value!" << std::endl;
 		globalID = id.get();
 		this->objects.set(object, globalID);
-	}
-	else {
+	} else {
 		globalID = this->objects.push(object);
 	}
 
 	object->globalID = globalID;
 
 	object->gridCellPositions = this->objectGridCells(object);
+
 	for (auto pos : object->gridCellPositions) {
 		if (!this->cellToObjects.contains(pos)) {
 			this->cellToObjects.insert({pos, std::vector<Object*>()});
@@ -98,6 +97,7 @@ SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID
 		}
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
+			std::cout << "INSERTING A PLAYER of TYPEID " << object->typeID << std::endl;
 			break;
 		case ObjectType::Python:
 		case ObjectType::Minotaur:
