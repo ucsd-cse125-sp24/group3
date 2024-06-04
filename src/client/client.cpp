@@ -502,6 +502,8 @@ void Client::processServerInput(bool allow_defer) {
                     //  TODO: Keep track of the match phase and who won the match to play the correct client
                     //  music
 
+                    static bool gameEnded = false;
+
                     if (this->gameState.phase == GamePhase::GAME) {
                         //  Keep track of the match phase from the previous tick (though initialize to current tick
                         //  for initialization)
@@ -533,9 +535,11 @@ void Client::processServerInput(bool allow_defer) {
                             }
                         }
                     }
-                    else {
+                    else if (!gameEnded) {
                         //  Game has ended - GamePhase::Results
                         std::cout << "Game has ended! Playing victory music." << std::endl;
+
+                        gameEnded = true;
 
                         //  Play victory theme of the team that won
                         if (this->session->getInfo().is_dungeon_master.value()) {
