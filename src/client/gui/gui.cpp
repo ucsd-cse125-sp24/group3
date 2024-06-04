@@ -1038,6 +1038,10 @@ void GUI::_sharedGameHUD() {
                     itemString = "Hammer";
                     break;
                 }
+                case ModelType::Mirror: {
+                    itemString = "Mirror";
+                    break;
+                }
             }
         }
     } else { // DM hotbar
@@ -1381,6 +1385,10 @@ void GUI::_sharedGameHUD() {
                         itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Hammer), 2));
                         break;
                     }
+                    case ModelType::Mirror: {
+                        //  TODO: Replace with an img of a mirror
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Mirror), 2));
+                    }
                 }
             } else {
                 itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Blank), 2));
@@ -1698,6 +1706,22 @@ void GUI::_layoutGameHUD() {
             font::getRelativePixels(13)
         );
         this->addWidget(std::move(mana_txt));
+
+        //  Show a large splash text at the center of the screen for the DM if the DM is paralyzed
+        if (self.get().DMInfo.get().paralyzed) {
+            std::cout << "DM is paralyzed!" << std::endl;
+            auto paralyzedSplashText = widget::CenterText::make(
+                "PARALYZED!",
+                gui::font::Font::TITLE,
+                gui::font::Size::LARGE,
+                gui::font::Color::RED,
+                this->fonts,
+                WINDOW_HEIGHT / 2
+            );
+
+            this->addWidget(std::move(paralyzedSplashText));
+        }
+
         return;
     }
 
@@ -1732,6 +1756,9 @@ void GUI::_layoutGameHUD() {
         }
         else if (type == ModelType::NauseaPotion) {
             name = "Nauseous: ";
+        }
+        else if (type == ModelType::Mirror) {
+            name = "Holding Mirror: ";
         }
 
         durationFlex->push(widget::DynText::make(
@@ -1817,6 +1844,22 @@ void GUI::_layoutGameHUD() {
         );
     }
     this->addWidget(std::move(needleFlex));
+
+    //  Show a large splash text at the center of the screen for the player if the player
+    //  successfully reflected a lightning bolt
+    if (self.get().playerInfo.get().used_mirror_to_reflect_lightning) {
+        std::cout << "Player used a mirror to reflect a lightning bolt!" << std::endl;
+        auto reflectedLightningSplashText = widget::CenterText::make(
+            "Reflected Lightning using Mirror!",
+            gui::font::Font::TITLE,
+            gui::font::Size::MEDIUM,
+            gui::font::Color::WHITE,
+            this->fonts,
+            WINDOW_HEIGHT / 2
+        );
+
+        this->addWidget(std::move(reflectedLightningSplashText));
+    }
 }
 
 void GUI::_layoutGameEscMenu() {

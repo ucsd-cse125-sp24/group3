@@ -238,7 +238,7 @@ bool Client::init() {
     auto exit_model_path = env_models_dir / "exit.obj";
     this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
 
-    auto player_model_path = graphics_assets_dir / "player_models/char_1/model_char_1.fbx";
+    auto player_model_path = graphics_assets_dir / "player_models/char_3/model_char_3.fbx";
     auto player_walk_path = graphics_assets_dir / "animations/walk.fbx";
     auto player_jump_path = graphics_assets_dir / "animations/jump.fbx";
     auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
@@ -542,17 +542,87 @@ void Client::processServerInput(bool allow_defer) {
             }
             else {
                 if (phase_change || (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME)) {
+                    std::cout << "game phase change!" << std::endl;
+
+                    //  Stop play menu theme music
+                    audioManager->stopMusic(ClientMusic::MenuTheme);
+                    
                     // set to Dungeon Master POV if DM
                     if (this->session->getInfo().is_dungeon_master.value()) {
                         this->cam = std::make_unique<DungeonMasterCamera>();
+
+                        //  Play Maze Exploration theme (DM)
+                        audioManager->playMusic(ClientMusic::MazeExplorationDMTheme);
+
                         // TODO: fix race condition where this doesn't get received in time when reconnecting because the server is doing way more stuff and is delayed
+                    }
+                    else {
+                        //  If player, play Maze Exploration theme (players)
+                        audioManager->playMusic(ClientMusic::MazeExplorationPlayersTheme);
                     }
 
                     this->gui_state = GUIState::GAME_HUD;
-
-                    audioManager->stopMusic(ClientMusic::TitleTheme);
-                    audioManager->playMusic(ClientMusic::GameTheme);
+                    
                     phase_change = false;
+                }
+                else if (this->gameState.phase == GamePhase::GAME || this->gameState.phase == GamePhase::RESULTS) {
+                    //  TODO: Keep track of the match phase and who won the match to play the correct client
+                    //  music
+
+                    if (this->gameState.phase == GamePhase::GAME) {
+                        //  Keep track of the match phase from the previous tick (though initialize to current tick
+                        //  for initialization)
+                        static MatchPhase previousMatchPhase = this->gameState.matchPhase;
+
+                        if (previousMatchPhase != this->gameState.matchPhase) {
+                            std::cout << "Match phase change!" << std::endl;
+
+                            previousMatchPhase = this->gameState.matchPhase;
+
+                            //  Play relay race theme
+                            if (this->session->getInfo().is_dungeon_master.value()) {
+                                std::cout << "Relay Race - DM!" << std::endl;
+
+                                //  Play DM relay race theme
+                                audioManager->stopMusic(ClientMusic::MazeExplorationDMTheme);
+
+                                audioManager->playMusic(ClientMusic::RelayRaceDMTheme);
+
+                            }
+                            else {
+                                //  Player in Relay Race
+                                std::cout << "Relay Race - Player!" << std::endl;
+
+                                //  Play Player relay race theme
+                                audioManager->stopMusic(ClientMusic::MazeExplorationPlayersTheme);
+
+                                audioManager->playMusic(ClientMusic::RelayRacePlayersTheme);
+                            }
+                        }
+                    }
+                    else {
+                        //  Game has ended - GamePhase::Results
+                        std::cout << "Game has ended! Playing victory music." << std::endl;
+
+                        //  Play victory theme of the team that won
+                        if (this->session->getInfo().is_dungeon_master.value()) {
+                            //  Stop relay race music of the DM
+                            audioManager->stopMusic(ClientMusic::RelayRaceDMTheme);
+                        }
+                        else {
+                            //  Stop relay race music of the Players
+                            audioManager->stopMusic(ClientMusic::RelayRacePlayersTheme);
+                        }
+
+                        //  Play victory theme for team that won
+                        if (this->gameState.playerVictory) {
+                            audioManager->playSFX(ClientSFX::VictoryThemePlayers);
+                        }
+                        else {
+                            audioManager->playSFX(ClientSFX::VictoryThemeDM);
+                        }
+                    }
+
                 }
             }
         } else if (event.type == EventType::LoadSoundCommands) {
@@ -579,7 +649,7 @@ void Client::processServerInput(bool allow_defer) {
             const auto& data = boost::get<LoadIntroCutsceneEvent>(event.data);
             this->intro_cutscene = data;
             this->gui_state = GUIState::INTRO_CUTSCENE;
-            this->audioManager->stopMusic(ClientMusic::TitleTheme);
+            this->audioManager->stopMusic(ClientMusic::MenuTheme);
         }
 
         this->events_received.pop_front();
@@ -1055,11 +1125,16 @@ void Client::geometryPass() {
                 }
                 break;
             }
-            // case ObjectType::Torchlight: {
-            //     this->torchlight_model->setDimensions(2.0f * sharedObject->physics.dimensions);
-            //     this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-            //     this->torchlight_model->draw(this->deferred_geometry_shader.get(), this->cam->getPos(), true);
-            //  }
+            case ObjectType::Mirror: {
+                if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
+                    this->item_model->setDimensions(sharedObject->physics.dimensions);
+                    this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    this->item_model->draw(this->deferred_geometry_shader.get(),
+                        this->cam->getPos(),
+                        true);
+                }
+                break;
+            }
             default:
                 break;
         }
@@ -1232,7 +1307,7 @@ void Client::drawBbox(boost::optional<SharedObject> object) {
 // callbacks - for Interaction
 void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (this->gui_state == GUIState::INITIAL_LOAD) {
-        this->audioManager->playMusic(ClientMusic::TitleTheme);
+        this->audioManager->playMusic(ClientMusic::MenuTheme);
         this->gui_state = GUIState::TITLE_SCREEN;
         return;
     }
@@ -1468,11 +1543,12 @@ void Client::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) 
     auto self = this->gameState.objects.at(eid.value());
 
     if (yoffset >= 1) {
+        this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), -1)));
+
         if (is_dm.has_value() && is_dm.value()) {
             // optimistic update on scroll, otherwise might lag
             int idx = self->trapInventoryInfo->selected;
 
-            this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), -1)));
 
             if (idx - 1 == 0)
                 idx = TRAP_INVENTORY_SIZE;
@@ -1484,11 +1560,11 @@ void Client::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) 
     }
 
     if (yoffset <= -1) {
+        this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
+
         if (is_dm.has_value() && is_dm.value()) {
             // optimistic update on scroll, otherwise might lag
             int idx = self->trapInventoryInfo->selected;
-
-            this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
 
             if (idx + 1 > TRAP_INVENTORY_SIZE)
                 idx = 1;

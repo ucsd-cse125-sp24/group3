@@ -9,25 +9,30 @@ using namespace std::chrono_literals;
 // Sounds that the client can decide to play on its own
 // (e.g. BGM, clicking on UI elements...)
 enum class ClientMusic {
-    TitleTheme,
-    GameTheme,
+    MenuTheme,
+    MazeExplorationPlayersTheme,
+    MazeExplorationDMTheme,
+    RelayRacePlayersTheme,
+    RelayRaceDMTheme
     // make sure to add to macro below!
 };
 
 #define GET_CLIENT_MUSICS() { \
-    ClientMusic::TitleTheme, ClientMusic::GameTheme \
+    ClientMusic::MenuTheme, ClientMusic::MazeExplorationPlayersTheme, \
+    ClientMusic::MazeExplorationDMTheme, ClientMusic::RelayRacePlayersTheme, \
+    ClientMusic::RelayRaceDMTheme \
 }
 
 enum class ClientSFX {
     // TODO: decide what these are
-    TEMP,
+    VictoryThemePlayers,
+    VictoryThemeDM
     // make sure to add to macro below!
 };
 
-// need to reenable in the function that iterates through this when we add the first sfx
-#define GET_CLIENT_SFXS() {} // \
-    // ClientSFX::TEMP, \
-// }
+#define GET_CLIENT_SFXS() { \
+    ClientSFX::VictoryThemePlayers, ClientSFX::VictoryThemeDM, \
+}
 
 // Sounds that correspond to something in the game world
 enum class ServerSFX {
@@ -58,6 +63,7 @@ enum class ServerSFX {
     Spell,
     ItemPickUp,
     ItemDrop,
+    MirrorShatter,
     TEMP,
     PlayersStartTheme,
     ZeusStartTheme,
@@ -103,7 +109,8 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     {ServerSFX::Potion,             500ms},
     {ServerSFX::Spell,              500ms},
     {ServerSFX::ItemPickUp,         500ms},
-    {ServerSFX::ItemDrop,           500ms}
+    {ServerSFX::ItemDrop,           500ms},
+    {ServerSFX::MirrorShatter,      2000ms},
     // dont forget macro below!
 };
 
@@ -115,7 +122,8 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     ServerSFX::Dagger, ServerSFX::Sword, ServerSFX::Hammer, ServerSFX::Minotaur, ServerSFX::Python, \
     ServerSFX::PlayersStartTheme, ServerSFX::ElectricHum, ServerSFX::IntroGateOpen, ServerSFX::ZeusStartTheme, \
     ServerSFX::Wind, \
-    ServerSFX::Teleport, ServerSFX::Potion, ServerSFX::Spell, ServerSFX::ItemPickUp, ServerSFX::ItemDrop \
+    ServerSFX::Teleport, ServerSFX::Potion, ServerSFX::Spell, ServerSFX::ItemPickUp, ServerSFX::ItemDrop, \
+    ServerSFX::MirrorShatter \
 }
 
 // const std::unordered_map<ServerSound, size_t> serverSoundTickLengths = {

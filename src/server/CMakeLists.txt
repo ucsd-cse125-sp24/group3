@@ -37,6 +37,7 @@ set(FILES
     game/minotaur.cpp
     game/python.cpp
     game/introcutscene.cpp
+    game/mirror.cpp
     audio/soundtable.cpp
 )
 

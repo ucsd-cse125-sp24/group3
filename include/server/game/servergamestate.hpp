@@ -141,6 +141,19 @@ public:
 
 	void deleteEntities();
 
+	/**
+	 * @brief Updates player's lightning invulnerability status
+	 * (sets to false once the player's lightning invulnerability duration
+	 * is past)
+	 */
+	void updatePlayerLightningInvulnerabilityStatus();
+
+	/**
+	 * @brief Updates the DungeonMaster's paralysis status
+	 * (sets to false once the DungeonMaster's paralysis duration is past)
+	 */
+	void updateDungeonMasterParalysis();
+
 	/*	SharedGameState generation	*/
 
 	//	TODO: Modify this function to dynamically allocate a SharedGameState

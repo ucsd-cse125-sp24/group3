@@ -73,6 +73,10 @@
 #define	DM_MANA_REGEN			1
 #define	LIGHTNING_MANA			10
 
+/*	Mirror Item	*/
+//	Mirror use duration in seconds
+#define	MIRROR_USE_DURATION		30
+
 /*	Game	*/
 #define	GRAVITY					0.03f
 #define	PLAYER_SPEED 			1.65f

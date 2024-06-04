@@ -9,6 +9,11 @@ static auto audio_dir = getRepoRoot() / "assets" / "sounds";
 std::string getAudioPath(ClientSFX sound) {
     static auto dir = audio_dir / "client_sfx";
     switch (sound) {
+        case ClientSFX::VictoryThemePlayers:
+            return (dir / "victory_players.flac").string();
+        case ClientSFX::VictoryThemeDM:
+            //  TODO: Replace with DM Victory theme!
+            return (dir / "victory_players.flac").string();
         default:
             std::cerr << "FATAL: no known path for ClientSFX " << static_cast<int>(sound) << std::endl;
             std::exit(1);
@@ -82,6 +87,8 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "itempickup.wav").string();
         case ServerSFX::ItemDrop:
             return (dir / "itemdrop.wav").string();
+        case ServerSFX::MirrorShatter:
+            return (dir / "mirror_shatter.mp3").string();
         
         default:
             std::cerr << "FATAL: no known path for ServerSFX " << static_cast<int>(sfx) << std::endl;
@@ -93,10 +100,18 @@ std::string getAudioPath(ClientMusic music) {
     static auto dir = audio_dir / "client_music";
 
     switch (music) {
-        case ClientMusic::TitleTheme:
-            return (dir / "piano.wav").string();
-        case ClientMusic::GameTheme:
-            return (dir / "maze.mp3").string();
+        case ClientMusic::MenuTheme:
+            //  TODO: Replace with menu theme!
+            return (dir / "relay_race_players.mp3").string();
+        case ClientMusic::MazeExplorationPlayersTheme:
+            return (dir / "maze_exploration_players.flac").string();
+        case ClientMusic::MazeExplorationDMTheme:
+            return (dir / "maze_exploration_dm.flac").string();
+        case ClientMusic::RelayRacePlayersTheme:
+            return (dir / "relay_race_players.mp3").string();
+        case ClientMusic::RelayRaceDMTheme:
+            //  TODO: Replace with DM Relay Race theme!
+            return (dir / "maze_exploration_dm.flac").string();
         default:
             std::cerr << "FATAL: no known path for ClientMusic " << static_cast<int>(music) << std::endl;
             std::exit(1);

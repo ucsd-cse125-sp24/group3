@@ -1,7 +1,9 @@
 #include "server/game/object.hpp"
+#include "server/game/item.hpp"
 #include "server/game/constants.hpp"
 #include "server/game/creature.hpp"
 #include "server/game/weaponcollider.hpp"
+#include "server/game/mirror.hpp"
 #include "server/game/servergamestate.hpp"
 #include "shared/audio/constants.hpp"
 #include <chrono>
@@ -31,6 +33,67 @@ void WeaponCollider::doCollision(Object* other, ServerGameState& state) {
     // don't dmg yourself
     if (this->usedPlayer != nullptr) {
         if (creature->globalID == this->usedPlayer->globalID) return;
+    }
+
+    //  If this weapon collider is a lightning bolt and it collides with
+    //  a Player whose currently using a Mirror, then don't do any damage
+    //  to the player and destroy the player's mirror.
+    //  Also, paralyze the DM for some amount of time.
+    if (this->info.lightning && creature->type == ObjectType::Player) {
+        std::cout << "Applying lightning damage!" << std::endl;
+        Player* player = dynamic_cast<Player*>(creature);
+
+        //  Return early if this player is currently invulnerable to lightning
+        if (player->isInvulnerableToLightning()) {
+            std::cout << "Player is invulnerable to lightning - applying no damage." << std::endl;
+            return;
+        }
+        
+        for (int i = 0; i < player->inventory.size(); i++) {
+            if (player->inventory[i] == -1)
+                continue;
+
+            //  Get item
+            Item* item = state.objects.getItem(player->inventory[i]);
+
+            //  If the item is a mirror and is used, then apply special
+            //  behavior
+            if (item->type == ObjectType::Mirror && item->iteminfo.used) {
+                std::cout << "Player using a mirror got hit by a lightning bolt!" << std::endl;
+                std::cout << "Deleting mirror!" << std::endl;
+
+                Mirror* mirror = dynamic_cast<Mirror*>(item);
+
+                //  Add mirror shatter sound effect
+                state.soundTable().addNewSoundSource(SoundSource(
+                    ServerSFX::MirrorShatter,
+                    player->physics.shared.corner,
+                    FULL_VOLUME,
+                    FAR_DIST,
+                    FAR_ATTEN
+                ));
+
+                //  Mark player as invulnerable to lightning for 1 second
+                player->setInvulnerableToLightning(true, 1);
+
+                //  Inform player they successfully relfected a lightning bolt
+                //  using a mirror
+                player->info.used_mirror_to_reflect_lightning = true;
+
+                //  Destroy the mirror that the player is holding
+                mirror->dropItem(player, state, i, 0.0f);
+                state.markForDeletion(item->globalID);
+
+                //  Remove mirror from player's list of used items
+                player->sharedInventory.usedItems.erase(item->typeID);
+
+                //  Paralyze the DM for 5 seconds
+                state.objects.getDM()->setParalysis(true, 5);
+
+                //  Don't apply damage to the player
+                return;
+            }
+        }
     }
     
     // do damage if creature
