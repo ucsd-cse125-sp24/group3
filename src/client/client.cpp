@@ -600,6 +600,10 @@ void Client::geometryPass() {
     bool is_dm = this->session->getInfo().is_dungeon_master.value();
     glm::vec3 my_pos = this->gameState.objects[eid]->physics.corner;
 
+    double currentTime = glfwGetTime();
+    double timeElapsed = currentTime - lastTime;
+    lastTime = currentTime;
+
     // draw all objects to g-buffer
     for (auto& [id, sharedObject] : this->gameState.objects) {
         if (!sharedObject.has_value()) {
@@ -628,6 +632,7 @@ void Client::geometryPass() {
 
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
+                    pos.z += 3.0f;
                     cam->updatePos(pos);
 
                     // update listener position & facing
@@ -643,12 +648,12 @@ void Client::geometryPass() {
                     if (!sharedObject->playerInfo->is_alive) {
                         this->gui_state = GUIState::DEAD_SCREEN;
                     }
-                    break;
+                    // break;
                 }
                 animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
 
                 /* Update model animation */
-                animManager->updateAnimation(0.025f);
+                animManager->updateAnimation(timeElapsed);
                 auto transforms = animManager->getFinalBoneMatrices();
 
                 for (int i = 0; i < (transforms.size() < 100 ? transforms.size() : 100); ++i) {
