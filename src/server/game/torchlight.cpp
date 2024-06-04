@@ -78,9 +78,21 @@ void Torchlight::init() {
 
 Torchlight::~Torchlight() {}
 
-void Torchlight::doTick(ServerGameState& state) {
+void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> light_cut_pos) {
     if(!this->properties.flickering) {
         return;
+    }
+
+    // cut this light if within position of light cut
+    if (light_cut_pos.has_value()) {
+        glm::vec3 pos = light_cut_pos.value();
+
+        // if within threshold, get out
+        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= 100.0f) {
+            this->curr_intensity = 0.0f;
+            std::cout << "A LIGHT CUT OUT!" << std::endl;
+            return;
+        }
     }
 
     // either increment or decrement intensity

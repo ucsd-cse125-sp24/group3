@@ -53,7 +53,7 @@ public:
      * animations
      * @parm current ServerGameState
      */
-    void doTick(ServerGameState& state);
+    void doTick(ServerGameState& state, std::optional<glm::vec3> light_cut_pos);
 
     /**
      * @brief get current intensity of torch from 0-1
@@ -70,8 +70,10 @@ private:
 
     // curr_step from 0-1 in flickering animation
     float curr_step;
+
     // how much the intensity should change on every server tick
     float flickering_speed; 
+
     // if the flickering animation is inceasing in
     // intensity or decreasing
     bool inc_intensity;

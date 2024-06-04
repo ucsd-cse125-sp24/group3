@@ -1171,25 +1171,25 @@ void Client::lightingPass() {
     auto camPos = this->cam->getPos();
     lighting_shader->setVec3("viewPos", camPos);
 
-    if (is_dm) {
-        auto ambient = glm::vec3(0.1, 0.1, 0.1);
-        auto diffuse = glm::vec3(0.1, 0.1, 0.1);
-        auto specular = glm::vec3(0.1, 0.1, 0.1);
-        std::array<DirLight, 4> dirLights = {
-            DirLight{glm::vec3(1.0f, 0.0f, 0.0f), ambient, diffuse, specular},
-            DirLight{glm::vec3(-1.0f, 1.0f, 0.0f), ambient, diffuse, specular},
-            DirLight{glm::vec3(0.0f, 1.0f, 1.0f), ambient, diffuse, specular},
-            DirLight{glm::vec3(0.0f, 1.0f, -1.0f), ambient, diffuse, specular},
-        };
+    //if (is_dm) {
+    //    auto ambient = glm::vec3(0.1, 0.1, 0.1);
+    //    auto diffuse = glm::vec3(0.1, 0.1, 0.1);
+    //    auto specular = glm::vec3(0.1, 0.1, 0.1);
+    //    std::array<DirLight, 4> dirLights = {
+    //        DirLight{glm::vec3(1.0f, 0.0f, 0.0f), ambient, diffuse, specular},
+    //        DirLight{glm::vec3(-1.0f, 1.0f, 0.0f), ambient, diffuse, specular},
+    //        DirLight{glm::vec3(0.0f, 1.0f, 1.0f), ambient, diffuse, specular},
+    //        DirLight{glm::vec3(0.0f, 1.0f, -1.0f), ambient, diffuse, specular},
+    //    };
 
-        for (int i = 0; i < dirLights.size(); i++) {
-            std::string i_s = std::to_string(i);
-            lighting_shader->setVec3("dirLights[" + i_s + "].direction", dirLights[i].direction);
-            lighting_shader->setVec3("dirLights[" + i_s + "].ambient_color", ambient);
-            lighting_shader->setVec3("dirLights[" + i_s + "].diffuse_color", diffuse);
-            lighting_shader->setVec3("dirLights[" + i_s + "].specular_color", specular);
-        }
-    }
+    //    for (int i = 0; i < dirLights.size(); i++) {
+    //        std::string i_s = std::to_string(i);
+    //        lighting_shader->setVec3("dirLights[" + i_s + "].direction", dirLights[i].direction);
+    //        lighting_shader->setVec3("dirLights[" + i_s + "].ambient_color", ambient);
+    //        lighting_shader->setVec3("dirLights[" + i_s + "].diffuse_color", diffuse);
+    //        lighting_shader->setVec3("dirLights[" + i_s + "].specular_color", specular);
+    //    }
+    //}
 
     for (int i = 0; i < closest_lights->size(); i++) {
         boost::optional<SharedObject>& curr_source = closest_lights->at(i);
@@ -1201,6 +1201,10 @@ void Client::lightingPass() {
         glm::vec3 pos = curr_source->physics.getCenterPosition();
 
         lighting_shader->setFloat("pointLights[" + std::to_string(i) + "].intensity", properties.intensity);
+
+        if (properties.intensity == 0.0f)
+            std::cout << "light intensity is 0: " << properties.intensity << std::endl;
+
         lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", pos);
 
         lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].ambient_color", properties.ambient_color);

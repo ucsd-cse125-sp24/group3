@@ -65,6 +65,8 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->spawner->spawnDummy(*this);
 	this->spawner->spawnSmallDummy(*this);
 
+	this->dmCutLights = {};
+	this->lastLightCut = 0;
 
     MazeGenerator generator(config);
     int attempts = 1;
@@ -304,6 +306,7 @@ void ServerGameState::update(const EventList& events) {
 			break;
 
 		}
+
 		case EventType::SelectItem:
 		{
 			auto selectItemEvent = boost::get<SelectItemEvent>(event.data);
@@ -355,6 +358,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
+
 		case EventType::UseItem:
 		{
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
@@ -375,6 +379,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
+
 		case EventType::DropItem:
 		{
 			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
@@ -389,6 +394,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
+
 		case EventType::TrapPlacement: 
 		{
 			DungeonMaster* dm = this->objects.getDM();
@@ -457,6 +463,9 @@ void ServerGameState::update(const EventList& events) {
 
 						lightning->useLightning(dm, *this, corner);
 						dm->useMana();
+
+						this->dmCutLights = corner;
+						this->lastLightCut = this->timestep;
 					}
 
 					break;
@@ -779,6 +788,12 @@ void ServerGameState::update(const EventList& events) {
 	//	Only do this if the DM exists
 	if (this->objects.getDM() != nullptr)
 		updateDungeonMasterParalysis();
+	
+
+	// after some amount of timesteps NO CUT
+	//if (std::abs((int)(this->lastLightCut - this->timestep)) <= 50) {
+	//	this->dmCutLights = {};
+	//}
 	
 	//	Increment timestep
 	this->timestep++;
@@ -1185,11 +1200,14 @@ void ServerGameState::updateAttacks() {
 
 void ServerGameState::doTorchlightTicks() {
 	auto torchlights = this->objects.getTorchlights();
+
 	for (int t = 0; t < torchlights.size(); t++) {
 		auto torchlight = torchlights.get(t);
-		if (torchlight == nullptr) continue;
 
-		torchlight->doTick(*this);
+		if (torchlight == nullptr) 
+			continue;
+
+		torchlight->doTick(*this, this->dmCutLights);
 	}
 }
 
