@@ -238,7 +238,6 @@ bool Client::init() {
     auto exit_model_path = env_models_dir / "exit.obj";
     this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
 
-    auto player_model_path = graphics_assets_dir / "player_models/char_3/model_char_3.fbx";
     auto player_walk_path = graphics_assets_dir / "animations/walk.fbx";
     auto player_jump_path = graphics_assets_dir / "animations/jump.fbx";
     auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
@@ -246,22 +245,40 @@ bool Client::init() {
     auto player_atk_path = graphics_assets_dir / "animations/slash.fbx";
     auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
 
-    this->player_model = std::make_unique<Model>(player_model_path.string(), false);
-    Animation* player_walk = new Animation(player_walk_path.string(), this->player_model.get());
-    Animation* player_jump = new Animation(player_jump_path.string(), this->player_model.get());
-    Animation* player_idle = new Animation(player_idle_path.string(), this->player_model.get());
-    Animation* player_run = new Animation(player_run_path.string(), this->player_model.get());
-    Animation* player_atk = new Animation(player_atk_path.string(), this->player_model.get());
-    Animation* player_use_potion = new Animation(player_use_potion_path.string(), this->player_model.get());
+    auto fire_player_model_path = player_models_dir      / "char_1/model_char_1.fbx";
+    auto lightning_player_model_path = player_models_dir / "char_2/model_char_2.fbx";
+    auto water_player_model_path = player_models_dir     / "char_3/model_char_3.fbx";
 
-    animManager = new AnimationManager(player_idle);
+    this->fire_player_model = std::make_unique<Model>(fire_player_model_path.string(), false);
+    this->lightning_player_model = std::make_unique<Model>(lightning_player_model_path.string(), false);
+    this->water_player_model = std::make_unique<Model>(water_player_model_path.string(), false);
 
-    animManager->addAnimation(player_walk, ObjectType::Player, AnimState::WalkAnim);
-    animManager->addAnimation(player_jump, ObjectType::Player, AnimState::JumpAnim);
-    animManager->addAnimation(player_idle, ObjectType::Player, AnimState::IdleAnim);
-    animManager->addAnimation(player_run, ObjectType::Player, AnimState::SprintAnim);
-    animManager->addAnimation(player_atk, ObjectType::Player, AnimState::AttackAnim);
-    animManager->addAnimation(player_use_potion, ObjectType::Player, AnimState::DrinkPotionAnim);
+    const int NUM_PLAYER_MODELS = 3;
+    std::array<std::pair<ModelType, Model*>, NUM_PLAYER_MODELS> player_models = {
+        // for some reason the first one only works if it is std::make_pair but the other two are fine with the 
+        // curly brace syntax... WTF, just making them all use std::make_pair so they line up
+        std::make_pair(ModelType::PlayerFire,      this->fire_player_model.get()), 
+        std::make_pair(ModelType::PlayerLightning, this->lightning_player_model.get()), 
+        std::make_pair(ModelType::PlayerWater,     this->water_player_model.get())
+    };
+
+    animManager = new AnimationManager();
+
+    for (int i = 0; i < NUM_PLAYER_MODELS; i++) {
+        Animation* player_walk = new Animation(player_walk_path.string(), player_models.at(i).second);
+        Animation* player_jump = new Animation(player_jump_path.string(), player_models.at(i).second);
+        Animation* player_idle = new Animation(player_idle_path.string(), player_models.at(i).second);
+        Animation* player_run = new Animation(player_run_path.string(), player_models.at(i).second);
+        Animation* player_atk = new Animation(player_atk_path.string(), player_models.at(i).second);
+        Animation* player_use_potion = new Animation(player_use_potion_path.string(), player_models.at(i).second);
+
+        animManager->addAnimation(player_walk, player_models.at(i).first, AnimState::WalkAnim);
+        animManager->addAnimation(player_jump, player_models.at(i).first, AnimState::JumpAnim);
+        animManager->addAnimation(player_idle, player_models.at(i).first, AnimState::IdleAnim);
+        animManager->addAnimation(player_run, player_models.at(i).first, AnimState::SprintAnim);
+        animManager->addAnimation(player_atk, player_models.at(i).first, AnimState::AttackAnim);
+        animManager->addAnimation(player_use_potion, player_models.at(i).first, AnimState::DrinkPotionAnim);
+    }
 
     this->configureGBuffer();
 
@@ -820,7 +837,7 @@ void Client::geometryPass() {
                     }
                     break;
                 }
-                animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
+                animManager->setAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
 
                 /* Update model animation */
                 animManager->updateAnimation(timeElapsed);
@@ -841,11 +858,28 @@ void Client::geometryPass() {
                     player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
                 }
                 player_dir.y = 0.0f;
-                this->player_model->rotateAbsolute(glm::normalize(player_dir), true);
-                this->player_model->translateAbsolute(player_pos);
-                // this->player_model->setDimensions(sharedObject->physics.dimensions);
-                this->player_model->scaleAbsolute(PLAYER_MODEL_SCALE);
-                this->player_model->draw(
+
+                Model* curr_player_model;
+                switch (sharedObject->modelType) {
+                    case ModelType::PlayerFire: 
+                        curr_player_model = this->fire_player_model.get();
+                        break;
+                    case ModelType::PlayerLightning:
+                        curr_player_model = this->lightning_player_model.get();
+                        break;
+                    case ModelType::PlayerWater:
+                        curr_player_model = this->water_player_model.get();
+                        break;
+                    default:
+                        std::cerr << "WARNING: player with non valid model type detected, defaulting to fire...";
+                        curr_player_model = this->fire_player_model.get();
+                        break;
+                }
+
+                curr_player_model->rotateAbsolute(glm::normalize(player_dir), true);
+                curr_player_model->translateAbsolute(player_pos);
+                curr_player_model->scaleAbsolute(PLAYER_MODEL_SCALE);
+                curr_player_model->draw(
                     this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
@@ -854,29 +888,30 @@ void Client::geometryPass() {
             }
             // CHANGE THIS
             case ObjectType::DungeonMaster: {
-                // don't render yourself
-                if (sharedObject->globalID == self_eid) {
-                    //  TODO: Update the player eye level to an acceptable level
-                    glm::vec3 pos = sharedObject->physics.getCenterPosition();
-                    pos.y += PLAYER_EYE_LEVEL;
-                    cam->updatePos(pos);
-                    break;
-                }
+                // shouldn't render DM at all?
 
-                auto player_pos = sharedObject->physics.corner;
-                auto player_dir = sharedObject->physics.facing;
+                // if (sharedObject->globalID == self_eid) {
+                //     //  TODO: Update the player eye level to an acceptable level
+                //     glm::vec3 pos = sharedObject->physics.getCenterPosition();
+                //     pos.y += PLAYER_EYE_LEVEL;
+                //     cam->updatePos(pos);
+                //     break;
+                // }
 
-                // this->player_model->setDimensions(sharedObject->physics.dimensions);
-                this->player_model->translateAbsolute(player_pos);
-                if (player_dir == glm::vec3(0.0f)) {
-                    player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
-                }
-                player_dir.y = 0.0f;
-                this->player_model->rotateAbsolute(glm::normalize(player_dir), true);
-                this->player_model->draw(
-                    this->deferred_geometry_shader.get(),
-                    this->cam->getPos(),
-                    true);
+                // auto player_pos = sharedObject->physics.corner;
+                // auto player_dir = sharedObject->physics.facing;
+
+                // // this->player_model->setDimensions(sharedObject->physics.dimensions);
+                // this->player_model->translateAbsolute(player_pos);
+                // if (player_dir == glm::vec3(0.0f)) {
+                //     player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
+                // }
+                // player_dir.y = 0.0f;
+                // this->player_model->rotateAbsolute(glm::normalize(player_dir), true);
+                // this->player_model->draw(
+                //     this->deferred_geometry_shader.get(),
+                //     this->cam->getPos(),
+                //     true);
                 break;
             }
             case ObjectType::Slime: {

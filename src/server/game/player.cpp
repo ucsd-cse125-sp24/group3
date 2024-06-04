@@ -14,7 +14,7 @@ SharedObject Player::toShared() {
 }
 
 Player::Player(glm::vec3 corner, glm::vec3 facing):
-    Creature(ObjectType::Player, corner, facing, ModelType::Player, SharedStats(
+    Creature(ObjectType::Player, corner, facing, ModelType::PlayerFire, SharedStats(
         Stat(0, 100, 100),
         Stat(0, 10, 5)
     )),
