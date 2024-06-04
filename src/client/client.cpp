@@ -630,9 +630,8 @@ void Client::geometryPass() {
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
                     //  TODO: Update the player eye level to an acceptable level
 
-                    glm::vec3 pos = sharedObject->physics.getCenterPosition();
+                    glm::vec3 pos = sharedObject->physics.getCenterPosition() - (sharedObject->physics.dimensions.y / 2.0f);
                     pos.y += PLAYER_EYE_LEVEL;
-                    pos.z += 3.0f;
                     cam->updatePos(pos);
 
                     // update listener position & facing
@@ -648,7 +647,7 @@ void Client::geometryPass() {
                     if (!sharedObject->playerInfo->is_alive) {
                         this->gui_state = GUIState::DEAD_SCREEN;
                     }
-                    // break;
+                    break;
                 }
                 animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
 
@@ -662,7 +661,7 @@ void Client::geometryPass() {
 
                 if (!sharedObject->playerInfo->render) { break; } // dont render while invisible
 
-                auto player_pos = sharedObject->physics.getCenterPosition();
+                auto player_pos = sharedObject->physics.getCenterPosition() - (sharedObject->physics.dimensions.y / 2.0f);
                 auto player_dir = sharedObject->physics.facing;
 
                 if (player_dir == glm::vec3(0.0f)) {
