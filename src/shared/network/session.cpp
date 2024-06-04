@@ -15,7 +15,6 @@ Session::Session(tcp::socket socket, SessionInfo info):
     socket(std::move(socket)),
     info(info)
 {
-    this->socket.set_option(boost::asio::ip::tcp::no_delay(true));
     this->okay = true;
 }
 
