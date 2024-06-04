@@ -107,7 +107,6 @@ ServerGameState::~ServerGameState() {}
 /*	SharedGameState generation	*/
 std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_all) {
 	std::vector<SharedGameState> partial_updates;
-	auto all_objects = this->objects.toShared();
 
 	auto getUpdateTemplate = [this]() {
 		SharedGameState curr_update;
@@ -122,6 +121,8 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 	};
 
 	if (send_all) {
+		auto all_objects = this->objects.toShared();
+
 		for (int i = 0; i < all_objects.size(); i += OBJECTS_PER_UPDATE) {
 			SharedGameState curr_update = getUpdateTemplate();
 
@@ -137,7 +138,14 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 
 		int num_in_curr_update = 0;
 		for (EntityID id : this->updated_entities) {
-			curr_update.objects.insert({id, all_objects.at(id)});
+
+			Object* obj = this->objects.getObject(id);
+			if (obj == nullptr) {
+				curr_update.objects.insert({ id, boost::none });
+			} else {
+				curr_update.objects.insert({ id, obj->toShared() });
+			}
+
 			num_in_curr_update++;
 
 			if (num_in_curr_update >= OBJECTS_PER_UPDATE) {
