@@ -1646,14 +1646,10 @@ void GUI::_layoutGameHUD() {
     this->addWidget(std::move(matchPhaseFlex));
 
     // Show death or timer on the top
-    auto death_timeflex = widget::Flexbox::make(
-        glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(50))),
-        glm::vec2(WINDOW_WIDTH, 0),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
-    );
 
     //  Add timer string
     if (client->gameState.matchPhase == MatchPhase::RelayRace) {
+        /*
         std::string timerString = "Time Left: ";
         int timerSeconds = client->gameState.timesteps_left * ((float)TIMESTEP_LEN.count()) / 1000;
         timerString += std::to_string(timerSeconds);
@@ -1664,22 +1660,30 @@ void GUI::_layoutGameHUD() {
             timerString,
             fonts,
             widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
-        ));
+        )); */
     }
     else {
-        //  Add player deaths string
-        std::string playerDeathsString = std::to_string(client->gameState.numPlayerDeaths)
-            + " / " + std::to_string(PLAYER_DEATHS_TO_RELAY_RACE)
-            + " Player Deaths";
-
-        death_timeflex->push(widget::DynText::make(
-            playerDeathsString,
-            fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
-        ));
+        auto death_flexBG = widget::Flexbox::make(
+            glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(100))),
+            glm::vec2(WINDOW_WIDTH, 0),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        death_flexBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SkullBG), 2));
+        this->addWidget(std::move(death_flexBG));
+        auto death_flex = widget::Flexbox::make(
+            glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(90))),
+            glm::vec2(WINDOW_WIDTH, 0),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        for(int i = 0; i < PLAYER_DEATHS_TO_RELAY_RACE; i++){
+            if(PLAYER_DEATHS_TO_RELAY_RACE - client->gameState.numPlayerDeaths > i){
+                death_flex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Skull), 2));
+            } else {
+                death_flex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DestroyedSkull), 2));
+            }  
+        }
+        this->addWidget(std::move(death_flex));
     }
-
-    this->addWidget(std::move(death_timeflex));
 
     auto txtHeight = font::getRelativePixels(170);
     if (!this->config.client.fullscreen) {
@@ -1863,6 +1867,22 @@ void GUI::_layoutGameHUD() {
 }
 
 void GUI::_layoutGameEscMenu() {
+    auto self_eid = client->session->getInfo().client_eid;
+    auto is_dm = client->session->getInfo().is_dungeon_master;
+
+    auto exitBG = widget::Flexbox::make(
+        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(50)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
+    );
+    if(!is_dm.value()){
+        exitBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::EventBG), 2));
+    } else {
+        exitBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMEventBG), 2));
+    }
+    
+    this->addWidget(std::move(exitBG));
+
     auto exit_game_txt = widget::DynText::make(
         "(Exit Game)",
         fonts,
