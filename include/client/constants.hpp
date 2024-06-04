@@ -8,7 +8,7 @@
 #define UNIT_WINDOW_WIDTH  1920
 #define UNIT_WINDOW_HEIGHT 1080
 
-#define PLAYER_EYE_LEVEL 2.35f
+#define PLAYER_EYE_LEVEL 3.35f
 
 // distance threshold of which objects
 // to render

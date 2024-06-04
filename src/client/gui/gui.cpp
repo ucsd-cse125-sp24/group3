@@ -163,6 +163,10 @@ void GUI::layoutFrame(GUIState state) {
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             this->_layoutLobbyBrowser();
             break;
+        case GUIState::INTRO_CUTSCENE:
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            // draw nothing
+            break;
         case GUIState::GAME_HUD:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -380,7 +384,7 @@ void GUI::_layoutLobby() {
         this->client->gameState.lobby.name,
         font::Font::MENU,
         font::Size::LARGE,
-        font::Color::BLACK,
+        font::Color::WHITE,
         this->fonts,
         lobby_title_height
     );
@@ -392,9 +396,9 @@ void GUI::_layoutLobby() {
 
     //  Define table column widths
     //glm::vec3 columnWidths(400.0f, 850.0f, 400.0f);
-    glm::vec3 columnWidths(font::getRelativePixels(400.0f), 
-        font::getRelativePixels(900.0f),
-        font::getRelativePixels(400.0f));
+    glm::vec3 columnWidths(font::getRelativePixelsHorizontal(400.0f), 
+        font::getRelativePixelsHorizontal(900.0f),
+        font::getRelativePixelsHorizontal(400.0f));
 
     float rowHeight = font::getFontSizePx(font::Size::LARGE);
 
@@ -425,7 +429,7 @@ void GUI::_layoutLobby() {
         widget::DynText::Options(
             font::Font::TEXT,
             font::Size::MEDIUM,
-            font::Color::BLACK
+            font::Color::WHITE
         )
     );
 
@@ -549,7 +553,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         widget::DynText::Options(
             font::Font::TEXT,
             font::Size::MEDIUM,
-            font::Color::BLACK
+            font::Color::WHITE
         )
     );
 
@@ -627,7 +631,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             widget::DynText::Options(
                 font::Font::TEXT,
                 font::Size::MEDIUM,
-                font::Color::BLACK
+                font::Color::WHITE
             )
         );
 
@@ -650,7 +654,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             widget::DynText::Options(
                 font::Font::TEXT,
                 font::Size::MEDIUM,
-                font::Color::BLACK
+                font::Color::WHITE
             )
         );
 
@@ -669,7 +673,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             widget::DynText::Options(
                 font::Font::TEXT,
                 font::Size::MEDIUM,
-                font::Color::BLACK
+                font::Color::WHITE
             )
         );
 
@@ -680,7 +684,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             widget::DynText::Options(
                 font::Font::TEXT,
                 font::Size::MEDIUM,
-                font::Color::BLACK
+                font::Color::WHITE
             )
         );
 
@@ -798,7 +802,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             widget::DynText::Options(
                 font::Font::TEXT,
                 font::Size::MEDIUM,
-                font::Color::BLACK
+                font::Color::WHITE
             )
         );
 
@@ -859,7 +863,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             widget::DynText::Options(
                 font::Font::TEXT,
                 font::Size::MEDIUM,
-                font::Color::BLACK
+                font::Color::WHITE
             )
         );
 

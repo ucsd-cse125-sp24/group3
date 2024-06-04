@@ -21,6 +21,15 @@ std::unordered_map<EntityID, std::vector<SoundCommand>> SoundTable::getCommandsP
 
     for (const auto& obj : players) {
         for (const SoundCommand& command : commands) {
+            // hack to prevent the dm and players from hearing the wrong sounds in intro cutscene...
+            if ((command.source.sfx == ServerSFX::ZeusStartTheme ||
+                 command.source.sfx == ServerSFX::Wind) && obj->type ==ObjectType::Player) {
+                continue;
+            }
+            if (command.source.sfx == ServerSFX::PlayersStartTheme && obj->type == ObjectType::DungeonMaster) {
+                continue;
+            }
+
             if (command.source.canBeHeardFrom(obj->physics.shared.getCenterPosition())) {
                 commands_per_player[obj->globalID].push_back(command);
             }

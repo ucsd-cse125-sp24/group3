@@ -247,7 +247,6 @@ bool Client::init() {
     auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
 
     this->player_model = std::make_unique<Model>(player_model_path.string(), false);
-    this->player_model->scaleAbsolute(0.0025);
     Animation* player_walk = new Animation(player_walk_path.string(), this->player_model.get());
     Animation* player_jump = new Animation(player_jump_path.string(), this->player_model.get());
     Animation* player_idle = new Animation(player_idle_path.string(), this->player_model.get());
@@ -295,7 +294,10 @@ void Client::displayCallback() {
     if (this->gameState.phase == GamePhase::TITLE_SCREEN) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     } else if (this->gameState.phase == GamePhase::LOBBY) {
-        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    } else if (this->gameState.phase == GamePhase::INTRO_CUTSCENE) {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        this->draw();
     } else if (this->gameState.phase == GamePhase::GAME) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         this->draw();
@@ -540,10 +542,8 @@ void Client::processServerInput(bool allow_defer) {
             }
             else {
                 if (phase_change || (old_phase != GamePhase::GAME && this->gameState.phase == GamePhase::GAME)) {
-                    std::cout << "game phase change!" << std::endl;
                     // set to Dungeon Master POV if DM
                     if (this->session->getInfo().is_dungeon_master.value()) {
-                        std::cout << "dungeon master cam!" << std::endl;
                         this->cam = std::make_unique<DungeonMasterCamera>();
                         // TODO: fix race condition where this doesn't get received in time when reconnecting because the server is doing way more stuff and is delayed
                     }
@@ -575,6 +575,11 @@ void Client::processServerInput(bool allow_defer) {
                 // update intensity with incoming intensity 
                 this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
             }
+        } else if (event.type == EventType::LoadIntroCutscene) {
+            const auto& data = boost::get<LoadIntroCutsceneEvent>(event.data);
+            this->intro_cutscene = data;
+            this->gui_state = GUIState::INTRO_CUTSCENE;
+            this->audioManager->stopMusic(ClientMusic::TitleTheme);
         }
 
         this->events_received.pop_front();
@@ -662,16 +667,44 @@ void Client::geometryPass() {
     this->deferred_geometry_shader->setMat4("viewProj", viewProj);
     // this->deferred_geometry_shader->setMat4("finalBonesMatrices[0]", transforms[i]);
 
-    auto eid = this->session->getInfo().client_eid.value();
+    if (!this->session->getInfo().client_eid.has_value()) {
+        std::cerr << "WARNING: trying to do geometry loop without knowing self eid\n";
+        return;
+    }
+
+    EntityID self_eid = this->session->getInfo().client_eid.value();
     bool is_dm = this->session->getInfo().is_dungeon_master.value();
-    glm::vec3 my_pos = this->gameState.objects[eid]->physics.corner;
+    std::unordered_map<EntityID, boost::optional<SharedObject>>* objects = &this->gameState.objects;
+    if (this->gameState.phase == GamePhase::INTRO_CUTSCENE) {
+        if (!this->intro_cutscene.has_value()) {
+            return; // haven't received cutscene packet yet
+        }
+
+        // use different values for the intro cutscene
+        if (is_dm) {
+            self_eid = this->intro_cutscene->dm_eid;
+            // look down
+            this->cam->update(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 5);
+        } else {
+            self_eid = this->intro_cutscene->pov_eid;
+            // look straight ahead
+            this->cam->update(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+        }
+        objects = &this->intro_cutscene->state.objects;
+    }
+
+    glm::vec3 my_pos = (*objects)[self_eid]->physics.corner;
+
+    double currentTime = glfwGetTime();
+    double timeElapsed = currentTime - lastTime;
+    lastTime = currentTime;
 
     double currentTime = glfwGetTime();
     double timeElapsed = currentTime - lastTime;
     lastTime = currentTime;
 
     // draw all objects to g-buffer
-    for (auto& [id, sharedObject] : this->gameState.objects) {
+    for (auto& [id, sharedObject] : *objects) {
         if (!sharedObject.has_value()) {
             continue;
         }
@@ -693,7 +726,7 @@ void Client::geometryPass() {
         switch (sharedObject->type) {
             case ObjectType::Player: {
                 // don't render yourself
-                if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+                if (sharedObject->globalID == self_eid) {
                     //  TODO: Update the player eye level to an acceptable level
 
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
@@ -739,6 +772,7 @@ void Client::geometryPass() {
                 player_dir.y = 0.0f;
                 this->player_model->rotateAbsolute(glm::normalize(player_dir), true);
                 this->player_model->translateAbsolute(player_pos);
+                this->player_model->setDimensions(sharedObject->physics.dimensions);
                 this->player_model->draw(
                     this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
@@ -748,14 +782,13 @@ void Client::geometryPass() {
             // CHANGE THIS
             case ObjectType::DungeonMaster: {
                 // don't render yourself
-                if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
+                if (sharedObject->globalID == self_eid) {
                     //  TODO: Update the player eye level to an acceptable level
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
                     break;
                 }
-                auto lightPos = glm::vec3(0.0f, 10.0f, 0.0f);
 
                 auto player_pos = sharedObject->physics.corner;
                 auto player_dir = sharedObject->physics.facing;
@@ -989,14 +1022,17 @@ void Client::geometryPass() {
                 break;
             }
             case ObjectType::WeaponCollider: {
-                /*
                 if (sharedObject->weaponInfo->lightning) {
                     if (!sharedObject->weaponInfo->attacked) {
-                        this->item_model->setDimensions(sharedObject->physics.dimensions);
-                        this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        glm::vec3 preview_dims = sharedObject->physics.dimensions;
+                        preview_dims.y = 0.01f;
+                        this->item_model->setDimensions(preview_dims);
+                        glm::vec3 preview_pos = sharedObject->physics.getCenterPosition();
+                        preview_pos.y = 0.0f;
+                        this->item_model->translateAbsolute(preview_pos);
                         this->item_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(),
-                            false);
+                            true);
                     } else {
                         this->item_model->setDimensions(sharedObject->physics.dimensions);
                         this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
@@ -1013,7 +1049,7 @@ void Client::geometryPass() {
                             this->cam->getPos(),
                             false);
                     }
-                }*/
+                }
                 break;
             }
             // case ObjectType::Torchlight: {
@@ -1038,9 +1074,26 @@ void Client::lightingPass() {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
 
-    bool is_dm = this->session->getInfo().is_dungeon_master.value();
+    auto* closest_lights = &this->closest_light_sources;
+    auto* gamestate_objects = &this->gameState.objects;
     auto eid = this->session->getInfo().client_eid.value();
-    glm::vec3 my_pos = this->gameState.objects[eid]->physics.corner;
+    bool is_dm = this->session->getInfo().is_dungeon_master.value();
+    if (this->gameState.phase == GamePhase::INTRO_CUTSCENE) {
+        if (!this->intro_cutscene.has_value()) {
+            return; // don't have cutscene info yet
+        }
+
+        // replace with intro cutscene state
+        closest_lights = &this->intro_cutscene->lights;
+        gamestate_objects = &this->intro_cutscene->state.objects;
+        if (is_dm) {
+            eid = this->intro_cutscene->dm_eid;
+        } else {
+            eid = this->intro_cutscene->pov_eid;
+        }
+    }
+
+    glm::vec3 my_pos = gamestate_objects->at(eid)->physics.corner;
 
     std::shared_ptr<Shader> lighting_shader = is_dm ? dm_deferred_lighting_shader: deferred_lighting_shader;
 
@@ -1067,15 +1120,15 @@ void Client::lightingPass() {
             lighting_shader->setVec3("dirLights[" + i_s + "].specular_color", specular);
         }
     }
-    for (int i = 0; i < this->closest_light_sources.size(); i++) {
-        boost::optional<SharedObject>& curr_source = this->closest_light_sources.at(i);
+
+    for (int i = 0; i < closest_lights->size(); i++) {
+        boost::optional<SharedObject>& curr_source = closest_lights->at(i);
         if (!curr_source.has_value()) {
             continue;
         }
         SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
 
         glm::vec3 pos = curr_source->physics.getCenterPosition();
-
 
         lighting_shader->setFloat("pointLights[" + std::to_string(i) + "].intensity", properties.intensity);
         lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", pos);
@@ -1125,7 +1178,7 @@ void Client::lightingPass() {
     this->deferred_light_box_shader->use();
     glm::mat4 viewProj = this->cam->getViewProj();
     this->deferred_light_box_shader->setMat4("viewProj", viewProj);
-    for (auto& [id, sharedObject] : this->gameState.objects) {
+    for (auto& [id, sharedObject] : *gamestate_objects) {
         if (!sharedObject.has_value()) {
             continue;
         }
@@ -1144,6 +1197,8 @@ void Client::lightingPass() {
             continue;
         }
         SharedPointLightInfo& properties = sharedObject->pointLightInfo.value();
+
+        glm::vec3 v(1.0f);
 
         this->deferred_light_box_shader->use();
         this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);

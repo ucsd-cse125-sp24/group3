@@ -42,6 +42,7 @@ enum class GUIState {
     TITLE_SCREEN,
     LOBBY_BROWSER,
     LOBBY,
+    INTRO_CUTSCENE,
     GAME_HUD,
     GAME_ESC_MENU,
     DEAD_SCREEN,

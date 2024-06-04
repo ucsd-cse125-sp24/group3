@@ -158,7 +158,9 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 
 		//	Make sure that SharedGameState updates are sent while the server is in the
 		//	Lobby phase (to ensure players can see other players lobby status updates)
-		if (num_in_curr_update > 0 || this->getPhase() == GamePhase::LOBBY) {
+		if (num_in_curr_update > 0 || 
+		   this->getPhase() == GamePhase::LOBBY ||
+		   this->getPhase() == GamePhase::INTRO_CUTSCENE) {
 			partial_updates.push_back(curr_update);
 		}
 

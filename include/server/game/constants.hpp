@@ -81,6 +81,7 @@
 /* Default model sizes */
 #define BEAR_DIMENSIONS         glm::vec3(14.163582, 17.914591, 10.655818)
 #define FIRE_PLAYER_DIMENSIONS  glm::vec3(8.008834, 10.069769, 2.198592)
+#define PLAYER_3_DIMENSIONS     glm::vec3(7.016080, 9.864347, 2.969337)
 #define SUNGOD_DIMENSIONS       glm::vec3(3.281404, 9.543382, 7.974873) 
 
 /* DM Constants */

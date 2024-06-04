@@ -28,6 +28,7 @@ void AudioManager::init() {
         this->clientMusics.insert({type, this->makeMusic(type)});
         // these are just streamed from the files at play time, so we are done for initing
     }	
+    /*
     for (auto type : GET_CLIENT_SFXS()) {
         auto buf = this->loadSFXBuf(type);
         auto sfx = std::make_unique<sf::Sound>();
@@ -38,6 +39,7 @@ void AudioManager::init() {
         // can make sf::Sound objects right away, since there will only ever be 1 of them playing at a time
         this->clientSFXs.insert({type, std::move(sfx)});
     }
+    */
     for (auto type : GET_SERVER_SFXS()) {
         this->serverSFXBufs.insert({type, this->loadSFXBuf(type)});
         // dont make sound objects right now, because will need to dynamically make them as the server
@@ -103,7 +105,9 @@ void AudioManager::doTick(glm::vec3 player_pos,
         auto source = light_sources.at(i);
         if (source.has_value() && source->type == ObjectType::Torchlight) {
             this->serverLightSFXs.at(i)->setPosition(source->physics.corner.x, source->physics.corner.y, source->physics.corner.z);
-            this->serverLightSFXs.at(i)->play();
+            if (this->serverLightSFXs.at(i)->getStatus() != sf::SoundSource::Status::Playing) {
+                this->serverLightSFXs.at(i)->play();
+            }
         } else {
             this->serverLightSFXs.at(i)->stop();
         }

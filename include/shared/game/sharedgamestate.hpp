@@ -20,6 +20,7 @@ enum class PlayerRole;
 enum class GamePhase {
 	TITLE_SCREEN,
 	LOBBY,
+	INTRO_CUTSCENE,
 	GAME,
 	RESULTS
 };

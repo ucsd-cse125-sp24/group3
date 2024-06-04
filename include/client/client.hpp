@@ -245,6 +245,9 @@ private:
     /* Current game state */
     SharedGameState gameState;
 
+    /* Stuff for the intro cutscene, contains a whole other SharedGameState */
+    std::optional<LoadIntroCutsceneEvent> intro_cutscene;
+
     /* Shader objects for various */
     std::shared_ptr<Shader> deferred_geometry_shader;
     std::shared_ptr<Shader> deferred_lighting_shader;

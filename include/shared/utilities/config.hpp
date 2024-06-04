@@ -50,6 +50,8 @@ struct GameConfig {
         int max_players;
         /// @brief whether or not the server will spawn a DM
         bool disable_dm;
+        /// @brief whether or not to skip the intro cutscene
+        bool skip_intro;
     } server;
     /// @brief Config settings for the client
     struct {
