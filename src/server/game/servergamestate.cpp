@@ -169,13 +169,6 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 		std::swap(this->updated_entities, empty);
 	}
 
-	//	DEBUG
-	/*if (partial_updates.size() > 0) {
-		std::cout << "Number of partial updates: " << std::to_string(partial_updates.size()) << std::endl;
-		std::cout << "Partial update's lobby (in server):" << std::endl;
-		std::cout << partial_updates[0].lobby.to_string() << std::endl;
-	}*/
-
 	return partial_updates;
 }
 
@@ -1147,7 +1140,7 @@ void ServerGameState::updateTraps() {
 	DungeonMaster* dm = this->objects.getDM();
 
 	// update DM trap cooldown
-	if (this->objects.getDM() != nullptr) {
+	if (dm != nullptr) {
 		auto& coolDownMap = dm->sharedTrapInventory.trapsInCooldown;
 
 		for (auto it = dm->sharedTrapInventory.trapsInCooldown.cbegin(); it != dm->sharedTrapInventory.trapsInCooldown.cend();) {
@@ -1167,38 +1160,38 @@ void ServerGameState::updateTraps() {
 			}
 		}
 
-		// This object moved, so we should check to see if a trap should trigger because of it
-		auto traps = this->objects.getTraps();
-		for (int i = 0; i < traps.size(); i++) {
-			auto trap = traps.get(i);
-			if (trap == nullptr) { continue; } // unsure if i need this?
-			if (trap->getIsDMTrap()) {
-				if (current_time >= trap->getExpiration()) {
-					int trapsPlaced = dm->getPlacedTraps();
-					this->markForDeletion(trap->globalID);
-					dm->setPlacedTraps(trapsPlaced - 1);
-					dm->sharedTrapInventory.trapsPlaced = trapsPlaced - 1;
+		this->updated_entities.insert(dm->globalID);
+	}
 
-					// change cell type to empty
-					GridCell* _cell = this->getGrid().getCell(trap->physics.shared.corner.x / Grid::grid_cell_width, trap->physics.shared.corner.z / Grid::grid_cell_width);
+	auto traps = this->objects.getTraps();
+	for (int i = 0; i < traps.size(); i++) {
+		auto trap = traps.get(i);
+		if (trap == nullptr) { continue; }
+		if (trap->getIsDMTrap() && dm != nullptr) {
+			if (current_time >= trap->getExpiration()) {
+				int trapsPlaced = dm->getPlacedTraps();
+				this->markForDeletion(trap->globalID);
+				dm->setPlacedTraps(trapsPlaced - 1);
+				dm->sharedTrapInventory.trapsPlaced = trapsPlaced - 1;
 
-					_cell->type = CellType::Empty;
+				// change cell type to empty
+				GridCell* _cell = this->getGrid().getCell(trap->physics.shared.corner.x / Grid::grid_cell_width, trap->physics.shared.corner.z / Grid::grid_cell_width);
 
-					continue;
-				}
-			}
+				_cell->type = CellType::Empty;
 
-			// check for activations
-			if (trap->shouldTrigger(*this)) {
-				trap->trigger(*this);
-				this->updated_entities.insert(trap->globalID);
-			}
-			if (trap->shouldReset(*this)) {
-				trap->reset(*this);
-				this->updated_entities.insert(trap->globalID);
+				continue;
 			}
 		}
-		this->updated_entities.insert(dm->globalID);
+
+		// check for activations
+		if (trap->shouldTrigger(*this)) {
+			trap->trigger(*this);
+			this->updated_entities.insert(trap->globalID);
+		}
+		if (trap->shouldReset(*this)) {
+			trap->reset(*this);
+			this->updated_entities.insert(trap->globalID);
+		}
 	}
 }
 
