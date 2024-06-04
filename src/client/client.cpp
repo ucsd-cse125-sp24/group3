@@ -1543,11 +1543,12 @@ void Client::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) 
     auto self = this->gameState.objects.at(eid.value());
 
     if (yoffset >= 1) {
+        this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), -1)));
+
         if (is_dm.has_value() && is_dm.value()) {
             // optimistic update on scroll, otherwise might lag
             int idx = self->trapInventoryInfo->selected;
 
-            this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), -1)));
 
             if (idx - 1 == 0)
                 idx = TRAP_INVENTORY_SIZE;
@@ -1559,11 +1560,11 @@ void Client::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) 
     }
 
     if (yoffset <= -1) {
+        this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
+
         if (is_dm.has_value() && is_dm.value()) {
             // optimistic update on scroll, otherwise might lag
             int idx = self->trapInventoryInfo->selected;
-
-            this->session->sendEvent(Event(eid.value(), EventType::SelectItem, SelectItemEvent(eid.value(), 1)));
 
             if (idx + 1 > TRAP_INVENTORY_SIZE)
                 idx = 1;
