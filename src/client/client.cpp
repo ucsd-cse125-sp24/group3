@@ -890,13 +890,12 @@ void Client::geometryPass() {
             case ObjectType::DungeonMaster: {
                 // shouldn't render DM at all?
 
-                // if (sharedObject->globalID == self_eid) {
-                //     //  TODO: Update the player eye level to an acceptable level
-                //     glm::vec3 pos = sharedObject->physics.getCenterPosition();
-                //     pos.y += PLAYER_EYE_LEVEL;
-                //     cam->updatePos(pos);
-                //     break;
-                // }
+                if (sharedObject->globalID == self_eid) {
+                    //  TODO: Update the player eye level to an acceptable level
+                    glm::vec3 pos = sharedObject->physics.getCenterPosition();
+                    pos.y += PLAYER_EYE_LEVEL;
+                    cam->updatePos(pos);
+                }
 
                 // auto player_pos = sharedObject->physics.corner;
                 // auto player_dir = sharedObject->physics.facing;
