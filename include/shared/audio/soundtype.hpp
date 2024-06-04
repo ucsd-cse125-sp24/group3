@@ -13,26 +13,26 @@ enum class ClientMusic {
     MazeExplorationPlayersTheme,
     MazeExplorationDMTheme,
     RelayRacePlayersTheme,
-    RelayRaceDMTheme,
-    VictoryThemePlayers,
-    VictoryThemeDM
+    RelayRaceDMTheme
     // make sure to add to macro below!
 };
 
 #define GET_CLIENT_MUSICS() { \
     ClientMusic::MenuTheme, ClientMusic::MazeExplorationPlayersTheme, \
     ClientMusic::MazeExplorationDMTheme, ClientMusic::RelayRacePlayersTheme, \
-    ClientMusic::RelayRaceDMTheme, ClientMusic::VictoryThemePlayers, \
-    ClientMusic::VictoryThemeDM \
+    ClientMusic::RelayRaceDMTheme \
 }
 
 enum class ClientSFX {
     // TODO: decide what these are
+    VictoryThemePlayers,
+    VictoryThemeDM,
     TEMP,
     // make sure to add to macro below!
 };
 
 #define GET_CLIENT_SFXS() { \
+    ClientSFX::VictoryThemePlayers, ClientSFX::VictoryThemeDM, \
     ClientSFX::TEMP, \
 }
 

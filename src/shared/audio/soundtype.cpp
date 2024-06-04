@@ -9,6 +9,11 @@ static auto audio_dir = getRepoRoot() / "assets" / "sounds";
 std::string getAudioPath(ClientSFX sound) {
     static auto dir = audio_dir / "client_sfx";
     switch (sound) {
+        case ClientSFX::VictoryThemePlayers:
+            return (dir / "victory_players.flac").string();
+        case ClientSFX::VictoryThemeDM:
+            //  TODO: Replace with DM Victory theme!
+            return (dir / "victory_players.flac").string();
         case ClientSFX::TEMP:
             return (dir / "vine-boom-mono.mp3").string();
         default:
@@ -99,11 +104,6 @@ std::string getAudioPath(ClientMusic music) {
         case ClientMusic::RelayRaceDMTheme:
             //  TODO: Replace with DM Relay Race theme!
             return (dir / "maze_exploration_dm.flac").string();
-        case ClientMusic::VictoryThemePlayers:
-            return (dir / "victory_players.flac").string();
-        case ClientMusic::VictoryThemeDM:
-            //  TODO: Replace with DM Victory theme!
-            return (dir / "victory_players.flac").string();
         default:
             std::cerr << "FATAL: no known path for ClientMusic " << static_cast<int>(music) << std::endl;
             std::exit(1);
