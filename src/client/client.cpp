@@ -1190,6 +1190,10 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             if (this->gameState.phase == GamePhase::GAME) {
                 if (this->gui_state == GUIState::GAME_ESC_MENU) {
                     this->gui_state = GUIState::GAME_HUD;
+
+                    if (is_dm.has_value() && is_dm.value()) {
+                        this->cam->setPitch(-89.0);
+                    }
                 }
                 else if (this->gui_state == GUIState::GAME_HUD) {
                     this->gui_state = GUIState::GAME_ESC_MENU;
