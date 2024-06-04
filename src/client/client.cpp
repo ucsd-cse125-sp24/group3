@@ -699,10 +699,6 @@ void Client::geometryPass() {
     double timeElapsed = currentTime - lastTime;
     lastTime = currentTime;
 
-    double currentTime = glfwGetTime();
-    double timeElapsed = currentTime - lastTime;
-    lastTime = currentTime;
-
     // draw all objects to g-buffer
     for (auto& [id, sharedObject] : *objects) {
         if (!sharedObject.has_value()) {
