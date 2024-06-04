@@ -623,6 +623,11 @@ void Client::geometryPass() {
         
         switch (sharedObject->type) {
             case ObjectType::Player: {
+                // search all player inventories to see who has the orb and update it's position (while it's held by a player)
+                if (sharedObject->inventoryInfo->hasOrb) {
+                    player_has_orb_global_id = sharedObject->globalID;
+                }
+                
                 // don't render yourself
                 if (this->session->getInfo().client_eid.has_value() && sharedObject->globalID == this->session->getInfo().client_eid.value()) {
                     //  TODO: Update the player eye level to an acceptable level
@@ -1003,7 +1008,9 @@ void Client::lightingPass() {
         SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
 
         glm::vec3 pos = curr_source->physics.getCenterPosition();
-
+        if (curr_source->type == ObjectType::Orb && curr_source->iteminfo->held) {
+            pos = this->gameState.objects.at(player_has_orb_global_id)->physics.getCenterPosition();
+        }
 
         lighting_shader->setFloat("pointLights[" + std::to_string(i) + "].intensity", properties.intensity);
         lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", pos);

@@ -3,6 +3,7 @@
 #include "glm/fwd.hpp"
 #include "server/game/collider.hpp"
 #include "server/game/object.hpp"
+#include "shared/game/point_light.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/rng.hpp"
 
@@ -26,7 +27,7 @@ Torchlight::Torchlight(
 		ModelType::Torchlight)
 {
     // for amber orange lights
-    this->properties = TorchlightProperties {
+    this->properties = PointLightProperties {
         .flickering = true,
         .min_intensity = 0.3f,
         .max_intensity = 1.0f,
@@ -38,7 +39,7 @@ Torchlight::Torchlight(
     };
     
     // for blue lights
-    // this->properties = TorchlightProperties {
+    // this->properties = PointLightProperties {
     //     .flickering = true,
     //     .min_intensity = 0.1f,
     //     .max_intensity = 0.5f,
@@ -53,7 +54,7 @@ Torchlight::Torchlight(
 
 Torchlight::Torchlight(
     glm::vec3 corner,
-    const TorchlightProperties& properties):
+    const PointLightProperties& properties):
 	Object(ObjectType::Torchlight, Physics(false, 
 		Collider::Box, corner, glm::vec3(0.0f), glm::vec3(1.0f)),
 		ModelType::Torchlight),

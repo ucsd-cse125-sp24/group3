@@ -1548,7 +1548,19 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						0,
 						cell->y * Grid::grid_cell_width + 1);
 
-					this->objects.createObject(new Orb(corner, dimensions));
+                    PointLightProperties lightProperties{
+                        .flickering = false,
+                        .min_intensity = 1.0f,
+                        .max_intensity = 1.0f,
+                        .ambient_color = glm::vec3(0.0f, 0.75f, 0.67f),
+                        .diffuse_color = glm::vec3(0.0f, 0.75f, 0.67f),
+                        .specular_color = glm::vec3(0.0f, 0.35f, 0.33f),
+                        .attenuation_linear = 0.07f,
+                        .attenuation_quadratic = 0.017f
+                    };
+
+
+					this->objects.createObject(new Orb(corner, dimensions, lightProperties));
 					break;
 				}
 				case CellType::FireballTrapLeft:
@@ -1777,8 +1789,19 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						MAZE_CEILING_HEIGHT,
 						Grid::grid_cell_width
 					);
+                    PointLightProperties lightProperties{
+                        .flickering = false,
+                        .min_intensity = 1.0f,
+                        .max_intensity = 1.0f,
+                        .ambient_color = glm::vec3(1.05f, 1.05f, 1.05f),
+                        .diffuse_color = glm::vec3(1.0f, 1.0f, 1.0f),
+                        .specular_color = glm::vec3(0.5f, 0.5f, 0.5f),
+                        .attenuation_linear = 0.07f,
+                        .attenuation_quadratic = 0.017f
+                    };
 
-					this->objects.createObject(new Exit(false, corner, dimensions));
+
+					this->objects.createObject(new Exit(false, corner, dimensions, lightProperties));
 					break;
 				}
 				default: {

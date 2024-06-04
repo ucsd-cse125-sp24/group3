@@ -329,5 +329,8 @@ private:
     std::deque<Event> events_received;
 
     bool phase_change;
+
+    // id of last known player which is holding the orb
+    EntityID player_has_orb_global_id;
 };
 

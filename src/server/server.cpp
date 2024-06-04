@@ -16,6 +16,7 @@
 #include <memory>
 
 #include "boost/variant/get.hpp"
+#include "server/game/exit.hpp"
 #include "server/game/objectmanager.hpp"
 #include "server/game/potion.hpp"
 #include "server/game/weapon.hpp"
@@ -34,6 +35,7 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/rng.hpp"
+
 
 using namespace std::chrono_literals;
 using namespace boost::asio::ip;
@@ -127,6 +129,20 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
         closestPointLights.push(torch->globalID);
     }
 
+    for(int i = 0; i < this->state.objects.getExits().size(); i++) {
+        auto exit = this->state.objects.getExits().get(i);
+        if (exit == nullptr) continue;
+        closestPointLights.push(exit->globalID);
+    }
+
+    for(int i = 0; i < this->state.objects.getItems().size(); i++) {
+        auto item = this->state.objects.getItems().get(i);
+        if (item == nullptr) continue;
+        if (item->type != ObjectType::Orb) continue;
+        closestPointLights.push(item->globalID);
+        break;
+    }
+
 
     // put set into an array
     UpdateLightSourcesEvent event_data;
@@ -135,13 +151,20 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
         EntityID light_id = closestPointLights.top(); 
         closestPointLights.pop();
 
-        auto torchlight = dynamic_cast<Torchlight*>(this->state.objects.getObject(light_id));
-        if (torchlight != nullptr) {
+        if (this->state.objects.getObject(light_id)->type == ObjectType::Torchlight) {
+            auto torchlight = dynamic_cast<Torchlight*>(this->state.objects.getObject(light_id));
+            if (torchlight != nullptr) {
+                event_data.lightSources[curr_light_num] = UpdateLightSourcesEvent::UpdatedLightSource {
+                    .eid = light_id,
+                    .intensity = torchlight->getIntensity()
+                };
+            } 
+        } else {
             event_data.lightSources[curr_light_num] = UpdateLightSourcesEvent::UpdatedLightSource {
                 .eid = light_id,
-                .intensity = torchlight->getIntensity()
+                .intensity = 1.0f
             };
-        } 
+        }
         curr_light_num++;
     }
 
