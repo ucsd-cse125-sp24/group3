@@ -88,9 +88,8 @@ void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> light_c
         glm::vec3 pos = light_cut_pos.value();
 
         // if within threshold, get out
-        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= 100.0f) {
+        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= LIGHT_CUT_RANGE) {
             this->curr_intensity = 0.0f;
-            std::cout << "A LIGHT CUT OUT!" << std::endl;
             return;
         }
     }

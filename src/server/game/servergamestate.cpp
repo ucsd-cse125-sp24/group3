@@ -788,12 +788,11 @@ void ServerGameState::update(const EventList& events) {
 	//	Only do this if the DM exists
 	if (this->objects.getDM() != nullptr)
 		updateDungeonMasterParalysis();
-	
 
-	// after some amount of timesteps NO CUT
-	//if (std::abs((int)(this->lastLightCut - this->timestep)) <= 50) {
-	//	this->dmCutLights = {};
-	//}
+	// after some amount of timesteps uncut lights
+	if ((this->timestep - this->lastLightCut) >= LIGHT_CUT_TICKS && this->dmCutLights.has_value()) {
+		this->dmCutLights = {};
+	}
 	
 	//	Increment timestep
 	this->timestep++;

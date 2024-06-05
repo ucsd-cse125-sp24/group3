@@ -1202,9 +1202,6 @@ void Client::lightingPass() {
 
         lighting_shader->setFloat("pointLights[" + std::to_string(i) + "].intensity", properties.intensity);
 
-        if (properties.intensity == 0.0f)
-            std::cout << "light intensity is 0: " << properties.intensity << std::endl;
-
         lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", pos);
 
         lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].ambient_color", properties.ambient_color);
