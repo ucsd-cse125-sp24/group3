@@ -5,6 +5,7 @@
 #include "server/game/object.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/rng.hpp"
+#include "server/game/grid.hpp"
 
 SharedObject Torchlight::toShared() {
     auto so = Object::toShared();
@@ -20,34 +21,74 @@ SharedObject Torchlight::toShared() {
 }
 
 Torchlight::Torchlight(
-    glm::vec3 corner):
+    glm::vec3 corner, float dist_orb, float dist_exit):
 	Object(ObjectType::Torchlight, Physics(false, 
 		Collider::Box, corner, glm::vec3(0.0f), glm::vec3(1.0f)),
 		ModelType::Torchlight)
 {
-    // for amber orange lights
-    this->properties = TorchlightProperties {
-        .flickering = true,
-        .min_intensity = 0.3f,
-        .max_intensity = 1.0f,
-        .ambient_color = glm::vec3(0.05f, 0.05f, 0.05f),
-        .diffuse_color = glm::vec3(1.0f, 0.5f, 0.03f),
-        .specular_color = glm::vec3(0.5f, 0.25f, 0.015f),
-        .attenuation_linear = 0.07f,
-        .attenuation_quadratic = 0.017f
-    };
+    const float MIN_ORB_DIST = Grid::grid_cell_width * 30.0f; // min distance to start shade blue
+    const float MIN_EXIT_DIST = Grid::grid_cell_width * 30.0f; // min distance to start shade white
+
+    const float AMBER_MIN_INTENSITY = 0.3f;
+    const float AMBER_MAX_INTENSITY = 1.0f;
+    const glm::vec3 AMBER_AMBIENT(0.05f, 0.05f, 0.05f);
+    const glm::vec3 AMBER_DIFFUSE(1.0f, 0.5f, 0.03f);
+    const glm::vec3 AMBER_SPECULAR(0.5f, 0.25f, 0.015f);
+
+    const float BLUE_MIN_INTENSITY = 0.1f;
+    const float BLUE_MAX_INTENSITY = 0.5f;
+    const glm::vec3 BLUE_AMBIENT(0.0f, 0.75f, 0.67f);
+    const glm::vec3 BLUE_DIFFUSE(0.0f, 0.75f, 0.67f);
+    const glm::vec3 BLUE_SPECULAR(0.0f, 0.35, 0.33f);
+
+    const float WHITE_MIN_INTENSITY = 0.1f;
+    const float WHITE_MAX_INTENSITY = 0.3f;
+    const glm::vec3 WHITE_AMBIENT(1.05f, 1.05f, 1.05f);
+    const glm::vec3 WHITE_DIFFUSE(1.0f, 1.0f, 1.0f);
+    const glm::vec3 WHITE_SPECULAR(0.5f, 0.5f, 0.5f);
+
+    const float ATTEN_LINEAR = 0.07f;
+    const float ATTEN_QUAD = 0.017f;
+
+    if (dist_orb < MIN_ORB_DIST) {
+        // close to orb, so shade blue
+        this->properties = TorchlightProperties {
+            .flickering = true,
+            .min_intensity = BLUE_MIN_INTENSITY,
+            .max_intensity = BLUE_MAX_INTENSITY,
+            .ambient_color = BLUE_AMBIENT,
+            .diffuse_color = BLUE_DIFFUSE,
+            .specular_color = BLUE_SPECULAR,
+            .attenuation_linear = ATTEN_LINEAR,
+            .attenuation_quadratic = ATTEN_QUAD
+        };
+    } else if (dist_exit < MIN_EXIT_DIST) {
+        // close to exit, so shade white
+        // TEMP: still amber
+        this->properties = TorchlightProperties {
+            .flickering = true,
+            .min_intensity = WHITE_MIN_INTENSITY,
+            .max_intensity = WHITE_MAX_INTENSITY,
+            .ambient_color = WHITE_AMBIENT,
+            .diffuse_color = WHITE_DIFFUSE,
+            .specular_color = WHITE_SPECULAR,
+            .attenuation_linear = ATTEN_LINEAR,
+            .attenuation_quadratic = ATTEN_QUAD
+        };
+    } else {
+        // shade normal amber
+        this->properties = TorchlightProperties {
+            .flickering = true,
+            .min_intensity = AMBER_MIN_INTENSITY,
+            .max_intensity = AMBER_MAX_INTENSITY,
+            .ambient_color = AMBER_AMBIENT,
+            .diffuse_color = AMBER_DIFFUSE,
+            .specular_color = AMBER_SPECULAR,
+            .attenuation_linear = ATTEN_LINEAR,
+            .attenuation_quadratic = ATTEN_QUAD
+        };
+    }
     
-    // for blue lights
-    // this->properties = TorchlightProperties {
-    //     .flickering = true,
-    //     .min_intensity = 0.1f,
-    //     .max_intensity = 0.5f,
-    //     .ambient_color = glm::vec3(0.0f, 0.75f, 0.67f),
-    //     .diffuse_color = glm::vec3(0.0f, 0.75f, 0.67f),
-    //     .specular_color = glm::vec3(0.0f, 0.35f, 0.33f),
-    //     .attenuation_linear = 0.07f,
-    //     .attenuation_quadratic = 0.017f
-    // };
     init();
 }
 
