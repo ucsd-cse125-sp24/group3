@@ -65,6 +65,9 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->spawner->spawnDummy(*this);
 	this->spawner->spawnSmallDummy(*this);
 
+	this->dmLightningCutLights = {};
+	this->dmActionCutLights = {};
+	this->lastLightCut = 0;
 
     MazeGenerator generator(config);
     int attempts = 1;
@@ -237,7 +240,9 @@ void ServerGameState::update(const EventList& events) {
 			}
 			case ActionType::Sprint: {
 				if (obj->type == ObjectType::DungeonMaster) {
-					obj->physics.velocityMultiplier = glm::vec3(5.0f, 1.1f, 5.0f);
+					DungeonMaster* dm = this->objects.getDM();
+
+					obj->physics.velocityMultiplier = (dm->physics.shared.corner.y/5.0f) * glm::vec3(1.5f, 1.1f, 1.5f);
 				}
 				else {
 					obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
@@ -248,8 +253,11 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::Zoom: { // only for DM
 				DungeonMaster * dm = this->objects.getDM();
 
-				if (dm != nullptr && (dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f))
+				if (dm != nullptr && (dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f)) {
 					dm->physics.shared.corner += startAction.movement;
+
+					obj->physics.velocityMultiplier = (dm->physics.shared.corner.y / 10.0f) * glm::vec3(1.5f, 1.1f, 1.5f);
+				}
 
 				break;
 			}
@@ -277,11 +285,18 @@ void ServerGameState::update(const EventList& events) {
 			}
 			case ActionType::Sprint: {
 				obj->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
+
+				// if DM gotta re-adjust velocity to be based on height
+				if (obj->type == ObjectType::DungeonMaster) {
+					obj->physics.velocityMultiplier = (obj->physics.shared.corner.y / 10.0f) * glm::vec3(1.5f, 1.1f, 1.5f);
+				}
+
 				if (obj->physics.velocity.x != 0.0f && obj->physics.velocity.z != 0.0f) {
 					obj->animState = AnimState::WalkAnim;
 				} else {
 					obj->animState = AnimState::IdleAnim;
 				}
+
 				break;
 			}
 			default: { break; }
@@ -304,6 +319,7 @@ void ServerGameState::update(const EventList& events) {
 			break;
 
 		}
+
 		case EventType::SelectItem:
 		{
 			auto selectItemEvent = boost::get<SelectItemEvent>(event.data);
@@ -355,6 +371,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
+
 		case EventType::UseItem:
 		{
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
@@ -375,6 +392,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
+
 		case EventType::DropItem:
 		{
 			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
@@ -389,6 +407,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
+
 		case EventType::TrapPlacement: 
 		{
 			DungeonMaster* dm = this->objects.getDM();
@@ -404,7 +423,8 @@ void ServerGameState::update(const EventList& events) {
 			float cellWidth = currGrid.grid_cell_width;
 
 			//	If the DM is paralyzed, do nothing
-			if (dm->isParalyzed()) break;
+			if (dm->isParalyzed()) 
+				break;
 
 			glm::vec3 dir = glm::normalize(trapPlacementEvent.world_pos-dm->physics.shared.corner);
 
@@ -427,9 +447,8 @@ void ServerGameState::update(const EventList& events) {
 
 			if (trapPlacementEvent.hover) {
 				// only hover for traps, not lightning
-				if (trapPlacementEvent.cell == CellType::Lightning) {
+				if (trapPlacementEvent.cell == CellType::Lightning || trapPlacementEvent.cell == CellType::LightCut)
 					break;
-				}
 
 				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
@@ -456,7 +475,23 @@ void ServerGameState::update(const EventList& events) {
 						);
 
 						lightning->useLightning(dm, *this, corner);
-						dm->useMana();
+						dm->useMana(LIGHTNING_MANA);
+
+						this->dmLightningCutLights = corner;
+						this->lastLightningLightCut = this->timestep;
+					}
+
+					break;
+				}
+
+				if (trapPlacementEvent.cell == CellType::LightCut) {
+					if (dm->dmInfo.mana_remaining >= LIGHT_CUT_MANA) {
+						this->dmActionCutLights = trapPlacementEvent.world_pos;
+
+						// go back 150 ticks (light cut is longer)
+						this->lastLightCut = this->timestep;
+
+						dm->useMana(LIGHT_CUT_MANA);
 					}
 
 					break;
@@ -515,8 +550,8 @@ void ServerGameState::update(const EventList& events) {
 						int randomC = randomInt(std::max(_cell->x - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND));
 						int randomR = randomInt(std::max(_cell->y - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getRows() - 1, _cell->y + ITEM_SPAWN_BOUND));
 
-						GridCell* cell = grid.getCell(randomC, randomR);
-						CellType celltype = cell->type;
+						GridCell* random_cell = grid.getCell(randomC, randomR);
+						CellType celltype = random_cell->type;
 
 						int counter = 0;
 
@@ -525,8 +560,8 @@ void ServerGameState::update(const EventList& events) {
 							randomC = randomInt(std::max(_cell->x - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND));
 							randomR = randomInt(std::max(_cell->y - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getRows() - 1, _cell->y + ITEM_SPAWN_BOUND));
 
-							GridCell* cell = grid.getCell(randomC, randomR);
-							CellType celltype = cell->type;
+							random_cell = grid.getCell(randomC, randomR);
+							celltype = random_cell->type;
 
 							counter += 1;
 
@@ -550,9 +585,9 @@ void ServerGameState::update(const EventList& events) {
 							glm::vec3 dimensions(1.0f);
 
 							glm::vec3 corner(
-								cell->x * Grid::grid_cell_width + 1,
+								random_cell->x * Grid::grid_cell_width + 1,
 								0,
-								cell->y * Grid::grid_cell_width + 1
+								random_cell->y * Grid::grid_cell_width + 1
 							);
 
 							int randomCellType = randomInt(1, 3);
@@ -560,192 +595,89 @@ void ServerGameState::update(const EventList& events) {
 							if (randomCellType == 1) {
 								int r = randomInt(1, 3);
 								if (r == 1) {
-									cell->type = CellType::HealthPotion;
+									random_cell->type = CellType::HealthPotion;
 								}
 								else if (r == 2) {
-									cell->type = CellType::InvisibilityPotion;
+									random_cell->type = CellType::InvisibilityPotion;
 								}
 								else {
-									cell->type = CellType::InvincibilityPotion;
+									random_cell->type = CellType::InvincibilityPotion;
 								}
 							}
 							else if (randomCellType == 2) {
 								int r = randomInt(1, 3);
 								if (r == 1) {
-									cell->type = CellType::FireSpell;
+									random_cell->type = CellType::FireSpell;
 								}
 								else if (r == 2) {
-									cell->type = CellType::HealSpell;
+									random_cell->type = CellType::HealSpell;
 								}
 								else {
-									cell->type = CellType::TeleportSpell;
+									random_cell->type = CellType::TeleportSpell;
 								}
 							}
 							else {
 								int r = randomInt(1, 4);
 								if (r == 1) {
-									cell->type = CellType::Dagger;
+									random_cell->type = CellType::Dagger;
 								}
 								else if (r == 2) {
-									cell->type = CellType::Sword;
+									random_cell->type = CellType::Sword;
 								}
 								else if (r == 3) {
-									cell->type = CellType::Mirror;
+									random_cell->type = CellType::Mirror;
 								}
 								else {
-									cell->type = CellType::Hammer;
+									random_cell->type = CellType::Hammer;
 								}
 							}
 
-							switch (cell->type) {
+							Object* spawned_object = nullptr;
+
+							switch (random_cell->type) {
 							case CellType::Dagger: {
-								glm::vec3 dimensions(1.0f);
-
-								glm::vec3 corner(
-									cell->x * Grid::grid_cell_width + 1,
-									0,
-									cell->y * Grid::grid_cell_width + 1);
-
-								Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Dagger);
-
-								this->objects.createObject(weapon);
-
-								this->updated_entities.insert(weapon->globalID);
+								spawned_object= new Weapon(corner, dimensions, WeaponType::Dagger);
 								break;
 							}
 							case CellType::Sword: {
-								glm::vec3 dimensions(1.0f);
-
-								glm::vec3 corner(
-									cell->x * Grid::grid_cell_width + 1,
-									0,
-									cell->y * Grid::grid_cell_width + 1);
-
-
-								Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Sword);
-
-								this->objects.createObject(weapon);
-
-								this->updated_entities.insert(weapon->globalID);
-
+								spawned_object = new Weapon(corner, dimensions, WeaponType::Sword);
 								break;
 							}
 							case CellType::Hammer: {
-								glm::vec3 dimensions(1.0f);
-
-								glm::vec3 corner(
-									cell->x * Grid::grid_cell_width + 1,
-									0,
-									cell->y * Grid::grid_cell_width + 1);
-
-
-								Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Hammer);
-
-								this->objects.createObject(weapon);
-
-								this->updated_entities.insert(weapon->globalID);
-
+								spawned_object = new Weapon(corner, dimensions, WeaponType::Hammer);
 								break;
 							}
 							case CellType::TeleportSpell: {
-								glm::vec3 dimensions(1.0f);
-
-								glm::vec3 corner(
-									cell->x * Grid::grid_cell_width + 1,
-									0,
-									cell->y * Grid::grid_cell_width + 1);
-
-								Spell* spell = new Spell(corner, dimensions, SpellType::Teleport);
-
-								this->objects.createObject(spell);
-
-								this->updated_entities.insert(spell->globalID);
-
-
+								spawned_object = new Spell(corner, dimensions, SpellType::Teleport);
 								break;
 							}
 							case CellType::FireSpell: {
-								glm::vec3 dimensions(1.0f);
-
-								glm::vec3 corner(
-									cell->x * Grid::grid_cell_width + 1,
-									0,
-									cell->y * Grid::grid_cell_width + 1);
-
-								Spell* spell = new Spell(corner, dimensions, SpellType::Fireball);
-
-								this->objects.createObject(spell);
-
-								this->updated_entities.insert(spell->globalID);
-
-
+								spawned_object = new Spell(corner, dimensions, SpellType::Fireball);
 								break;
 							}
 							case CellType::HealSpell: {
-								glm::vec3 dimensions(1.0f);
-
-								glm::vec3 corner(
-									cell->x * Grid::grid_cell_width + 1,
-									0,
-									cell->y * Grid::grid_cell_width + 1);
-
-
-								Spell* spell = new Spell(corner, dimensions, SpellType::HealOrb);
-
-								this->objects.createObject(spell);
-
-								this->updated_entities.insert(spell->globalID);
-
+								spawned_object = new Spell(corner, dimensions, SpellType::HealOrb);
 								break;
 							}
 							case CellType::HealthPotion: {
-								glm::vec3 dimensions(1.0f);
-
-								glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
-									0,
-									cell->y * Grid::grid_cell_width + 1);
-
-								Potion* potion = new Potion(corner, dimensions, PotionType::Health);
-
-								this->objects.createObject(potion);
-
-								this->updated_entities.insert(potion->globalID);
-
+								spawned_object = new Potion(corner, dimensions, PotionType::Health);
 								break;
 							}
 							case CellType::InvisibilityPotion: {
-								glm::vec3 dimensions(1.0f);
-
-								glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
-									0,
-									cell->y * Grid::grid_cell_width + 1);
-
-
-								Potion* potion = new Potion(corner, dimensions, PotionType::Invisibility);
-
-								this->objects.createObject(potion);
-
-								this->updated_entities.insert(potion->globalID);
-
+								spawned_object = new Potion(corner, dimensions, PotionType::Invisibility);
 								break;
 							}
 							case CellType::InvincibilityPotion: {
-								glm::vec3 dimensions(1.0f);
-
-								glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
-									0,
-									cell->y * Grid::grid_cell_width + 1);
-
-								Potion* potion = new Potion(corner, dimensions, PotionType::Invincibility);
-
-								this->objects.createObject(potion);
-
-								this->updated_entities.insert(potion->globalID);
-
+								spawned_object = new Potion(corner, dimensions, PotionType::Invincibility);
 								break;
 							}
 							default:
-								std::cout << "what item is this??" << std::endl;
+								std::cerr << "WARNING: unknown item spawned in DM care package code." << std::endl;
+							}
+
+							if (spawned_object != nullptr) {
+								this->objects.createObject(spawned_object);
+								this->updated_entities.insert(spawned_object->globalID);
 							}
 						}
 					}
@@ -779,7 +711,17 @@ void ServerGameState::update(const EventList& events) {
 	//	Only do this if the DM exists
 	if (this->objects.getDM() != nullptr)
 		updateDungeonMasterParalysis();
-	
+
+	// after some amount of timesteps uncut lights
+	if ((this->timestep - this->lastLightningLightCut) >= LIGHTNING_LIGHT_CUT_TICKS && this->dmLightningCutLights.has_value()) {
+		this->dmLightningCutLights = {};
+	}
+
+	// after some amount of timesteps uncut lights
+	if ((this->timestep - this->lastLightCut) >= LIGHT_CUT_TICKS && this->dmActionCutLights.has_value()) {
+		this->dmActionCutLights = {};
+	}
+
 	//	Increment timestep
 	this->timestep++;
 
@@ -1183,11 +1125,14 @@ void ServerGameState::updateAttacks() {
 
 void ServerGameState::doTorchlightTicks() {
 	auto torchlights = this->objects.getTorchlights();
+
 	for (int t = 0; t < torchlights.size(); t++) {
 		auto torchlight = torchlights.get(t);
-		if (torchlight == nullptr) continue;
 
-		torchlight->doTick(*this);
+		if (torchlight == nullptr) 
+			continue;
+
+		torchlight->doTick(*this, this->dmLightningCutLights, this->dmActionCutLights);
 	}
 }
 
@@ -1782,13 +1727,13 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 		}
 
 		Direction dir;
-		if (cell->type == CellType::ArrowTrapDown) {
+		if (type == CellType::ArrowTrapDown) {
 			dir = Direction::DOWN;
 		}
-		else if (cell->type == CellType::ArrowTrapUp) {
+		else if (type == CellType::ArrowTrapUp) {
 			dir = Direction::UP;
 		}
-		else if (cell->type == CellType::ArrowTrapLeft) {
+		else if (type == CellType::ArrowTrapLeft) {
 			dir = Direction::LEFT;
 		}
 		else {
