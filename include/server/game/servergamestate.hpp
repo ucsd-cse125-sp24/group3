@@ -381,4 +381,6 @@ private:
 	 * @brief table of all currently playing sounds
 	 */
 	SoundTable sound_table;
+
+    GameConfig config;
 };

@@ -30,5 +30,7 @@ enum class ModelType {
 	Dagger,
 	Sword,
 	Hammer,
-	Lightning
+	Lightning,
+    Arrow,
+    ArrowTrap
 };

@@ -242,6 +242,8 @@ private:
     std::unique_ptr<Model> orb_model;
     std::unique_ptr<Model> exit_model;
     std::unique_ptr<Model> floor_model;
+    std::unique_ptr<Model> arrow_model;
+    std::unique_ptr<Model> arrow_trap_model;
 
     GLFWwindow *window;
 

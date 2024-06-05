@@ -23,6 +23,7 @@
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/audio/constants.hpp"
 #include "shared/audio/utilities.hpp"
+#include "shared/game/sharedmodel.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -38,7 +39,7 @@
 
 ServerGameState::ServerGameState() : ServerGameState(getDefaultConfig()) {}
 
-ServerGameState::ServerGameState(GameConfig config) {
+ServerGameState::ServerGameState(GameConfig config) : config(config) {
 	this->phase = GamePhase::LOBBY;
 	this->timestep = FIRST_TIMESTEP;
 	this->lobby = Lobby(config.server.max_players);
@@ -470,7 +471,9 @@ void ServerGameState::update(const EventList& events) {
 	handleDeaths();
 	handleRespawns();
 	deleteEntities();
-	spawnEnemies();
+    if (!this->config.game.disable_enemies) {
+        spawnEnemies();
+    }
 	handleTickVelocity();
 	handleDM();
 	tickStatuses();
@@ -647,6 +650,13 @@ void ServerGameState::updateMovement() {
 			//	Update current position vector
 			currentPosition = object->physics.shared.corner;
 		}
+
+        const float spike_low_y = 3.0f;
+        if (object->type == ObjectType::SpikeTrap && object->physics.shared.corner.y < spike_low_y) {
+            object->physics.shared.corner.y = spike_low_y;
+            object->physics.feels_gravity = false;
+            object->physics.velocity.y = 0;
+        }
 
 		//	Vertical movement
 		if (object->physics.shared.corner.y < 0) {
@@ -1752,18 +1762,13 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						dir = Direction::RIGHT;
 					}
 
-					glm::vec3 dimensions(
-						Grid::grid_cell_width,
-						MAZE_CEILING_HEIGHT,
-						Grid::grid_cell_width
-					);
 					glm::vec3 corner(
 						cell->x * Grid::grid_cell_width,
-						0.0f, 
+						-3.0f, 
 						cell->y * Grid::grid_cell_width
 					);
 
-					this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
+					this->objects.createObject(new ArrowTrap(corner, dir));
 					break;
 				}
 

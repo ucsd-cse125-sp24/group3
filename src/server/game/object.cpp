@@ -2,6 +2,7 @@
 #include "server/game/constants.hpp"
 #include "shared/game/sharedmodel.hpp"
 #include "shared/game/sharedobject.hpp"
+#include "shared/game/constants.hpp"
 
 /*	Constructors and Destructors	*/
 
@@ -42,7 +43,9 @@ std::unordered_map<ModelType, glm::vec3> Object::models ({
 	{ModelType::Player, (FIRE_PLAYER_DIMENSIONS / 4.0f)},
 	{ModelType::WarrenBear, (BEAR_DIMENSIONS / 4.0f)},
     {ModelType::Torchlight, glm::vec3(1.0f)},
-    {ModelType::SunGod, (SUNGOD_DIMENSIONS / 2.0f)}
+    {ModelType::SunGod, (SUNGOD_DIMENSIONS / 2.0f)},
+    {ModelType::Arrow, glm::vec3(0.5f, 0.5f, 2.0f)},
+    {ModelType::ArrowTrap, (ARROW_TRAP_DIMENSIONS * 1.2f)}
 });
 
 /*	SharedGameState generation	*/

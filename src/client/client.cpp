@@ -25,8 +25,10 @@
 #include "glm/fwd.hpp"
 #include "server/game/object.hpp"
 #include "server/game/solidsurface.hpp"
+#include "shared/game/constants.hpp"
 #include "shared/game/dir_light.hpp"
 #include "shared/game/event.hpp"
+#include "shared/game/sharedmodel.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/utilities/rng.hpp"
@@ -229,8 +231,14 @@ bool Client::init() {
     auto item_model_path = item_models_dir / "item.obj";
     this->item_model = std::make_unique<Model>(item_model_path.string(), true);
 
-    auto spike_trap_model_path = env_models_dir / "spike_trap.obj";
-    this->spike_trap_model = std::make_unique<Model>(spike_trap_model_path.string(), true);
+    auto spike_trap_model_path = env_models_dir / "Spike_trap" / "Trap.obj";
+    this->spike_trap_model = std::make_unique<Model>(spike_trap_model_path.string(), false);
+    
+    auto arrow_model_path = entity_models_dir / "Arrow_red" / "Arrow.obj";
+    this->arrow_model = std::make_unique<Model>(arrow_model_path.string(), false);
+
+    auto arrow_trap_model_path = env_models_dir / "Arrow trap" / "levelout_21.obj";
+    this->arrow_trap_model = std::make_unique<Model>(arrow_trap_model_path.string(), false);
 
     auto orb_model_path = item_models_dir / "orb.obj";
     this->orb_model = std::make_unique<Model>(orb_model_path.string(), true);
@@ -784,6 +792,7 @@ void Client::geometryPass() {
                     break;
                 }
 
+                this->spike_trap_model->rotateAbsolute(M_PI, glm::vec3(0.0f, 0.0f, 1.0f));
                 this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
                 this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
@@ -799,7 +808,6 @@ void Client::geometryPass() {
 
                 this->sungod_model->setDimensions(sharedObject->physics.dimensions);
                 this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->sungod_model->rotateAbsolute(sharedObject->physics.facing);
                 this->sungod_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
@@ -812,19 +820,32 @@ void Client::geometryPass() {
                     break;
                 }
 
-                this->python_model->setDimensions(sharedObject->physics.dimensions);
-                this->python_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->python_model->draw(this->deferred_geometry_shader.get(),
+                this->arrow_trap_model->rotateAbsolute(sharedObject->physics.facing, true);
+                this->arrow_trap_model->setDimensions(sharedObject->physics.dimensions);
+                this->arrow_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->arrow_trap_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
                 break;
             }
-            case ObjectType::Projectile: {  
-                this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
-                this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getPos(),
-                    true);
+            case ObjectType::Projectile: {
+                switch (sharedObject->modelType) {
+                    case ModelType::Arrow: {
+                        auto dim = ARROW_DIMENSIONS * 0.005f;
+                        this->arrow_model->setDimensions(dim);
+                        this->arrow_model->rotateAbsolute(sharedObject->physics.facing);
+                        this->arrow_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        this->arrow_model->draw(this->deferred_geometry_shader.get(),
+                            this->cam->getPos(), true);
+                        break;
+                   }
+                    default:
+                        this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
+                        this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
+                            this->cam->getPos(), true);
+                        break;
+                }
                 break;
             }
             case ObjectType::FloorSpike: {
@@ -895,12 +916,17 @@ void Client::geometryPass() {
                 if (!is_dm && sharedObject->trapInfo->dm_hover) {
                     break;
                 }
+                auto dim = glm::vec3(45.025101, 68.662003, 815.164001) * 0.005f;
+                this->arrow_model->setDimensions(dim);
+                this->arrow_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->arrow_model->draw(this->deferred_geometry_shader.get(),
+                    this->cam->getPos(), true);
 
-                this->orb_model->setDimensions( sharedObject->physics.dimensions);
-                this->orb_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->orb_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getPos(),
-                    true);
+                // this->orb_model->setDimensions( sharedObject->physics.dimensions);
+                // this->orb_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                // this->orb_model->draw(this->deferred_geometry_shader.get(),
+                //     this->cam->getPos(),
+                //     true);
                 break;
             }
             case ObjectType::Exit: {
