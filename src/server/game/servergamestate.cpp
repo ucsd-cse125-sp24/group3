@@ -1272,6 +1272,15 @@ void ServerGameState::handleDeaths() {
 			if (enemy->doDeath(*this)) {
 				this->entities_to_delete.insert(enemy->globalID);
 			}
+			if (enemy->type == ObjectType::Minotaur) {
+				this->soundTable().addNewSoundSource(SoundSource(
+					ServerSFX::MinotaurDeath,
+					enemy->physics.shared.getCenterPosition(),
+					DEFAULT_VOLUME,
+					MEDIUM_DIST,
+					MEDIUM_ATTEN
+				));
+			}
 		}
 	}
 }
