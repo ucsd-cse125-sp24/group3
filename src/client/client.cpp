@@ -1431,16 +1431,13 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
         /* Send an event to start 'shift' movement (i.e. sprint) */
         case GLFW_KEY_LEFT_SHIFT:
-            if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
-                this->session->sendEvent(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
-            }
-            is_held_i = true;
-            break;
-        case GLFW_KEY_LEFT_CONTROL:
-            if (this->session->getInfo().is_dungeon_master.has_value() && this->session->getInfo().is_dungeon_master.value()) {
+            if (eid.has_value()) {
                 this->session->sendEvent(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
 
+            break;
+        case GLFW_KEY_LEFT_CONTROL:
+            is_held_i = true;
             break;
 
         default:
@@ -1484,10 +1481,9 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
 
         case GLFW_KEY_LEFT_SHIFT:
-            if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
+            if (eid.has_value()) {
                 this->session->sendEvent(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
-            is_held_i = false;
             break;
 
         case GLFW_KEY_O: // zoom out
@@ -1497,16 +1493,10 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             }
             break;
         case GLFW_KEY_I: // zoom out
-            if (eid.has_value() && this->session->getInfo().is_dungeon_master.value()) {
-                //sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
-            }
             is_held_i = false;
             break;
         case GLFW_KEY_LEFT_CONTROL:
-            if (this->session->getInfo().is_dungeon_master.has_value() && this->session->getInfo().is_dungeon_master.value()) {
-                this->session->sendEvent(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
-            }
-
+            is_held_i = false;
             break;
         default:
             break;

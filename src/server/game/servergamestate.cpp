@@ -240,7 +240,9 @@ void ServerGameState::update(const EventList& events) {
 			}
 			case ActionType::Sprint: {
 				if (obj->type == ObjectType::DungeonMaster) {
-					obj->physics.velocityMultiplier = glm::vec3(5.0f, 1.1f, 5.0f);
+					DungeonMaster* dm = this->objects.getDM();
+
+					obj->physics.velocityMultiplier = (dm->physics.shared.corner.y/5.0f) * glm::vec3(1.5f, 1.1f, 1.5f);
 				}
 				else {
 					obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
