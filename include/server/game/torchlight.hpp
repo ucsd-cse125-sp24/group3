@@ -53,7 +53,7 @@ public:
      * animations
      * @parm current ServerGameState
      */
-    void doTick(ServerGameState& state, std::optional<glm::vec3> light_cut_pos);
+    void doTick(ServerGameState& state, std::optional<glm::vec3> lightning_light_cut_pos, std::optional<glm::vec3> action_light_cut_pos);
 
     /**
      * @brief get current intensity of torch from 0-1

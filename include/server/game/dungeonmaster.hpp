@@ -24,7 +24,7 @@ public:
 	void setPlacedTraps(int placedTraps);
 
 	// For lightning usage
-	void useMana();
+	void useMana(int mana);
 	void manaRegen();
 
 	/**

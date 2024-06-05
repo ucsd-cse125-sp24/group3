@@ -72,6 +72,7 @@
 #define	DM_MANA_TOTAL			30
 #define	DM_MANA_REGEN			1
 #define	LIGHTNING_MANA			10
+#define	LIGHT_CUT_MANA			5
 
 /*	Mirror Item	*/
 //	Mirror use duration in seconds

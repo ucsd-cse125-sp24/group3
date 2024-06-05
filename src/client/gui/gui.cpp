@@ -1096,6 +1096,11 @@ void GUI::_sharedGameHUD() {
                     
                     break;
                 }
+                case ModelType::LightCut: {
+                    itemString = "Cut Lights (5)";
+
+                    break;
+                }
                 case ModelType::TeleporterTrap: {
                     itemString = "Teleporter Trap";
 
@@ -1246,6 +1251,10 @@ void GUI::_sharedGameHUD() {
                     }
                     case ModelType::Lightning: {
                         itemString = "Lightning Bolt (10)";
+
+                        break;
+                    }case ModelType::LightCut: {
+                        itemString = "Cut Lights (5)";
 
                         break;
                     }
@@ -1417,6 +1426,9 @@ void GUI::_sharedGameHUD() {
                     break;
                 }
                 case ModelType::Lightning: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Lightning), 2));
+                    break;
+                }case ModelType::LightCut: {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Lightning), 2));
                     break;
                 }

@@ -65,7 +65,8 @@ ServerGameState::ServerGameState(GameConfig config) {
 	this->spawner->spawnDummy(*this);
 	this->spawner->spawnSmallDummy(*this);
 
-	this->dmCutLights = {};
+	this->dmLightningCutLights = {};
+	this->dmActionCutLights = {};
 	this->lastLightCut = 0;
 
     MazeGenerator generator(config);
@@ -410,7 +411,8 @@ void ServerGameState::update(const EventList& events) {
 			float cellWidth = currGrid.grid_cell_width;
 
 			//	If the DM is paralyzed, do nothing
-			if (dm->isParalyzed()) break;
+			if (dm->isParalyzed()) 
+				break;
 
 			glm::vec3 dir = glm::normalize(trapPlacementEvent.world_pos-dm->physics.shared.corner);
 
@@ -433,9 +435,9 @@ void ServerGameState::update(const EventList& events) {
 
 			if (trapPlacementEvent.hover) {
 				// only hover for traps, not lightning
-				if (trapPlacementEvent.cell == CellType::Lightning) {
+				if (trapPlacementEvent.cell == CellType::Lightning || trapPlacementEvent.cell == CellType::LightCut)
 					break;
-				}
+				
 
 				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
@@ -462,10 +464,23 @@ void ServerGameState::update(const EventList& events) {
 						);
 
 						lightning->useLightning(dm, *this, corner);
-						dm->useMana();
+						dm->useMana(LIGHTNING_MANA);
 
-						this->dmCutLights = corner;
-						this->lastLightCut = this->timestep;
+						this->dmLightningCutLights = corner;
+						this->lastLightningLightCut = this->timestep;
+					}
+
+					break;
+				}
+
+				if (trapPlacementEvent.cell == CellType::LightCut) {
+					if (dm->dmInfo.mana_remaining >= LIGHT_CUT_MANA) {
+						this->dmActionCutLights = trapPlacementEvent.world_pos;
+
+						// go back 150 ticks (light cut is longer)
+						this->lastLightCut = std::max(this->timestep, (unsigned int)150) - 150;
+
+						dm->useMana(LIGHT_CUT_MANA);
 					}
 
 					break;
@@ -790,10 +805,15 @@ void ServerGameState::update(const EventList& events) {
 		updateDungeonMasterParalysis();
 
 	// after some amount of timesteps uncut lights
-	if ((this->timestep - this->lastLightCut) >= LIGHT_CUT_TICKS && this->dmCutLights.has_value()) {
-		this->dmCutLights = {};
+	if ((this->timestep - this->lastLightningLightCut) >= LIGHT_CUT_TICKS && this->dmLightningCutLights.has_value()) {
+		this->dmLightningCutLights = {};
 	}
-	
+
+	// after some amount of timesteps uncut lights
+	if ((this->timestep - this->lastLightCut) >= LIGHT_CUT_TICKS && this->dmActionCutLights.has_value()) {
+		this->dmActionCutLights = {};
+	}
+
 	//	Increment timestep
 	this->timestep++;
 
@@ -1204,7 +1224,7 @@ void ServerGameState::doTorchlightTicks() {
 		if (torchlight == nullptr) 
 			continue;
 
-		torchlight->doTick(*this, this->dmCutLights);
+		torchlight->doTick(*this, this->dmLightningCutLights, this->dmActionCutLights);
 	}
 }
 

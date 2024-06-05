@@ -355,9 +355,25 @@ private:
 	 */
 	Trap* currentGhostTrap;
 
-	std::optional<glm::vec3> dmCutLights;
+	/**
+	 * @brief Field that stores the lightning pos for cutting lights
+	 */
+	std::optional<glm::vec3> dmLightningCutLights;
 
+	/**
+	 * @brief Field that stores the light cut action for cutting lights
+	 */
+	std::optional<glm::vec3> dmActionCutLights;
+
+	/**
+	 * @brief last light cut for light cut action
+	 */
 	unsigned int lastLightCut;
+
+	/**
+	 * @brief last light cut for lightning action
+	 */
+	unsigned int lastLightningLightCut;
 
 	/**
     /**
