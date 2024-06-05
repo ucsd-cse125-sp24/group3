@@ -26,8 +26,8 @@ Torchlight::Torchlight(
 		Collider::Box, corner, glm::vec3(0.0f), glm::vec3(1.0f)),
 		ModelType::Torchlight)
 {
-    const float MIN_ORB_DIST = Grid::grid_cell_width * 30.0f; // min distance to start shade blue
-    const float MIN_EXIT_DIST = Grid::grid_cell_width * 30.0f; // min distance to start shade white
+    const float MIN_ORB_DIST = Grid::grid_cell_width * 60.0f;
+    const float MIN_EXIT_DIST = Grid::grid_cell_width * 60.0f; // min distance to start shade white
 
     const float AMBER_MIN_INTENSITY = 0.3f;
     const float AMBER_MAX_INTENSITY = 1.0f;
@@ -50,28 +50,37 @@ Torchlight::Torchlight(
     const float ATTEN_LINEAR = 0.07f;
     const float ATTEN_QUAD = 0.017f;
 
+    // higher intensity takes you closer to color2
+    const auto interpolateColor = [](float intensity, glm::vec3 color1, glm::vec3 color2) {
+        return color1 + intensity * (color2 - color1);
+    };
+
     if (dist_orb < MIN_ORB_DIST) {
+        // the closer you get, the higher the factor to make it more white is multiplied
+        const float blue_intensity = (MIN_ORB_DIST - dist_orb) / MIN_ORB_DIST;
+
         // close to orb, so shade blue
         this->properties = TorchlightProperties {
             .flickering = true,
             .min_intensity = BLUE_MIN_INTENSITY,
             .max_intensity = BLUE_MAX_INTENSITY,
-            .ambient_color = BLUE_AMBIENT,
-            .diffuse_color = BLUE_DIFFUSE,
-            .specular_color = BLUE_SPECULAR,
+            .ambient_color = interpolateColor(blue_intensity, AMBER_AMBIENT, BLUE_DIFFUSE),
+            .diffuse_color = interpolateColor(blue_intensity, AMBER_DIFFUSE, BLUE_DIFFUSE),
+            .specular_color = interpolateColor(blue_intensity, AMBER_SPECULAR, BLUE_SPECULAR),
             .attenuation_linear = ATTEN_LINEAR,
             .attenuation_quadratic = ATTEN_QUAD
         };
     } else if (dist_exit < MIN_EXIT_DIST) {
+        const float white_intensity = (MIN_EXIT_DIST - dist_exit) / MIN_EXIT_DIST;
         // close to exit, so shade white
         // TEMP: still amber
         this->properties = TorchlightProperties {
             .flickering = true,
             .min_intensity = WHITE_MIN_INTENSITY,
             .max_intensity = WHITE_MAX_INTENSITY,
-            .ambient_color = WHITE_AMBIENT,
-            .diffuse_color = WHITE_DIFFUSE,
-            .specular_color = WHITE_SPECULAR,
+            .ambient_color = interpolateColor(white_intensity, AMBER_AMBIENT, WHITE_AMBIENT),
+            .diffuse_color = interpolateColor(white_intensity, AMBER_DIFFUSE, WHITE_DIFFUSE),
+            .specular_color = interpolateColor(white_intensity, AMBER_SPECULAR, WHITE_SPECULAR),
             .attenuation_linear = ATTEN_LINEAR,
             .attenuation_quadratic = ATTEN_QUAD
         };
