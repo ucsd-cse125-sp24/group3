@@ -821,6 +821,10 @@ void Client::geometryPass() {
                     }
                     break;
                 }
+                if (!sharedObject->playerInfo->is_alive) {
+                    break; // don't render dead players
+                }
+
                 animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
 
                 /* Update model animation */
