@@ -1,10 +1,10 @@
 {
     "game": {
-        "maze": {
-            "directory": "maps",
-            "procedural": true,
-            "maze_file": "test/itemRoom.maze"
-        }
+      "maze": {
+        "directory": "maps",
+        "procedural": false,
+        "maze_file": "generated/1717628119561.maze"
+      }
     },
     "network": {
         "server_ip": "localhost",
@@ -13,14 +13,14 @@
     "server": {
         "lobby_name": "Fortnite Lobby",
         "lobby_broadcast": true,
-        "max_players": 4,
+        "max_players": 3,
         "disable_dm": false,
         "skip_intro": false 
     },
     "client": {
         "default_name": "Conan O'Brien",
         "lobby_discovery": true,
-        "fullscreen": true,
+        "fullscreen": false,
         "draw_bboxes": false,
         "fps_counter": true,
         "presentation": false

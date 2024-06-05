@@ -366,18 +366,11 @@ std::chrono::milliseconds Server::doTick() {
 
     auto sgamestate = this->state.generateSharedGameState(false);
 
-    auto start_time = std::chrono::steady_clock::now();
-
     // send partial updates to the clients
     // ALSO where the packets actually get sent
     for (const auto& partial_update: sgamestate) {
         sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
     }
-
-    auto end_time = std::chrono::steady_clock::now();
-
-    std::cout << "time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << "\n";
-
 
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
