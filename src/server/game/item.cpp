@@ -28,7 +28,7 @@ void Item::dropItem(Object* other, ServerGameState& state, int itemSelected, flo
 
 	this->iteminfo.held = false;
 	this->physics.collider = Collider::Box;
-	state.objects.moveObject(this, (player->physics.shared.corner + (player->physics.shared.facing * dropDistance)) * glm::vec3(1.0f, 0.0f, 1.0f));
+	state.objects.moveObject(this, (player->physics.shared.getCenterPosition() + (player->physics.shared.facing * dropDistance)) * glm::vec3(1.0f, 0.0f, 1.0f));
 
 	player->inventory[itemSelected] = -1;
 	player->sharedInventory.inventory[itemSelected] = ModelType::Frame;
