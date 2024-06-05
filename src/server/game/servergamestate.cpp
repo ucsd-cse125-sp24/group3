@@ -253,8 +253,11 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::Zoom: { // only for DM
 				DungeonMaster * dm = this->objects.getDM();
 
-				if (dm != nullptr && (dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f))
+				if (dm != nullptr && (dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f)) {
 					dm->physics.shared.corner += startAction.movement;
+
+					obj->physics.velocityMultiplier = (dm->physics.shared.corner.y / 10.0f) * glm::vec3(1.5f, 1.1f, 1.5f);
+				}
 
 				break;
 			}
@@ -282,11 +285,18 @@ void ServerGameState::update(const EventList& events) {
 			}
 			case ActionType::Sprint: {
 				obj->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
+
+				// if DM gotta re-adjust velocity to be based on height
+				if (obj->type == ObjectType::DungeonMaster) {
+					obj->physics.velocityMultiplier = (obj->physics.shared.corner.y / 10.0f) * glm::vec3(1.5f, 1.1f, 1.5f);
+				}
+
 				if (obj->physics.velocity.x != 0.0f && obj->physics.velocity.z != 0.0f) {
 					obj->animState = AnimState::WalkAnim;
 				} else {
 					obj->animState = AnimState::IdleAnim;
 				}
+
 				break;
 			}
 			default: { break; }
@@ -1820,13 +1830,13 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 		}
 
 		Direction dir;
-		if (cell->type == CellType::ArrowTrapDown) {
+		if (type == CellType::ArrowTrapDown) {
 			dir = Direction::DOWN;
 		}
-		else if (cell->type == CellType::ArrowTrapUp) {
+		else if (type == CellType::ArrowTrapUp) {
 			dir = Direction::UP;
 		}
-		else if (cell->type == CellType::ArrowTrapLeft) {
+		else if (type == CellType::ArrowTrapLeft) {
 			dir = Direction::LEFT;
 		}
 		else {
