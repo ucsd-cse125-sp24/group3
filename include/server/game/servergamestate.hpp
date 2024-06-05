@@ -309,11 +309,11 @@ private:
 	MatchPhase matchPhase;
 
 	/**
-	 * @brief Amount of time, in timesteps, left until the end of the match
-	 * This value only becomes relevant when matchPhase is set to
+	 * @brief epoch timestamp of when the match will end
+	 * This value only becomes set when matchPhase is set to
 	 * MatchPhase::RelayRace
 	 */
-	unsigned int timesteps_left;
+	time_t relay_finish_time;
 
 	/**
 	 * @brief Player victory is by default false - only becomes true if a Player
