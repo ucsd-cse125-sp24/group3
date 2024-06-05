@@ -1114,15 +1114,7 @@ void Client::geometryPass() {
                             true);
                     }
                 }
-                else {
-                    if (sharedObject->weaponInfo->attacked) {
-                        this->item_model->setDimensions(sharedObject->physics.dimensions);
-                        this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                        this->item_model->draw(this->deferred_geometry_shader.get(),
-                            this->cam->getPos(),
-                            false);
-                    }
-                }
+                // dont render weapon colliders
                 break;
             }
             case ObjectType::Mirror: {
