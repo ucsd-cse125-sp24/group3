@@ -15,6 +15,7 @@
 #include <chrono>
 #include <memory>
 
+#include "shared/utilities/time.hpp"
 #include "boost/variant/get.hpp"
 #include "server/game/objectmanager.hpp"
 #include "server/game/potion.hpp"
@@ -363,11 +364,20 @@ std::chrono::milliseconds Server::doTick() {
 
     this->sendSoundCommands();
 
+    auto sgamestate = this->state.generateSharedGameState(false);
+
+    auto start_time = std::chrono::steady_clock::now();
+
     // send partial updates to the clients
     // ALSO where the packets actually get sent
-    for (const auto& partial_update: this->state.generateSharedGameState(false)) {
+    for (const auto& partial_update: sgamestate) {
         sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
     }
+
+    auto end_time = std::chrono::steady_clock::now();
+
+    std::cout << "time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << "\n";
+
 
     // Calculate how long we need to wait until the next tick
     auto stop = std::chrono::high_resolution_clock::now();
@@ -381,6 +391,8 @@ void Server::_doAccept() {
         [this](boost::system::error_code ec) {
             if (!ec) {
                 this->socket.set_option(boost::asio::ip::tcp::no_delay(true));
+                boost::asio::socket_base::send_buffer_size option(10000000);
+                this->socket.set_option(option);
                 auto addr = this->socket.remote_endpoint().address();
                 auto new_session = this->_handleNewSession(addr);
 
