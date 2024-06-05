@@ -93,3 +93,14 @@ Bbox combineBboxes(const Bbox& bbox1, const Bbox& bbox2) {
         )
     };
 }
+
+glm::vec3 rotate90DegreesAroundYAxis(const glm::vec3& direction) {
+    // Create a 90-degree rotation matrix around the Y-axis
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    // Apply the rotation to the direction vector
+    glm::vec4 rotatedDirection = rotationMatrix * glm::vec4(direction, 1.0f);
+
+    // Return the rotated vector as a vec3
+    return glm::vec3(rotatedDirection);
+}

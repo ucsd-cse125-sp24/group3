@@ -220,9 +220,6 @@ bool Client::init() {
     auto sungod_model_path = entity_models_dir / "sungod.obj";
     this->sungod_model = std::make_unique<Model>(sungod_model_path.string(), true);
 
-    auto minotaur_model_path = entity_models_dir / "minotaur.obj";
-    this->minotaur_model = std::make_unique<Model>(minotaur_model_path.string(), true);
-
     auto python_model_path = entity_models_dir / "python.obj";
     this->python_model = std::make_unique<Model>(python_model_path.string(), true);
 
@@ -824,6 +821,10 @@ void Client::geometryPass() {
                     }
                     break;
                 }
+                if (!sharedObject->playerInfo->is_alive) {
+                    break; // don't render dead players
+                }
+
                 animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
 
                 /* Update model animation */
@@ -892,9 +893,11 @@ void Client::geometryPass() {
                 break;
             }
             case ObjectType::Minotaur: {
-                this->minotaur_model->setDimensions(sharedObject->physics.dimensions);
-                this->minotaur_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->minotaur_model->draw(this->deferred_geometry_shader.get(),
+                this->bear_model->setDimensions(sharedObject->physics.dimensions);
+                this->bear_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->bear_model->translateRelative(glm::vec3(0, -8.5f, 0));
+                this->bear_model->rotateAbsolute(rotate90DegreesAroundYAxis(sharedObject->physics.facing));
+                this->bear_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
                 break;

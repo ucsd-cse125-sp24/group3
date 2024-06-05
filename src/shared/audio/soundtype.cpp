@@ -89,6 +89,8 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "itemdrop.wav").string();
         case ServerSFX::MirrorShatter:
             return (dir / "mirror_shatter.mp3").string();
+        case ServerSFX::MinotaurDeath:
+            return (dir / "minotaur_death.wav").string();
         
         default:
             std::cerr << "FATAL: no known path for ServerSFX " << static_cast<int>(sfx) << std::endl;
