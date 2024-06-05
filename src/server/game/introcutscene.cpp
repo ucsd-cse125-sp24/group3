@@ -23,7 +23,9 @@ IntroCutscene::IntroCutscene():
     // hard code direction to face right based on the intro cutscene maze orientation
     Player* player = new Player(this->state.getGrid().getRandomSpawnPoint(), directionToFacing(Direction::RIGHT));
     Player* player_left = new Player(this->state.getGrid().getRandomSpawnPoint(), directionToFacing(Direction::RIGHT));
+    player_left->modelType = ModelType::PlayerLightning;
     Player* player_right = new Player(this->state.getGrid().getRandomSpawnPoint(), directionToFacing(Direction::RIGHT));
+    player_right->modelType = ModelType::PlayerWater;
 
     this->state.objects.createObject(player);
     this->state.objects.createObject(player_left);
