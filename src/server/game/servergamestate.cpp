@@ -1270,6 +1270,16 @@ void ServerGameState::handleDeaths() {
 			//	Player died - increment number of player deaths
 			this->numPlayerDeaths++;
 
+			if (numPlayerDeaths < PLAYER_DEATHS_TO_RELAY_RACE) {
+				this->soundTable().addNewSoundSource(SoundSource(
+					ServerSFX::Thunder,
+					player->physics.shared.getCenterPosition(),
+					DEFAULT_VOLUME,
+					FAR_DIST,
+					FAR_ATTEN
+				));
+			}
+
 			if (numPlayerDeaths == PLAYER_DEATHS_TO_RELAY_RACE) {
 				this->transitionToRelayRace();
 			}
@@ -1865,6 +1875,29 @@ void ServerGameState::loadMaze(const Grid& grid) {
 		}
 	}
 
+	std::optional<glm::vec3> orb_pos;
+	std::optional<glm::vec3> exit_pos;
+	// go through and mark distance to orb and exit
+	for (int c = 0; c < this->grid.getColumns(); c++) {
+		for (int r = 0; r < this->grid.getRows(); r++) {
+			CellType type = this->grid.getCell(c, r)->type;
+			if (type == CellType::Orb || type == CellType::Exit) {
+				glm::vec3 corner(c * Grid::grid_cell_width, 0.0f, r * Grid::grid_cell_width);
+
+				if (type == CellType::Orb) {
+					orb_pos = corner;
+				} else {
+					exit_pos = corner;
+				}
+
+			}
+		}
+
+		if (orb_pos.has_value() && exit_pos.has_value()) {
+			break; // early exit, not really needed though probably
+		}
+	}
+
     // create multiple floor and ceiling objects to populate the size of the entire maze. 
     // currently doing this to stretch out the floor texture by the desired factor. here
     // in the maze generation we can have a lot of control over how frequently the floor texture
@@ -2097,7 +2130,10 @@ void ServerGameState::loadMaze(const Grid& grid) {
                 case CellType::TorchDown:
                 case CellType::TorchRight:
                 case CellType::TorchLeft: {
-                    this->spawnTorch(cell);
+					// if no orb or exit in maze then just tell it that they are very far off so not
+					// considered in color calculations
+					const glm::vec3 FAR_OFF_POS(10000, 10000, 10000);
+					this->spawnTorch(cell, orb_pos.value_or(FAR_OFF_POS), exit_pos.value_or(FAR_OFF_POS));
                     this->spawnWall(cell, col, row, internal_walls.contains(glm::ivec2(col, row)));
                     break;
                 }
@@ -2227,13 +2263,16 @@ void ServerGameState::spawnWall(GridCell* cell, int col, int row, bool is_intern
     }
 }
 
-void ServerGameState::spawnTorch(GridCell *cell) {
+void ServerGameState::spawnTorch(GridCell *cell, glm::vec3 orb_pos, glm::vec3 exit_pos) {
     glm::vec3 dimensions = Object::models.at(ModelType::Torchlight);
     glm::vec3 corner(
         cell->x * this->grid.grid_cell_width,
         MAZE_CEILING_HEIGHT / 2.0f,
         cell->y * this->grid.grid_cell_width
     );
+
+	float orb_dist = glm::distance(corner, orb_pos);
+	float exit_dist = glm::distance(corner, exit_pos);
 
     switch (cell->type) {
         case CellType::TorchDown: {
@@ -2271,7 +2310,7 @@ void ServerGameState::spawnTorch(GridCell *cell) {
 		true
 	));
 
-    this->objects.createObject(new Torchlight(corner));
+    this->objects.createObject(new Torchlight(corner, orb_dist, exit_dist));
 }
 
 Trap* ServerGameState::spawnFireballTrap(GridCell *cell) {

@@ -371,11 +371,15 @@ private:
      * cell
      * @param cell is a single cell of the maze's grid where a wall + torch
      * should be placed
+	 * @param orb_pos position of the orb so that we can calculate the distance
+	 * for coloring purposes
+	 * @param exit_pos position of the exit so that we can calculate the distance
+	 * for coloring purposes
      * @param cellType determines which direction the torch should face. 
      * This means that only TorchUp, TorchDown, TorchRight, and TorchLeft
      * are acceptable values of cellType 
      */
-    void spawnTorch(GridCell *cell);
+    void spawnTorch(GridCell *cell, glm::vec3 orb_pos, glm::vec3 exit_pos);
 
     /**
      * @brief helper function to spawn a fireball trap 
