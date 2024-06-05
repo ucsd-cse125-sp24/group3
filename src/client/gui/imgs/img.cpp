@@ -85,6 +85,13 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::Skull: return (img_root / "normalSkull.png").string();
         case ImgID::DestroyedSkull: return (img_root / "destroyedSkull.png").string();
         case ImgID::SkullBG: return (img_root / "deathCountBG.png").string();
+        case ImgID::HelpBG: return (img_root / "helpBG.png").string();
+        case ImgID::HelpDMBG: return (img_root / "helpDMBG.png").string();
+        case ImgID::ExitBG: return (img_root / "exitBG.png").string();
+        case ImgID::ExitDMBG: return (img_root / "exitDMBG.png").string();
+        case ImgID::LobbyButton: return (img_root / "lobbyButton.png").string();
+        case ImgID::Victory: return (img_root / "victory.png").string();
+        case ImgID::Defeat: return (img_root / "defeat.png").string();
     }
 }
 }

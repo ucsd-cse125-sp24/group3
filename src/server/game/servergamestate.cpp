@@ -1271,7 +1271,13 @@ void ServerGameState::handleDeaths() {
 			this->numPlayerDeaths++;
 
 			if (numPlayerDeaths < PLAYER_DEATHS_TO_RELAY_RACE) {
-				// Play death sounds
+				this->soundTable().addNewSoundSource(SoundSource(
+					ServerSFX::Thunder,
+					player->physics.shared.getCenterPosition(),
+					DEFAULT_VOLUME,
+					FAR_DIST,
+					FAR_ATTEN
+				));
 			}
 
 			if (numPlayerDeaths == PLAYER_DEATHS_TO_RELAY_RACE) {

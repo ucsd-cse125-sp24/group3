@@ -59,7 +59,8 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
                 .lobby_discovery = json.at("client").at("lobby_discovery"),
                 .fullscreen = json.at("client").at("fullscreen"),
                 .draw_bboxes = json.at("client").at("draw_bboxes"),
-                .fps_counter = json.at("client").at("fps_counter")
+                .fps_counter = json.at("client").at("fps_counter"),
+                .presentation = json.at("client").at("presentation")
             }
         };
     } catch (nlohmann::json::exception& ex) {
@@ -91,7 +92,10 @@ GameConfig getDefaultConfig() {
         .client = {
             .default_name = "Player",
             .lobby_discovery = false,
-            .fullscreen = false
+            .fullscreen = false,
+            .draw_bboxes = false,
+            .fps_counter = false,
+            .presentation = false
         }
     };
 }
