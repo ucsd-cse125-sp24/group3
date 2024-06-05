@@ -35,8 +35,10 @@ public:
 	/**
      * Creates a torchight with default lighting properties.
 	 * @param corner Corner position of the surface
+     * @param dist_orb distance to orb, to see if it should be shaded blue
+     * @param dist_exit distance to the exit, to see if it should be shaded white
 	 */
-	explicit Torchlight(glm::vec3 corner);
+	explicit Torchlight(glm::vec3 corner, float dist_orb, float dist_exit);
 
 	/**
 	 * @param corner Corner position of the surface

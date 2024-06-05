@@ -64,6 +64,16 @@ enum class ImgID {
     DMCD_10, DMCD_9, DMCD_8, DMCD_7, DMCD_6, DMCD_5, DMCD_4, DMCD_3, DMCD_2, DMCD_1, 
     DMCD_Selected_10, DMCD_Selected_9, DMCD_Selected_8, DMCD_Selected_7, DMCD_Selected_6, 
     DMCD_Selected_5, DMCD_Selected_4, DMCD_Selected_3, DMCD_Selected_2, DMCD_Selected_1,
+    Skull, 
+    DestroyedSkull,
+    SkullBG,
+    HelpBG,
+    HelpDMBG,
+    ExitBG,
+    ExitDMBG,
+    LobbyButton,
+    Victory,
+    Defeat,
     Blank,
 };
 
@@ -88,6 +98,8 @@ enum class ImgID {
         ImgID::DMCD_5, ImgID::DMCD_4, ImgID::DMCD_3, ImgID::DMCD_2, ImgID::DMCD_1, \
         ImgID::DMCD_Selected_10, ImgID::DMCD_Selected_9, ImgID::DMCD_Selected_8, ImgID::DMCD_Selected_7, ImgID::DMCD_Selected_6, \
         ImgID::DMCD_Selected_5, ImgID::DMCD_Selected_4, ImgID::DMCD_Selected_3, ImgID::DMCD_Selected_2, ImgID::DMCD_Selected_1, \
+        ImgID::Skull, ImgID::DestroyedSkull, ImgID::SkullBG, ImgID::HelpBG, ImgID::HelpDMBG, \
+        ImgID::ExitBG, ImgID::ExitDMBG, ImgID::LobbyButton, ImgID::Victory, ImgID::Defeat, \
     }
 
 /**
