@@ -1918,12 +1918,32 @@ void GUI::_layoutGameEscMenu() {
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
     );
-    if(!is_dm.value()){
-        exitBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ExitBG), 2));
-    } else {
-        exitBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ExitDMBG), 2));
-    }
 
+    /*
+    auto changeimage = [this](widget::Handle handle) {
+        auto widget = this->borrowWidget<widget::StaticImg>(handle);
+        widget->changeImage(images.getImg(img::ImgID::ExitBG));
+    };*/
+
+    auto img = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ExitBG), 2);
+
+    if(!is_dm.value()){
+        img->addOnHover([this](widget::Handle handle) {
+            auto widget = this->borrowWidget<widget::StaticImg>(handle);
+            widget->changeImage(images.getImg(img::ImgID::ExitBG));
+        });
+        
+    } 
+    else {
+        img = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ExitDMBG), 2);
+
+        img->addOnHover([this](widget::Handle handle) {
+            auto widget = this->borrowWidget<widget::StaticImg>(handle);
+            widget->changeImage(images.getImg(img::ImgID::ExitBG));
+        });
+    }
+    exitBG->push(std::move(img));
+    
     exitBG->addOnClick([this](widget::Handle handle) {
         glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
     });

@@ -42,6 +42,7 @@ public:
     explicit StaticImg(gui::img::Img img);
     ~StaticImg();
 
+    void changeImage(gui::img::Img img);
     void render() override;
 
 private:

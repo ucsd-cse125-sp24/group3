@@ -2,7 +2,7 @@
     "game": {
         "maze": {
             "directory": "maps",
-            "procedural": false,
+            "procedural": true,
             "maze_file": "test/itemRoom.maze"
         }
     },
@@ -23,6 +23,6 @@
         "fullscreen": true,
         "draw_bboxes": false,
         "fps_counter": true,
-        "presentation": true
+        "presentation": false
     }
 }
