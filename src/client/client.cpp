@@ -1572,16 +1572,6 @@ void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { /
 
     mouse_xpos = new_mouse_xpos;
     mouse_ypos = new_mouse_ypos;
-
-    if (this->gameState.phase == GamePhase::GAME && this->gui_state == GUIState::GAME_HUD) {
-        if (this->session->getInfo().is_dungeon_master.has_value() &&
-            this->session->getInfo().is_dungeon_master.value()) {
-            auto eid = this->session->getInfo().client_eid;
-            auto obj = this->gameState.objects.at(eid.value());
-
-            //sendTrapEvent(true, false, obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected - 1]);
-        }
-    }
 }
 
 void Client::setWorldPos() {
