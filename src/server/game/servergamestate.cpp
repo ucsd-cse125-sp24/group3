@@ -439,7 +439,6 @@ void ServerGameState::update(const EventList& events) {
 				// only hover for traps, not lightning
 				if (trapPlacementEvent.cell == CellType::Lightning || trapPlacementEvent.cell == CellType::LightCut)
 					break;
-				
 
 				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
@@ -480,7 +479,7 @@ void ServerGameState::update(const EventList& events) {
 						this->dmActionCutLights = trapPlacementEvent.world_pos;
 
 						// go back 150 ticks (light cut is longer)
-						this->lastLightCut = std::max(this->timestep, (unsigned int)150) - 150;
+						this->lastLightCut = this->timestep;
 
 						dm->useMana(LIGHT_CUT_MANA);
 					}
@@ -807,7 +806,7 @@ void ServerGameState::update(const EventList& events) {
 		updateDungeonMasterParalysis();
 
 	// after some amount of timesteps uncut lights
-	if ((this->timestep - this->lastLightningLightCut) >= LIGHT_CUT_TICKS && this->dmLightningCutLights.has_value()) {
+	if ((this->timestep - this->lastLightningLightCut) >= LIGHTNING_LIGHT_CUT_TICKS && this->dmLightningCutLights.has_value()) {
 		this->dmLightningCutLights = {};
 	}
 

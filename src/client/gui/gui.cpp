@@ -1429,7 +1429,7 @@ void GUI::_sharedGameHUD() {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Lightning), 2));
                     break;
                 }case ModelType::LightCut: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Lightning), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LightCut), 2));
                     break;
                 }
                 case ModelType::ArrowTrap: {
