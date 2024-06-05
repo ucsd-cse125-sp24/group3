@@ -1778,35 +1778,10 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 	case CellType::ArrowTrapLeft:
 	case CellType::ArrowTrapRight:
 	case CellType::ArrowTrapUp: {
-		if (cell->type != CellType::Empty) {
-			return nullptr;
-		}
-
-		Direction dir;
-		if (cell->type == CellType::ArrowTrapDown) {
-			dir = Direction::DOWN;
-		}
-		else if (cell->type == CellType::ArrowTrapUp) {
-			dir = Direction::UP;
-		}
-		else if (cell->type == CellType::ArrowTrapLeft) {
-			dir = Direction::LEFT;
-		}
-		else {
-			dir = Direction::RIGHT;
-		}
-
-		glm::vec3 corner(
-			(cell->x* Grid::grid_cell_width),
-			0.0f,
-			(cell->y* Grid::grid_cell_width)
-		);
-
-		ArrowTrap* arrowTrap = new ArrowTrap(corner, dir);
-
-		this->objects.createObject(arrowTrap);
-		
-		return arrowTrap;
+        if (cell->type != CellType::Empty) {
+            return nullptr;
+        }
+        return spawnArrowTrap(cell);
 	}
 	case CellType::TeleporterTrap: {
 		if (cell->type != CellType::Empty)
@@ -2146,24 +2121,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				case CellType::ArrowTrapLeft:
 				case CellType::ArrowTrapRight:
 				case CellType::ArrowTrapUp: {
-					Direction dir;
-					if (cell->type == CellType::ArrowTrapDown) {
-						dir = Direction::DOWN;
-					} else if (cell->type == CellType::ArrowTrapUp) {
-						dir = Direction::UP;
-					} else if (cell->type == CellType::ArrowTrapLeft) {
-						dir = Direction::LEFT;
-					} else {
-						dir = Direction::RIGHT;
-					}
-
-					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
-						-3.0f, 
-						cell->y * Grid::grid_cell_width
-					);
-
-					this->objects.createObject(new ArrowTrap(corner, dir));
+                    spawnArrowTrap(cell);
 					break;
 				}
 
@@ -2329,6 +2287,41 @@ Trap* ServerGameState::spawnFireballTrap(GridCell *cell) {
     FireballTrap* fireBallTrap = new FireballTrap(corner, dir);
     this->objects.createObject(fireBallTrap);
     return fireBallTrap;
+}
+
+Trap* ServerGameState::spawnArrowTrap(GridCell* cell) {
+    glm::vec3 corner(
+        (cell->x* Grid::grid_cell_width),
+        -3.0f,
+        (cell->y* Grid::grid_cell_width)
+    );
+
+    const float z_nudge = 0.55f;
+    const float x_nudge = 0.15f;
+    Direction dir;
+    if (cell->type == CellType::ArrowTrapDown) {
+        dir = Direction::DOWN;
+        corner.x -= x_nudge;
+    }
+    else if (cell->type == CellType::ArrowTrapUp) {
+        dir = Direction::UP;
+        corner.x -= x_nudge;
+    }
+    else if (cell->type == CellType::ArrowTrapLeft) {
+        dir = Direction::LEFT;
+        corner.z += z_nudge;
+    }
+    else {
+        dir = Direction::RIGHT;
+        corner.z += z_nudge;
+    }
+
+
+    ArrowTrap* arrowTrap = new ArrowTrap(corner, dir);
+
+    this->objects.createObject(arrowTrap);
+    
+    return arrowTrap;
 }
 
 Grid& ServerGameState::getGrid() {

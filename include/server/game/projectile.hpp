@@ -105,27 +105,33 @@ public:
 class Arrow : public Projectile {
 public:
     inline static const int DAMAGE = 10;
-    inline static const float H_MULT = 0.10f;
+    inline static const float H_MULT = 0.55f;
     inline static const float V_MULT = 0.0f; // not affected by gravity
 
     Arrow(glm::vec3 corner, glm::vec3 facing, Direction dir):
         Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Arrow, ServerSFX::ArrowImpact,
             Options(false, DAMAGE, H_MULT, V_MULT, false, 0.0f, 0, {})), dir(dir)
     {
+        const float clear_model_nudge = 1.5f;
         switch (dir) {
             case Direction::LEFT:
                 std::swap(this->physics.shared.dimensions.x, this->physics.shared.dimensions.z);
                 this->physics.shared.facing = glm::vec3(0.0f, 0.0f, -1.0f);
+                this->physics.shared.corner.x -= clear_model_nudge;
                 break;
             case Direction::RIGHT:
                 std::swap(this->physics.shared.dimensions.x, this->physics.shared.dimensions.z);
                 this->physics.shared.facing = glm::vec3(0.0f, 0.0f, 1.0f);
+                // right doesn't need nudge for some reason
+                // this->physics.shared.corner.x += clear_model_nudge;
                 break;
             case Direction::UP:
                 this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
+                this->physics.shared.corner.z -= (2.0f * clear_model_nudge);
                 break;
             case Direction::DOWN:
                 this->physics.shared.facing = glm::vec3(-1.0f, 0.0f, 0.0f);
+                this->physics.shared.corner.z += clear_model_nudge;
                 break;
         }
     }
