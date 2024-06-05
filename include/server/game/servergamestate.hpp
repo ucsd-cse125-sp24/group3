@@ -141,6 +141,19 @@ public:
 
 	void deleteEntities();
 
+	/**
+	 * @brief Updates player's lightning invulnerability status
+	 * (sets to false once the player's lightning invulnerability duration
+	 * is past)
+	 */
+	void updatePlayerLightningInvulnerabilityStatus();
+
+	/**
+	 * @brief Updates the DungeonMaster's paralysis status
+	 * (sets to false once the DungeonMaster's paralysis duration is past)
+	 */
+	void updateDungeonMasterParalysis();
+
 	/*	SharedGameState generation	*/
 
 	//	TODO: Modify this function to dynamically allocate a SharedGameState
@@ -298,11 +311,11 @@ private:
 	MatchPhase matchPhase;
 
 	/**
-	 * @brief Amount of time, in timesteps, left until the end of the match
-	 * This value only becomes relevant when matchPhase is set to
+	 * @brief epoch timestamp of when the match will end
+	 * This value only becomes set when matchPhase is set to
 	 * MatchPhase::RelayRace
 	 */
-	unsigned int timesteps_left;
+	time_t relay_finish_time;
 
 	/**
 	 * @brief Player victory is by default false - only becomes true if a Player
@@ -339,9 +352,9 @@ private:
 	 */
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
 
-
-	std::unordered_map<std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
-
+	/**
+	 * @brief Field that stores the current trap the DM is hovering (not placed yet)
+	 */
 	Trap* currentGhostTrap;
 
 	/**

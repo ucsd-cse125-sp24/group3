@@ -25,12 +25,17 @@ enum class ModelType {
 	ArrowTrapLeft,
 	ArrowTrapRight,
 	SpikeTrap,
-	SunGod,
 	TeleporterTrap,
 	Dagger,
 	Sword,
 	Hammer,
 	Lightning,
     Arrow,
-    ArrowTrap
+    ArrowTrap,
+	FireballTrapLeft,
+	FireballTrapRight,
+	FireballTrapUp,
+	FireballTrapDown,
+	SunGod,
+	Mirror
 };

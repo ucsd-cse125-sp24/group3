@@ -16,4 +16,4 @@
 
 // Sound values fitting for something that should be heard from very far
 #define FAR_ATTEN 1.0f
-#define FAR_DIST 50.0f
+#define FAR_DIST 80.0f

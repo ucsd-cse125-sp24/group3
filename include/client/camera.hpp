@@ -89,6 +89,8 @@ public:
 
     glm::mat4 getView();
 
+    void setPitch(float pitch);
+
 protected:
     // Perspective controls
     float FOV;       // Field of View Angle (degrees)

@@ -16,7 +16,7 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
     Stat(0, 10, 5)
 )), sharedTrapInventory(SharedTrapInventory{ .selected = 1, .inventory_size = TRAP_INVENTORY_SIZE, \
     .inventory = std::vector<ModelType>(TRAP_INVENTORY_SIZE, ModelType::Frame) }), \
-    dmInfo(SharedDMInfo{ .mana_remaining = 15 })
+    dmInfo(SharedDMInfo{ .paralyzed = false, .mana_remaining = 15  })
 {
     this->physics.feels_gravity = false;
     this->physics.velocityMultiplier = glm::vec3(3.0f, 1.0f, 3.0f);
@@ -25,12 +25,25 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
     this->placedTraps = 0;
 
     // TODO: fill in rest of traps
-    this->sharedTrapInventory.inventory[0] = ModelType::FloorSpikeFull;
-    this->sharedTrapInventory.inventory[1] = ModelType::FloorSpikeHorizontal;
-    this->sharedTrapInventory.inventory[2] = ModelType::FloorSpikeVertical;
+    this->sharedTrapInventory.inventory[0] = ModelType::Lightning;
+    this->sharedTrapInventory.inventory[1] = ModelType::TeleporterTrap;
+    this->sharedTrapInventory.inventory[2] = ModelType::ArrowTrap;
     this->sharedTrapInventory.inventory[3] = ModelType::SunGod;
     this->sharedTrapInventory.inventory[4] = ModelType::SpikeTrap;
-    this->sharedTrapInventory.inventory[5] = ModelType::Lightning;
+    this->sharedTrapInventory.inventory[5] = ModelType::FloorSpikeFull;
+
+    //  DungeonMaster paralysis (relevant when the DM is paralyzed by a Player
+    //  reflecting a lightning bolt back at the DM using a Mirror)
+
+    //  Initially, the DM isn't paralyzed
+
+    //  This will be overwritten when the DM is actually paralyzed using
+    //  setParalysis()
+    this->paralysisDuration = -1;
+    
+    //  This will be overwritten when the DM is actually paralyzed using
+    //  setParalysis()
+    this->paralysis_start_time = std::chrono::system_clock::now();
 }
 
 int DungeonMaster::getPlacedTraps() {
@@ -63,4 +76,27 @@ void DungeonMaster::manaRegen() {
 
 DungeonMaster::~DungeonMaster() {
 
+}
+
+void DungeonMaster::setParalysis(bool isParalyzed, double paralysis_duration) {
+    if (isParalyzed) {
+        //  DM is now paralyzed - set duration and mark start timestamp
+        std::cout << "Paralyzing the DM!" << std::endl;
+        this->paralysisDuration = paralysis_duration;
+        this->paralysis_start_time = std::chrono::system_clock::now();
+    }
+
+    this->dmInfo.paralyzed = isParalyzed;
+}
+
+bool DungeonMaster::isParalyzed() const {
+    return this->dmInfo.paralyzed;
+}
+
+double DungeonMaster::getParalysisDuration() const {
+    return this->paralysisDuration;
+}
+
+std::chrono::time_point<std::chrono::system_clock> DungeonMaster::getParalysisStartTime() const {
+    return this->paralysis_start_time;
 }

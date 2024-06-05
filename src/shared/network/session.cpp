@@ -166,3 +166,7 @@ bool Session::socketHasEnoughBytes(std::size_t bytes) {
 
     return bytes_readable >= bytes;
 }
+
+void Session::setDM(bool is_dm) {
+    this->info.is_dungeon_master = is_dm;
+}

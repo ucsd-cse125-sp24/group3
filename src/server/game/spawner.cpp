@@ -16,6 +16,7 @@ Spawner::Spawner() {
     this->enemyValueCap = MAX_ENEMY_VALUE;
     this->currentEnemyValue = 0;
 	this->dummyItem = nullptr;
+	this->smallDummyItem = nullptr;
 
     this->valueMap.push_back(20); // 0: Big slime (size = 4)
     this->valueMap.push_back(10); // 1: Medium slime (size = 3)
@@ -136,8 +137,6 @@ glm::vec3 Spawner::findEmptyPosition(ServerGameState& state) {
 		// add small offset for spawn
 		if (!state.hasObjectCollided(this->dummyItem, 
 				glm::vec3(random_cell.x * Grid::grid_cell_width + 0.01f, 0, random_cell.y * Grid::grid_cell_width + 0.01f))) {
-			for (glm::ivec2 cellPos : this->dummyItem->gridCellPositions) {
-			}
 			state.objects.moveObject(this->dummyItem, glm::vec3(-1, 0, -1));
 			break;
 		}
@@ -153,6 +152,16 @@ void Spawner::spawnDummy(ServerGameState& state) {
 	auto dummy = state.objects.getItem(itemID);
 	dummy->physics.shared.dimensions = glm::vec3(4.0f, 7.0f, 4.0f);
 	this->dummyItem = dummy;
+	dummy->iteminfo.held = true;
+}
+
+void Spawner::spawnSmallDummy(ServerGameState& state) {
+	// Set dummy item with the biggest possible enemy size
+	// Used for checking spawnable tile
+	SpecificID itemID = state.objects.createObject(new Item(ObjectType::Item, true, glm::vec3(-1, 0, -1), ModelType::Cube, glm::vec3(1)));
+	auto dummy = state.objects.getItem(itemID);
+	dummy->physics.shared.dimensions = glm::vec3(1.0f, 1.0f, 1.0f);
+	this->smallDummyItem = dummy;
 	dummy->iteminfo.held = true;
 }
 

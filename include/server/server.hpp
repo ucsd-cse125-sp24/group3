@@ -10,6 +10,7 @@
 #include <chrono>
 
 #include "server/lobbybroadcaster.hpp"
+#include "server/game/introcutscene.hpp"
 #include "shared/network/session.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/typedefs.hpp"
@@ -40,6 +41,8 @@ public:
     void sendUpdateToAllClients(Event event);
 
     void sendLightSourceUpdates(EntityID playerID);
+
+    void sendSoundCommands();
 
 private:
     /// @brief EID that is reserved for the Server / World itself.
@@ -76,4 +79,7 @@ private:
 
     /// @brief config
     GameConfig config;
+
+    /// @brief game state used to render the intro cutscene
+    IntroCutscene intro_cutscene;
 };

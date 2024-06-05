@@ -40,6 +40,7 @@ enum class ObjectType {
 	Orb,
 	Weapon,
 	WeaponCollider,
+	Mirror
 };
 
 /**
@@ -126,10 +127,11 @@ struct SharedTrapInventory {
 	int inventory_size;
 	std::vector<ModelType> inventory;
 	std::unordered_map<CellType, std::time_t> trapsInCooldown;
+	std::unordered_map<CellType, int> trapsCooldown;
 	int trapsPlaced;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& selected& inventory_size& inventory& trapsInCooldown& trapsPlaced;
+		ar& selected& inventory_size& inventory& trapsInCooldown& trapsPlaced & trapsCooldown;
 	}
 };
 
@@ -217,9 +219,10 @@ struct SharedPlayerInfo {
 	bool is_alive;
 	time_t respawn_time; // unix timestamp in ms when the player will be respawned
 	bool render; // for invis potion
+	bool used_mirror_to_reflect_lightning;	//	To tell the player that they successfully reflected lightning
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & is_alive & respawn_time & render;
+		ar & is_alive & respawn_time & render & used_mirror_to_reflect_lightning;
 	}
 };
 
@@ -264,11 +267,18 @@ enum class AnimState {
 };
 
 struct SharedDMInfo {
+	/**
+	 * @brief The Dungeon Master can become paralyzed if a player used a Mirror
+	 * object to reflect a lightning bolt back at the Dungeon Master.
+	 * When the Dungeon Master is paralyzed, all input events from the DM should
+	 * be ignored for the duration of the paralysis.
+	 */
+	bool paralyzed;
 
 	int mana_remaining;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& mana_remaining;
+		ar & paralyzed & mana_remaining;
 	}
 };
 

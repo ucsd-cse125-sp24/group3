@@ -10,6 +10,7 @@
 #include "server/game/spell.hpp"
 #include "server/game/weaponcollider.hpp"
 #include "server/game/weapon.hpp"
+#include "server/game/mirror.hpp"
 #include "shared/utilities/rng.hpp"
 
 #include <memory>
@@ -42,17 +43,16 @@ SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID
 
 	//	If an EntityID is specified, put object at the specific EntityID
 	if (id.has_value()) {
-		std::cout << "OPTIONAL PARAMETER TO _createObject() id has value!" << std::endl;
 		globalID = id.get();
 		this->objects.set(object, globalID);
-	}
-	else {
+	} else {
 		globalID = this->objects.push(object);
 	}
 
 	object->globalID = globalID;
 
 	object->gridCellPositions = this->objectGridCells(object);
+
 	for (auto pos : object->gridCellPositions) {
 		if (!this->cellToObjects.contains(pos)) {
 			this->cellToObjects.insert({pos, std::vector<Object*>()});
@@ -98,6 +98,7 @@ SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID
 		}
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
+			std::cout << "INSERTING A PLAYER of TYPEID " << object->typeID << std::endl;
 			break;
 		case ObjectType::Python:
 		case ObjectType::Minotaur:
@@ -109,6 +110,9 @@ SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID
 			break;
 		case ObjectType::Orb:
 			object->typeID = this->items.push(dynamic_cast<Orb*>(object));
+			break;
+		case ObjectType::Mirror:
+			object->typeID = this->items.push(dynamic_cast<Mirror*>(object));
 			break;
         default:
 			std::cerr << "FATAL: invalid object type being created: " << static_cast<int>(object->type) << 
@@ -178,6 +182,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::Spell:
 	case ObjectType::Potion:
 	case ObjectType::Orb:
+	case ObjectType::Mirror:
 		this->items.remove(object->typeID);
 		break;
 	case ObjectType::Exit:

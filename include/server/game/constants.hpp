@@ -73,14 +73,19 @@
 #define	DM_MANA_REGEN			1
 #define	LIGHTNING_MANA			10
 
+/*	Mirror Item	*/
+//	Mirror use duration in seconds
+#define	MIRROR_USE_DURATION		30
+
 /*	Game	*/
 #define	GRAVITY					0.03f
 #define	PLAYER_SPEED 			1.65f
 #define JUMP_SPEED				0.55f
-
 
 /* DM Constants */
 #define MAX_TRAPS 10
 #define TRAP_INVENTORY_SIZE 10
 #define TRAP_TIME 10
 #define TRAP_COOL_DOWN 5
+#define ITEM_SPAWN_PROB	0.1
+#define ITEM_SPAWN_BOUND 3

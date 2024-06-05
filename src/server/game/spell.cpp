@@ -55,17 +55,21 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
     }
     case SpellType::Teleport: {
         sound = ServerSFX::Teleport;
-        auto players = state.objects.getPlayers();
-        Player* rand_player;
-        while (true) {
-            rand_player = players.get(randomInt(0, players.size() - 1));
-            if (players.size() == 1) { 
-                break; 
-            }
-            if (player->typeID != rand_player->typeID) {
-                break;
+
+        std::vector<Player*> valid_players;
+
+        auto all_players = state.objects.getPlayers();
+        for (int i = 0; i < all_players.size(); i++) {
+            if (all_players.get(i) != nullptr && all_players.get(i)->typeID != player->typeID) {
+                valid_players.push_back(all_players.get(i));
             }
         }
+
+        if (valid_players.size() < 1) {
+            return;
+        }
+
+        Player* rand_player = valid_players.at(randomInt(0, valid_players.size() - 1));
 
         auto& grid = state.getGrid();
         int r_col = 0;

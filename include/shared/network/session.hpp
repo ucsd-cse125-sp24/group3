@@ -113,6 +113,8 @@ public:
      */
     const SessionInfo& getInfo() const;
 
+    void setDM(bool is_dm);
+
 private:
     /// @brief true until there is a fatal error on the socket
     bool okay;

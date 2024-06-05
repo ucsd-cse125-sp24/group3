@@ -50,9 +50,9 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
         if (!state.getGrid().getCell(curr_grid_pos.x, curr_grid_pos.y)) {
             break;
         }
-        if (state.getGrid().getCell(curr_grid_pos.x, curr_grid_pos.y)->type == CellType::Wall) {
-            return false; // didnt find a player before a wall
-        }
+        //if (state.getGrid().getCell(curr_grid_pos.x, curr_grid_pos.y)->type == CellType::Wall) {
+        //    return false; // didnt find a player before a wall
+        //}
 
         for (const auto& curr_player_pos : player_grid_positions) {
             if (curr_grid_pos == curr_player_pos) { // cppcheck-suppress useStlAlgorithm

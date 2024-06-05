@@ -20,6 +20,7 @@ enum class PlayerRole;
 enum class GamePhase {
 	TITLE_SCREEN,
 	LOBBY,
+	INTRO_CUTSCENE,
 	GAME,
 	RESULTS
 };
@@ -174,7 +175,7 @@ struct SharedGameState {
 
 	MatchPhase matchPhase;
 
-	unsigned int timesteps_left;
+	time_t relay_finish_time;
 
 	bool playerVictory;
 
@@ -187,7 +188,7 @@ struct SharedGameState {
 		this->timestep = FIRST_TIMESTEP;
 		this->lobby.max_players = MAX_PLAYERS;
 		this->matchPhase = MatchPhase::MazeExploration;
-		this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
+		this->relay_finish_time = 0;
 		this->playerVictory = false;
 		this->numPlayerDeaths = 0;
 	}
@@ -200,14 +201,14 @@ struct SharedGameState {
 		this->lobby.max_players = config.server.max_players;
 		this->lobby.name = config.server.lobby_name;
 		this->matchPhase = MatchPhase::MazeExploration;
-		this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
+		this->relay_finish_time = 0;
 		this->playerVictory = false;
 		this->numPlayerDeaths = 0;
 	}
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
 		ar & objects & timestep & lobby & phase & matchPhase
-			& timesteps_left & playerVictory & numPlayerDeaths;
+			& relay_finish_time & playerVictory & numPlayerDeaths;
 	}
 
 	/**

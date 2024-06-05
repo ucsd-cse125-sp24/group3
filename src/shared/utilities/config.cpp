@@ -52,7 +52,8 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
                 .lobby_name = json.at("server").at("lobby_name"),
                 .lobby_broadcast = json.at("server").at("lobby_broadcast"),
                 .max_players = json.at("server").at("max_players"),
-                .disable_dm = json.at("server").at("disable_dm")
+                .disable_dm = json.at("server").at("disable_dm"),
+                .skip_intro = json.at("server").at("skip_intro")
             },
             .client = {
                 .default_name = json.at("client").at("default_name"),
@@ -86,7 +87,8 @@ GameConfig getDefaultConfig() {
             .lobby_name = "My Test Lobby",
             .lobby_broadcast = false,
             .max_players = 1,
-            .disable_dm = false
+            .disable_dm = false,
+            .skip_intro = false
         },
         .client = {
             .default_name = "Player",

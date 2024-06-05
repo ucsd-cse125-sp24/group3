@@ -17,6 +17,7 @@
 #include "server/game/orb.hpp"
 #include "server/game/weapon.hpp"
 #include "server/game/weaponcollider.hpp"
+#include "server/game/mirror.hpp"
 #include "server/game/spawner.hpp"
 
 #include "shared/game/celltype.hpp"
@@ -52,7 +53,7 @@ ServerGameState::ServerGameState(GameConfig config) : config(config) {
 	//	Initialize game instance match phase data
 	//	Match begins in MazeExploration phase (no timer)
 	this->matchPhase = MatchPhase::MazeExploration;
-	this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
+	this->relay_finish_time = 0;
 	//	Player victory is by default false (need to collide with an open exit
 	//	while holding the Orb to win, whereas DM wins on time limit expiration)
 	this->playerVictory = false;
@@ -63,6 +64,7 @@ ServerGameState::ServerGameState(GameConfig config) : config(config) {
 	this->currentGhostTrap = nullptr;
 	this->spawner = std::make_unique<Spawner>();
 	this->spawner->spawnDummy(*this);
+	this->spawner->spawnSmallDummy(*this);
 
 
     MazeGenerator generator(config);
@@ -115,7 +117,7 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 		curr_update.lobby = this->lobby;
 		curr_update.phase = this->phase;
 		curr_update.matchPhase = this->matchPhase;
-		curr_update.timesteps_left = this->timesteps_left;
+		curr_update.relay_finish_time = this->relay_finish_time;
 		curr_update.playerVictory = this->playerVictory;
 		curr_update.numPlayerDeaths = this->numPlayerDeaths;
 		return curr_update;
@@ -158,7 +160,9 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 
 		//	Make sure that SharedGameState updates are sent while the server is in the
 		//	Lobby phase (to ensure players can see other players lobby status updates)
-		if (num_in_curr_update > 0 || this->getPhase() == GamePhase::LOBBY) {
+		if (num_in_curr_update > 0 || 
+		   this->getPhase() == GamePhase::LOBBY ||
+		   this->getPhase() == GamePhase::INTRO_CUTSCENE) {
 			partial_updates.push_back(curr_update);
 		}
 
@@ -166,13 +170,6 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 		std::unordered_set<EntityID> empty;
 		std::swap(this->updated_entities, empty);
 	}
-
-	//	DEBUG
-	/*if (partial_updates.size() > 0) {
-		std::cout << "Number of partial updates: " << std::to_string(partial_updates.size()) << std::endl;
-		std::cout << "Partial update's lobby (in server):" << std::endl;
-		std::cout << partial_updates[0].lobby.to_string() << std::endl;
-	}*/
 
 	return partial_updates;
 }
@@ -198,6 +195,11 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::ChangeFacing: {
 			auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
 			obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster
+				&& dynamic_cast<DungeonMaster*>(obj)->isParalyzed()) break;
+
 			obj->physics.shared.facing = changeFacingEvent.facing;
 			this->updated_entities.insert({ obj->globalID });
 			break;
@@ -206,6 +208,11 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StartAction: {
 			auto startAction = boost::get<StartActionEvent>(event.data);
 			obj = this->objects.getObject(startAction.entity_to_act);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster 
+				&& dynamic_cast<DungeonMaster *>(obj)->isParalyzed()) break;
+
 			this->updated_entities.insert({ obj->globalID });
 
 			//switch case for action (currently using keys)
@@ -242,7 +249,7 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::Zoom: { // only for DM
 				DungeonMaster * dm = this->objects.getDM();
 
-				if ((dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f))
+				if (dm != nullptr && (dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f))
 					dm->physics.shared.corner += startAction.movement;
 
 				break;
@@ -255,6 +262,11 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StopAction: {
 			auto stopAction = boost::get<StopActionEvent>(event.data);
 			obj = this->objects.getObject(stopAction.entity_to_act);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster
+				&& dynamic_cast<DungeonMaster*>(obj)->isParalyzed()) break;
+
 			this->updated_entities.insert({ obj->globalID });
 			//switch case for action (currently using keys)
 			switch (stopAction.action) {
@@ -283,6 +295,11 @@ void ServerGameState::update(const EventList& events) {
 			//currently just sets the velocity to given 
 			auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
 			obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster
+				&& dynamic_cast<DungeonMaster*>(obj)->isParalyzed()) break;
+
 			obj->physics.velocity += moveRelativeEvent.movement;
 			this->updated_entities.insert(obj->globalID);
 			break;
@@ -301,6 +318,9 @@ void ServerGameState::update(const EventList& events) {
 			if (obj->type == ObjectType::DungeonMaster) {
 				DungeonMaster* dm = this->objects.getDM();
 
+				//	If the dungeon master is paralyzed, do nothing
+				if (dm->isParalyzed()) break;
+
 				if (dm->sharedTrapInventory.selected + selectItemEvent.itemNum == 0)
 					dm->sharedTrapInventory.selected = TRAP_INVENTORY_SIZE;
 				else if (dm->sharedTrapInventory.selected + selectItemEvent.itemNum == TRAP_INVENTORY_SIZE + 1)
@@ -311,6 +331,20 @@ void ServerGameState::update(const EventList& events) {
 				this->updated_entities.insert(dm->globalID);
 			}
 			else {
+				//	If the current selected item is a Mirror and it is used, set it to not be used
+				SpecificID currentItemSelected = player->inventory[player->sharedInventory.selected - 1];
+
+				if (currentItemSelected != -1) {
+					Item* selectedItem = this->objects.getItem(currentItemSelected);
+
+					if (selectedItem->type == ObjectType::Mirror && selectedItem->iteminfo.used) {
+						//	Set mirror to be unused
+						Mirror* mirror = dynamic_cast<Mirror*>(selectedItem);
+					
+						mirror->revertEffect(*this);
+					}
+				}
+
 				if (player->sharedInventory.selected + selectItemEvent.itemNum == 0)
 					player->sharedInventory.selected = INVENTORY_SIZE;
 				else if (player->sharedInventory.selected + selectItemEvent.itemNum == INVENTORY_SIZE + 1)
@@ -358,13 +392,20 @@ void ServerGameState::update(const EventList& events) {
 		}
 		case EventType::TrapPlacement: 
 		{
+			DungeonMaster* dm = this->objects.getDM();
+
+			// exit if DM is null?
+			if (dm == nullptr) 
+				break;
+
 			auto trapPlacementEvent = boost::get<TrapPlacementEvent>(event.data);
 
 			Grid& currGrid = this->getGrid();
 
 			float cellWidth = currGrid.grid_cell_width;
 
-			DungeonMaster* dm = this->objects.getDM();
+			//	If the DM is paralyzed, do nothing
+			if (dm->isParalyzed()) break;
 
 			glm::vec3 dir = glm::normalize(trapPlacementEvent.world_pos-dm->physics.shared.corner);
 
@@ -386,7 +427,7 @@ void ServerGameState::update(const EventList& events) {
 			}
 
 			if (trapPlacementEvent.hover) {
-				// only for traps, not lightning
+				// only hover for traps, not lightning
 				if (trapPlacementEvent.cell == CellType::Lightning) {
 					break;
 				}
@@ -418,6 +459,7 @@ void ServerGameState::update(const EventList& events) {
 						lightning->useLightning(dm, *this, corner);
 						dm->useMana();
 					}
+
 					break;
 				}
 
@@ -440,6 +482,9 @@ void ServerGameState::update(const EventList& events) {
 					break;
 				}
 
+				// change cell type
+				cell->type = trapPlacementEvent.cell;
+
 				trap->setIsDMTrap(true);
 				trap->setExpiration(curr_time + std::chrono::seconds(10));
 
@@ -447,18 +492,272 @@ void ServerGameState::update(const EventList& events) {
 
 				dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
 
+				// Store remaining CD in milliseconds
+				dm->sharedTrapInventory.trapsCooldown[trapPlacementEvent.cell] = TRAP_COOL_DOWN * 1000;
+
 				dm->setPlacedTraps(trapsPlaced + 1);
 
 				dm->sharedTrapInventory.trapsPlaced = trapsPlaced + 1;
+
+				// SPAWN AN ITEM FOR EACH PLAYER
+				float randFloat = randomDouble(0.0, 1.0);
+
+				if (randFloat <= ITEM_SPAWN_PROB) {
+					auto players = this->objects.getPlayers();
+
+					for (int p = 0; p < players.size(); p++) {
+						auto _player = players.get(p);
+
+						if (_player == nullptr)
+							continue;
+
+						GridCell* _cell = this->getGrid().getCell(_player->physics.shared.corner.x / Grid::grid_cell_width, _player->physics.shared.corner.z / Grid::grid_cell_width);
+
+						int randomC = randomInt(std::max(_cell->x - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND));
+						int randomR = randomInt(std::max(_cell->y - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getRows() - 1, _cell->y + ITEM_SPAWN_BOUND));
+
+						GridCell* cell = grid.getCell(randomC, randomR);
+						CellType celltype = cell->type;
+
+						int counter = 0;
+
+						// keep finding that cell!
+						while ((randomC == _cell->x && randomR == _cell->y) || celltype != CellType::Empty) {
+							randomC = randomInt(std::max(_cell->x - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND));
+							randomR = randomInt(std::max(_cell->y - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getRows() - 1, _cell->y + ITEM_SPAWN_BOUND));
+
+							GridCell* cell = grid.getCell(randomC, randomR);
+							CellType celltype = cell->type;
+
+							counter += 1;
+
+							// this allows us to break out in case infinite loop
+							if (counter >= ((ITEM_SPAWN_BOUND + 1) * (ITEM_SPAWN_BOUND + 1))) {
+								break;
+							}
+						}
+
+						// early exit, just couldn't place anything sadly
+						if ((randomC == _cell->x && randomR == _cell->y) || celltype != CellType::Empty) {
+							std::cout << "COULDNT PLACE ANY ITEMS!" << std::endl;
+							break;
+						}
+
+						if (!this->hasObjectCollided(this->spawner->smallDummyItem,
+							glm::vec3(randomC * Grid::grid_cell_width + 0.01f, 0, randomR * Grid::grid_cell_width + 0.01f)))
+						{
+							this->objects.moveObject(this->spawner->smallDummyItem, glm::vec3(-1, 0, -1));
+
+							glm::vec3 dimensions(1.0f);
+
+							glm::vec3 corner(
+								cell->x * Grid::grid_cell_width + 1,
+								0,
+								cell->y * Grid::grid_cell_width + 1
+							);
+
+							int randomCellType = randomInt(1, 3);
+
+							if (randomCellType == 1) {
+								int r = randomInt(1, 3);
+								if (r == 1) {
+									cell->type = CellType::HealthPotion;
+								}
+								else if (r == 2) {
+									cell->type = CellType::InvisibilityPotion;
+								}
+								else {
+									cell->type = CellType::InvincibilityPotion;
+								}
+							}
+							else if (randomCellType == 2) {
+								int r = randomInt(1, 3);
+								if (r == 1) {
+									cell->type = CellType::FireSpell;
+								}
+								else if (r == 2) {
+									cell->type = CellType::HealSpell;
+								}
+								else {
+									cell->type = CellType::TeleportSpell;
+								}
+							}
+							else {
+								int r = randomInt(1, 4);
+								if (r == 1) {
+									cell->type = CellType::Dagger;
+								}
+								else if (r == 2) {
+									cell->type = CellType::Sword;
+								}
+								else if (r == 3) {
+									cell->type = CellType::Mirror;
+								}
+								else {
+									cell->type = CellType::Hammer;
+								}
+							}
+
+							switch (cell->type) {
+							case CellType::Dagger: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+								Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Dagger);
+
+								this->objects.createObject(weapon);
+
+								this->updated_entities.insert(weapon->globalID);
+								break;
+							}
+							case CellType::Sword: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+
+								Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Sword);
+
+								this->objects.createObject(weapon);
+
+								this->updated_entities.insert(weapon->globalID);
+
+								break;
+							}
+							case CellType::Hammer: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+
+								Weapon* weapon = new Weapon(corner, dimensions, WeaponType::Hammer);
+
+								this->objects.createObject(weapon);
+
+								this->updated_entities.insert(weapon->globalID);
+
+								break;
+							}
+							case CellType::TeleportSpell: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+								Spell* spell = new Spell(corner, dimensions, SpellType::Teleport);
+
+								this->objects.createObject(spell);
+
+								this->updated_entities.insert(spell->globalID);
+
+
+								break;
+							}
+							case CellType::FireSpell: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+								Spell* spell = new Spell(corner, dimensions, SpellType::Fireball);
+
+								this->objects.createObject(spell);
+
+								this->updated_entities.insert(spell->globalID);
+
+
+								break;
+							}
+							case CellType::HealSpell: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(
+									cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+
+								Spell* spell = new Spell(corner, dimensions, SpellType::HealOrb);
+
+								this->objects.createObject(spell);
+
+								this->updated_entities.insert(spell->globalID);
+
+								break;
+							}
+							case CellType::HealthPotion: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+								Potion* potion = new Potion(corner, dimensions, PotionType::Health);
+
+								this->objects.createObject(potion);
+
+								this->updated_entities.insert(potion->globalID);
+
+								break;
+							}
+							case CellType::InvisibilityPotion: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+
+								Potion* potion = new Potion(corner, dimensions, PotionType::Invisibility);
+
+								this->objects.createObject(potion);
+
+								this->updated_entities.insert(potion->globalID);
+
+								break;
+							}
+							case CellType::InvincibilityPotion: {
+								glm::vec3 dimensions(1.0f);
+
+								glm::vec3 corner(cell->x * Grid::grid_cell_width + 1,
+									0,
+									cell->y * Grid::grid_cell_width + 1);
+
+								Potion* potion = new Potion(corner, dimensions, PotionType::Invincibility);
+
+								this->objects.createObject(potion);
+
+								this->updated_entities.insert(potion->globalID);
+
+								break;
+							}
+							default:
+								std::cout << "what item is this??" << std::endl;
+							}
+						}
+					}
+				}
+
 			}
+
 			break;
 		}
-
-		// default:
-		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
 		}
 	}
-
 
 	//	TODO: fill update() method with updating object movement
 	doProjectileTicks();
@@ -478,6 +777,11 @@ void ServerGameState::update(const EventList& events) {
 	handleDM();
 	tickStatuses();
 	updateCompass();
+	updatePlayerLightningInvulnerabilityStatus();
+
+	//	Only do this if the DM exists
+	if (this->objects.getDM() != nullptr)
+		updateDungeonMasterParalysis();
 	
 	//	Increment timestep
 	this->timestep++;
@@ -485,9 +789,7 @@ void ServerGameState::update(const EventList& events) {
 	//	Countdown timer if the Orb has been picked up by a Player and the match
 	//	phase is now RelayRace
 	if (this->matchPhase == MatchPhase::RelayRace) {
-		this->timesteps_left--;
-
-		if (this->timesteps_left == 0) {
+		if (std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) > this->relay_finish_time) {
 			//	Dungeon Master won on time limit expiration
 			this->phase = GamePhase::RESULTS;
 		}
@@ -656,6 +958,15 @@ void ServerGameState::updateMovement() {
             object->physics.shared.corner.y = spike_low_y;
             object->physics.feels_gravity = false;
             object->physics.velocity.y = 0;
+            if (starting_corner_pos.y != 3.0f) {
+                this->sound_table.addNewSoundSource(SoundSource(
+                    ServerSFX::CeilingSpikeImpact,
+                    object->physics.shared.corner,
+                    FULL_VOLUME,
+                    FAR_DIST,
+                    FAR_ATTEN
+                ));
+            }
         }
 
 		//	Vertical movement
@@ -680,15 +991,7 @@ void ServerGameState::updateMovement() {
 						MEDIUM_DIST,
 						MEDIUM_ATTEN
 					));
-				} else if (object->type == ObjectType::SpikeTrap) {
-					this->sound_table.addNewSoundSource(SoundSource(
-						ServerSFX::CeilingSpikeImpact,
-						object->physics.shared.corner,
-						FULL_VOLUME,
-						FAR_DIST,
-						FAR_ATTEN
-					));
-				}
+				} 
 			}
 		}
 
@@ -828,6 +1131,16 @@ void ServerGameState::updateItems() {
 			}
 		}
 
+		if (item->type == ObjectType::Mirror) {
+			Mirror* mirror = dynamic_cast<Mirror*>(item);
+			if (mirror->iteminfo.used) {
+				if (mirror->timeOut()) {
+					mirror->revertEffect(*this);
+					this->updated_entities.insert(mirror->globalID);
+				}
+			}
+		}
+
 		if (item->type == ObjectType::Weapon) {
 			Weapon* weapon = dynamic_cast<Weapon*>(item);
 			weapon->reset(*this);
@@ -895,34 +1208,45 @@ void ServerGameState::updateTraps() {
 	DungeonMaster* dm = this->objects.getDM();
 
 	// update DM trap cooldown
-	if (this->objects.getDM() != nullptr) {
+	if (dm != nullptr) {
 		auto& coolDownMap = dm->sharedTrapInventory.trapsInCooldown;
 
-		//std::cout << coolDownMap << " cooldown map size" << std::endl;
-
 		for (auto it = dm->sharedTrapInventory.trapsInCooldown.cbegin(); it != dm->sharedTrapInventory.trapsInCooldown.cend();) {
+			auto key = it->first;
+			auto passedTime = std::chrono::round<std::chrono::milliseconds>(current_time - std::chrono::system_clock::from_time_t(it->second));
+			auto diff = std::chrono::milliseconds(TRAP_COOL_DOWN * 1000) - passedTime;
+
+			// update remaining time
+			dm->sharedTrapInventory.trapsCooldown[key] = diff.count();
+
 			if (std::chrono::round<std::chrono::seconds>(current_time - std::chrono::system_clock::from_time_t(it->second)) >= std::chrono::seconds(TRAP_COOL_DOWN)) {
+				dm->sharedTrapInventory.trapsCooldown.erase(key);
 				it = dm->sharedTrapInventory.trapsInCooldown.erase(it);
 			}
 			else {
 				it++;
 			}
 		}
+
+		this->updated_entities.insert(dm->globalID);
 	}
 
-	// This object moved, so we should check to see if a trap should trigger because of it
 	auto traps = this->objects.getTraps();
 	for (int i = 0; i < traps.size(); i++) {
 		auto trap = traps.get(i);
-		if (trap == nullptr) { continue; } // unsure if i need this?
-		if (trap->getIsDMTrap()) {
-			
+		if (trap == nullptr) { continue; }
+		if (trap->getIsDMTrap() && dm != nullptr) {
 			if (current_time >= trap->getExpiration()) {
-				
 				int trapsPlaced = dm->getPlacedTraps();
-
 				this->markForDeletion(trap->globalID);
 				dm->setPlacedTraps(trapsPlaced - 1);
+				dm->sharedTrapInventory.trapsPlaced = trapsPlaced - 1;
+
+				// change cell type to empty
+				GridCell* _cell = this->getGrid().getCell(trap->physics.shared.corner.x / Grid::grid_cell_width, trap->physics.shared.corner.z / Grid::grid_cell_width);
+
+				_cell->type = CellType::Empty;
+
 				continue;
 			}
 		}
@@ -932,10 +1256,10 @@ void ServerGameState::updateTraps() {
 			trap->trigger(*this);
 			this->updated_entities.insert(trap->globalID);
 		}
-        if (trap->shouldReset(*this)) {
-            trap->reset(*this);
+		if (trap->shouldReset(*this)) {
+			trap->reset(*this);
 			this->updated_entities.insert(trap->globalID);
-        }
+		}
 	}
 }
 
@@ -1188,6 +1512,49 @@ void ServerGameState::handleTickVelocity() {
 	}
 }
 
+void ServerGameState::updatePlayerLightningInvulnerabilityStatus() {
+	//	Iterate through all players. If one of the players has a
+	//	lightning invulernability, check whether it should be turned
+	//	off, and if so, turn it off.
+	for (int i = 0; i < this->objects.getPlayers().size(); i++) {
+		Player* player = this->objects.getPlayers().get(i);
+
+		if (player == nullptr)
+			continue;
+
+		if (player->isInvulnerableToLightning()) {
+			//	Player is invulnerable to lightning - check whether timeout
+			//	has occurred and if so, set as vulnerable to lightning again
+			auto now = std::chrono::system_clock::now();
+			std::chrono::duration<double> elapsed_seconds{ now - player->getLightningInvulnerabilityStartTime()};
+
+			if (elapsed_seconds.count() > player->getLightningInvulnerabilityDuration()) {
+				std::cout << "Removing a player's lightning invulnerability." << std::endl;
+				player->setInvulnerableToLightning(false, -1);
+
+				//	If the player gained invulnerability due to reflecting a
+				//	lightning bolt with a mirror, undo that boolean
+				player->info.used_mirror_to_reflect_lightning = false;
+			}
+		}
+	}
+}
+
+void ServerGameState::updateDungeonMasterParalysis() {
+	//	Check whether the DM is paralyzed
+	DungeonMaster* dm = this->objects.getDM();
+	if (dm->isParalyzed()) {
+		//	Check whether timeout has occurred and if so, set as not paralyzed
+		auto now = std::chrono::system_clock::now();
+		std::chrono::duration<double> elapsed_seconds{ now - dm->getParalysisStartTime() };
+
+		if (elapsed_seconds.count() > dm->getParalysisDuration()) {
+			std::cout << "Ending DM's paralysis" << std::endl;
+			dm->setParalysis(false, -1);
+		}
+	}
+}
+
 
 unsigned int ServerGameState::getTimestep() const {
 	return this->timestep;
@@ -1212,6 +1579,7 @@ void ServerGameState::transitionToRelayRace() {
 
 	this->matchPhase = MatchPhase::RelayRace;
 
+	this->relay_finish_time = getSecSinceEpoch() + TIME_LIMIT_S.count();
 	//	Open all exits!
 	for (int i = 0; i < this->objects.getExits().size(); i++) {
 		Exit* exit = this->objects.getExits().get(i);
@@ -1303,7 +1671,39 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 	case CellType::FireballTrapDown: {
 		if (cell->type != CellType::Empty)
 			return nullptr;
-        return spawnFireballTrap(cell);
+
+		glm::vec3 dimensions = Object::models.at(ModelType::SunGod);
+		glm::vec3 corner(
+			(cell->x * Grid::grid_cell_width),
+			0.0f,
+			(cell->y * Grid::grid_cell_width)
+		);
+		Direction dir;
+		switch (type) {
+		case CellType::FireballTrapLeft:
+			dir = Direction::LEFT;
+			// corner.z -= (dimensions.z / 2.0f);
+			break;
+		case CellType::FireballTrapRight:
+			dir = Direction::RIGHT;
+			// corner.z -= (dimensions.z / 2.0f);
+			break;
+		case CellType::FireballTrapUp:
+			dir = Direction::UP;
+			corner.x += (dimensions.x / 2.0f);
+			break;
+		case CellType::FireballTrapDown:
+			corner.x += (dimensions.x / 2.0f);
+			dir = Direction::DOWN;
+			break;
+		default:
+			dir = Direction::LEFT;
+			break;
+		}
+
+		FireballTrap* fireBallTrap = new FireballTrap(corner, dir);
+		this->objects.createObject(fireBallTrap);
+		return fireBallTrap;
 	}
 	case CellType::SpikeTrap: {
 		if (cell->type != CellType::Empty)
@@ -1374,42 +1774,40 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 		this->objects.createObject(floorSpike);
 		return floorSpike;
 	}
-	/*
-	TODO: ADD BACK ARROWS!
-
 	case CellType::ArrowTrapDown:
 	case CellType::ArrowTrapLeft:
 	case CellType::ArrowTrapRight:
 	case CellType::ArrowTrapUp: {
-		ArrowTrap::Direction dir;
+		if (cell->type != CellType::Empty) {
+			return nullptr;
+		}
+
+		Direction dir;
 		if (cell->type == CellType::ArrowTrapDown) {
-			dir = ArrowTrap::Direction::DOWN;
+			dir = Direction::DOWN;
 		}
 		else if (cell->type == CellType::ArrowTrapUp) {
-
+			dir = Direction::UP;
 		}
 		else if (cell->type == CellType::ArrowTrapLeft) {
-			dir = ArrowTrap::Direction::LEFT;
+			dir = Direction::LEFT;
 		}
 		else {
-			dir = ArrowTrap::Direction::RIGHT;
+			dir = Direction::RIGHT;
 		}
 
-		glm::vec3 dimensions(
-			Grid::grid_cell_width,
-			MAZE_CEILING_HEIGHT,
-			Grid::grid_cell_width
-		);
 		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
+			(cell->x* Grid::grid_cell_width),
 			0.0f,
-			cell->y * Grid::grid_cell_width
+			(cell->y* Grid::grid_cell_width)
 		);
 
-		this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
-		break;
-	}*/
+		ArrowTrap* arrowTrap = new ArrowTrap(corner, dir);
 
+		this->objects.createObject(arrowTrap);
+		
+		return arrowTrap;
+	}
 	case CellType::TeleporterTrap: {
 		if (cell->type != CellType::Empty)
 			return nullptr;
@@ -1472,9 +1870,6 @@ void ServerGameState::loadMaze(const Grid& grid) {
 		}
 	}
 
-	//	Step 5:	Add floor and ceiling SolidSurfaces.
-	std::vector<std::vector<bool>> freeSpots(grid.getRows(), std::vector<bool>(grid.getColumns(), false));
-
     // create multiple floor and ceiling objects to populate the size of the entire maze. 
     // currently doing this to stretch out the floor texture by the desired factor. here
     // in the maze generation we can have a lot of control over how frequently the floor texture
@@ -1503,9 +1898,6 @@ void ServerGameState::loadMaze(const Grid& grid) {
                     Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT)
 			);
 			this->objects.createObject(ceiling);
-
-			if(freeSpots[r][c])
-                solidSurfaceInGridCells.insert({{c, r}, {floor}});
 		}
 	}
 
@@ -1537,12 +1929,15 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					cell->type = CellType::TeleportSpell;
 				}
 			} else if (cell->type == CellType::RandomWeapon) {
-				int r = randomInt(1, 3);
+				int r = randomInt(1, 4);
 				if (r == 1) {
 					cell->type = CellType::Dagger;
 				}
 				else if (r == 2) {
 					cell->type = CellType::Sword;
+				}
+				else if (r == 3) {
+					cell->type = CellType::Mirror;
 				}
 				else {
 					cell->type = CellType::Hammer;
@@ -1784,9 +2179,9 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				}
 				case CellType::Exit: {
 					glm::vec3 corner(
-						cell->x* Grid::grid_cell_width,
+						cell->x * Grid::grid_cell_width,
 						0.0f,
-						cell->y* Grid::grid_cell_width
+						cell->y * Grid::grid_cell_width
 					);
 
 					glm::vec3 dimensions(
@@ -1809,13 +2204,22 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					this->objects.createObject(new Exit(false, corner, dimensions, lightProperties));
 					break;
 				}
+				case CellType::Mirror: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x* Grid::grid_cell_width + 1,
+						0,
+						cell->y* Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Mirror(corner, dimensions));
+					break;
+				}
 				default: {
-					freeSpots[row][col] = true;
+
 				}
 			}
 		}
 	}
-
 }
 
 void ServerGameState::spawnWall(GridCell* cell, int col, int row, bool is_internal) {
@@ -1843,10 +2247,6 @@ void ServerGameState::spawnWall(GridCell* cell, int col, int row, bool is_intern
 		SolidSurface* wall = new SolidSurface(false, Collider::Box, surface_type, corner, dimensions);
 		wall->shared.is_internal = is_internal;
         this->objects.createObject(wall);
-		if (cell->type == CellType::Wall || cell->type == CellType::Pillar) {
-			// don't let the DM select walls with torches
-			solidSurfaceInGridCells.insert({{col, row}, { wall }});
-		}	
     }
 }
 
