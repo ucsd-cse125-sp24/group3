@@ -54,6 +54,8 @@ public:
      * @brief runs on every server tick to update torchlight flickering 
      * animations
      * @parm current ServerGameState
+     * @param the position the lightning hit (if exists)
+     * @param the position of the light cut action (if exists)
      */
     void doTick(ServerGameState& state, std::optional<glm::vec3> lightning_light_cut_pos, std::optional<glm::vec3> action_light_cut_pos);
 

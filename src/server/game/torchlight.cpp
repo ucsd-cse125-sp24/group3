@@ -147,8 +147,8 @@ void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightni
     if (action_light_cut_pos.has_value()) {
         glm::vec3 pos = action_light_cut_pos.value();
 
-        // if within threshold, get out
-        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= LIGHT_CUT_RANGE) {
+        // if within threshold, black out (slightly expand the light cut action range)
+        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= (1.5 * LIGHT_CUT_RANGE)) {
             this->curr_intensity = 0.0f;
             return;
         }
