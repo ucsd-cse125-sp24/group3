@@ -102,7 +102,7 @@ std::string getAudioPath(ClientMusic music) {
     switch (music) {
         case ClientMusic::MenuTheme:
             //  TODO: Replace with menu theme!
-            return (dir / "relay_race_players.mp3").string();
+            return (dir / "menu.mp3").string();
         case ClientMusic::MazeExplorationPlayersTheme:
             return (dir / "maze_exploration_players.flac").string();
         case ClientMusic::MazeExplorationDMTheme:

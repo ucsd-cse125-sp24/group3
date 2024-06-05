@@ -1651,7 +1651,7 @@ void GUI::_layoutGameHUD() {
     if (client->gameState.matchPhase == MatchPhase::RelayRace) {
         /*
         std::string timerString = "Time Left: ";
-        int timerSeconds = client->gameState.timesteps_left * ((float)TIMESTEP_LEN.count()) / 1000;
+        auto timerSeconds = client->gameState.relay_finish_time - getSecSinceEpoch();
         timerString += std::to_string(timerSeconds);
 
         timerString += (timerSeconds > 1) ? " seconds" : " second";

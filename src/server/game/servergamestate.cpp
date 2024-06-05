@@ -52,7 +52,7 @@ ServerGameState::ServerGameState(GameConfig config) {
 	//	Initialize game instance match phase data
 	//	Match begins in MazeExploration phase (no timer)
 	this->matchPhase = MatchPhase::MazeExploration;
-	this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
+	this->relay_finish_time = 0;
 	//	Player victory is by default false (need to collide with an open exit
 	//	while holding the Orb to win, whereas DM wins on time limit expiration)
 	this->playerVictory = false;
@@ -116,7 +116,7 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 		curr_update.lobby = this->lobby;
 		curr_update.phase = this->phase;
 		curr_update.matchPhase = this->matchPhase;
-		curr_update.timesteps_left = this->timesteps_left;
+		curr_update.relay_finish_time = this->relay_finish_time;
 		curr_update.playerVictory = this->playerVictory;
 		curr_update.numPlayerDeaths = this->numPlayerDeaths;
 		return curr_update;
@@ -582,12 +582,15 @@ void ServerGameState::update(const EventList& events) {
 								}
 							}
 							else {
-								int r = randomInt(1, 3);
+								int r = randomInt(1, 4);
 								if (r == 1) {
 									cell->type = CellType::Dagger;
 								}
 								else if (r == 2) {
 									cell->type = CellType::Sword;
+								}
+								else if (r == 3) {
+									cell->type = CellType::Mirror;
 								}
 								else {
 									cell->type = CellType::Hammer;
@@ -783,9 +786,7 @@ void ServerGameState::update(const EventList& events) {
 	//	Countdown timer if the Orb has been picked up by a Player and the match
 	//	phase is now RelayRace
 	if (this->matchPhase == MatchPhase::RelayRace) {
-		this->timesteps_left--;
-
-		if (this->timesteps_left == 0) {
+		if (std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) > this->relay_finish_time) {
 			//	Dungeon Master won on time limit expiration
 			this->phase = GamePhase::RESULTS;
 		}
@@ -1571,6 +1572,7 @@ void ServerGameState::transitionToRelayRace() {
 
 	this->matchPhase = MatchPhase::RelayRace;
 
+	this->relay_finish_time = getSecSinceEpoch() + TIME_LIMIT_S.count();
 	//	Open all exits!
 	for (int i = 0; i < this->objects.getExits().size(); i++) {
 		Exit* exit = this->objects.getExits().get(i);
