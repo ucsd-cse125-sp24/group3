@@ -4,16 +4,9 @@
 #include <glm/gtx/string_cast.hpp>
 #include <vector>
 
-#define NUM_PLAYERS 4
-#define MAX_ENTITIES 1000
-#define MAX_COMPONENTS 32
-#define MAX_WALLS 1000
-#define MAX_TRAPS 10
-#define MAX_SPELLS 4
-
-
 /* ServerGameState Constants */
 #define MAX_ENEMY_VALUE			500
+#define NUM_PLAYERS 4
 
 /*	Maze Constants */
 #define	MAX_MAZE_COLUMNS		10000
@@ -98,7 +91,7 @@
 
 /* DM Constants */
 #define MAX_TRAPS 10
-#define TRAP_INVENTORY_SIZE 10
+#define TRAP_INVENTORY_SIZE 6
 #define TRAP_TIME 10
 #define TRAP_COOL_DOWN 5
 #define ITEM_SPAWN_PROB	0.1

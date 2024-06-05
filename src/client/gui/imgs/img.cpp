@@ -17,8 +17,7 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::FireSpell: return (img_root / "fire_wand.png").string();
         case ImgID::HealSpell: return (img_root / "heal_wand.png").string();
         case ImgID::Orb: return (img_root / "orb.png").string();
-        //  TODO: Replace mirror image with an image of an actual mirror
-        case ImgID::Mirror: return (img_root / "orb.png").string();
+        case ImgID::Mirror: return (img_root / "mirror.png").string();
         case ImgID::Scroll: return (img_root / "scroll.png").string();
         case ImgID::Crosshair: return (img_root / "crosshair046.png").string();
         case ImgID::Dagger: return (img_root / "weapon_dagger.png").string();
@@ -83,6 +82,16 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::FloorSpikeTrap: return (img_root / "floorspiketrap.png").string();
         case ImgID::ArrowTrap: return (img_root / "arrowtrap.png").string();
         case ImgID::SpikeTrap: return (img_root / "spiketrap.png").string();
+        case ImgID::Skull: return (img_root / "normalSkull.png").string();
+        case ImgID::DestroyedSkull: return (img_root / "destroyedSkull.png").string();
+        case ImgID::SkullBG: return (img_root / "deathCountBG.png").string();
+        case ImgID::HelpBG: return (img_root / "helpBG.png").string();
+        case ImgID::HelpDMBG: return (img_root / "helpDMBG.png").string();
+        case ImgID::ExitBG: return (img_root / "exitBG.png").string();
+        case ImgID::ExitDMBG: return (img_root / "exitDMBG.png").string();
+        case ImgID::LobbyButton: return (img_root / "lobbyButton.png").string();
+        case ImgID::Victory: return (img_root / "victory.png").string();
+        case ImgID::Defeat: return (img_root / "defeat.png").string();
     }
 }
 }
