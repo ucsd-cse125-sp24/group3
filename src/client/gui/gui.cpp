@@ -873,7 +873,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             font::Color color;
 
             if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
-                playerRoleString = "You want to play as the Zeus.";
+                playerRoleString = "You want to play as Zeus.";
                 color = font::Color::YELLOW;
             }
             else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
