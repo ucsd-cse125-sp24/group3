@@ -234,11 +234,11 @@ bool Client::init() {
     auto lava_cross_model_path = env_models_dir / "lava" / "lava_cross.obj";
     this->lava_cross_model = std::make_unique<Model>(lava_cross_model_path.string(), false);
 
-    auto lava_horizontal_model_path = env_models_dir / "lava" / "lava_horizontal.obj";
-    this->lava_horizontal_model = std::make_unique<Model>(lava_horizontal_model_path.string(), false);
-
-    auto lava_vertical_model_path = env_models_dir / "lava" / "lava_vertical.obj";
-    this->lava_vertical_model = std::make_unique<Model>(lava_vertical_model_path.string(), false);
+    auto lava_row_model_path = env_models_dir / "lava" / "lava_row.obj";
+    this->lava_horizontal_model = std::make_unique<Model>(lava_row_model_path.string(), false);
+    // thank you openai!
+    this->lava_horizontal_model->rotateAbsolute(rotate90DegreesAroundYAxis(glm::vec3(1.0f, 0.0f, 0.0f)));
+    this->lava_vertical_model = std::make_unique<Model>(lava_row_model_path.string(), false);
     
     auto arrow_model_path = entity_models_dir / "Arrow_red" / "Arrow.obj";
     this->arrow_model = std::make_unique<Model>(arrow_model_path.string(), false);
@@ -1068,9 +1068,6 @@ void Client::geometryPass() {
                     }
                     case ModelType::LavaHorizontal: {
                         model = this->lava_horizontal_model.get();
-                        // thank you openai!
-                        glm::vec3 rot_dir = rotate90DegreesAroundYAxis(glm::vec3(1.0f, 0.0f, 0.0f));
-                        model->rotateAbsolute(rot_dir);
                         break;
                     }
                     default: {

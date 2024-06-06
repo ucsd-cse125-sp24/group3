@@ -1,17 +1,14 @@
 #include "server/game/lava.hpp"
 #include "server/game/object.hpp"
+#include "shared/game/point_light.hpp"
 #include "shared/game/sharedmodel.hpp"
 
 const int Lava::DAMAGE = 1;
 
-Lava::Lava(glm::vec3 corner, ModelType model_type, float grid_width):
-    Trap(ObjectType::Lava, false, corner, Collider::Box, model_type, glm::vec3(0.0f))
+Lava::Lava(glm::vec3 corner, ModelType model_type, float grid_width, PointLightProperties light_properties):
+    Trap(ObjectType::Lava, false, corner, Collider::Box, model_type, glm::vec3(0.0f)),
+    light_properties(light_properties)
 {
-    if (model_type == ModelType::LavaHorizontal) {
-        this->physics.shared.dimensions.z /= 2.0f;
-    } else if (model_type == ModelType::LavaVertical ) {
-        this->physics.shared.dimensions.x /= 2.0f;
-    }
 }
 
 bool Lava::shouldTrigger(ServerGameState& state) {
@@ -31,4 +28,17 @@ void Lava::doCollision(Object* obj, ServerGameState& state) {
     if (creature == nullptr) return;
 
     creature->stats.health.decrease(DAMAGE);
+}
+
+SharedObject Lava::toShared() {
+	auto so = Object::toShared();
+    so.pointLightInfo = SharedPointLightInfo {
+        .intensity = 1.0f,
+        .ambient_color = this->light_properties.ambient_color,
+        .diffuse_color = this->light_properties.diffuse_color,
+        .specular_color = this->light_properties.specular_color,
+        .attenuation_linear = this->light_properties.attenuation_linear,
+        .attenuation_quadratic = this->light_properties.attenuation_quadratic,
+    };
+	return so;
 }

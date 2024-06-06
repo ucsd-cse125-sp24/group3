@@ -2319,13 +2319,22 @@ Trap* ServerGameState::spawnLava(GridCell* cell) {
 		model_type = ModelType::LavaCross;	
     } else if (cell->type == CellType::LavaHorizontal) {
 		model_type = ModelType::LavaHorizontal;	
-        corner.z += Grid::grid_cell_width * 0.25f;
     } else {
 		model_type = ModelType::LavaVertical;	
-        corner.x += Grid::grid_cell_width * 0.25f;
     }
 
-    Lava* lava = new Lava(corner, model_type, Grid::grid_cell_width);
+    PointLightProperties light_properties{
+        .flickering = false,
+        .min_intensity = 1.0f,
+        .max_intensity = 1.0f,
+        .ambient_color = glm::vec3(0.72f, 0.14f, 0.01f),
+        .diffuse_color = glm::vec3(0.8f, 0.14f, 0.0f),
+        .specular_color = glm::vec3(0.1f, 0.1f, 0.1f),
+        .attenuation_linear = 0.35f,
+        .attenuation_quadratic = 0.44f
+    };
+
+    Lava* lava = new Lava(corner, model_type, Grid::grid_cell_width, light_properties);
     this->objects.createObject(lava);
     return lava;
 }

@@ -25,6 +25,8 @@
 #include "shared/game/event.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
+#include "shared/game/sharedmodel.hpp"
+#include "server/game/trap.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
@@ -140,7 +142,14 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
         if (item == nullptr) continue;
         if (item->type != ObjectType::Orb) continue;
         closestPointLights.push(item->globalID);
-        break;
+        break; // only one orb
+    }
+
+    for(int i = 0; i < this->state.objects.getTraps().size(); i++) {
+        auto lava = this->state.objects.getTraps().get(i);
+        if (lava == nullptr) continue;
+        if (lava->type != ObjectType::Lava) continue;
+        closestPointLights.push(lava->globalID);
     }
 
 
