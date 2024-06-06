@@ -90,7 +90,7 @@ public:
         this->sound = ServerSFX::Thunder;
     }
 	virtual SharedObject toShared() override {
-        auto so = Object::toShared();
+        auto so = WeaponCollider::toShared();
         so.pointLightInfo = SharedPointLightInfo {
             .intensity = 1.0f,
             .ambient_color = this->properties.ambient_color,
