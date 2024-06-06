@@ -242,7 +242,7 @@ bool Client::init() {
     auto player_atk_path = graphics_assets_dir / "animations/slash.fbx";
     auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
 
-    auto fire_player_model_path = player_models_dir      / "char_3/model_char_3.fbx";
+    auto fire_player_model_path = player_models_dir      / "char_1_rename/char1.fbx";
     auto lightning_player_model_path = player_models_dir / "char_3/model_char_3.fbx";
     auto water_player_model_path = player_models_dir     / "char_3/model_char_3.fbx";
 
