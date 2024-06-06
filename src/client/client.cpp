@@ -1137,17 +1137,11 @@ void Client::geometryPass() {
                 if (!is_dm && sharedObject->trapInfo->dm_hover) {
                     break;
                 }
-                auto dim = glm::vec3(45.025101, 68.662003, 815.164001) * 0.005f;
-                this->arrow_model->setDimensions(dim);
-                this->arrow_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->arrow_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getPos(), true);
-
-                // this->orb_model->setDimensions( sharedObject->physics.dimensions);
-                // this->orb_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                // this->orb_model->draw(this->deferred_geometry_shader.get(),
-                //     this->cam->getPos(),
-                //     true);
+                this->orb_model->setDimensions( sharedObject->physics.dimensions);
+                this->orb_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->orb_model->draw(this->deferred_geometry_shader.get(),
+                    this->cam->getPos(),
+                    true);
                 break;
             }
             case ObjectType::Exit: {
