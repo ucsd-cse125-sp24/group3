@@ -28,6 +28,7 @@ enum class ObjectType {
 	FireballTrap,
 	Projectile,
 	FloorSpike,
+    Lava,
 	FakeWall,
 	ArrowTrap,
 	TeleporterTrap,

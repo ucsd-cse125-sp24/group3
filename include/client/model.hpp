@@ -211,6 +211,16 @@ class Model : public Renderable {
     /**
      * @brief Rotates the item along the specified axis. If
      * no axis is specified, then assumes a rotation on the
+     * y-axis. This will not stack upon previous rotations.
+     * 
+     * @param angle The angle of rotation
+     * @param axis The axis of rotation 
+     */
+    void rotateAbsolute(const float& angle, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f)) override;
+
+    /**
+     * @brief Rotates the item along the specified axis. If
+     * no axis is specified, then assumes a rotation on the
      * y-axis. This will stack upon previous rotations.
      * 
      * @param angle The angle of rotation

@@ -271,6 +271,11 @@ private:
     std::unique_ptr<Model> orb_model;
     std::unique_ptr<Model> exit_model;
     std::unique_ptr<Model> floor_model;
+    std::unique_ptr<Model> arrow_model;
+    std::unique_ptr<Model> arrow_trap_model;
+    std::unique_ptr<Model> lava_cross_model;
+    std::unique_ptr<Model> lava_vertical_model;
+    std::unique_ptr<Model> lava_horizontal_model;
 
     GLFWwindow *window;
 
@@ -370,5 +375,8 @@ private:
      * @brief boolean to see if a phase change from LOBBY to GAME already happened
      */
     bool phase_change;
+
+    // id of last known player which is holding the orb
+    EntityID player_has_orb_global_id;
 };
 

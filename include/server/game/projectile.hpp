@@ -2,10 +2,12 @@
 #include "server/game/constants.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/spell.hpp"
+#include "shared/game/sharedmodel.hpp"
 
 #include <optional>
 #include <deque>
 #include <iostream>
+#include <variant>
 
 /**
  * Class for any possible Projectile.
@@ -103,37 +105,38 @@ public:
 class Arrow : public Projectile {
 public:
     inline static const int DAMAGE = 10;
-    inline static const float H_MULT = 0.75f;
+    inline static const float H_MULT = 0.55f;
     inline static const float V_MULT = 0.0f; // not affected by gravity
 
     Arrow(glm::vec3 corner, glm::vec3 facing, Direction dir):
-        Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Cube, ServerSFX::ArrowImpact,
-            Options(false, DAMAGE, H_MULT, V_MULT, false, 0.0f, 0, {}))
+        Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Arrow, ServerSFX::ArrowImpact,
+            Options(false, DAMAGE, H_MULT, V_MULT, false, 0.0f, 0, {})), dir(dir)
     {
-        // temp hack to get the correct direction until we load in a model and can rotate it
-
-        const float ARROW_WIDTH = 0.2f;    
-        const float ARROW_LENGTH = 1.0f;    
-        const float ARROW_HEIGHT = 0.2f;
-
-        float arrow_x_dim;
-        float arrow_z_dim;
-
+        const float clear_model_nudge = 1.5f;
         switch (dir) {
-            case Direction::UP:
-            case Direction::DOWN:
-                arrow_x_dim = ARROW_WIDTH;
-                arrow_z_dim = ARROW_LENGTH;
-                break;
             case Direction::LEFT:
+                std::swap(this->physics.shared.dimensions.x, this->physics.shared.dimensions.z);
+                this->physics.shared.facing = glm::vec3(0.0f, 0.0f, -1.0f);
+                this->physics.shared.corner.x -= clear_model_nudge;
+                break;
             case Direction::RIGHT:
-                arrow_x_dim = ARROW_LENGTH;
-                arrow_z_dim = ARROW_WIDTH;
+                std::swap(this->physics.shared.dimensions.x, this->physics.shared.dimensions.z);
+                this->physics.shared.facing = glm::vec3(0.0f, 0.0f, 1.0f);
+                // right doesn't need nudge for some reason
+                // this->physics.shared.corner.x += clear_model_nudge;
+                break;
+            case Direction::UP:
+                this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
+                this->physics.shared.corner.z -= (2.0f * clear_model_nudge);
+                break;
+            case Direction::DOWN:
+                this->physics.shared.facing = glm::vec3(-1.0f, 0.0f, 0.0f);
+                this->physics.shared.corner.z += clear_model_nudge;
                 break;
         }
-
-        this->physics.shared.dimensions = glm::vec3(arrow_x_dim, ARROW_HEIGHT, arrow_z_dim);
     }
+
+    Direction dir;
 };
 
 class SpellOrb : public Projectile {

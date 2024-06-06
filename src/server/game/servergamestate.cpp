@@ -19,11 +19,13 @@
 #include "server/game/weaponcollider.hpp"
 #include "server/game/mirror.hpp"
 #include "server/game/spawner.hpp"
+#include "server/game/lava.hpp"
 
 #include "shared/game/celltype.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/audio/constants.hpp"
 #include "shared/audio/utilities.hpp"
+#include "shared/game/sharedmodel.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -39,7 +41,7 @@
 
 ServerGameState::ServerGameState() : ServerGameState(getDefaultConfig()) {}
 
-ServerGameState::ServerGameState(GameConfig config) {
+ServerGameState::ServerGameState(GameConfig config) : config(config) {
 	this->phase = GamePhase::LOBBY;
 	this->timestep = FIRST_TIMESTEP;
 	this->lobby = Lobby(config.server.max_players);
@@ -701,7 +703,9 @@ void ServerGameState::update(const EventList& events) {
 	handleDeaths();
 	handleRespawns();
 	deleteEntities();
-	spawnEnemies();
+    if (!this->config.game.disable_enemies) {
+        spawnEnemies();
+    }
 	handleTickVelocity();
 	handleDM();
 	tickStatuses();
@@ -892,6 +896,22 @@ void ServerGameState::updateMovement() {
 			currentPosition = object->physics.shared.corner;
 		}
 
+        const float spike_low_y = 3.0f;
+        if (object->type == ObjectType::SpikeTrap && object->physics.shared.corner.y < spike_low_y) {
+            object->physics.shared.corner.y = spike_low_y;
+            object->physics.feels_gravity = false;
+            object->physics.velocity.y = 0;
+            if (starting_corner_pos.y != 3.0f) {
+                this->sound_table.addNewSoundSource(SoundSource(
+                    ServerSFX::CeilingSpikeImpact,
+                    object->physics.shared.corner,
+                    FULL_VOLUME,
+                    FAR_DIST,
+                    FAR_ATTEN
+                ));
+            }
+        }
+
 		//	Vertical movement
 		if (object->physics.shared.corner.y < 0) {
 			//	Clamp object to floor if corner's y position is lower than the floor
@@ -914,15 +934,7 @@ void ServerGameState::updateMovement() {
 						MEDIUM_DIST,
 						MEDIUM_ATTEN
 					));
-				} else if (object->type == ObjectType::SpikeTrap) {
-					this->sound_table.addNewSoundSource(SoundSource(
-						ServerSFX::CeilingSpikeImpact,
-						object->physics.shared.corner,
-						FULL_VOLUME,
-						FAR_DIST,
-						FAR_ATTEN
-					));
-				}
+				} 
 			}
 		}
 
@@ -1019,6 +1031,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				//	perform collision handling but do not return true as the
 				//	trap doesn't affect the movement of the object it hits
 				if (otherObj->type == ObjectType::FloorSpike || 
+					otherObj->type == ObjectType::Lava || 
 					otherObj->type == ObjectType::Potion || 
 					otherObj->type == ObjectType::Spell ||
 					otherObj->type == ObjectType::Weapon ||
@@ -1704,67 +1717,46 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 			return nullptr;
 		}
 
-		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
-			0.0f,
-			cell->y * Grid::grid_cell_width
-		);
-
-		FloorSpike::Orientation orientation;
-		if (type == CellType::FloorSpikeFull) {
-			orientation = FloorSpike::Orientation::Full;
-		}
-		else if (type == CellType::FloorSpikeHorizontal) {
-			orientation = FloorSpike::Orientation::Horizontal;
-			corner.z += Grid::grid_cell_width * 0.25f;
-		}
-		else {
-			orientation = FloorSpike::Orientation::Vertical;
-			corner.x += Grid::grid_cell_width * 0.25f;
-		}
-
-		FloorSpike* floorSpike = new FloorSpike(corner, orientation, Grid::grid_cell_width);
-		this->objects.createObject(floorSpike);
-		return floorSpike;
+        return spawnFloorSpike(cell);
 	}
 	case CellType::ArrowTrapDown:
 	case CellType::ArrowTrapLeft:
 	case CellType::ArrowTrapRight:
 	case CellType::ArrowTrapUp: {
-		if (cell->type != CellType::Empty) {
-			return nullptr;
-		}
+        if (cell->type != CellType::Empty) {
+            return nullptr;
+        }
+		glm::vec3 corner(
+			(cell->x * Grid::grid_cell_width),
+			-3.0f,
+			(cell->y * Grid::grid_cell_width)
+		);
 
+		const float z_nudge = 0.55f;
+		const float x_nudge = 0.15f;
 		Direction dir;
 		if (type == CellType::ArrowTrapDown) {
 			dir = Direction::DOWN;
+			corner.x -= x_nudge;
 		}
 		else if (type == CellType::ArrowTrapUp) {
 			dir = Direction::UP;
+			corner.x -= x_nudge;
 		}
 		else if (type == CellType::ArrowTrapLeft) {
 			dir = Direction::LEFT;
+			corner.z += z_nudge;
 		}
 		else {
 			dir = Direction::RIGHT;
+			corner.z += z_nudge;
 		}
 
-		glm::vec3 dimensions(
-			Grid::grid_cell_width,
-			MAZE_CEILING_HEIGHT,
-			Grid::grid_cell_width
-		);
 
-		glm::vec3 corner(
-			(cell->x* Grid::grid_cell_width),
-			0.0f,
-			(cell->y* Grid::grid_cell_width)
-		);
-
-		ArrowTrap* arrowTrap = new ArrowTrap(corner, dimensions, dir);
+		ArrowTrap* arrowTrap = new ArrowTrap(corner, dir);
 
 		this->objects.createObject(arrowTrap);
-		
+
 		return arrowTrap;
 	}
 	case CellType::TeleporterTrap: {
@@ -1935,7 +1927,19 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						0,
 						cell->y * Grid::grid_cell_width + 1);
 
-					this->objects.createObject(new Orb(corner, dimensions));
+                    PointLightProperties lightProperties{
+                        .flickering = false,
+                        .min_intensity = 1.0f,
+                        .max_intensity = 1.0f,
+                        .ambient_color = glm::vec3(0.0f, 0.75f, 0.67f),
+                        .diffuse_color = glm::vec3(0.0f, 0.75f, 0.67f),
+                        .specular_color = glm::vec3(0.0f, 0.35f, 0.33f),
+                        .attenuation_linear = 0.07f,
+                        .attenuation_quadratic = 0.017f
+                    };
+
+
+					this->objects.createObject(new Orb(corner, dimensions, lightProperties));
 					break;
 				}
 				case CellType::FireballTrapLeft:
@@ -2091,27 +2095,15 @@ void ServerGameState::loadMaze(const Grid& grid) {
                     this->spawnWall(cell, col, row, internal_walls.contains(glm::ivec2(col, row)));
                     break;
                 }
-				case CellType::FloorSpikeFull:
+                case CellType::LavaCross:
+                case CellType::LavaHorizontal:
+                case CellType::LavaVertical: {
+                    this->spawnLava(cell);
+					break;
+				}
 				case CellType::FloorSpikeHorizontal:
 				case CellType::FloorSpikeVertical: {
-					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
-						0.0f, 
-						cell->y * Grid::grid_cell_width
-					);
-
-					FloorSpike::Orientation orientation;
-					if (cell->type == CellType::FloorSpikeFull) {
-						orientation = FloorSpike::Orientation::Full;
-					} else if (cell->type == CellType::FloorSpikeHorizontal) {
-						orientation = FloorSpike::Orientation::Horizontal;
-						corner.z += Grid::grid_cell_width * 0.25f;
-					} else {
-						orientation = FloorSpike::Orientation::Vertical;
-						corner.x += Grid::grid_cell_width * 0.25f;
-					}
-
-					this->objects.createObject(new FloorSpike(corner, orientation, Grid::grid_cell_width));
+                    this->spawnFloorSpike(cell);
 					break;
 				}
 
@@ -2119,29 +2111,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				case CellType::ArrowTrapLeft:
 				case CellType::ArrowTrapRight:
 				case CellType::ArrowTrapUp: {
-					Direction dir;
-					if (cell->type == CellType::ArrowTrapDown) {
-						dir = Direction::DOWN;
-					} else if (cell->type == CellType::ArrowTrapUp) {
-						dir = Direction::UP;
-					} else if (cell->type == CellType::ArrowTrapLeft) {
-						dir = Direction::LEFT;
-					} else {
-						dir = Direction::RIGHT;
-					}
-
-					glm::vec3 dimensions(
-						Grid::grid_cell_width,
-						MAZE_CEILING_HEIGHT,
-						Grid::grid_cell_width
-					);
-					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
-						0.0f, 
-						cell->y * Grid::grid_cell_width
-					);
-
-					this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
+                    spawnArrowTrap(cell);
 					break;
 				}
 
@@ -2167,8 +2137,19 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						MAZE_CEILING_HEIGHT,
 						Grid::grid_cell_width
 					);
+                    PointLightProperties lightProperties{
+                        .flickering = false,
+                        .min_intensity = 1.0f,
+                        .max_intensity = 1.0f,
+                        .ambient_color = glm::vec3(1.05f, 1.05f, 1.05f),
+                        .diffuse_color = glm::vec3(1.0f, 1.0f, 1.0f),
+                        .specular_color = glm::vec3(0.5f, 0.5f, 0.5f),
+                        .attenuation_linear = 0.07f,
+                        .attenuation_quadratic = 0.017f
+                    };
 
-					this->objects.createObject(new Exit(false, corner, dimensions));
+
+					this->objects.createObject(new Exit(false, corner, dimensions, lightProperties));
 					break;
 				}
 				case CellType::Mirror: {
@@ -2299,6 +2280,85 @@ Trap* ServerGameState::spawnFireballTrap(GridCell *cell) {
     FireballTrap* fireBallTrap = new FireballTrap(corner, dir);
     this->objects.createObject(fireBallTrap);
     return fireBallTrap;
+}
+
+Trap* ServerGameState::spawnArrowTrap(GridCell* cell) {
+    glm::vec3 corner(
+        (cell->x* Grid::grid_cell_width),
+        -3.0f,
+        (cell->y* Grid::grid_cell_width)
+    );
+
+    const float z_nudge = 0.55f;
+    const float x_nudge = 0.15f;
+    Direction dir;
+    if (cell->type == CellType::ArrowTrapDown) {
+        dir = Direction::DOWN;
+        corner.x -= x_nudge;
+    }
+    else if (cell->type == CellType::ArrowTrapUp) {
+        dir = Direction::UP;
+        corner.x -= x_nudge;
+    }
+    else if (cell->type == CellType::ArrowTrapLeft) {
+        dir = Direction::LEFT;
+        corner.z += z_nudge;
+    }
+    else {
+        dir = Direction::RIGHT;
+        corner.z += z_nudge;
+    }
+
+
+    ArrowTrap* arrowTrap = new ArrowTrap(corner, dir);
+
+    this->objects.createObject(arrowTrap);
+    
+    return arrowTrap;
+}
+
+Trap* ServerGameState::spawnFloorSpike(GridCell* cell) {
+    glm::vec3 corner(
+        cell->x * Grid::grid_cell_width,
+        -0.5f,
+        cell->y * Grid::grid_cell_width
+    );
+
+    FloorSpike* floorSpike = new FloorSpike(corner, Grid::grid_cell_width);
+    this->objects.createObject(floorSpike);
+    return floorSpike;
+}
+
+Trap* ServerGameState::spawnLava(GridCell* cell) {
+    glm::vec3 corner(
+        cell->x * Grid::grid_cell_width,
+        0.0f,
+        cell->y * Grid::grid_cell_width
+    );
+
+    ModelType model_type;
+    if (cell->type == CellType::LavaCross) {
+		model_type = ModelType::LavaCross;	
+    } else if (cell->type == CellType::LavaHorizontal) {
+		model_type = ModelType::LavaHorizontal;	
+    } else {
+		model_type = ModelType::LavaVertical;	
+    }
+
+    PointLightProperties light_properties{
+        .flickering = false,
+        .min_intensity = 1.0f,
+        .max_intensity = 1.0f,
+        .ambient_color = glm::vec3(0.72f, 0.14f, 0.01f),
+        .diffuse_color = glm::vec3(0.8f, 0.14f, 0.0f),
+        .specular_color = glm::vec3(0.1f, 0.1f, 0.1f),
+        .attenuation_linear = 0.35f,
+        .attenuation_quadratic = 0.44f
+    };
+
+    Lava* lava = new Lava(corner, model_type, Grid::grid_cell_width, light_properties);
+    this->objects.createObject(lava);
+    return lava;
 }
 
 Grid& ServerGameState::getGrid() {

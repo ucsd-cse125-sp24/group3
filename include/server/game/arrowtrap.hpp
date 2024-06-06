@@ -21,10 +21,9 @@ class ArrowTrap: public Trap {
 public:
     /**
      * @param corner Corner position of the spike trap
-     * @param dimensions TODO: remove once we use real model with size
      * @param dir What direction it should shoot in
      */
-    ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir);
+    ArrowTrap(glm::vec3 corner, Direction dir);
 
     /// how long from initial activation until it can activate again
     const static inline std::chrono::seconds TIME_UNTIL_RESET = 4s;
