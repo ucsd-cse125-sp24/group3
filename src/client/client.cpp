@@ -1287,10 +1287,7 @@ void Client::lightingPass() {
         /* Update model animation */
         double currentTime = glfwGetTime();
         double timeElapsed = currentTime - lastTime;
-        /* Change this to a constant */
-        if (timeElapsed >= 0.01667) {
-            Model* torch_frame_model = animManager->updateAnimation(); 
-        }
+        Model* torch_frame_model = animManager->updateFrameAnimation(timeElapsed); 
         glm::vec3 dims = torch_frame_model->getDimensions();
         this->deferred_light_box_shader->use();
         this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);

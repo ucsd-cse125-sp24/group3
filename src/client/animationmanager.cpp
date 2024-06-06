@@ -25,10 +25,15 @@ void AnimationManager::updateAnimation(float dt) {
     }
 }
 
-Model* AnimationManager::updateAnimation() {
+Model* AnimationManager::updateFrameAnimation(float dt) {
     if (entityAnimFrameMap[currEntity].second) {
         m_currentAnimation = entityAnimFrameMap[currEntity].second;
-        int currFrame = entityAnimFrameMap[currEntity].first + 1;
+        int currFrame = entityAnimFrameMap[currEntity].first;
+        
+        /* Change this to a constant */
+        if (dt > 0.01667) {
+            currFrame += 1;
+        }
         entityAnimFrameMap[currEntity].first = currFrame;
         return m_currentAnimation->getFrame(currFrame);
     } else {

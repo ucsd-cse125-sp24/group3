@@ -20,7 +20,7 @@ public:
 
 	void updateAnimation(float dt);
 
-	Model* updateAnimation();
+	Model* updateFrameAnimation(float dt);
 
 	void playAnimation(Animation* pAnimation);
 
