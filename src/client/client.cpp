@@ -214,6 +214,9 @@ bool Client::init() {
     auto torchlight_model_path = env_models_dir / "exit.obj";
     this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string(), true);
 
+    auto torchpost_model_path = env_models_dir / "Torch" / "Torch.obj";
+    this->torchpost_model = std::make_unique<Model>(torchpost_model_path.string(), false);
+
     auto slime_model_path = entity_models_dir / "slime.obj";
     this->slime_model = std::make_unique<Model>(slime_model_path.string(), true);
 
@@ -259,6 +262,8 @@ bool Client::init() {
     auto player_run_path = graphics_assets_dir / "animations/run.fbx";
     auto player_atk_path = graphics_assets_dir / "animations/slash.fbx";
     auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
+    auto torchlight_anim_path = graphics_assets_dir / "animations/fire-fix";
+
 
     auto fire_player_model_path = player_models_dir      / "char_1_rename/char1.fbx";
     auto lightning_player_model_path = player_models_dir / "char_2_rename/char2.fbx";
@@ -278,6 +283,8 @@ bool Client::init() {
     };
 
     animManager = new AnimationManager();
+    Animation* torchlight_animation = new Animation(torchlight_anim_path.string(), "fire-fix", 45);
+    animManager->addAnimation(torchlight_animation, ModelType::Torchlight, AnimState::IdleAnim);
 
     for (int i = 0; i < NUM_PLAYER_MODELS; i++) {
         Animation* player_walk = new Animation(player_walk_path.string(), player_models.at(i).second);
@@ -830,10 +837,12 @@ void Client::geometryPass() {
              sharedObject->type == ObjectType::Lava || 
              sharedObject->type == ObjectType::ArrowTrap ||
              sharedObject->type == ObjectType::SpikeTrap || 
-             sharedObject->type == ObjectType::Projectile ) && dist > this->config.client.render) {
+             sharedObject->type == ObjectType::Projectile ||
+             sharedObject->type == ObjectType::Torchlight) // dont render post from far away
+             && dist > this->config.client.render) {
             continue; 
         }
-        
+
         switch (sharedObject->type) {
             case ObjectType::Player: {
                 // search all player inventories to see who has the orb and update it's position (while it's held by a player)
@@ -853,6 +862,7 @@ void Client::geometryPass() {
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y -= sharedObject->physics.dimensions.y / 2.0f;
                     pos.y += PLAYER_EYE_LEVEL;
+                    // pos.z += 3.0f;
                     cam->updatePos(pos);
 
                     // update listener position & facing
@@ -1238,6 +1248,17 @@ void Client::geometryPass() {
                 }
                 break;
             }
+            case ObjectType::Torchlight: {
+                // render the post in the geometry pass, and the light in the lighting pass
+                // i fucked with the y value to make it the right height but the x and z are from the
+                // model coords
+                this->torchpost_model->setDimensions(glm::vec3(0.860699, 5.2f, 0.827778));
+                this->torchpost_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->torchpost_model->translateRelative(glm::vec3(0, -0.2f, 0));
+                this->torchpost_model->draw(this->deferred_geometry_shader.get(),
+                    this->cam->getPos(),
+                    true);
+            }
             default:
                 break;
         }
@@ -1363,7 +1384,6 @@ void Client::lightingPass() {
     glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
     // render torch lights on top of scene
     this->deferred_light_box_shader->use();
     glm::mat4 viewProj = this->cam->getViewProj();
@@ -1390,11 +1410,21 @@ void Client::lightingPass() {
 
         glm::vec3 v(1.0f);
 
+
+        animManager->setFrameAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
+
+        /* Update model animation */
+        Model* torch_frame_model = animManager->updateFrameAnimation(glfwGetTime()); 
+        glm::vec3 dims = torch_frame_model->getDimensions();
         this->deferred_light_box_shader->use();
         this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);
-        this->torchlight_model->setDimensions(2.0f * sharedObject->physics.dimensions);
-        this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-        this->torchlight_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
+        // this->torchlight_model->setDimensions(2.0f * sharedObject->physics.dimensions);
+        // this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+        // this->torchlight_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
+        torch_frame_model->setDimensions(2.0f * sharedObject->physics.dimensions);
+        torch_frame_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+        // torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
+        torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true, properties.diffuse_color);
     }
 
 }

@@ -169,6 +169,19 @@ void Model::draw(Shader* shader,
     }
 }
 
+void Model::draw(Shader* shader,
+    glm::vec3 camPos, 
+    bool fill,
+    glm::vec3 color) {
+    float scale = 1.1f;
+    for(Mesh& mesh : this->meshes) {
+        glm::vec3 scaledColor = scale * color;
+        shader->setVec3("lightColor", scaledColor);
+        mesh.draw(shader, camPos, fill);
+        scale += 0.15f;
+    }
+}
+
 void Model::translateAbsolute(const glm::vec3& new_pos) {
     Renderable::translateAbsolute(new_pos);
     for(Mesh& mesh : this->meshes) {

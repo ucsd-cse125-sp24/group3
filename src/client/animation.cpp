@@ -14,6 +14,14 @@ Animation::Animation(const std::string& animationPath, Model* model) {
     readMissingBones(animation, *model);
 }
 
+Animation::Animation(const std::string& animationDirPath, const std::string& animName, int frames) {
+    for (int i = 1; i <= frames; i++) {
+        auto frame_model_path = animationDirPath + "/" + animName + std::to_string(i) + ".obj";
+        auto frame_model = new Model(frame_model_path, true);
+        model_keyframes.push_back(frame_model);
+    }
+}
+
 Bone* Animation::findBone(const std::string& name) {
     auto iter = std::find_if(m_bones.begin(), m_bones.end(),
         [&](const Bone& Bone)

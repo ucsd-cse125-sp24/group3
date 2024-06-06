@@ -43,5 +43,6 @@ enum class ModelType {
 	FireballTrapDown,
 	SunGod,
 	Mirror,
-	LightCut
+	LightCut,
+	TorchPost
 };

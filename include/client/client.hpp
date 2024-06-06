@@ -261,6 +261,7 @@ private:
 
     std::unique_ptr<Model> bear_model;
     std::unique_ptr<Model> torchlight_model;
+    std::unique_ptr<Model> torchpost_model;
     std::unique_ptr<Model> wall_model;
     std::unique_ptr<Model> pillar_model;
     std::unique_ptr<Model> sungod_model;
