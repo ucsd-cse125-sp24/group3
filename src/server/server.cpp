@@ -303,7 +303,30 @@ std::chrono::milliseconds Server::doTick() {
                             }
 
                             std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
-                            std::cout << "Starting game!" << std::endl;
+                        }
+
+                        int player_idx = 0;  // only increment when assigning a model                          
+
+                        auto players = this->state.objects.getPlayers();
+                        for (int i = 0; i < players.size(); i++) {
+                            auto player = players.get(i);
+                            if (player == nullptr) continue;
+
+                            if (player_idx == 0) {
+                                player->modelType = ModelType::PlayerFire;
+                            }
+                            else if (player_idx == 1) {
+                                player->modelType = ModelType::PlayerLightning;
+                            }
+                            else if (player_idx == 2) {
+                                player->modelType = ModelType::PlayerWater;
+                            }
+
+                            player_idx++;
+
+                            if (player_idx > 2) {
+                                player_idx = 0;
+                            }
                         }
 
                         if (this->config.server.skip_intro) {
