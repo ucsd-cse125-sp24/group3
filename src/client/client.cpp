@@ -807,6 +807,10 @@ void Client::geometryPass() {
             }
         }
         
+        if (is_dm && (sharedObject->type == ObjectType::FloorSpike || sharedObject->type == ObjectType::Lava) && dist > RENDER_DISTANCE) {
+            continue; 
+        }
+        
         switch (sharedObject->type) {
             case ObjectType::Player: {
                 // search all player inventories to see who has the orb and update it's position (while it's held by a player)
