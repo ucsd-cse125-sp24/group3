@@ -56,6 +56,7 @@ std::unordered_map<ModelType, glm::vec3> Object::models ({
     {ModelType::FloorSpikeHorizontal, FLOOR_SPIKE_DIMENSIONS},
     {ModelType::FloorSpikeVertical, FLOOR_SPIKE_DIMENSIONS},
     {ModelType::Lightning, glm::vec3(3.0f, 100.0f, 3.0f)},
+	{ModelType::Orb, glm::vec3(0.887116, 0.941508, 0.950092)}
 });
 
 /*	SharedGameState generation	*/

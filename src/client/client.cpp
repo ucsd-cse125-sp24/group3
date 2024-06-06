@@ -247,8 +247,8 @@ bool Client::init() {
     auto arrow_trap_model_path = env_models_dir / "Arrow trap" / "levelout_21.obj";
     this->arrow_trap_model = std::make_unique<Model>(arrow_trap_model_path.string(), false);
 
-    auto orb_model_path = item_models_dir / "orb.obj";
-    this->orb_model = std::make_unique<Model>(orb_model_path.string(), true);
+    auto orb_model_path = item_models_dir / "orb_final/Orb 1.obj";
+    this->orb_model = std::make_unique<Model>(orb_model_path.string(), false);
 
     auto exit_model_path = env_models_dir / "exit.obj";
     this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
@@ -1307,6 +1307,7 @@ void Client::lightingPass() {
         if (!curr_source.has_value()) {
             continue;
         }
+
         SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
 
         glm::vec3 pos = curr_source->physics.getCenterPosition();
