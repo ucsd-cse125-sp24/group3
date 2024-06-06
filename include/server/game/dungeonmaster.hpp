@@ -12,19 +12,32 @@ class DungeonMaster : public Creature {
 public:
 	SharedTrapInventory sharedTrapInventory;
 	SharedDMInfo dmInfo;
-	Weapon* lightning;
 
 	DungeonMaster(glm::vec3 corner, glm::vec3 facing);
 	~DungeonMaster();
 
 	virtual SharedObject toShared() override;
 
+	/**
+	 * @brief get the number of traps the DM currently has placed
+	 */
 	int getPlacedTraps();
 
+	/**
+	 * @brief set the number of traps the DM currently has placed
+	 * @param placedTraps the number of traps the DM has placed
+	 */
 	void setPlacedTraps(int placedTraps);
 
-	// For lightning usage
-	void useMana();
+	/**
+	 * @brief For lightning and light-cut usage
+	 * @param mana the amount of mana the specific DM action takes
+	 */
+	void useMana(int mana);
+
+	/**
+	 * @brief mana regeneration function
+	 */
 	void manaRegen();
 
 	/**
@@ -59,7 +72,12 @@ public:
 	 * the last time the DungeonMaster became paralyzed.
 	 */
 	std::chrono::time_point<std::chrono::system_clock> getParalysisStartTime() const;
-		
+
+	/**
+	 * @brief The DM's lightning weapon
+	 */
+	Weapon* lightning;
+
 private:
 	/**
 	 * @brief Duration, in seconds, of the Dungeon Master's current paralysis 
@@ -73,6 +91,10 @@ private:
 	 */
 	std::chrono::time_point<std::chrono::system_clock> paralysis_start_time;
 
+	/**
+	 * @brief the number of traps the DM has placed
+	 */
 	int placedTraps;
+
 	std::chrono::system_clock::time_point mana_used;
 };

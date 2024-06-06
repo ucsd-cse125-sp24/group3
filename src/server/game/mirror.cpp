@@ -4,7 +4,7 @@
 Mirror::Mirror(glm::vec3 corner, glm::vec3 dimensions)
 	: Item(ObjectType::Mirror, false, corner, ModelType::Cube, dimensions) {
 	this->modelType = ModelType::Mirror;
-
+	this->used_player = nullptr;
 }
 
 void Mirror::useItem(Object* other, ServerGameState& state, int itemSelected) {

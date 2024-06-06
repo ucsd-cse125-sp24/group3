@@ -5,6 +5,8 @@ AnimationManager::AnimationManager(Animation* animation) {
     m_currentTime = 0.0;
     m_currentAnimation = animation;
 
+    m_deltaTime = 0; // Tyler: is this still used? linter complaining about it not being initialized
+
     m_finalBoneMatrices.reserve(100);
 
     for (int i = 0; i < 100; i++)

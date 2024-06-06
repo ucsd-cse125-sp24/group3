@@ -26,11 +26,12 @@ DungeonMaster::DungeonMaster(glm::vec3 corner, glm::vec3 facing) :
 
     // TODO: fill in rest of traps
     this->sharedTrapInventory.inventory[0] = ModelType::Lightning;
-    this->sharedTrapInventory.inventory[1] = ModelType::TeleporterTrap;
+    this->sharedTrapInventory.inventory[1] = ModelType::LightCut;
     this->sharedTrapInventory.inventory[2] = ModelType::ArrowTrap;
     this->sharedTrapInventory.inventory[3] = ModelType::SunGod;
     this->sharedTrapInventory.inventory[4] = ModelType::SpikeTrap;
     this->sharedTrapInventory.inventory[5] = ModelType::FloorSpikeFull;
+    this->sharedTrapInventory.inventory[6] = ModelType::TeleporterTrap;
 
     //  DungeonMaster paralysis (relevant when the DM is paralyzed by a Player
     //  reflecting a lightning bolt back at the DM using a Mirror)
@@ -54,11 +55,11 @@ void DungeonMaster::setPlacedTraps(int traps) {
     this->placedTraps = traps;
 }
 
-void DungeonMaster::useMana() {
+void DungeonMaster::useMana(int mana) {
     if (this->dmInfo.mana_remaining == DM_MANA_TOTAL) {
         this->mana_used = std::chrono::system_clock::now();
     }
-    this->dmInfo.mana_remaining -= LIGHTNING_MANA;
+    this->dmInfo.mana_remaining -= mana;
 }   
 
 void DungeonMaster::manaRegen() {

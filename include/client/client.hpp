@@ -262,7 +262,6 @@ private:
     std::unique_ptr<Model> pillar_model;
     std::unique_ptr<Model> sungod_model;
     std::unique_ptr<Model> slime_model;
-    std::unique_ptr<Model> minotaur_model;
     std::unique_ptr<Model> python_model;
     std::unique_ptr<Model> item_model;
     std::unique_ptr<Model> spike_trap_model;

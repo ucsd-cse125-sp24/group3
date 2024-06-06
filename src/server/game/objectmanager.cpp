@@ -99,7 +99,6 @@ SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID
 		}
 		case ObjectType::Player:
 			object->typeID = this->players.push(dynamic_cast<Player*>(object));
-			std::cout << "INSERTING A PLAYER of TYPEID " << object->typeID << std::endl;
 			break;
 		case ObjectType::Python:
 		case ObjectType::Minotaur:

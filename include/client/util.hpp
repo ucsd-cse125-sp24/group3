@@ -47,5 +47,6 @@ Bbox aiBboxToGLM(const aiAABB& bbox);
  */
 Bbox combineBboxes(const Bbox& bbox1, const Bbox& bbox2);
 
-
 glm::quat getGLMQuat(const aiQuaternion& pOrientation);
+
+glm::vec3 rotate90DegreesAroundYAxis(const glm::vec3& direction);

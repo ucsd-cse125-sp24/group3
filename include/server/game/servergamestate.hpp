@@ -275,8 +275,6 @@ public:
 	 */
 	std::string to_string();
 
-	Trap* createTrap(CellType type, glm::vec3 corner);
-
 private:
 	/**
 	 * list of entities to delete at the end of the tick
@@ -359,6 +357,26 @@ private:
 	Trap* currentGhostTrap;
 
 	/**
+	 * @brief Field that stores the lightning pos for cutting lights
+	 */
+	std::optional<glm::vec3> dmLightningCutLights;
+
+	/**
+	 * @brief Field that stores the light cut action for cutting lights
+	 */
+	std::optional<glm::vec3> dmActionCutLights;
+
+	/**
+	 * @brief last light cut for light cut action
+	 */
+	unsigned int lastLightCut;
+
+	/**
+	 * @brief last light cut for lightning action
+	 */
+	unsigned int lastLightningLightCut;
+
+	/**
     /**
      * @brief helper function to spawn a wall at a specified cell
      * @param cell is a single cell of the maze's grid where a wall
@@ -372,11 +390,15 @@ private:
      * cell
      * @param cell is a single cell of the maze's grid where a wall + torch
      * should be placed
+	 * @param orb_pos position of the orb so that we can calculate the distance
+	 * for coloring purposes
+	 * @param exit_pos position of the exit so that we can calculate the distance
+	 * for coloring purposes
      * @param cellType determines which direction the torch should face. 
      * This means that only TorchUp, TorchDown, TorchRight, and TorchLeft
      * are acceptable values of cellType 
      */
-    void spawnTorch(GridCell *cell);
+    void spawnTorch(GridCell *cell, glm::vec3 orb_pos, glm::vec3 exit_pos);
 
     /**
      * @brief helper function to spawn a fireball trap 

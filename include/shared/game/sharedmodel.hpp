@@ -40,5 +40,7 @@ enum class ModelType {
 	FireballTrapUp,
 	FireballTrapDown,
 	SunGod,
-	Mirror
+	ArrowTrap,
+	Mirror,
+	LightCut
 };

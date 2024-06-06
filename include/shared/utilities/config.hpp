@@ -63,6 +63,7 @@ struct GameConfig {
         bool fullscreen;
         bool draw_bboxes;
         bool fps_counter;
+        bool presentation;
     } client;
 
     /**
