@@ -24,6 +24,7 @@
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/audio/constants.hpp"
 #include "shared/audio/utilities.hpp"
+#include "shared/game/sharedmodel.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -39,7 +40,7 @@
 
 ServerGameState::ServerGameState() : ServerGameState(getDefaultConfig()) {}
 
-ServerGameState::ServerGameState(GameConfig config) {
+ServerGameState::ServerGameState(GameConfig config) : config(config) {
 	this->phase = GamePhase::LOBBY;
 	this->timestep = FIRST_TIMESTEP;
 	this->lobby = Lobby(config.server.max_players);
@@ -701,7 +702,9 @@ void ServerGameState::update(const EventList& events) {
 	handleDeaths();
 	handleRespawns();
 	deleteEntities();
-	spawnEnemies();
+    if (!this->config.game.disable_enemies) {
+        spawnEnemies();
+    }
 	handleTickVelocity();
 	handleDM();
 	tickStatuses();
@@ -892,6 +895,22 @@ void ServerGameState::updateMovement() {
 			currentPosition = object->physics.shared.corner;
 		}
 
+        const float spike_low_y = 3.0f;
+        if (object->type == ObjectType::SpikeTrap && object->physics.shared.corner.y < spike_low_y) {
+            object->physics.shared.corner.y = spike_low_y;
+            object->physics.feels_gravity = false;
+            object->physics.velocity.y = 0;
+            if (starting_corner_pos.y != 3.0f) {
+                this->sound_table.addNewSoundSource(SoundSource(
+                    ServerSFX::CeilingSpikeImpact,
+                    object->physics.shared.corner,
+                    FULL_VOLUME,
+                    FAR_DIST,
+                    FAR_ATTEN
+                ));
+            }
+        }
+
 		//	Vertical movement
 		if (object->physics.shared.corner.y < 0) {
 			//	Clamp object to floor if corner's y position is lower than the floor
@@ -914,15 +933,7 @@ void ServerGameState::updateMovement() {
 						MEDIUM_DIST,
 						MEDIUM_ATTEN
 					));
-				} else if (object->type == ObjectType::SpikeTrap) {
-					this->sound_table.addNewSoundSource(SoundSource(
-						ServerSFX::CeilingSpikeImpact,
-						object->physics.shared.corner,
-						FULL_VOLUME,
-						FAR_DIST,
-						FAR_ATTEN
-					));
-				}
+				} 
 			}
 		}
 
@@ -1761,7 +1772,7 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 			(cell->y* Grid::grid_cell_width)
 		);
 
-		ArrowTrap* arrowTrap = new ArrowTrap(corner, dimensions, dir);
+		ArrowTrap* arrowTrap = new ArrowTrap(corner, dir);
 
 		this->objects.createObject(arrowTrap);
 		
@@ -1935,7 +1946,19 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						0,
 						cell->y * Grid::grid_cell_width + 1);
 
-					this->objects.createObject(new Orb(corner, dimensions));
+                    PointLightProperties lightProperties{
+                        .flickering = false,
+                        .min_intensity = 1.0f,
+                        .max_intensity = 1.0f,
+                        .ambient_color = glm::vec3(0.0f, 0.75f, 0.67f),
+                        .diffuse_color = glm::vec3(0.0f, 0.75f, 0.67f),
+                        .specular_color = glm::vec3(0.0f, 0.35f, 0.33f),
+                        .attenuation_linear = 0.07f,
+                        .attenuation_quadratic = 0.017f
+                    };
+
+
+					this->objects.createObject(new Orb(corner, dimensions, lightProperties));
 					break;
 				}
 				case CellType::FireballTrapLeft:
@@ -2119,29 +2142,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				case CellType::ArrowTrapLeft:
 				case CellType::ArrowTrapRight:
 				case CellType::ArrowTrapUp: {
-					Direction dir;
-					if (cell->type == CellType::ArrowTrapDown) {
-						dir = Direction::DOWN;
-					} else if (cell->type == CellType::ArrowTrapUp) {
-						dir = Direction::UP;
-					} else if (cell->type == CellType::ArrowTrapLeft) {
-						dir = Direction::LEFT;
-					} else {
-						dir = Direction::RIGHT;
-					}
-
-					glm::vec3 dimensions(
-						Grid::grid_cell_width,
-						MAZE_CEILING_HEIGHT,
-						Grid::grid_cell_width
-					);
-					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
-						0.0f, 
-						cell->y * Grid::grid_cell_width
-					);
-
-					this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
+                    spawnArrowTrap(cell);
 					break;
 				}
 
@@ -2167,8 +2168,19 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						MAZE_CEILING_HEIGHT,
 						Grid::grid_cell_width
 					);
+                    PointLightProperties lightProperties{
+                        .flickering = false,
+                        .min_intensity = 1.0f,
+                        .max_intensity = 1.0f,
+                        .ambient_color = glm::vec3(1.05f, 1.05f, 1.05f),
+                        .diffuse_color = glm::vec3(1.0f, 1.0f, 1.0f),
+                        .specular_color = glm::vec3(0.5f, 0.5f, 0.5f),
+                        .attenuation_linear = 0.07f,
+                        .attenuation_quadratic = 0.017f
+                    };
 
-					this->objects.createObject(new Exit(false, corner, dimensions));
+
+					this->objects.createObject(new Exit(false, corner, dimensions, lightProperties));
 					break;
 				}
 				case CellType::Mirror: {
@@ -2299,6 +2311,41 @@ Trap* ServerGameState::spawnFireballTrap(GridCell *cell) {
     FireballTrap* fireBallTrap = new FireballTrap(corner, dir);
     this->objects.createObject(fireBallTrap);
     return fireBallTrap;
+}
+
+Trap* ServerGameState::spawnArrowTrap(GridCell* cell) {
+    glm::vec3 corner(
+        (cell->x* Grid::grid_cell_width),
+        -3.0f,
+        (cell->y* Grid::grid_cell_width)
+    );
+
+    const float z_nudge = 0.55f;
+    const float x_nudge = 0.15f;
+    Direction dir;
+    if (cell->type == CellType::ArrowTrapDown) {
+        dir = Direction::DOWN;
+        corner.x -= x_nudge;
+    }
+    else if (cell->type == CellType::ArrowTrapUp) {
+        dir = Direction::UP;
+        corner.x -= x_nudge;
+    }
+    else if (cell->type == CellType::ArrowTrapLeft) {
+        dir = Direction::LEFT;
+        corner.z += z_nudge;
+    }
+    else {
+        dir = Direction::RIGHT;
+        corner.z += z_nudge;
+    }
+
+
+    ArrowTrap* arrowTrap = new ArrowTrap(corner, dir);
+
+    this->objects.createObject(arrowTrap);
+    
+    return arrowTrap;
 }
 
 Grid& ServerGameState::getGrid() {

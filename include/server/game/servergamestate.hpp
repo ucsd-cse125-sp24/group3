@@ -1,5 +1,6 @@
 #pragma once
 
+#include "server/game/gridcell.hpp"
 #include "shared/utilities/constants.hpp"
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -410,10 +411,14 @@ private:
      */
     Trap* spawnFireballTrap(GridCell *cell);
 
+    Trap* spawnArrowTrap(GridCell* cell);
+
     std::unordered_map<EntityID, std::array<std::optional<EntityID>, MAX_POINT_LIGHTS>> lightSourcesPerPlayer;
 
 	/**
 	 * @brief table of all currently playing sounds
 	 */
 	SoundTable sound_table;
+
+    GameConfig config;
 };

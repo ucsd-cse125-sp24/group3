@@ -3,6 +3,7 @@
 #include "glm/fwd.hpp"
 #include "server/game/collider.hpp"
 #include "server/game/object.hpp"
+#include "shared/game/point_light.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/rng.hpp"
 #include "server/game/grid.hpp"
@@ -60,7 +61,7 @@ Torchlight::Torchlight(
         const float blue_intensity = (MIN_ORB_DIST - dist_orb) / MIN_ORB_DIST;
 
         // close to orb, so shade blue
-        this->properties = TorchlightProperties {
+        this->properties = PointLightProperties {
             .flickering = true,
             .min_intensity = BLUE_MIN_INTENSITY,
             .max_intensity = BLUE_MAX_INTENSITY,
@@ -74,7 +75,7 @@ Torchlight::Torchlight(
         const float white_intensity = (MIN_EXIT_DIST - dist_exit) / MIN_EXIT_DIST;
         // close to exit, so shade white
         // TEMP: still amber
-        this->properties = TorchlightProperties {
+        this->properties = PointLightProperties{
             .flickering = true,
             .min_intensity = WHITE_MIN_INTENSITY,
             .max_intensity = WHITE_MAX_INTENSITY,
@@ -86,7 +87,7 @@ Torchlight::Torchlight(
         };
     } else {
         // shade normal amber
-        this->properties = TorchlightProperties {
+        this->properties = PointLightProperties{
             .flickering = true,
             .min_intensity = AMBER_MIN_INTENSITY,
             .max_intensity = AMBER_MAX_INTENSITY,
@@ -103,7 +104,7 @@ Torchlight::Torchlight(
 
 Torchlight::Torchlight(
     glm::vec3 corner,
-    const TorchlightProperties& properties):
+    const PointLightProperties& properties):
 	Object(ObjectType::Torchlight, Physics(false, 
 		Collider::Box, corner, glm::vec3(0.0f), glm::vec3(1.0f)),
 		ModelType::Torchlight),

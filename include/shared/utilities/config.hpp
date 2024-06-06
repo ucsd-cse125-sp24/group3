@@ -31,6 +31,7 @@ struct GameConfig {
             std::string maze_file;
 
         } maze;
+        bool disable_enemies;
     } game;
     /// @brief Shared config settings for the network
     struct {
