@@ -1078,7 +1078,6 @@ void Client::geometryPass() {
                         break;
                     }
                 }
-                std::cout << glm::to_string(sharedObject->physics.dimensions) << std::endl;
                 model->setDimensions(sharedObject->physics.dimensions);
                 model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 model->draw(this->deferred_geometry_shader.get(),

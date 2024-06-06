@@ -1031,6 +1031,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				//	perform collision handling but do not return true as the
 				//	trap doesn't affect the movement of the object it hits
 				if (otherObj->type == ObjectType::FloorSpike || 
+					otherObj->type == ObjectType::Lava || 
 					otherObj->type == ObjectType::Potion || 
 					otherObj->type == ObjectType::Spell ||
 					otherObj->type == ObjectType::Weapon ||

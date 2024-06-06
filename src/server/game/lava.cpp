@@ -5,7 +5,7 @@
 const int Lava::DAMAGE = 1;
 
 Lava::Lava(glm::vec3 corner, ModelType model_type, float grid_width):
-    Trap(ObjectType::Lava, false, corner, Collider::None, model_type, glm::vec3(0.0f))
+    Trap(ObjectType::Lava, false, corner, Collider::Box, model_type, glm::vec3(0.0f))
 {
     if (model_type == ModelType::LavaHorizontal) {
         this->physics.shared.dimensions.z /= 2.0f;
