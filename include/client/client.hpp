@@ -255,7 +255,10 @@ private:
     std::shared_ptr<Shader> deferred_light_box_shader;
 
     /* Character models and lighting objects, might need to move to different classes later */
-    std::unique_ptr<Model> player_model;
+    std::unique_ptr<Model> fire_player_model;
+    std::unique_ptr<Model> lightning_player_model;
+    std::unique_ptr<Model> water_player_model;
+
     std::unique_ptr<Model> bear_model;
     std::unique_ptr<Model> torchlight_model;
     std::unique_ptr<Model> wall_model;
