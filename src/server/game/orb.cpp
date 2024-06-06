@@ -6,7 +6,7 @@
 #include "shared/audio/constants.hpp"
 #include <chrono>
 
-Orb::Orb(glm::vec3 corner, glm::vec3 dimensions, const PointLightProperties& properties) : Item(ObjectType::Orb, true, corner, ModelType::Cube, dimensions), 
+Orb::Orb(glm::vec3 corner, glm::vec3 dimensions, const PointLightProperties& properties) : Item(ObjectType::Orb, true, corner, ModelType::Orb, dimensions), 
     properties(properties) {
 	this->modelType = ModelType::Orb;
 }
