@@ -214,6 +214,9 @@ bool Client::init() {
     auto torchlight_model_path = env_models_dir / "exit.obj";
     this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string(), true);
 
+    auto torchpost_model_path = env_models_dir / "Torch" / "Torch.obj";
+    this->torchpost_model = std::make_unique<Model>(torchpost_model_path.string(), false);
+
     auto slime_model_path = entity_models_dir / "slime.obj";
     this->slime_model = std::make_unique<Model>(slime_model_path.string(), true);
 
@@ -837,7 +840,7 @@ void Client::geometryPass() {
              sharedObject->type == ObjectType::Projectile ) && dist > this->config.client.render) {
             continue; 
         }
-        
+
         switch (sharedObject->type) {
             case ObjectType::Player: {
                 // search all player inventories to see who has the orb and update it's position (while it's held by a player)
@@ -1243,6 +1246,17 @@ void Client::geometryPass() {
                 }
                 break;
             }
+            case ObjectType::Torchlight: {
+                // render the post in the geometry pass, and the light in the lighting pass
+                // i fucked with the y value to make it the right height but the x and z are from the
+                // model coords
+                this->torchpost_model->setDimensions(glm::vec3(0.860699, 5.2f, 0.827778));
+                this->torchpost_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->torchpost_model->translateRelative(glm::vec3(0, -0.2f, 0));
+                this->torchpost_model->draw(this->deferred_geometry_shader.get(),
+                    this->cam->getPos(),
+                    true);
+            }
             default:
                 break;
         }
@@ -1368,7 +1382,6 @@ void Client::lightingPass() {
     glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
     // render torch lights on top of scene
     this->deferred_light_box_shader->use();
     glm::mat4 viewProj = this->cam->getViewProj();
@@ -1394,6 +1407,7 @@ void Client::lightingPass() {
         SharedPointLightInfo& properties = sharedObject->pointLightInfo.value();
 
         glm::vec3 v(1.0f);
+
 
         animManager->setFrameAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
 

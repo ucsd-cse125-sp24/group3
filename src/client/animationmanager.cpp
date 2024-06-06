@@ -94,9 +94,9 @@ void AnimationManager::setAnimation(EntityID id, ModelType modelType, AnimState 
 
 void AnimationManager::setFrameAnimation(EntityID id, ModelType modelType, AnimState animState) {
     if (entityAnimFrameMap.find(id) == entityAnimFrameMap.end() || entityAnimFrameMap[id].second != objAnimMap[modelType][animState]) {
-        std::random_device dev;
-        std::mt19937 rng(dev());
-        std::uniform_int_distribution<std::mt19937::result_type> dist(0,51);
+        static std::random_device dev;
+        static std::mt19937 rng(dev());
+        static std::uniform_int_distribution<std::mt19937::result_type> dist(0,51);
         entityAnimFrameMap[id] = std::make_pair(dist(rng), objAnimMap[modelType][animState]);
     }
     currEntity = id;
