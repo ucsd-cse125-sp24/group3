@@ -423,6 +423,10 @@ void GUI::_layoutLobby() {
     /*  GUI Subsection 3:   Start Game Button   */
 
     auto start_game_button = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::StartGame), 1);
+    start_game_button->addOnHover([this](widget::Handle handle) {
+        auto widget = this->borrowWidget<widget::StaticImg>(handle);
+        widget->changeImage(images.getImg(img::ImgID::StartGameSelected));
+    });
 
     //  Display differently based on whether all players in the lobby are ready
     bool allReady = true;
@@ -437,11 +441,6 @@ void GUI::_layoutLobby() {
     }
 
     if (allReady) {
-        start_game_button->addOnHover([this](widget::Handle handle) {
-            auto widget = this->borrowWidget<widget::StaticImg>(handle);
-            widget->changeImage(images.getImg(img::ImgID::StartGameSelected));
-        });
-
         //  Add radio button on click
         start_game_button->addOnClick([this](widget::Handle handle) {
             auto widget = this->borrowWidget<widget::StaticImg>(handle);
@@ -458,7 +457,7 @@ void GUI::_layoutLobby() {
         });
     }
 
-    //  Create flexbox to contain dynamic text
+    //  Create flexbox to contain start button
     auto start_game_flex = widget::Flexbox::make(
         glm::vec2(0, 200),
         glm::vec2(WINDOW_WIDTH, 0),
