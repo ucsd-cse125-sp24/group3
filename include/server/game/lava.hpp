@@ -16,7 +16,7 @@ public:
      * @param model_type type of model 
      * @param grid_width or how wide the longer axis should be (e.g. z if vertical, x if horizontal)
      */
-    Lava(glm::vec3 corner, ModelType model_type, float grid_width, PointLightProperties light_properties);
+    Lava(glm::vec3 corner, ModelType model_type, float grid_width, const PointLightProperties& light_properties);
 
     bool shouldTrigger(ServerGameState& state) override;
 
