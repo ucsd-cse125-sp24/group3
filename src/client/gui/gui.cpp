@@ -422,16 +422,7 @@ void GUI::_layoutLobby() {
 
     /*  GUI Subsection 3:   Start Game Button   */
 
-    //  Create dynamic text button for the start game button
-    auto start_game_button = widget::DynText::make(
-        "Start Game",
-        this->fonts,
-        widget::DynText::Options(
-            font::Font::TEXT,
-            font::Size::MEDIUM,
-            font::Color::WHITE
-        )
-    );
+    auto start_game_button = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::StartGame), 1);
 
     //  Display differently based on whether all players in the lobby are ready
     bool allReady = true;
@@ -447,13 +438,13 @@ void GUI::_layoutLobby() {
 
     if (allReady) {
         start_game_button->addOnHover([this](widget::Handle handle) {
-            auto widget = this->borrowWidget<widget::DynText>(handle);
-            widget->changeColor(font::Color::RED);
+            auto widget = this->borrowWidget<widget::StaticImg>(handle);
+            widget->changeImage(images.getImg(img::ImgID::StartGameSelected));
         });
 
         //  Add radio button on click
         start_game_button->addOnClick([this](widget::Handle handle) {
-            auto widget = this->borrowWidget<widget::DynText>(handle);
+            auto widget = this->borrowWidget<widget::StaticImg>(handle);
 
             //  Send StartGame event to the server
             this->client->session->sendEvent(Event(
@@ -499,6 +490,14 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         widget::Align::CENTER,
         0.0f
     );
+
+    auto playerstatusBG = widget::Flexbox::make(
+        origin - glm::vec2(65, 26),
+        rowSize,
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 30.0f)
+    );
+    playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RowBG), 2));
+    this->addWidget(std::move(playerstatusBG));
 
     auto player_status_row = widget::Flexbox::make(
         origin,
@@ -562,6 +561,8 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
 
     auto column1_empty = widget::Empty::make(column1_empty_width);
 
+    //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
+
     //  Push both the text widget and the Empty widget to the row Flexbox
     player_status_row->push(std::move(playerID));
     player_status_row->push(std::move(column1_empty));
@@ -591,6 +592,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         //      PlayerRole::Player
         
         std::string playerRoleString;
+        font::Color color = font::Color::WHITE;
 
         if (!connected) {
             //  Subcase 1
@@ -609,6 +611,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
                     //  Subcase 3
                     playerRoleString = "Player " + std::to_string(playerIndex)
                         + " wants to play as the Zeus.";
+                    color = font::Color::YELLOW;
                 }
                 else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
                     //  subcase 4
@@ -631,7 +634,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             widget::DynText::Options(
                 font::Font::TEXT,
                 font::Size::MEDIUM,
-                font::Color::WHITE
+                color
             )
         );
 
@@ -640,129 +643,172 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
 
         auto column2_empty = widget::Empty::make(column2_empty_width);
 
+        //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
         //  Push both the player role text widget and the Empty widget to the row
         player_status_row->push(std::move(player_role));
         player_status_row->push(std::move(column2_empty));
     }
     else {
+
         //  Case 2: This player IS the client player
 
-        //  Add a text widget which says "Play as:"
-        auto radio_buttons_label = widget::DynText::make(
-            "Play as:",
-            this->fonts,
-            widget::DynText::Options(
-                font::Font::TEXT,
-                font::Size::MEDIUM,
-                font::Color::WHITE
-            )
-        );
+        if (this->client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
 
-        //  Add Empty widget been radio buttons label and first radio
-        //  button
-        auto radio_label_first_option_empty = widget::Empty::make(
-            50.0f
-        );
+            //  Add a text widget which says "Play as:"
+            auto radio_buttons_label = widget::DynText::make(
+                "Play as:",
+                this->fonts,
+                widget::DynText::Options(
+                    font::Font::TEXT,
+                    font::Size::MEDIUM,
+                    font::Color::WHITE
+                )
+            );
 
-        //  Add radio buttons "Player" and "DM"
+            //  Add Empty widget been radio buttons label and first radio
+            //  button
+            auto radio_label_first_option_empty = widget::Empty::make(
+                50.0f
+            );
 
-        //  "Player" radio button
-        auto player_radio_button = widget::DynText::make(
-            "Player",
-            fonts,
-            widget::DynText::Options(
-                font::Font::TEXT,
-                font::Size::MEDIUM,
-                font::Color::WHITE
-            )
-        );
+            //  Add radio buttons "Player" and "DM"
 
-        //  "DM" radio button
-        auto dm_radio_button = widget::DynText::make(
-            "Zeus",
-            fonts,
-            widget::DynText::Options(
-                font::Font::TEXT,
-                font::Size::MEDIUM,
-                font::Color::WHITE
-            )
-        );
+            //  "Player" radio button
+            auto player_radio_button = widget::DynText::make(
+                "Player",
+                fonts,
+                widget::DynText::Options(
+                    font::Font::TEXT,
+                    font::Size::MEDIUM,
+                    font::Color::WHITE
+                )
+            );
 
-        //  Add radio button hover
-        player_radio_button->addOnHover([this](widget::Handle handle) {
-            if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+            //  "DM" radio button
+            auto dm_radio_button = widget::DynText::make(
+                "Zeus",
+                fonts,
+                widget::DynText::Options(
+                    font::Font::TEXT,
+                    font::Size::MEDIUM,
+                    font::Color::WHITE
+                )
+            );
+
+            //  Add radio button hover
+            player_radio_button->addOnHover([this](widget::Handle handle) {
+                if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                    auto widget = this->borrowWidget<widget::DynText>(handle);
+                    widget->changeColor(font::Color::YELLOW);
+                }
+                });
+
+            //  Add radio button on click
+            player_radio_button->addOnClick([this](widget::Handle handle) {
                 auto widget = this->borrowWidget<widget::DynText>(handle);
-                widget->changeColor(font::Color::RED);
-            }
-        });
 
-        //  Add radio button on click
-        player_radio_button->addOnClick([this](widget::Handle handle) {
-            auto widget = this->borrowWidget<widget::DynText>(handle);
+                //  TODO: Change button text to be surrounded by two brackets
+                //  Change other radio button text to not be surrounded by brackets
+                if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                    client->roleSelection = Client::RadioButtonState::FirstOption;
+                    client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
 
-            //  TODO: Change button text to be surrounded by two brackets
-            //  Change other radio button text to not be surrounded by brackets
-            if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
-                client->roleSelection = Client::RadioButtonState::FirstOption;
-                client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                    //  Update this radio button text to show it's selected
+                    //widget->changeText("[Player]");
 
-                //  Update this radio button text to show it's selected
-                //widget->changeText("[Player]");
+                    //  Update dm radio button text show it's not selected
+                    //dm_button->changeText("DM");
+                }
+                });
 
-                //  Update dm radio button text show it's not selected
-                //dm_button->changeText("DM");
-            }
-        });
+            //  Add Empty widget between first radio button and second radio
+            //  button
+            auto radio_first_second_option_empty = widget::Empty::make(
+                50.0f
+            );
 
-        //  Add Empty widget between first radio button and second radio
-        //  button
-        auto radio_first_second_option_empty = widget::Empty::make(
-            50.0f
-        );
+            //  Add radio button hover
+            dm_radio_button->addOnHover([this](widget::Handle handle) {
+                if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                    auto widget = this->borrowWidget<widget::DynText>(handle);
+                    widget->changeColor(font::Color::YELLOW);
+                }
+                });
 
-        //  Add radio button hover
-        dm_radio_button->addOnHover([this](widget::Handle handle) {
-            if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+            //  Add radio button on click
+            dm_radio_button->addOnClick([this](widget::Handle handle) {
                 auto widget = this->borrowWidget<widget::DynText>(handle);
-                widget->changeColor(font::Color::RED);
+
+                //  TODO: Change button text to be surrounded by two brackets
+                //  Change other radio button text to not be surrounded by brackets
+                if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                    client->roleSelection = Client::RadioButtonState::SecondOption;
+                    client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+
+                    //  Update this radio button text to show it's selected
+                    //widget->changeText("[DM]");
+
+                    //  Update player radio button text show it's not selected
+                    //player_button->changeText("Player");
+                }
+                });
+
+            //  Compute the remaining column width and create an Empty widget
+            float column2_empty_width = columnWidths.y
+                - radio_buttons_label->getSize().first
+                - radio_label_first_option_empty->getSize().first
+                - player_radio_button->getSize().first
+                - radio_first_second_option_empty->getSize().first
+                - dm_radio_button->getSize().first;
+
+            auto column2_empty = widget::Empty::make(column2_empty_width);
+
+            //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
+            //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
+            //  Push all widgets to the row
+            player_status_row->push(std::move(radio_buttons_label));
+            player_status_row->push(std::move(radio_label_first_option_empty));
+            player_status_row->push(std::move(player_radio_button));
+            player_status_row->push(std::move(radio_first_second_option_empty));
+            player_status_row->push(std::move(dm_radio_button));
+            player_status_row->push(std::move(column2_empty));
+        }
+        else {
+
+            // After selected role for yourself
+
+            std::string playerRoleString;
+            font::Color color;
+
+            if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
+                playerRoleString = "You want to play as the Zeus.";
+                color = font::Color::YELLOW;
             }
-        });
-
-        //  Add radio button on click
-        dm_radio_button->addOnClick([this](widget::Handle handle) {
-            auto widget = this->borrowWidget<widget::DynText>(handle);
-            
-            //  TODO: Change button text to be surrounded by two brackets
-            //  Change other radio button text to not be surrounded by brackets
-            if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
-                client->roleSelection = Client::RadioButtonState::SecondOption;
-                client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
-
-                //  Update this radio button text to show it's selected
-                //widget->changeText("[DM]");
-
-                //  Update player radio button text show it's not selected
-                //player_button->changeText("Player");
+            else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
+                playerRoleString = "You want to play as the Player.";
+                color = font::Color::WHITE;
             }
-        });
 
-        //  Compute the remaining column width and create an Empty widget
-        float column2_empty_width = columnWidths.y
-            - radio_buttons_label->getSize().first
-            - radio_label_first_option_empty->getSize().first
-            - player_radio_button->getSize().first
-            - radio_first_second_option_empty->getSize().first
-            - dm_radio_button->getSize().first;
+            //  Create player role text widget
+            auto player_role = widget::DynText::make(
+                playerRoleString,
+                this->fonts,
+                widget::DynText::Options(
+                    font::Font::TEXT,
+                    font::Size::MEDIUM,
+                    color
+                )
+            );
 
-        auto column2_empty = widget::Empty::make(column2_empty_width);
-        
-        //  Push all widgets to the row
-        player_status_row->push(std::move(radio_buttons_label));
-        player_status_row->push(std::move(radio_label_first_option_empty));
-        player_status_row->push(std::move(player_radio_button));
-        player_status_row->push(std::move(radio_first_second_option_empty));
-        player_status_row->push(std::move(dm_radio_button));
-        player_status_row->push(std::move(column2_empty));
+            //  Compute the remaining column width and create an Empty widget
+            float column2_empty_width = columnWidths.y - player_role->getSize().first;
+
+            auto column2_empty = widget::Empty::make(column2_empty_width);
+
+            //  Push both the player role text widget and the Empty widget to the row
+            player_status_row->push(std::move(player_role));
+            player_status_row->push(std::move(column2_empty));
+        }
     }
 
     //  Optional: Can add column padding here for additional padding between
@@ -785,6 +831,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         //      Displays if this player is ready
 
         std::string readyStatusString;
+        font::Color color = font::Color::WHITE;;
 
         if (!connected || !lobbyPlayer.get().ready) {
             //  Subcase 1
@@ -793,6 +840,9 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         else {
             //  Subcase 2
             readyStatusString = "Ready!";
+            if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
+                color = font::Color::YELLOW;
+            }
         }
 
         //  Create ready status string text widget
@@ -802,7 +852,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             widget::DynText::Options(
                 font::Font::TEXT,
                 font::Size::MEDIUM,
-                font::Color::WHITE
+                color
             )
         );
 
@@ -810,6 +860,8 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         float column3_empty_width = columnWidths.z - ready_status->getSize().first;
 
         auto column3_empty = widget::Empty::make(column3_empty_width);
+
+        //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
 
         //  Push all widgets to the row
         player_status_row->push(std::move(ready_status));
@@ -827,6 +879,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         //      Displays when the client's player is in the Ready state.
 
         std::string readyStatusString;
+        font::Color color = font::Color::WHITE;
 
         //  First, set string text
         switch (this->client->lobbyPlayerState) {
@@ -853,6 +906,9 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             case Client::LobbyPlayerState::Ready:
                 //  Subcase 3
                 readyStatusString = "Ready!";
+                if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
+                    color = font::Color::YELLOW;
+                }
                 break;
         }
 
@@ -863,7 +919,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             widget::DynText::Options(
                 font::Font::TEXT,
                 font::Size::MEDIUM,
-                font::Color::WHITE
+                color
             )
         );
 
@@ -872,7 +928,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             //  Add button hover
             ready_status->addOnHover([this](widget::Handle handle) {
                 auto widget = this->borrowWidget<widget::DynText>(handle);
-                widget->changeColor(font::Color::RED);
+                widget->changeColor(font::Color::YELLOW);
             });
 
             //  Add radio button on click
@@ -910,6 +966,8 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         float column3_empty_width = columnWidths.z - ready_status->getSize().first;
 
         auto column3_empty = widget::Empty::make(column3_empty_width);
+
+        //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
 
         //  Push both widgets to row
         player_status_row->push(std::move(ready_status));
@@ -1926,7 +1984,7 @@ void GUI::_layoutGameEscMenu() {
     auto is_dm = client->session->getInfo().is_dungeon_master;
 
     auto exitBG = widget::Flexbox::make(
-        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(15)),
+        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(17)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
     );
