@@ -3,7 +3,7 @@
     "maze": {
       "directory": "maps",
       "procedural": true,
-      "maze_file": "test/orb_drop.maze"
+      "maze_file": "test/itemRoom.maze"
     },
     "disable_enemies": true
   },
@@ -15,16 +15,16 @@
       "lobby_name": "Hope you're doing well!",
       "lobby_broadcast": true,
       "max_players": 1,
-      "disable_dm": false,
-      "skip_intro": true 
+      "disable_dm": true,
+      "skip_intro": false 
   },
   "client": {
     "default_name": "Conan O'Brien",
     "lobby_discovery": true,
-    "fullscreen": true,
+    "fullscreen": false,
     "draw_bboxes": false,
     "fps_counter": true,
     "presentation": false,
-    "render": 75
+    "render": 50
   }
 }

@@ -187,3 +187,8 @@ void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightni
 float Torchlight::getIntensity() const {
     return this->curr_intensity;
 }
+
+
+void Torchlight::overrideIntensity(float val) {
+    this->curr_intensity = val;
+}

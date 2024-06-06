@@ -1326,6 +1326,10 @@ void Client::lightingPass() {
     for (int i = 0; i < closest_lights->size(); i++) {
         boost::optional<SharedObject>& curr_source = closest_lights->at(i);
         if (!curr_source.has_value()) {
+            // put the light in africa so it isn't shown
+            // important for intro cutscene since other lights wont replace entries that are removed!
+            glm::vec3 FAR_AWAY(10000, 10000, 10000);
+            lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", FAR_AWAY);
             continue;
         }
 

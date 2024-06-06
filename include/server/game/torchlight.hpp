@@ -35,6 +35,11 @@ public:
     void doTick(ServerGameState& state, std::optional<glm::vec3> lightning_light_cut_pos, std::optional<glm::vec3> action_light_cut_pos);
 
     /**
+     * @brief manually set torchlight intensity, for use in intro cutscene
+     */
+    void overrideIntensity(float val);
+
+    /**
      * @brief get current intensity of torch from 0-1
      */
     float getIntensity() const;
