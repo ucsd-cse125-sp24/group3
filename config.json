@@ -20,11 +20,12 @@
         "skip_intro": true 
     },
     "client": {
-        "default_name": "Conan O'Brien",
-        "lobby_discovery": true,
-        "fullscreen": false,
-        "draw_bboxes": false,
-        "fps_counter": true,
-        "presentation": false
+      "default_name": "Conan O'Brien",
+      "lobby_discovery": true,
+      "fullscreen": false,
+      "draw_bboxes": false,
+      "fps_counter": true,
+      "presentation": false,
+      "render": 100
     }
 }
