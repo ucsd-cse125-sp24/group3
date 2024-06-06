@@ -272,7 +272,7 @@ void GUI::_layoutTitleScreen() {
     );
     exit_text->addOnHover([this](widget::Handle handle) {
         auto widget = this->borrowWidget<widget::DynText>(handle);
-        widget->changeColor(font::Color::RED);
+        widget->changeColor(font::Color::YELLOW);
     });
     exit_text->addOnClick([this](widget::Handle handle) {
         glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
@@ -1925,24 +1925,23 @@ void GUI::_layoutGameEscMenu() {
         widget->changeImage(images.getImg(img::ImgID::ExitBG));
     };*/
 
-    auto img = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ExitBG), 2);
-
+    
     if(!is_dm.value()){
+        auto img = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ExitBG), 2);
         img->addOnHover([this](widget::Handle handle) {
             auto widget = this->borrowWidget<widget::StaticImg>(handle);
-            widget->changeImage(images.getImg(img::ImgID::ExitBG));
-        });
-        
+            widget->changeImage(images.getImg(img::ImgID::ExitBGSelected));
+            });
+        exitBG->push(std::move(img));
     } 
     else {
-        img = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ExitDMBG), 2);
-
+        auto img = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ExitDMBG), 2);
         img->addOnHover([this](widget::Handle handle) {
             auto widget = this->borrowWidget<widget::StaticImg>(handle);
-            widget->changeImage(images.getImg(img::ImgID::ExitBG));
+            widget->changeImage(images.getImg(img::ImgID::ExitDMBGSelected));
         });
+        exitBG->push(std::move(img));
     }
-    exitBG->push(std::move(img));
     
     exitBG->addOnClick([this](widget::Handle handle) {
         glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
@@ -1950,6 +1949,25 @@ void GUI::_layoutGameEscMenu() {
 
     this->addWidget(std::move(exitBG));
 
+    auto flex = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(15)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
+    );
+
+    auto img = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Exit), 1);
+    img->addOnHover([this](widget::Handle handle) {
+        auto widget = this->borrowWidget<widget::StaticImg>(handle);
+        widget->changeImage(images.getImg(img::ImgID::ExitSelected));
+        });
+    flex->push(std::move(img));
+
+    flex->addOnClick([this](widget::Handle handle) {
+        glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
+    });
+    this->addWidget(std::move(flex));
+
+    /*
     auto exit_game_txt = widget::DynText::make(
         "Exit Game",
         fonts,
@@ -1967,9 +1985,9 @@ void GUI::_layoutGameEscMenu() {
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
     );
-    flex->push(std::move(exit_game_txt));
+    flex->push(std::move(exit_game_txt)); 
 
-    this->addWidget(std::move(flex));
+    this->addWidget(std::move(flex)); */
 }
 
 void GUI::_layoutDeadScreen() {

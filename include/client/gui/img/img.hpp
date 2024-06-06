@@ -70,6 +70,10 @@ enum class ImgID {
     HelpDMBG,
     ExitBG,
     ExitDMBG,
+    ExitBGSelected,
+    ExitDMBGSelected,
+    ExitSelected,
+    Exit,
     LobbyButton,
     Victory,
     Defeat,
@@ -99,6 +103,7 @@ enum class ImgID {
         ImgID::DMCD_Selected_5, ImgID::DMCD_Selected_4, ImgID::DMCD_Selected_3, ImgID::DMCD_Selected_2, ImgID::DMCD_Selected_1, \
         ImgID::Skull, ImgID::DestroyedSkull, ImgID::SkullBG, ImgID::HelpBG, ImgID::HelpDMBG, \
         ImgID::ExitBG, ImgID::ExitDMBG, ImgID::LobbyButton, ImgID::Victory, ImgID::Defeat, \
+        ImgID::ExitBGSelected, ImgID::ExitDMBGSelected, ImgID::ExitSelected, ImgID::Exit, \
     }
 
 /**

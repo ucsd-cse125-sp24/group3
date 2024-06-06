@@ -89,6 +89,10 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::HelpDMBG: return (img_root / "helpDMBG.png").string();
         case ImgID::ExitBG: return (img_root / "exitBG.png").string();
         case ImgID::ExitDMBG: return (img_root / "exitDMBG.png").string();
+        case ImgID::ExitBGSelected: return (img_root / "exitBGSelected.png").string();
+        case ImgID::ExitDMBGSelected: return (img_root / "exitDMBGSelected.png").string();
+        case ImgID::Exit: return (img_root / "exit.png").string();
+        case ImgID::ExitSelected: return (img_root / "exitSelected.png").string();
         case ImgID::LobbyButton: return (img_root / "lobbyButton.png").string();
         case ImgID::Victory: return (img_root / "victory.png").string();
         case ImgID::Defeat: return (img_root / "defeat.png").string();
