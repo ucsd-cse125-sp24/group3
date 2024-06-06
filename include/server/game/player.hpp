@@ -61,13 +61,6 @@ public:
 
 private:
 	/**
-	 * @brief whether or not the player is sprinting, which is currently only used
-	 * to check if the player should resume the running animation or walking animation
-	 * upon landing
-	 */
-	bool is_sprinting;
-
-	/**
 	 * @brief Whether or not this Player is currently invulnerable to lightning.
 	 * This can occur after a Player used a Mirror to effectively reflect a
 	 * lightning bolt (this is to ensure that the player isn't harmed by that

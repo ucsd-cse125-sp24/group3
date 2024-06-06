@@ -58,7 +58,7 @@ void Orb::useItem(Object* other, ServerGameState& state, int itemSelected) {
 	for (glm::ivec2 grid_cell : grid_cells) {
 		auto potential_collision_objects = state.objects.cellToObjects.at(grid_cell);	
 		for (Object* obj : potential_collision_objects) {
-			if (obj->type != ObjectType::Orb && obj->type != ObjectType::Player && detectCollision(this->physics, obj->physics)) {
+			if (obj->type != ObjectType::Orb && obj->type != ObjectType::Player && detectCollision(this->physics, obj->physics)) { // cppcheck-suppress useStlAlgorithm
 				// go back in the inventory b/c inside a wall or something
 				this->doCollision(player, state); // get picked up by the player again
 				return;
@@ -83,7 +83,7 @@ void Orb::dropItem(Object* other, ServerGameState& state, int itemSelected, floa
 	for (glm::ivec2 grid_cell : grid_cells) {
 		auto potential_collision_objects = state.objects.cellToObjects.at(grid_cell);	
 		for (Object* obj : potential_collision_objects) {
-			if (obj->type != ObjectType::Orb && obj->type != ObjectType::Player && detectCollision(this->physics, obj->physics)) {
+			if (obj->type != ObjectType::Orb && obj->type != ObjectType::Player && detectCollision(this->physics, obj->physics)) { // cppcheck-suppress useStlAlgorithm
 				// go back in the inventory b/c inside a wall or something
 				this->doCollision(player, state); // get picked up by the player again
 				return;
