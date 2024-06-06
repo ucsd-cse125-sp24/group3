@@ -1058,18 +1058,24 @@ void Client::geometryPass() {
             case ObjectType::Lava: {
                 Model* model;
                 switch (sharedObject->modelType) {
-                    case ModelType::LavaCross:
+                    case ModelType::LavaCross: {
                         model = this->lava_cross_model.get();
                         break;
-                    case ModelType::LavaVertical:
+                    }
+                    case ModelType::LavaVertical: {
                         model = this->lava_vertical_model.get();
+                        glm::vec3 rot_dir = rotate90DegreesAroundYAxis(glm::vec3(1.0f, 0.0f, 0.0f));
+                        model->rotateAbsolute(rot_dir);
                         break;
-                    case ModelType::LavaHorizontal:
+                    }
+                    case ModelType::LavaHorizontal: {
                         model = this->lava_horizontal_model.get();
                         break;
-                    default:
+                    }
+                    default: {
                         model = this->lava_cross_model.get();
                         break;
+                    }
                 }
                 std::cout << glm::to_string(sharedObject->physics.dimensions) << std::endl;
                 model->setDimensions(sharedObject->physics.dimensions);
