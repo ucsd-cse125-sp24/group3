@@ -70,6 +70,7 @@ enum class ServerSFX {
     ElectricHum,
     IntroGateOpen,
     Wind,
+    MinotaurDeath
     // make sure to add to server sfx len map!
     // make sure to add to macro below!
 };
@@ -111,6 +112,7 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     {ServerSFX::ItemPickUp,         500ms},
     {ServerSFX::ItemDrop,           500ms},
     {ServerSFX::MirrorShatter,      2000ms},
+    {ServerSFX::MinotaurDeath,      3100ms},
     // dont forget macro below!
 };
 
@@ -123,7 +125,7 @@ const std::unordered_map<ServerSFX, std::chrono::milliseconds> SERVER_SFX_LENS =
     ServerSFX::PlayersStartTheme, ServerSFX::ElectricHum, ServerSFX::IntroGateOpen, ServerSFX::ZeusStartTheme, \
     ServerSFX::Wind, \
     ServerSFX::Teleport, ServerSFX::Potion, ServerSFX::Spell, ServerSFX::ItemPickUp, ServerSFX::ItemDrop, \
-    ServerSFX::MirrorShatter \
+    ServerSFX::MirrorShatter, ServerSFX::MinotaurDeath \
 }
 
 // const std::unordered_map<ServerSound, size_t> serverSoundTickLengths = {

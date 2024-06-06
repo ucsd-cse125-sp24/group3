@@ -2,7 +2,7 @@
     "game": {
         "maze": {
             "directory": "maps",
-            "procedural": false,
+            "procedural": true,
             "maze_file": "test/itemRoom.maze"
         }
     },
@@ -14,8 +14,8 @@
         "lobby_name": "Hope you're doing well!",
         "lobby_broadcast": true,
         "max_players": 1,
-        "disable_dm": false,
-        "skip_intro": true
+        "disable_dm": true,
+        "skip_intro": true 
     },
     "client": {
         "default_name": "Conan O'Brien",

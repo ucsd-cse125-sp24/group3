@@ -169,7 +169,7 @@ void GUI::layoutFrame(GUIState state) {
             break;
         case GUIState::GAME_HUD:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            this->_layoutDeadScreen();
+            //this->_layoutDeadScreen();
             this->_sharedGameHUD();
             this->_layoutGameHUD();
             break;
@@ -608,7 +608,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
                 if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
                     //  Subcase 3
                     playerRoleString = "Player " + std::to_string(playerIndex)
-                        + " wants to play as the DM.";
+                        + " wants to play as the Zeus.";
                 }
                 else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
                     //  subcase 4
@@ -679,7 +679,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
 
         //  "DM" radio button
         auto dm_radio_button = widget::DynText::make(
-            "DM",
+            "Zeus",
             fonts,
             widget::DynText::Options(
                 font::Font::TEXT,
@@ -843,7 +843,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
                         readyStatusString += "Player";
                         break;
                     case Client::RadioButtonState::SecondOption:
-                        readyStatusString += "DM";
+                        readyStatusString += "Zeus";
                         break;
                 }
 
@@ -1109,6 +1109,11 @@ void GUI::_sharedGameHUD() {
                     
                     break;
                 }
+                case ModelType::LightCut: {
+                    itemString = "Cut Lights (5)";
+
+                    break;
+                }
                 case ModelType::TeleporterTrap: {
                     itemString = "Teleporter Trap";
 
@@ -1262,6 +1267,10 @@ void GUI::_sharedGameHUD() {
                     }
                     case ModelType::Lightning: {
                         itemString = "Lightning Bolt (10)";
+
+                        break;
+                    }case ModelType::LightCut: {
+                        itemString = "Cut Lights (5)";
 
                         break;
                     }
@@ -1434,6 +1443,9 @@ void GUI::_sharedGameHUD() {
                 }
                 case ModelType::Lightning: {
                     itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Lightning), 2));
+                    break;
+                }case ModelType::LightCut: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LightCut), 2));
                     break;
                 }
                 case ModelType::ArrowTrap: {
@@ -1977,13 +1989,13 @@ void GUI::_layoutDeadScreen() {
     auto time_until_respawn = (self->playerInfo->respawn_time - getMsSinceEpoch()) / 1000;
 
     auto diedBG = widget::Flexbox::make(
-        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(35)),
+        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(45)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
     );
     diedBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Death), 2));
     auto respawnBG = widget::Flexbox::make(
-        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(200)),
+        glm::vec2(font::getRelativePixels(5), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(210)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
     );
@@ -1996,7 +2008,7 @@ void GUI::_layoutDeadScreen() {
         "You died...",
         font::Font::MENU,
         font::Size::LARGE,
-        font::Color::RED,
+        font::Color::WHITE,
         fonts,
         FRAC_WINDOW_HEIGHT(1, 2)
     ));
@@ -2004,7 +2016,7 @@ void GUI::_layoutDeadScreen() {
         "Respawning in " + std::to_string(time_until_respawn),
         font::Font::TEXT,
         font::Size::MEDIUM,
-        font::Color::BLACK,
+        font::Color::WHITE,
         fonts,
         FRAC_WINDOW_HEIGHT(1, 3)
     ));

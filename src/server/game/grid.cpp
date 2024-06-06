@@ -131,6 +131,7 @@ glm::ivec2 Grid::getGridCellFromPosition(glm::vec3 position) {
 
 std::vector<glm::ivec2> Grid::getCellsFromPositionRange(glm::vec3 p1, glm::vec3 p2) {
 	std::vector<glm::ivec2> cellPositions;
+
 	//	Get GridCell positions for p1 and p2
 	glm::ivec2 gridCellStart = Grid::getGridCellFromPosition(p1);
 	glm::ivec2 gridCellEnd = Grid::getGridCellFromPosition(p2);

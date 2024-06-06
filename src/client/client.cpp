@@ -220,9 +220,6 @@ bool Client::init() {
     auto sungod_model_path = entity_models_dir / "sungod.obj";
     this->sungod_model = std::make_unique<Model>(sungod_model_path.string(), true);
 
-    auto minotaur_model_path = entity_models_dir / "minotaur.obj";
-    this->minotaur_model = std::make_unique<Model>(minotaur_model_path.string(), true);
-
     auto python_model_path = entity_models_dir / "python.obj";
     this->python_model = std::make_unique<Model>(python_model_path.string(), true);
 
@@ -366,7 +363,11 @@ void Client::sendTrapEvent(bool hover, bool place, ModelType trapType) {
     case ModelType::Lightning:
         this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::Lightning, hover, place)));
         break;
+    case ModelType::LightCut:
+        this->session->sendEvent(Event(eid, EventType::TrapPlacement, TrapPlacementEvent(eid, this->world_pos, CellType::LightCut, hover, place)));
+        break;
     }
+
 }
 
 // Handle any updates 
@@ -820,6 +821,10 @@ void Client::geometryPass() {
                     }
                     break;
                 }
+                if (!sharedObject->playerInfo->is_alive) {
+                    break; // don't render dead players
+                }
+
                 animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
 
                 /* Update model animation */
@@ -888,9 +893,11 @@ void Client::geometryPass() {
                 break;
             }
             case ObjectType::Minotaur: {
-                this->minotaur_model->setDimensions(sharedObject->physics.dimensions);
-                this->minotaur_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->minotaur_model->draw(this->deferred_geometry_shader.get(),
+                this->bear_model->setDimensions(sharedObject->physics.dimensions);
+                this->bear_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->bear_model->translateRelative(glm::vec3(0, -8.5f, 0));
+                this->bear_model->rotateAbsolute(rotate90DegreesAroundYAxis(sharedObject->physics.facing));
+                this->bear_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
                 break;
@@ -1172,23 +1179,23 @@ void Client::lightingPass() {
     lighting_shader->setVec3("viewPos", camPos);
 
     if (is_dm) {
-        auto ambient = glm::vec3(0.1, 0.1, 0.1);
-        auto diffuse = glm::vec3(0.1, 0.1, 0.1);
-        auto specular = glm::vec3(0.1, 0.1, 0.1);
-        std::array<DirLight, 4> dirLights = {
-            DirLight{glm::vec3(1.0f, 0.0f, 0.0f), ambient, diffuse, specular},
-            DirLight{glm::vec3(-1.0f, 1.0f, 0.0f), ambient, diffuse, specular},
-            DirLight{glm::vec3(0.0f, 1.0f, 1.0f), ambient, diffuse, specular},
-            DirLight{glm::vec3(0.0f, 1.0f, -1.0f), ambient, diffuse, specular},
-        };
+       auto ambient = glm::vec3(0.1, 0.1, 0.1);
+       auto diffuse = glm::vec3(0.1, 0.1, 0.1);
+       auto specular = glm::vec3(0.1, 0.1, 0.1);
+       std::array<DirLight, 4> dirLights = {
+           DirLight{glm::vec3(1.0f, 0.0f, 0.0f), ambient, diffuse, specular},
+           DirLight{glm::vec3(-1.0f, 1.0f, 0.0f), ambient, diffuse, specular},
+           DirLight{glm::vec3(0.0f, 1.0f, 1.0f), ambient, diffuse, specular},
+           DirLight{glm::vec3(0.0f, 1.0f, -1.0f), ambient, diffuse, specular},
+       };
 
-        for (int i = 0; i < dirLights.size(); i++) {
-            std::string i_s = std::to_string(i);
-            lighting_shader->setVec3("dirLights[" + i_s + "].direction", dirLights[i].direction);
-            lighting_shader->setVec3("dirLights[" + i_s + "].ambient_color", ambient);
-            lighting_shader->setVec3("dirLights[" + i_s + "].diffuse_color", diffuse);
-            lighting_shader->setVec3("dirLights[" + i_s + "].specular_color", specular);
-        }
+       for (int i = 0; i < dirLights.size(); i++) {
+           std::string i_s = std::to_string(i);
+           lighting_shader->setVec3("dirLights[" + i_s + "].direction", dirLights[i].direction);
+           lighting_shader->setVec3("dirLights[" + i_s + "].ambient_color", ambient);
+           lighting_shader->setVec3("dirLights[" + i_s + "].diffuse_color", diffuse);
+           lighting_shader->setVec3("dirLights[" + i_s + "].specular_color", specular);
+       }
     }
 
     for (int i = 0; i < closest_lights->size(); i++) {
@@ -1201,6 +1208,7 @@ void Client::lightingPass() {
         glm::vec3 pos = curr_source->physics.getCenterPosition();
 
         lighting_shader->setFloat("pointLights[" + std::to_string(i) + "].intensity", properties.intensity);
+
         lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", pos);
 
         lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].ambient_color", properties.ambient_color);
@@ -1426,16 +1434,13 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
         /* Send an event to start 'shift' movement (i.e. sprint) */
         case GLFW_KEY_LEFT_SHIFT:
-            if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
-                this->session->sendEvent(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
-            }
-            is_held_i = true;
-            break;
-        case GLFW_KEY_LEFT_CONTROL:
-            if (this->session->getInfo().is_dungeon_master.has_value() && this->session->getInfo().is_dungeon_master.value()) {
+            if (eid.has_value()) {
                 this->session->sendEvent(Event(eid.value(), EventType::StartAction, StartActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
 
+            break;
+        case GLFW_KEY_LEFT_CONTROL:
+            is_held_i = true;
             break;
 
         default:
@@ -1479,10 +1484,9 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             break;
 
         case GLFW_KEY_LEFT_SHIFT:
-            if (eid.has_value() && !this->session->getInfo().is_dungeon_master.value()) {
+            if (eid.has_value()) {
                 this->session->sendEvent(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
             }
-            is_held_i = false;
             break;
 
         case GLFW_KEY_O: // zoom out
@@ -1492,16 +1496,10 @@ void Client::keyCallback(GLFWwindow *window, int key, int scancode, int action, 
             }
             break;
         case GLFW_KEY_I: // zoom out
-            if (eid.has_value() && this->session->getInfo().is_dungeon_master.value()) {
-                //sendTrapEvent(true, false, (this->gameState.objects.at(eid.value()))->trapInventoryInfo->inventory[(this->gameState.objects.at(eid.value()))->trapInventoryInfo->selected-1]);
-            }
             is_held_i = false;
             break;
         case GLFW_KEY_LEFT_CONTROL:
-            if (this->session->getInfo().is_dungeon_master.has_value() && this->session->getInfo().is_dungeon_master.value()) {
-                this->session->sendEvent(Event(eid.value(), EventType::StopAction, StopActionEvent(eid.value(), glm::vec3(0.0f), ActionType::Sprint)));
-            }
-
+            is_held_i = false;
             break;
         default:
             break;
@@ -1577,16 +1575,6 @@ void Client::mouseCallback(GLFWwindow* window, double xposIn, double yposIn) { /
 
     mouse_xpos = new_mouse_xpos;
     mouse_ypos = new_mouse_ypos;
-
-    if (this->gameState.phase == GamePhase::GAME && this->gui_state == GUIState::GAME_HUD) {
-        if (this->session->getInfo().is_dungeon_master.has_value() &&
-            this->session->getInfo().is_dungeon_master.value()) {
-            auto eid = this->session->getInfo().client_eid;
-            auto obj = this->gameState.objects.at(eid.value());
-
-            //sendTrapEvent(true, false, obj->trapInventoryInfo->inventory[obj->trapInventoryInfo->selected - 1]);
-        }
-    }
 }
 
 void Client::setWorldPos() {
