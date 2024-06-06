@@ -837,7 +837,9 @@ void Client::geometryPass() {
              sharedObject->type == ObjectType::Lava || 
              sharedObject->type == ObjectType::ArrowTrap ||
              sharedObject->type == ObjectType::SpikeTrap || 
-             sharedObject->type == ObjectType::Projectile ) && dist > this->config.client.render) {
+             sharedObject->type == ObjectType::Projectile ||
+             sharedObject->type == ObjectType::Torchlight) // dont render post from far away
+             && dist > this->config.client.render) {
             continue; 
         }
 
