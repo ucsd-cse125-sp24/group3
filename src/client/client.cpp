@@ -50,6 +50,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
+#define M_PI 3.14159265358979323846
 
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
