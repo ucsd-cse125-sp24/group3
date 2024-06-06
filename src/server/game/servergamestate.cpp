@@ -19,6 +19,7 @@
 #include "server/game/weaponcollider.hpp"
 #include "server/game/mirror.hpp"
 #include "server/game/spawner.hpp"
+#include "server/game/lava.hpp"
 
 #include "shared/game/celltype.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -1751,28 +1752,7 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 			return nullptr;
 		}
 
-		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
-			0.0f,
-			cell->y * Grid::grid_cell_width
-		);
-
-		FloorSpike::Orientation orientation;
-		if (type == CellType::FloorSpikeFull) {
-			orientation = FloorSpike::Orientation::Full;
-		}
-		else if (type == CellType::FloorSpikeHorizontal) {
-			orientation = FloorSpike::Orientation::Horizontal;
-			corner.z += Grid::grid_cell_width * 0.25f;
-		}
-		else {
-			orientation = FloorSpike::Orientation::Vertical;
-			corner.x += Grid::grid_cell_width * 0.25f;
-		}
-
-		FloorSpike* floorSpike = new FloorSpike(corner, orientation, Grid::grid_cell_width);
-		this->objects.createObject(floorSpike);
-		return floorSpike;
+        return spawnFloorSpike(cell);
 	}
 	case CellType::ArrowTrapDown:
 	case CellType::ArrowTrapLeft:
@@ -2093,27 +2073,15 @@ void ServerGameState::loadMaze(const Grid& grid) {
                     this->spawnWall(cell, col, row, internal_walls.contains(glm::ivec2(col, row)));
                     break;
                 }
-				case CellType::FloorSpikeFull:
+                case CellType::LavaCross:
+                case CellType::LavaHorizontal:
+                case CellType::LavaVertical: {
+                    this->spawnLava(cell);
+					break;
+				}
 				case CellType::FloorSpikeHorizontal:
 				case CellType::FloorSpikeVertical: {
-					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
-						0.0f, 
-						cell->y * Grid::grid_cell_width
-					);
-
-					FloorSpike::Orientation orientation;
-					if (cell->type == CellType::FloorSpikeFull) {
-						orientation = FloorSpike::Orientation::Full;
-					} else if (cell->type == CellType::FloorSpikeHorizontal) {
-						orientation = FloorSpike::Orientation::Horizontal;
-						corner.z += Grid::grid_cell_width * 0.25f;
-					} else {
-						orientation = FloorSpike::Orientation::Vertical;
-						corner.x += Grid::grid_cell_width * 0.25f;
-					}
-
-					this->objects.createObject(new FloorSpike(corner, orientation, Grid::grid_cell_width));
+                    this->spawnFloorSpike(cell);
 					break;
 				}
 
@@ -2322,6 +2290,50 @@ Trap* ServerGameState::spawnArrowTrap(GridCell* cell) {
     this->objects.createObject(arrowTrap);
     
     return arrowTrap;
+}
+
+Trap* ServerGameState::spawnFloorSpike(GridCell* cell) {
+    glm::vec3 corner(
+        cell->x * Grid::grid_cell_width,
+        -0.5f,
+        cell->y * Grid::grid_cell_width
+    );
+
+    FloorSpike::Orientation orientation;
+    if (cell->type == CellType::FloorSpikeHorizontal) {
+        orientation = FloorSpike::Orientation::Horizontal;
+        corner.z += Grid::grid_cell_width * 0.25f;
+    } else {
+        orientation = FloorSpike::Orientation::Vertical;
+        corner.x += Grid::grid_cell_width * 0.25f;
+    }
+
+    FloorSpike* floorSpike = new FloorSpike(corner, orientation, Grid::grid_cell_width);
+    this->objects.createObject(floorSpike);
+    return floorSpike;
+}
+
+Trap* ServerGameState::spawnLava(GridCell* cell) {
+    glm::vec3 corner(
+        cell->x * Grid::grid_cell_width,
+        0.0f,
+        cell->y * Grid::grid_cell_width
+    );
+
+    ModelType model_type;
+    if (cell->type == CellType::LavaCross) {
+		model_type = ModelType::LavaCross;	
+    } else if (cell->type == CellType::LavaHorizontal) {
+		model_type = ModelType::LavaHorizontal;	
+        corner.z += Grid::grid_cell_width * 0.25f;
+    } else {
+		model_type = ModelType::LavaVertical;	
+        corner.x += Grid::grid_cell_width * 0.25f;
+    }
+
+    Lava* lava = new Lava(corner, model_type, Grid::grid_cell_width);
+    this->objects.createObject(lava);
+    return lava;
 }
 
 Grid& ServerGameState::getGrid() {

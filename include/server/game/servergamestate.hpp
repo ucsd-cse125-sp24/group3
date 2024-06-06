@@ -391,6 +391,10 @@ private:
 
     Trap* spawnArrowTrap(GridCell* cell);
 
+    Trap* spawnFloorSpike(GridCell* cell);
+
+    Trap* spawnLava(GridCell* cell);
+
     std::unordered_map<EntityID, std::array<std::optional<EntityID>, MAX_POINT_LIGHTS>> lightSourcesPerPlayer;
 
 	/**

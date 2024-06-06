@@ -46,7 +46,13 @@ std::unordered_map<ModelType, glm::vec3> Object::models ({
     {ModelType::Torchlight, glm::vec3(1.0f)},
     {ModelType::SunGod, (SUNGOD_DIMENSIONS / 2.0f)},
     {ModelType::Arrow, glm::vec3(0.5f, 0.5f, 2.0f)},
-    {ModelType::ArrowTrap, (ARROW_TRAP_DIMENSIONS * 1.2f)}
+    {ModelType::ArrowTrap, (ARROW_TRAP_DIMENSIONS * 1.2f)},
+    {ModelType::LavaCross, LAVA_DIMENSIONS},
+    {ModelType::LavaHorizontal, LAVA_DIMENSIONS},
+    {ModelType::LavaVertical, LAVA_DIMENSIONS},
+    {ModelType::FloorSpikeFull, FLOOR_SPIKE_DIMENSIONS},
+    {ModelType::FloorSpikeHorizontal, FLOOR_SPIKE_DIMENSIONS},
+    {ModelType::FloorSpikeVertical, FLOOR_SPIKE_DIMENSIONS},
 });
 
 /*	SharedGameState generation	*/

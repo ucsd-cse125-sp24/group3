@@ -233,6 +233,15 @@ bool Client::init() {
 
     auto spike_trap_model_path = env_models_dir / "Spike_trap" / "Trap.obj";
     this->spike_trap_model = std::make_unique<Model>(spike_trap_model_path.string(), false);
+
+    auto lava_cross_model_path = env_models_dir / "lava" / "lava_cross.obj";
+    this->lava_cross_model = std::make_unique<Model>(lava_cross_model_path.string(), false);
+
+    auto lava_horizontal_model_path = env_models_dir / "lava" / "lava_horizontal.obj";
+    this->lava_horizontal_model = std::make_unique<Model>(lava_horizontal_model_path.string(), false);
+
+    auto lava_vertical_model_path = env_models_dir / "lava" / "lava_vertical.obj";
+    this->lava_vertical_model = std::make_unique<Model>(lava_vertical_model_path.string(), false);
     
     auto arrow_model_path = entity_models_dir / "Arrow_red" / "Arrow.obj";
     this->arrow_model = std::make_unique<Model>(arrow_model_path.string(), false);
@@ -1035,6 +1044,30 @@ void Client::geometryPass() {
                 this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
                 this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
+                    this->cam->getPos(),
+                    true);
+                break;
+            }
+            case ObjectType::Lava: {
+                Model* model;
+                switch (sharedObject->modelType) {
+                    case ModelType::LavaCross:
+                        model = this->lava_cross_model.get();
+                        break;
+                    case ModelType::LavaVertical:
+                        model = this->lava_vertical_model.get();
+                        break;
+                    case ModelType::LavaHorizontal:
+                        model = this->lava_horizontal_model.get();
+                        break;
+                    default:
+                        model = this->lava_cross_model.get();
+                        break;
+                }
+                std::cout << glm::to_string(sharedObject->physics.dimensions) << std::endl;
+                model->setDimensions(sharedObject->physics.dimensions);
+                model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
                 break;

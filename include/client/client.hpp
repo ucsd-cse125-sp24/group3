@@ -271,6 +271,9 @@ private:
     std::unique_ptr<Model> floor_model;
     std::unique_ptr<Model> arrow_model;
     std::unique_ptr<Model> arrow_trap_model;
+    std::unique_ptr<Model> lava_cross_model;
+    std::unique_ptr<Model> lava_horizontal_model;
+    std::unique_ptr<Model> lava_vertical_model;
 
     GLFWwindow *window;
 

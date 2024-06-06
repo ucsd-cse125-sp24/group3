@@ -6,24 +6,16 @@
 #include "server/game/object.hpp"
 #include "server/game/servergamestate.hpp"
 
-/**
- * A spike trap which lines the floor and deals damage to players that walk over them
- */
-class FloorSpike : public Trap {
+class Lava : public Trap {
 public:
-    enum class Orientation {
-        Vertical, // 1/2 x, take up full z
-        Horizontal // 1/2 z, take up full x
-    };
-
     static const int DAMAGE;
 
     /**
      * @param corner Corner position of the floor spike trap
-     * @param orientation what orientation the floorspike should be in
+     * @param model_type type of model 
      * @param grid_width or how wide the longer axis should be (e.g. z if vertical, x if horizontal)
      */
-    FloorSpike(glm::vec3 corner, Orientation dimensions, float grid_width);
+    Lava(glm::vec3 corner, ModelType model_type, float grid_width);
 
     bool shouldTrigger(ServerGameState& state) override;
 
