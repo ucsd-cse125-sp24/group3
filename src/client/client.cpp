@@ -243,7 +243,6 @@ bool Client::init() {
     auto player_atk_path = graphics_assets_dir / "animations/slash.fbx";
     auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
     auto torchlight_anim_path = graphics_assets_dir / "animations/fire-fix";
-    auto fireball_animation_path = graphics_assets_dir / "animations/fireball";
 
     this->player_model = std::make_unique<Model>(player_model_path.string(), false);
     Animation* player_walk = new Animation(player_walk_path.string(), this->player_model.get());
@@ -253,7 +252,6 @@ bool Client::init() {
     Animation* player_atk = new Animation(player_atk_path.string(), this->player_model.get());
     Animation* player_use_potion = new Animation(player_use_potion_path.string(), this->player_model.get());
     Animation* torchlight_animation = new Animation(torchlight_anim_path.string(), "fire-fix", 45);
-    Animation* fireball_animation = new Animation(fireball_animation_path.string(), "fireball", 60);
 
     animManager = new AnimationManager(player_idle);
 
@@ -264,7 +262,6 @@ bool Client::init() {
     animManager->addAnimation(player_atk, ObjectType::Player, AnimState::AttackAnim);
     animManager->addAnimation(player_use_potion, ObjectType::Player, AnimState::DrinkPotionAnim);
     animManager->addAnimation(torchlight_animation, ObjectType::Torchlight, AnimState::IdleAnim);
-    animManager->addAnimation(fireball_animation, ObjectType::Projectile, AnimState::IdleAnim);
 
     this->configureGBuffer();
 
@@ -1012,13 +1009,6 @@ void Client::geometryPass() {
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
-                // animManager->setFrameAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
-                // Model* fireball_model = animManager->updateAnimation();
-                // fireball_model->setDimensions(sharedObject->physics.dimensions);
-                // fireball_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                // fireball_model->draw(this->deferred_geometry_shader.get(), 
-                //     this->cam->getPos(),
-                //     true);
                 break;
             }
             case ObjectType::FloorSpike: {
