@@ -18,6 +18,7 @@
 #include "boost/variant/get.hpp"
 #include "server/game/exit.hpp"
 #include "server/game/objectmanager.hpp"
+#include "server/game/weaponcollider.hpp"
 #include "server/game/potion.hpp"
 #include "server/game/weapon.hpp"
 #include "server/game/enemy.hpp"
@@ -143,6 +144,14 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
         if (item->type != ObjectType::Orb) continue;
         closestPointLights.push(item->globalID);
         break; // only one orb
+    }
+
+    for(int i = 0; i < this->state.objects.getWeaponColliders().size(); i++) {
+        auto item = this->state.objects.getWeaponColliders().get(i);
+        if (item == nullptr) continue;
+        if (item->modelType != ModelType::Lightning) continue;
+        closestPointLights.push(item->globalID);
+        break; // only one lightning 
     }
 
     for(int i = 0; i < this->state.objects.getTraps().size(); i++) {

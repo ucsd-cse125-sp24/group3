@@ -2,6 +2,8 @@
 #include "server/game/constants.hpp"
 #include "server/game/player.hpp"
 #include "shared/audio/soundtype.hpp"
+#include "shared/game/point_light.hpp"
+#include "shared/game/sharedmodel.hpp"
 #include <chrono>
 
 /*
@@ -80,10 +82,25 @@ class Lightning : public WeaponCollider {
 public:
     inline static const glm::vec3 DIMENSION = glm::vec3(3.0f, 100.0f, 3.0f);
 
-    Lightning(glm::vec3 corner, glm::vec3 facing) :
-        WeaponCollider(nullptr, corner, facing, DIMENSION, ModelType::Cube,
-            WeaponOptions(LIGHTNING_DMG, LIGHTNING_PREP, LIGHTNING_DUR, false))
+    Lightning(glm::vec3 corner, glm::vec3 facing, const PointLightProperties& properties) :
+        WeaponCollider(nullptr, corner, facing, DIMENSION, ModelType::Lightning,
+            WeaponOptions(LIGHTNING_DMG, LIGHTNING_PREP, LIGHTNING_DUR, false)),
+        properties(properties)
     {
         this->sound = ServerSFX::Thunder;
     }
+	virtual SharedObject toShared() override {
+        auto so = Object::toShared();
+        so.pointLightInfo = SharedPointLightInfo {
+            .intensity = 1.0f,
+            .ambient_color = this->properties.ambient_color,
+            .diffuse_color = this->properties.diffuse_color,
+            .specular_color = this->properties.specular_color,
+            .attenuation_linear = this->properties.attenuation_linear,
+            .attenuation_quadratic = this->properties.attenuation_quadratic,
+        };
+        return so;
+    }
+private:
+    PointLightProperties properties;
 };

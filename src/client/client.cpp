@@ -1270,6 +1270,10 @@ void Client::lightingPass() {
             pos = this->gameState.objects.at(player_has_orb_global_id)->physics.getCenterPosition();
         }
 
+        if (curr_source->modelType == ModelType::Lightning) {
+            pos.y = 0.0f; 
+        }
+
         lighting_shader->setFloat("pointLights[" + std::to_string(i) + "].intensity", properties.intensity);
 
         lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", pos);
