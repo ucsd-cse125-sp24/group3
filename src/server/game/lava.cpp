@@ -5,7 +5,7 @@
 
 const int Lava::DAMAGE = 1;
 
-Lava::Lava(glm::vec3 corner, ModelType model_type, float grid_width, PointLightProperties light_properties):
+Lava::Lava(glm::vec3 corner, ModelType model_type, float grid_width, const PointLightProperties& light_properties):
     Trap(ObjectType::Lava, false, corner, Collider::Box, model_type, glm::vec3(0.0f)),
     light_properties(light_properties)
 {
