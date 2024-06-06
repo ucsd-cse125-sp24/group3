@@ -386,9 +386,11 @@ std::chrono::milliseconds Server::doTick() {
 
     this->sendSoundCommands();
 
+    auto shared_gamestate = this->state.generateSharedGameState(false);
+
     // send partial updates to the clients
     // ALSO where the packets actually get sent
-    for (const auto& partial_update: this->state.generateSharedGameState(false)) {
+    for (const auto& partial_update: shared_gamestate) {
         sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
     }
 
@@ -404,6 +406,8 @@ void Server::_doAccept() {
         [this](boost::system::error_code ec) {
             if (!ec) {
                 this->socket.set_option(boost::asio::ip::tcp::no_delay(true));
+                boost::asio::socket_base::send_buffer_size option(10000000); // 10x buffer size
+                this->socket.set_option(option);
                 auto addr = this->socket.remote_endpoint().address();
                 auto new_session = this->_handleNewSession(addr);
 

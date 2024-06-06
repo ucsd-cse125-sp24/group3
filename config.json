@@ -24,6 +24,6 @@
         "fullscreen": false,
         "draw_bboxes": false,
         "fps_counter": true,
-        "presentation": true
+        "presentation": false 
     }
 }
