@@ -18,7 +18,7 @@
 #define ARROW_DIMENSIONS        glm::vec3(25.025101, 68.662003, 333.333333)
 #define ARROW_TRAP_DIMENSIONS   glm::vec3(2.815553, 3.673665, 1.588817)
 #define FLOOR_SPIKE_DIMENSIONS  glm::vec3(3.0f, 1.0f, 3.0f)
-#define LAVA_DIMENSIONS         glm::vec3(3.0f, 0.1f, 3.0f)
+#define LAVA_DIMENSIONS         glm::vec3(3.0f, 0.01f, 3.0f)
 
 #define PLAYER_BBOX_SCALE           0.35f
 #define PLAYER_MODEL_SCALE          0.004f
