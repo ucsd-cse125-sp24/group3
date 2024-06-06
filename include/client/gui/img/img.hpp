@@ -82,6 +82,10 @@ enum class ImgID {
     Respawn,
     StartGame,
     StartGameSelected,
+    Player, PlayerSelected,
+    Zeus, ZeusSelected,
+    ReadyPlayer, ReadyPlayerSelected,
+    ReadyZeus, ReadyZeusSelected,
     RowBG,
     Blank,
 };
@@ -110,6 +114,8 @@ enum class ImgID {
         ImgID::ExitBG, ImgID::ExitDMBG, ImgID::LobbyButton, ImgID::Victory, ImgID::Defeat, \
         ImgID::ExitBGSelected, ImgID::ExitDMBGSelected, ImgID::ExitSelected, ImgID::Exit, \
         ImgID::Respawn, ImgID::Death, ImgID::StartGame, ImgID::StartGameSelected, ImgID::RowBG, \
+        ImgID::Player, ImgID::PlayerSelected, ImgID::Zeus, ImgID::ZeusSelected, \
+        ImgID::ReadyPlayer, ImgID::ReadyPlayerSelected, ImgID::ReadyZeus, ImgID::ReadyZeusSelected, \
     }
 
 /**

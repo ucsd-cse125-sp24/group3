@@ -102,6 +102,14 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::StartGame: return (img_root / "start.png").string();
         case ImgID::StartGameSelected: return (img_root / "startHover.png").string();
         case ImgID::RowBG: return (img_root / "rowBG.png").string();
+        case ImgID::Player: return (img_root / "player.png").string();
+        case ImgID::PlayerSelected: return (img_root / "playerSelected.png").string();
+        case ImgID::Zeus: return (img_root / "zeus.png").string();
+        case ImgID::ZeusSelected: return (img_root / "zeusSelected.png").string();
+        case ImgID::ReadyPlayer: return (img_root / "readyPlayer.png").string();
+        case ImgID::ReadyPlayerSelected: return (img_root / "readyPlayerSelected.png").string();
+        case ImgID::ReadyZeus: return (img_root / "readyZeus.png").string();
+        case ImgID::ReadyZeusSelected: return (img_root / "readyZeusSelected.png").string();
     }
 }
 }

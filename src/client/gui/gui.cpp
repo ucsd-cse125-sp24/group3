@@ -560,8 +560,6 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
 
     auto column1_empty = widget::Empty::make(column1_empty_width);
 
-    //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
-
     //  Push both the text widget and the Empty widget to the row Flexbox
     player_status_row->push(std::move(playerID));
     player_status_row->push(std::move(column1_empty));
@@ -642,7 +640,6 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
 
         auto column2_empty = widget::Empty::make(column2_empty_width);
 
-        //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
         //  Push both the player role text widget and the Empty widget to the row
         player_status_row->push(std::move(player_role));
         player_status_row->push(std::move(column2_empty));
@@ -753,24 +750,120 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
                 });
 
             //  Compute the remaining column width and create an Empty widget
+            /*
             float column2_empty_width = columnWidths.y
                 - radio_buttons_label->getSize().first
                 - radio_label_first_option_empty->getSize().first
                 - player_radio_button->getSize().first
                 - radio_first_second_option_empty->getSize().first
-                - dm_radio_button->getSize().first;
+                - dm_radio_button->getSize().first;*/
 
+            float column2_empty_width = columnWidths.y - radio_buttons_label->getSize().first;
             auto column2_empty = widget::Empty::make(column2_empty_width);
 
-            //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
-            //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
+            auto row_buttons = widget::Flexbox::make(
+                origin - glm::vec2(120, 16),
+                rowSize,
+                widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 20.0f)
+            );
+
+            // When first selecting
+            if (this->client->lobbyPlayerState == Client::LobbyPlayerState::Connected) {
+                auto playerButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Player), 1);
+                playerButton->addOnHover([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::StaticImg>(handle);
+                    widget->changeImage(images.getImg(img::ImgID::PlayerSelected));
+                    });
+                playerButton->addOnClick([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::DynText>(handle);
+                    if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                        client->roleSelection = Client::RadioButtonState::FirstOption;
+                        client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                    }
+                    });
+
+                auto zeusButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Zeus), 1);
+                zeusButton->addOnHover([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::StaticImg>(handle);
+                    widget->changeImage(images.getImg(img::ImgID::ZeusSelected));
+                    });
+                zeusButton->addOnClick([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::DynText>(handle);
+                    if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                        client->roleSelection = Client::RadioButtonState::SecondOption;
+                        client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                    }
+                    });
+                row_buttons->push(std::move(playerButton));
+                row_buttons->push(std::move(zeusButton));
+            }
+            // After one is selected
+            else {
+                if (this->client->roleSelection == Client::RadioButtonState::FirstOption) {
+                    auto playerButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::PlayerSelected), 1);
+                    playerButton->addOnClick([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::DynText>(handle);
+                        if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                            client->roleSelection = Client::RadioButtonState::FirstOption;
+                            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                        }
+                        });
+
+                    auto zeusButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Zeus), 1);
+                    zeusButton->addOnHover([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::StaticImg>(handle);
+                        widget->changeImage(images.getImg(img::ImgID::ZeusSelected));
+                        });
+                    zeusButton->addOnClick([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::DynText>(handle);
+                        if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                            client->roleSelection = Client::RadioButtonState::SecondOption;
+                            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                        }
+                        });
+                    row_buttons->push(std::move(playerButton));
+                    row_buttons->push(std::move(zeusButton));
+                }
+                else {
+                    auto playerButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Player), 1);
+                    playerButton->addOnHover([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::StaticImg>(handle);
+                        widget->changeImage(images.getImg(img::ImgID::PlayerSelected));
+                        });
+                    playerButton->addOnClick([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::DynText>(handle);
+                        if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                            client->roleSelection = Client::RadioButtonState::FirstOption;
+                            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                        }
+                        });
+
+                    auto zeusButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ZeusSelected), 1);
+                    zeusButton->addOnClick([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::DynText>(handle);
+                        if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                            client->roleSelection = Client::RadioButtonState::SecondOption;
+                            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                        }
+                        });
+                    row_buttons->push(std::move(playerButton));
+                    row_buttons->push(std::move(zeusButton));
+                }
+            }
+            this->addWidget(std::move(row_buttons));
+            
+            // fill in empty spaces in row
+            player_status_row->push(std::move(radio_buttons_label));
+            player_status_row->push(std::move(column2_empty));
+
             //  Push all widgets to the row
+            /*
             player_status_row->push(std::move(radio_buttons_label));
             player_status_row->push(std::move(radio_label_first_option_empty));
             player_status_row->push(std::move(player_radio_button));
             player_status_row->push(std::move(radio_first_second_option_empty));
             player_status_row->push(std::move(dm_radio_button));
-            player_status_row->push(std::move(column2_empty));
+            player_status_row->push(std::move(column2_empty)); */
         }
         else {
 
@@ -860,8 +953,6 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
 
         auto column3_empty = widget::Empty::make(column3_empty_width);
 
-        //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
-
         //  Push all widgets to the row
         player_status_row->push(std::move(ready_status));
         player_status_row->push(std::move(column3_empty));
@@ -880,35 +971,78 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
         std::string readyStatusString;
         font::Color color = font::Color::WHITE;
 
+        auto ready_button = widget::Flexbox::make(
+            origin - glm::vec2(-595, 16),
+            rowSize,
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 20.0f)
+        );
+
         //  First, set string text
         switch (this->client->lobbyPlayerState) {
-            case Client::LobbyPlayerState::Connected:
+            case Client::LobbyPlayerState::Connected: {
                 //  Subcase 1
                 readyStatusString = "Not Ready";
                 break;
-            case Client::LobbyPlayerState::SelectedRole:
+            }
+            case Client::LobbyPlayerState::SelectedRole: {
                 //  Subcase 2
-                readyStatusString = "Ready? (";
-
+                img::ImgID readyRole;
                 switch (this->client->roleSelection) {
-                    case Client::RadioButtonState::FirstOption:
-                        readyStatusString += "Player";
-                        break;
-                    case Client::RadioButtonState::SecondOption:
-                        readyStatusString += "Zeus";
-                        break;
+                case Client::RadioButtonState::FirstOption:
+                    readyRole = img::ImgID::ReadyPlayer;
+                    break;
+                case Client::RadioButtonState::SecondOption:
+                    readyRole = img::ImgID::ReadyZeus;
+                    break;
                 }
 
-                readyStatusString += ")";
+                auto readyImg = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(readyRole), 1);
+                readyImg->addOnHover([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::StaticImg>(handle);
+                    img::ImgID readyRoleSelected;
+                    switch (this->client->roleSelection) {
+                    case Client::RadioButtonState::FirstOption:
+                        readyRoleSelected = img::ImgID::ReadyPlayerSelected;
+                        break;
+                    case Client::RadioButtonState::SecondOption:
+                        readyRoleSelected = img::ImgID::ReadyZeusSelected;
+                        break;
+                    }
+                    widget->changeImage(images.getImg(readyRoleSelected));
+                    });
 
+                readyImg->addOnClick([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::DynText>(handle);
+                    client->lobbyPlayerState = Client::LobbyPlayerState::Ready;
+                    PlayerRole role;
+                    switch (this->client->roleSelection) {
+                    case Client::RadioButtonState::FirstOption:
+                        role = PlayerRole::Player;
+                        break;
+                    case Client::RadioButtonState::SecondOption:
+                        role = PlayerRole::DungeonMaster;
+                        break;
+                    }
+                    this->client->session->sendEvent(Event(
+                        this->client->session->getInfo().client_eid.value(),
+                        EventType::LobbyAction,
+                        LobbyActionEvent(
+                            LobbyActionEvent::Action::Ready,
+                            role
+                        )
+                    ));
+                    });
+                ready_button->push(std::move(readyImg));
                 break;
-            case Client::LobbyPlayerState::Ready:
+            }
+            case Client::LobbyPlayerState::Ready: {
                 //  Subcase 3
                 readyStatusString = "Ready!";
                 if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
                     color = font::Color::YELLOW;
                 }
                 break;
+            }
         }
 
         //  Create text widget
@@ -922,57 +1056,18 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
             )
         );
 
-        //  Add clickable property if in subcase 2
-        if (this->client->lobbyPlayerState == Client::LobbyPlayerState::SelectedRole) {
-            //  Add button hover
-            ready_status->addOnHover([this](widget::Handle handle) {
-                auto widget = this->borrowWidget<widget::DynText>(handle);
-                widget->changeColor(font::Color::YELLOW);
-            });
-
-            //  Add radio button on click
-            ready_status->addOnClick([this](widget::Handle handle) {
-                auto widget = this->borrowWidget<widget::DynText>(handle);
-
-                client->lobbyPlayerState = Client::LobbyPlayerState::Ready;
-
-                //  TODO: Send Ready Event to Server!
-
-                //  Determine player's desired role by radio button selected
-                PlayerRole desired_role;
-
-                switch (this->client->roleSelection) {
-                    case Client::RadioButtonState::FirstOption:
-                        desired_role = PlayerRole::Player;
-                        break;
-                    case Client::RadioButtonState::SecondOption:
-                        desired_role = PlayerRole::DungeonMaster;
-                        break;
-                }
-
-                this->client->session->sendEvent(Event(
-                    this->client->session->getInfo().client_eid.value(),
-                    EventType::LobbyAction,
-                    LobbyActionEvent(
-                        LobbyActionEvent::Action::Ready,
-                        desired_role
-                    )
-                ));
-            });
-        }
-
         //  Calculate remaining empty space and create Empty widget
         float column3_empty_width = columnWidths.z - ready_status->getSize().first;
 
         auto column3_empty = widget::Empty::make(column3_empty_width);
 
-        //playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LobbyButton), 2));
+        this->addWidget(std::move(ready_button));
 
         //  Push both widgets to row
         player_status_row->push(std::move(ready_status));
         player_status_row->push(std::move(column3_empty));
     }
-
+    
     return player_status_row;
 }
 
