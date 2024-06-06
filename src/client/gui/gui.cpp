@@ -169,7 +169,7 @@ void GUI::layoutFrame(GUIState state) {
             break;
         case GUIState::GAME_HUD:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
+            this->_layoutDeadScreen();
             this->_sharedGameHUD();
             this->_layoutGameHUD();
             break;
@@ -1966,28 +1966,6 @@ void GUI::_layoutGameEscMenu() {
         glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
     });
     this->addWidget(std::move(flex));
-
-    /*
-    auto exit_game_txt = widget::DynText::make(
-        "Exit Game",
-        fonts,
-        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::WHITE)
-    );
-    exit_game_txt->addOnHover([this](widget::Handle handle) {
-        auto widget = this->borrowWidget<widget::DynText>(handle);
-        widget->changeColor(font::Color::YELLOW);
-    });
-    exit_game_txt->addOnClick([this](widget::Handle handle) {
-        glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
-    });
-    auto flex = widget::Flexbox::make(
-        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 2)),
-        glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
-    );
-    flex->push(std::move(exit_game_txt)); 
-
-    this->addWidget(std::move(flex)); */
 }
 
 void GUI::_layoutDeadScreen() {
@@ -1996,8 +1974,23 @@ void GUI::_layoutDeadScreen() {
         return;
     }
     auto self = client->gameState.objects.at(*self_eid);
-
     auto time_until_respawn = (self->playerInfo->respawn_time - getMsSinceEpoch()) / 1000;
+
+    auto diedBG = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(35)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
+    );
+    diedBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Death), 2));
+    auto respawnBG = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(200)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
+    );
+    respawnBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Respawn), 2));
+
+    this->addWidget(std::move(diedBG));
+    this->addWidget(std::move(respawnBG));
 
     this->addWidget(widget::CenterText::make(
         "You died...",

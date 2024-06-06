@@ -96,6 +96,8 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::LobbyButton: return (img_root / "lobbyButton.png").string();
         case ImgID::Victory: return (img_root / "victory.png").string();
         case ImgID::Defeat: return (img_root / "defeat.png").string();
+        case ImgID::Death: return (img_root / "died.png").string();
+        case ImgID::Respawn: return (img_root / "respawn.png").string();
     }
 }
 }

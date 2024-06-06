@@ -77,6 +77,8 @@ enum class ImgID {
     LobbyButton,
     Victory,
     Defeat,
+    Death,
+    Respawn,
     Blank,
 };
 
@@ -104,6 +106,7 @@ enum class ImgID {
         ImgID::Skull, ImgID::DestroyedSkull, ImgID::SkullBG, ImgID::HelpBG, ImgID::HelpDMBG, \
         ImgID::ExitBG, ImgID::ExitDMBG, ImgID::LobbyButton, ImgID::Victory, ImgID::Defeat, \
         ImgID::ExitBGSelected, ImgID::ExitDMBGSelected, ImgID::ExitSelected, ImgID::Exit, \
+        ImgID::Respawn, ImgID::Death, \
     }
 
 /**
