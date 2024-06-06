@@ -25,6 +25,18 @@ void AnimationManager::updateAnimation(float dt) {
     }
 }
 
+Model* AnimationManager::updateAnimation() {
+    if (entityAnimFrameMap[currEntity].second) {
+        m_currentAnimation = entityAnimFrameMap[currEntity].second;
+        int currFrame = entityAnimFrameMap[currEntity].first + 1;
+        entityAnimFrameMap[currEntity].first = currFrame;
+        return m_currentAnimation->getFrame(currFrame);
+    } else {
+        return nullptr;
+    }
+}
+
+
 void AnimationManager::playAnimation(Animation* pAnimation) {
     m_currentAnimation = pAnimation;
     m_currentTime = 0.0f;
@@ -61,6 +73,16 @@ void AnimationManager::calculateBoneTransform(const AssimpNodeData* node, glm::m
 void AnimationManager::setAnimation(EntityID id, ObjectType objType, AnimState animState) {
     if (entityAnimMap.find(id) == entityAnimMap.end() || entityAnimMap[id].second != objAnimMap[objType][animState]) {
         entityAnimMap[id] = std::make_pair(0.0f, objAnimMap[objType][animState]);
+    }
+    currEntity = id;
+}
+
+void AnimationManager::setFrameAnimation(EntityID id, ObjectType objType, AnimState animState) {
+    if (entityAnimFrameMap.find(id) == entityAnimFrameMap.end() || entityAnimFrameMap[id].second != objAnimMap[objType][animState]) {
+        std::random_device dev;
+        std::mt19937 rng(dev());
+        std::uniform_int_distribution<std::mt19937::result_type> dist(0,51);
+        entityAnimFrameMap[id] = std::make_pair(dist(rng), objAnimMap[objType][animState]);
     }
     currEntity = id;
 }

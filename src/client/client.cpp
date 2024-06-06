@@ -208,7 +208,8 @@ bool Client::init() {
     auto pillar_model_path = env_models_dir / "pillar.obj";
     this->pillar_model = std::make_unique<Model>(pillar_model_path.string(), true);
 
-    auto torchlight_model_path = env_models_dir / "exit.obj";
+    // auto torchlight_model_path = env_models_dir / "exit.obj";
+    auto torchlight_model_path = env_models_dir / "fireball.obj";
     this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string(), true);
 
     auto slime_model_path = entity_models_dir / "slime.obj";
@@ -235,13 +236,15 @@ bool Client::init() {
     auto exit_model_path = env_models_dir / "exit.obj";
     this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
 
-    auto player_model_path = graphics_assets_dir / "player_models/char_3/model_char_3.fbx";
+    auto player_model_path = graphics_assets_dir / "player_models/char_2_rename/char2.fbx";
     auto player_walk_path = graphics_assets_dir / "animations/walk.fbx";
     auto player_jump_path = graphics_assets_dir / "animations/jump.fbx";
     auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
     auto player_run_path = graphics_assets_dir / "animations/run.fbx";
     auto player_atk_path = graphics_assets_dir / "animations/slash.fbx";
     auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
+    auto torchlight_anim_path = graphics_assets_dir / "animations/fire-fix";
+    auto fireball_animation_path = graphics_assets_dir / "animations/fireball";
 
     this->player_model = std::make_unique<Model>(player_model_path.string(), false);
     Animation* player_walk = new Animation(player_walk_path.string(), this->player_model.get());
@@ -250,6 +253,8 @@ bool Client::init() {
     Animation* player_run = new Animation(player_run_path.string(), this->player_model.get());
     Animation* player_atk = new Animation(player_atk_path.string(), this->player_model.get());
     Animation* player_use_potion = new Animation(player_use_potion_path.string(), this->player_model.get());
+    Animation* torchlight_animation = new Animation(torchlight_anim_path.string(), "fire-fix", 45);
+    Animation* fireball_animation = new Animation(fireball_animation_path.string(), "fireball", 60);
 
     animManager = new AnimationManager(player_idle);
 
@@ -259,6 +264,8 @@ bool Client::init() {
     animManager->addAnimation(player_run, ObjectType::Player, AnimState::SprintAnim);
     animManager->addAnimation(player_atk, ObjectType::Player, AnimState::AttackAnim);
     animManager->addAnimation(player_use_potion, ObjectType::Player, AnimState::DrinkPotionAnim);
+    animManager->addAnimation(torchlight_animation, ObjectType::Torchlight, AnimState::IdleAnim);
+    animManager->addAnimation(fireball_animation, ObjectType::Projectile, AnimState::IdleAnim);
 
     this->configureGBuffer();
 
@@ -804,6 +811,7 @@ void Client::geometryPass() {
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y -= sharedObject->physics.dimensions.y / 2.0f;
                     pos.y += PLAYER_EYE_LEVEL;
+                    // pos.z += 3.0f;
                     cam->updatePos(pos);
 
                     // update listener position & facing
@@ -1005,6 +1013,13 @@ void Client::geometryPass() {
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
+                // animManager->setFrameAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
+                // Model* fireball_model = animManager->updateAnimation();
+                // fireball_model->setDimensions(sharedObject->physics.dimensions);
+                // fireball_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                // fireball_model->draw(this->deferred_geometry_shader.get(), 
+                //     this->cam->getPos(),
+                //     true);
                 break;
             }
             case ObjectType::FloorSpike: {
@@ -1278,11 +1293,19 @@ void Client::lightingPass() {
 
         glm::vec3 v(1.0f);
 
+        animManager->setFrameAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
+
+        /* Update model animation */
+        Model* torch_frame_model = animManager->updateAnimation(); 
+        glm::vec3 dims = torch_frame_model->getDimensions();
         this->deferred_light_box_shader->use();
         this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);
-        this->torchlight_model->setDimensions(2.0f * sharedObject->physics.dimensions);
-        this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-        this->torchlight_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
+        // this->torchlight_model->setDimensions(2.0f * sharedObject->physics.dimensions);
+        // this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+        // this->torchlight_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
+        torch_frame_model->setDimensions(2.0f * sharedObject->physics.dimensions);
+        torch_frame_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+        torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
     }
 
 }
