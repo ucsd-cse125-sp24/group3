@@ -90,9 +90,26 @@ std::string getImgFilepath(ImgID img) {
         case ImgID::HelpDMBG: return (img_root / "helpDMBG.png").string();
         case ImgID::ExitBG: return (img_root / "exitBG.png").string();
         case ImgID::ExitDMBG: return (img_root / "exitDMBG.png").string();
+        case ImgID::ExitBGSelected: return (img_root / "exitBGSelected.png").string();
+        case ImgID::ExitDMBGSelected: return (img_root / "exitDMBGSelected.png").string();
+        case ImgID::Exit: return (img_root / "exit.png").string();
+        case ImgID::ExitSelected: return (img_root / "exitSelected.png").string();
         case ImgID::LobbyButton: return (img_root / "lobbyButton.png").string();
         case ImgID::Victory: return (img_root / "victory.png").string();
         case ImgID::Defeat: return (img_root / "defeat.png").string();
+        case ImgID::Death: return (img_root / "died.png").string();
+        case ImgID::Respawn: return (img_root / "respawn.png").string();
+        case ImgID::StartGame: return (img_root / "start.png").string();
+        case ImgID::StartGameSelected: return (img_root / "startHover.png").string();
+        case ImgID::RowBG: return (img_root / "rowBG.png").string();
+        case ImgID::Player: return (img_root / "player.png").string();
+        case ImgID::PlayerSelected: return (img_root / "playerSelected.png").string();
+        case ImgID::Zeus: return (img_root / "zeus.png").string();
+        case ImgID::ZeusSelected: return (img_root / "zeusSelected.png").string();
+        case ImgID::ReadyPlayer: return (img_root / "readyPlayer.png").string();
+        case ImgID::ReadyPlayerSelected: return (img_root / "readyPlayerSelected.png").string();
+        case ImgID::ReadyZeus: return (img_root / "readyZeus.png").string();
+        case ImgID::ReadyZeusSelected: return (img_root / "readyZeusSelected.png").string();
     }
 }
 }

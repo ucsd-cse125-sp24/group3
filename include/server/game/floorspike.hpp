@@ -11,12 +11,6 @@
  */
 class FloorSpike : public Trap {
 public:
-    enum class Orientation {
-        Full, // take up whole grid cell
-        Vertical, // 1/2 x, take up full z
-        Horizontal // 1/2 z, take up full x
-    };
-
     static const int DAMAGE;
 
     /**
@@ -24,7 +18,7 @@ public:
      * @param orientation what orientation the floorspike should be in
      * @param grid_width or how wide the longer axis should be (e.g. z if vertical, x if horizontal)
      */
-    FloorSpike(glm::vec3 corner, Orientation dimensions, float grid_width);
+    FloorSpike(glm::vec3 corner, float grid_width);
 
     bool shouldTrigger(ServerGameState& state) override;
 

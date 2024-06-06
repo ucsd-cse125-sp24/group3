@@ -1,11 +1,13 @@
 #include "server/game/orb.hpp"
 #include "server/game/constants.hpp"
+#include "shared/game/point_light.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "server/game/exit.hpp"
 #include "shared/audio/constants.hpp"
 #include <chrono>
 
-Orb::Orb(glm::vec3 corner, glm::vec3 dimensions) : Item(ObjectType::Orb, true, corner, ModelType::Cube, dimensions) {
+Orb::Orb(glm::vec3 corner, glm::vec3 dimensions, const PointLightProperties& properties) : Item(ObjectType::Orb, true, corner, ModelType::Cube, dimensions), 
+    properties(properties) {
 	this->modelType = ModelType::Orb;
 }
 
@@ -90,4 +92,19 @@ void Orb::dropItem(Object* other, ServerGameState& state, int itemSelected, floa
 			}
 		}
 	}
+}
+
+/*	SharedGameState generation	*/
+SharedObject Orb::toShared() {
+    auto so = Object::toShared();
+    so.iteminfo = this->iteminfo;
+    so.pointLightInfo = SharedPointLightInfo {
+        .intensity = 1.0f,
+        .ambient_color = this->properties.ambient_color,
+        .diffuse_color = this->properties.diffuse_color,
+        .specular_color = this->properties.specular_color,
+        .attenuation_linear = this->properties.attenuation_linear,
+        .attenuation_quadratic = this->properties.attenuation_quadratic,
+    };
+    return so;
 }

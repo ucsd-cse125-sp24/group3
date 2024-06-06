@@ -12,4 +12,4 @@
 
 // distance threshold of which objects
 // to render
-#define RENDER_DISTANCE 100.0f
+#define RENDER_DISTANCE 80.0f

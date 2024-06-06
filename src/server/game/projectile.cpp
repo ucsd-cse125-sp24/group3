@@ -3,6 +3,7 @@
 #include "server/game/servergamestate.hpp"
 #include "server/game/spell.hpp"
 #include "shared/audio/constants.hpp"
+#include "shared/game/sharedmodel.hpp"
 
 #include <iostream>
 
@@ -20,12 +21,18 @@ bool Projectile::doTick(ServerGameState& state) {
         state.markForDeletion(this->globalID);
     }
 
-    if (!this->opt.homing) return false;
+    if (!this->opt.homing) {
+        return false;
+    }
     this->opt.homing_duration--;
-    if (this->opt.homing_duration <= 0) return false;
+    if (this->opt.homing_duration <= 0) {
+        return false;
+    }
 
     Object* target = state.objects.getObject(*this->opt.target);
-    if (target == nullptr) return false;
+    if (target == nullptr) {
+        return false;
+    }
 
     auto pos_to_go_to = target->physics.shared.getCenterPosition();
     auto dir_to_target = glm::normalize(pos_to_go_to - this->physics.shared.getCenterPosition());

@@ -57,9 +57,7 @@ void Spawner::spawnEnemy(ServerGameState& state, int valueRemaining) {
 
 		// Dont spawn mini slimes
 		if (index == 3) { continue; }
-		if (this->valueMap[index] < valueRemaining) {
-			break;
-		}
+		break;
 	}
 
 	SpecificID enemyID = 0;

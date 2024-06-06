@@ -1,28 +1,30 @@
 {
-    "game": {
-        "maze": {
-            "directory": "maps",
-            "procedural": false,
-            "maze_file": "test/orb_drop.maze"
-        }
+
+  "game": {
+    "maze": {
+      "directory": "maps",
+      "procedural": true,
+      "maze_file": "test/itemRoom.maze"
     },
+    "disable_enemies": true
+  },
     "network": {
         "server_ip": "localhost",
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "Tyler",
+        "lobby_name": "Hope you're doing well!",
         "lobby_broadcast": true,
         "max_players": 1,
-        "disable_dm": true,
+        "disable_dm": false,
         "skip_intro": true 
     },
     "client": {
         "default_name": "Conan O'Brien",
         "lobby_discovery": true,
-        "fullscreen": false,
+        "fullscreen": true,
         "draw_bboxes": false,
         "fps_counter": true,
-        "presentation": false 
+        "presentation": false
     }
 }
