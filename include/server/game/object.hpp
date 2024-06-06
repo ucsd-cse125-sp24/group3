@@ -136,6 +136,11 @@ public:
 	AnimState animState;
 
 	/**
+	 * @brief used to determine if the player is sprinting for animation purposes
+	 */
+    bool is_sprinting;
+
+	/**
 	 * @brief Vector of (x, y) positions of GridCells currently occupied by this
 	 * object
 	 */

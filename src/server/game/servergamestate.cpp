@@ -222,7 +222,11 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::MoveCam: {
 				obj->physics.velocity.x = (startAction.movement * PLAYER_SPEED).x;
 				obj->physics.velocity.z = (startAction.movement * PLAYER_SPEED).z;
-				obj->animState = (obj->animState == AnimState::JumpAnim || obj->animState == AnimState::SprintAnim) ? obj->animState : AnimState::WalkAnim;
+				if (obj->is_sprinting) {
+					obj->animState = (obj->animState == AnimState::JumpAnim) ? obj->animState : AnimState::SprintAnim;
+				} else {
+					obj->animState = (obj->animState == AnimState::JumpAnim) ? obj->animState : AnimState::WalkAnim;
+				}
 				break;
 			}
 			case ActionType::Jump: {
@@ -247,6 +251,7 @@ void ServerGameState::update(const EventList& events) {
 				else {
 					obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
 					obj->animState = (obj->animState == AnimState::WalkAnim) ? AnimState::SprintAnim : obj->animState;
+					obj->is_sprinting = true;
 				}
 				break;
 			}
@@ -296,6 +301,8 @@ void ServerGameState::update(const EventList& events) {
 				} else {
 					obj->animState = AnimState::IdleAnim;
 				}
+
+				obj->is_sprinting = false;
 
 				break;
 			}
@@ -899,7 +906,11 @@ void ServerGameState::updateMovement() {
 
 			// After landing, set object's animation to non-jump (idle)
 			if (object->physics.velocity.x != 0.0f && object->physics.velocity.z != 0.0f) {
-				object->animState = AnimState::WalkAnim;
+				if (object->is_sprinting) {
+					object->animState = AnimState::SprintAnim;
+				} else {
+					object->animState = AnimState::WalkAnim;
+				}
 			} else {
 				object->animState = AnimState::IdleAnim;
 			}

@@ -13,7 +13,7 @@
     "server": {
         "lobby_name": "Hope you're doing well!1",
         "lobby_broadcast": true,
-        "max_players": 2,
+        "max_players": 1,
         "disable_dm": true,
         "skip_intro": true 
     },

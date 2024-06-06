@@ -13,6 +13,7 @@ Object::Object(ObjectType type, Physics physics, ModelType modelType):
 	this->setModel(modelType);
 	this->distance_moved = 0.0f;
 	this->animState = AnimState::IdleAnim;
+	this->is_sprinting = false;
 }
 
 Object::~Object() {}
