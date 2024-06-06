@@ -216,6 +216,27 @@ bool IntroCutscene::update() {
     }
 
     if (ticks == EXIT_CUTSCENE_TICK) {
+        player->animState = AnimState::SprintAnim;
+        player->physics.velocity = glm::normalize(player->physics.shared.facing) * 0.20f;
+    }
+
+    if (ticks == EXIT_CUTSCENE_TICK + 20) {
+        player_left->animState = AnimState::SprintAnim;
+        player_left->physics.velocity = glm::normalize(player->physics.shared.facing) * 0.20f;
+        player_right->animState = AnimState::SprintAnim;
+        player_right->physics.velocity = glm::normalize(player->physics.shared.facing) * 0.20f;
+    }
+
+    if (ticks == EXIT_CUTSCENE_TICK + 100) {
+        this->state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::Teleport,
+            player->physics.shared.getCenterPosition(),
+            FULL_VOLUME,
+            FAR_DIST,
+            FAR_ATTEN
+        ));
+    }
+    if (ticks == EXIT_CUTSCENE_TICK + 105) {
         return true;
     }
 
