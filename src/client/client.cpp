@@ -992,6 +992,7 @@ void Client::geometryPass() {
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
+                this->spike_trap_model->rotateAbsolute(0.0f, glm::vec3(0.0f, 0.0f, 1.0f));
                 break;
             }
             case ObjectType::FireballTrap: {
@@ -1051,8 +1052,7 @@ void Client::geometryPass() {
                 this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
                 this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getPos(),
-                    true);
+                    this->cam->getPos(), true);
                 break;
             }
             case ObjectType::Lava: {
@@ -1078,8 +1078,7 @@ void Client::geometryPass() {
                 model->setDimensions(sharedObject->physics.dimensions);
                 model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getPos(),
-                    true);
+                    this->cam->getPos(), true);
                 break;
             }
             case ObjectType::Orb: {

@@ -2293,16 +2293,7 @@ Trap* ServerGameState::spawnFloorSpike(GridCell* cell) {
         cell->y * Grid::grid_cell_width
     );
 
-    FloorSpike::Orientation orientation;
-    if (cell->type == CellType::FloorSpikeHorizontal) {
-        orientation = FloorSpike::Orientation::Horizontal;
-        corner.z += Grid::grid_cell_width * 0.25f;
-    } else {
-        orientation = FloorSpike::Orientation::Vertical;
-        corner.x += Grid::grid_cell_width * 0.25f;
-    }
-
-    FloorSpike* floorSpike = new FloorSpike(corner, orientation, Grid::grid_cell_width);
+    FloorSpike* floorSpike = new FloorSpike(corner, Grid::grid_cell_width);
     this->objects.createObject(floorSpike);
     return floorSpike;
 }
