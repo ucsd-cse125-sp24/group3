@@ -311,10 +311,13 @@ std::chrono::milliseconds Server::doTick() {
                                 if (player == nullptr) continue;
 
                                 if (player_idx == 0) {
+                                    std::cout << "assigning player " << i << " to fire\n";
                                     player->modelType = ModelType::PlayerFire;
                                 } else if (player_idx == 1) {
+                                    std::cout << "assigning player " << i << " to lightning\n";
                                     player->modelType = ModelType::PlayerLightning;
                                 } else if (player_idx == 2) {
+                                    std::cout << "assigning player " << i << " to water\n";
                                     player->modelType = ModelType::PlayerWater;
                                 }
 
