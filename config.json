@@ -12,7 +12,7 @@
         "server_port": 2355
     },
     "server": {
-        "lobby_name": "Hope you're doing well!1",
+        "lobby_name": "Hope you're doing well!",
         "lobby_broadcast": true,
         "max_players": 1,
         "disable_dm": false,
@@ -24,6 +24,6 @@
         "fullscreen": true,
         "draw_bboxes": false,
         "fps_counter": true,
-        "presentation": false 
+        "presentation": false
     }
 }

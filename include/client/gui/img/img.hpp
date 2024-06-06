@@ -71,9 +71,22 @@ enum class ImgID {
     HelpDMBG,
     ExitBG,
     ExitDMBG,
+    ExitBGSelected,
+    ExitDMBGSelected,
+    ExitSelected,
+    Exit,
     LobbyButton,
     Victory,
     Defeat,
+    Death,
+    Respawn,
+    StartGame,
+    StartGameSelected,
+    Player, PlayerSelected,
+    Zeus, ZeusSelected,
+    ReadyPlayer, ReadyPlayerSelected,
+    ReadyZeus, ReadyZeusSelected,
+    RowBG,
     Blank,
 };
 
@@ -90,8 +103,7 @@ enum class ImgID {
         ImgID::Compass120, ImgID::Compass150, ImgID::Compass180, ImgID::Compass210, \
         ImgID::Compass240, ImgID::Compass270, ImgID::Compass300, ImgID::Compass330, \
         ImgID::FloorSpikeTrap, ImgID::Sungod, ImgID::Teleporter, ImgID::Lightning, ImgID::LightCut, \
-        ImgID::ArrowTrap, ImgID::SpikeTrap, \
-        ImgID::DMTrapBG, ImgID::Needle, \
+        ImgID::ArrowTrap, ImgID::SpikeTrap, ImgID::DMTrapBG, ImgID::Needle, \
         ImgID::EventBG, ImgID::DMEventBG, \
         ImgID::DMLeftHotbar, ImgID::DMRightHotbar, ImgID::DMMiddleHotbar, ImgID::DMMiddleSelected, ImgID::DMMiddleCooldown, \
         ImgID::DMCD_10, ImgID::DMCD_9, ImgID::DMCD_8, ImgID::DMCD_7, ImgID::DMCD_6, \
@@ -100,6 +112,10 @@ enum class ImgID {
         ImgID::DMCD_Selected_5, ImgID::DMCD_Selected_4, ImgID::DMCD_Selected_3, ImgID::DMCD_Selected_2, ImgID::DMCD_Selected_1, \
         ImgID::Skull, ImgID::DestroyedSkull, ImgID::SkullBG, ImgID::HelpBG, ImgID::HelpDMBG, \
         ImgID::ExitBG, ImgID::ExitDMBG, ImgID::LobbyButton, ImgID::Victory, ImgID::Defeat, \
+        ImgID::ExitBGSelected, ImgID::ExitDMBGSelected, ImgID::ExitSelected, ImgID::Exit, \
+        ImgID::Respawn, ImgID::Death, ImgID::StartGame, ImgID::StartGameSelected, ImgID::RowBG, \
+        ImgID::Player, ImgID::PlayerSelected, ImgID::Zeus, ImgID::ZeusSelected, \
+        ImgID::ReadyPlayer, ImgID::ReadyPlayerSelected, ImgID::ReadyZeus, ImgID::ReadyZeusSelected, \
     }
 
 /**
