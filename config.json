@@ -21,7 +21,7 @@
     "client": {
         "default_name": "Conan O'Brien",
         "lobby_discovery": true,
-        "fullscreen": false,
+        "fullscreen": true,
         "draw_bboxes": false,
         "fps_counter": true,
         "presentation": false 
