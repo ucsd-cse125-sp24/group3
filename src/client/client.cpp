@@ -1064,12 +1064,13 @@ void Client::geometryPass() {
                     }
                     case ModelType::LavaVertical: {
                         model = this->lava_vertical_model.get();
-                        glm::vec3 rot_dir = rotate90DegreesAroundYAxis(glm::vec3(1.0f, 0.0f, 0.0f));
-                        model->rotateAbsolute(rot_dir);
                         break;
                     }
                     case ModelType::LavaHorizontal: {
                         model = this->lava_horizontal_model.get();
+                        // thank you openai!
+                        glm::vec3 rot_dir = rotate90DegreesAroundYAxis(glm::vec3(1.0f, 0.0f, 0.0f));
+                        model->rotateAbsolute(rot_dir);
                         break;
                     }
                     default: {
