@@ -20,7 +20,7 @@ public:
 
 	void updateAnimation(float dt);
 
-	Model* updateFrameAnimation(float dt);
+	Model* updateFrameAnimation(float time);
 
 	void playAnimation(Animation* pAnimation);
 
@@ -43,5 +43,6 @@ private:
 	EntityID currEntity;
 	float m_currentTime;
 	float m_deltaTime;
+	double lastFrameTime;
 	int currFrame;
 };

@@ -11,6 +11,9 @@ AnimationManager::AnimationManager(Animation* animation) {
 
     for (int i = 0; i < 100; i++)
         m_finalBoneMatrices.push_back(glm::mat4(1.0f));
+
+    currFrame = 0;
+    lastFrameTime = 0.0;
 }
 
 void AnimationManager::updateAnimation(float dt) {
@@ -25,15 +28,18 @@ void AnimationManager::updateAnimation(float dt) {
     }
 }
 
-Model* AnimationManager::updateFrameAnimation(float dt) {
+Model* AnimationManager::updateFrameAnimation(float time) {
     if (entityAnimFrameMap[currEntity].second) {
         m_currentAnimation = entityAnimFrameMap[currEntity].second;
-        int currFrame = entityAnimFrameMap[currEntity].first;
+        int currFrame = entityAnimFrameMap[currEntity].first + 1;
         
-        /* Change this to a constant */
-        if (dt > 0.01667) {
-            currFrame += 1;
-        }
+        // /* Change this to a constant */
+        // if (time - lastFrameTime >= 0.01667) {
+        //     std::cout << "time: " << time << ", lastTime: " << lastFrameTime << ", diff: " << (time - lastFrameTime) << ", currFrame: " << currFrame << std::endl;
+        //     currFrame += 1;
+        //     std::cout << currFrame << std::endl;
+        //     lastFrameTime = time;
+        // }
         entityAnimFrameMap[currEntity].first = currFrame;
         return m_currentAnimation->getFrame(currFrame);
     } else {
