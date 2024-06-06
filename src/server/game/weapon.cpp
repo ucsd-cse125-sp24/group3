@@ -66,7 +66,17 @@ void Weapon::useItem(Object* other, ServerGameState& state, int itemSelected) {
 void Weapon::useLightning(Object* other, ServerGameState& state, glm::vec3 corner) {
     if (this->resetAttack) {
         DungeonMaster* dm = dynamic_cast<DungeonMaster*>(other);
-        state.objects.createObject(new Lightning(corner, dm->physics.shared.facing));
+        PointLightProperties light_properties{
+            .flickering = false,
+            .min_intensity = 1.0f,
+            .max_intensity = 1.0f,
+            .ambient_color = glm::vec3(1.0f, 0.94f, 0.0f),
+            .diffuse_color = glm::vec3(1.0f, 0.94f, 0.0f),
+            .specular_color = glm::vec3(0.1f, 0.1f, 0.1f),
+            .attenuation_linear = 0.045f,
+            .attenuation_quadratic = 0.0075f
+        };
+        state.objects.createObject(new Lightning(corner, dm->physics.shared.facing, light_properties));
 
         this->attacked_time = std::chrono::system_clock::now();
         this->resetAttack = false;

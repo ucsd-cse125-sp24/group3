@@ -41,7 +41,8 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
                     .directory = json.at("game").at("maze").at("directory"),
                     .procedural = json.at("game").at("maze").at("procedural"),
                     .maze_file = json.at("game").at("maze").at("maze_file")
-                }
+                },
+                .disable_enemies = json.at("game").at("disable_enemies") 
             },
             .network = {
                 .server_ip = json.at("network").at("server_ip"),
@@ -60,7 +61,8 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
                 .fullscreen = json.at("client").at("fullscreen"),
                 .draw_bboxes = json.at("client").at("draw_bboxes"),
                 .fps_counter = json.at("client").at("fps_counter"),
-                .presentation = json.at("client").at("presentation")
+                .presentation = json.at("client").at("presentation"),
+                .render = json.at("client").at("render")
             }
         };
     } catch (nlohmann::json::exception& ex) {
@@ -76,7 +78,8 @@ GameConfig getDefaultConfig() {
                 .directory = "maps",
                 .procedural = true,
                 .maze_file = "default_maze.maze"
-            }
+            },
+            .disable_enemies = false 
         },
         .network = {
             .server_ip = "localhost",

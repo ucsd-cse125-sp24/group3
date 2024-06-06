@@ -70,6 +70,7 @@ SpecificID ObjectManager::_createObject(Object* object, boost::optional<EntityID
 		case ObjectType::FakeWall:
 		case ObjectType::SpikeTrap:
 		case ObjectType::FloorSpike:
+		case ObjectType::Lava:
 		case ObjectType::ArrowTrap:
 		case ObjectType::TeleporterTrap:
 			object->typeID = this->traps.push(dynamic_cast<Trap*>(object));
@@ -158,6 +159,7 @@ bool ObjectManager::removeObject(EntityID globalID) {
 	case ObjectType::FakeWall:
 	case ObjectType::SpikeTrap:
 	case ObjectType::FloorSpike:
+	case ObjectType::Lava:
 	case ObjectType::ArrowTrap:
 	case ObjectType::TeleporterTrap:
 		this->traps.remove(object->typeID);

@@ -231,6 +231,13 @@ void Model::rotateAbsolute(const glm::vec3& dir, bool is_player, const glm::vec3
     }
 }
 
+void Model::rotateAbsolute(const float& angle, const glm::vec3& axis) {
+    Renderable::rotateAbsolute(angle, axis);
+    for(Mesh& mesh : this->meshes) {
+        mesh.rotateAbsolute(angle, axis);
+    }
+}
+
 void Model::rotateRelative(const glm::vec3& dir, const glm::vec3& axis) {
     Renderable::rotateRelative(dir, axis);
     for(Mesh& mesh : this->meshes) {

@@ -16,7 +16,9 @@
 #include <memory>
 
 #include "boost/variant/get.hpp"
+#include "server/game/exit.hpp"
 #include "server/game/objectmanager.hpp"
+#include "server/game/weaponcollider.hpp"
 #include "server/game/potion.hpp"
 #include "server/game/weapon.hpp"
 #include "server/game/enemy.hpp"
@@ -24,6 +26,8 @@
 #include "shared/game/event.hpp"
 #include "server/game/servergamestate.hpp"
 #include "server/game/object.hpp"
+#include "shared/game/sharedmodel.hpp"
+#include "server/game/trap.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
@@ -34,6 +38,7 @@
 #include "shared/utilities/typedefs.hpp"
 #include "shared/utilities/config.hpp"
 #include "shared/utilities/rng.hpp"
+
 
 using namespace std::chrono_literals;
 using namespace boost::asio::ip;
@@ -127,6 +132,35 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
         closestPointLights.push(torch->globalID);
     }
 
+    for(int i = 0; i < this->state.objects.getExits().size(); i++) {
+        auto exit = this->state.objects.getExits().get(i);
+        if (exit == nullptr) continue;
+        closestPointLights.push(exit->globalID);
+    }
+
+    for(int i = 0; i < this->state.objects.getItems().size(); i++) {
+        auto item = this->state.objects.getItems().get(i);
+        if (item == nullptr) continue;
+        if (item->type != ObjectType::Orb) continue;
+        closestPointLights.push(item->globalID);
+        break; // only one orb
+    }
+
+    for(int i = 0; i < this->state.objects.getWeaponColliders().size(); i++) {
+        auto item = this->state.objects.getWeaponColliders().get(i);
+        if (item == nullptr) continue;
+        if (item->modelType != ModelType::Lightning) continue;
+        closestPointLights.push(item->globalID);
+        break; // only one lightning 
+    }
+
+    for(int i = 0; i < this->state.objects.getTraps().size(); i++) {
+        auto lava = this->state.objects.getTraps().get(i);
+        if (lava == nullptr) continue;
+        if (lava->type != ObjectType::Lava) continue;
+        closestPointLights.push(lava->globalID);
+    }
+
 
     // put set into an array
     UpdateLightSourcesEvent event_data;
@@ -135,13 +169,20 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
         EntityID light_id = closestPointLights.top(); 
         closestPointLights.pop();
 
-        auto torchlight = dynamic_cast<Torchlight*>(this->state.objects.getObject(light_id));
-        if (torchlight != nullptr) {
+        if (this->state.objects.getObject(light_id)->type == ObjectType::Torchlight) {
+            auto torchlight = dynamic_cast<Torchlight*>(this->state.objects.getObject(light_id));
+            if (torchlight != nullptr) {
+                event_data.lightSources[curr_light_num] = UpdateLightSourcesEvent::UpdatedLightSource {
+                    .eid = light_id,
+                    .intensity = torchlight->getIntensity()
+                };
+            } 
+        } else {
             event_data.lightSources[curr_light_num] = UpdateLightSourcesEvent::UpdatedLightSource {
                 .eid = light_id,
-                .intensity = torchlight->getIntensity()
+                .intensity = 1.0f
             };
-        } 
+        }
         curr_light_num++;
     }
 
@@ -303,7 +344,30 @@ std::chrono::milliseconds Server::doTick() {
                             }
 
                             std::cout << "Assigned player " + std::to_string(index) + " to be the DM" << std::endl;
-                            std::cout << "Starting game!" << std::endl;
+                        }
+
+                        int player_idx = 0;  // only increment when assigning a model                          
+
+                        auto players = this->state.objects.getPlayers();
+                        for (int i = 0; i < players.size(); i++) {
+                            auto player = players.get(i);
+                            if (player == nullptr) continue;
+
+                            if (player_idx == 0) {
+                                player->modelType = ModelType::PlayerFire;
+                            }
+                            else if (player_idx == 1) {
+                                player->modelType = ModelType::PlayerLightning;
+                            }
+                            else if (player_idx == 2) {
+                                player->modelType = ModelType::PlayerWater;
+                            }
+
+                            player_idx++;
+
+                            if (player_idx > 2) {
+                                player_idx = 0;
+                            }
                         }
 
                         if (this->config.server.skip_intro) {
@@ -363,9 +427,11 @@ std::chrono::milliseconds Server::doTick() {
 
     this->sendSoundCommands();
 
+    auto shared_gamestate = this->state.generateSharedGameState(false);
+
     // send partial updates to the clients
     // ALSO where the packets actually get sent
-    for (const auto& partial_update: this->state.generateSharedGameState(false)) {
+    for (const auto& partial_update: shared_gamestate) {
         sendUpdateToAllClients(Event(this->world_eid, EventType::LoadGameState, LoadGameStateEvent(partial_update)));
     }
 
@@ -381,6 +447,8 @@ void Server::_doAccept() {
         [this](boost::system::error_code ec) {
             if (!ec) {
                 this->socket.set_option(boost::asio::ip::tcp::no_delay(true));
+                boost::asio::socket_base::send_buffer_size option(10000000); // 10x buffer size
+                this->socket.set_option(option);
                 auto addr = this->socket.remote_endpoint().address();
                 auto new_session = this->_handleNewSession(addr);
 

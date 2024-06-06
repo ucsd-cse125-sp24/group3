@@ -1,9 +1,9 @@
 #include "client/animationmanager.hpp"
 
-AnimationManager::AnimationManager(Animation* animation) {
+AnimationManager::AnimationManager() {
     currEntity = 0;
     m_currentTime = 0.0;
-    m_currentAnimation = animation;
+    m_currentAnimation = nullptr;
 
     m_deltaTime = 0; // Tyler: is this still used? linter complaining about it not being initialized
 
@@ -54,6 +54,10 @@ void AnimationManager::playAnimation(Animation* pAnimation) {
 }
 
 void AnimationManager::calculateBoneTransform(const AssimpNodeData* node, glm::mat4 parentTransform) {
+    if (m_currentAnimation == nullptr) {
+        return; // note from tyler: added this check because no longer setting currentAnimation in constructor
+    }
+
     std::string nodeName = node->name;
     glm::mat4 nodeTransform = node->transformation;
 
@@ -81,29 +85,29 @@ void AnimationManager::calculateBoneTransform(const AssimpNodeData* node, glm::m
         calculateBoneTransform(&node->children[i], globalTransformation);
 }
 
-void AnimationManager::setAnimation(EntityID id, ObjectType objType, AnimState animState) {
-    if (entityAnimMap.find(id) == entityAnimMap.end() || entityAnimMap[id].second != objAnimMap[objType][animState]) {
-        entityAnimMap[id] = std::make_pair(0.0f, objAnimMap[objType][animState]);
+void AnimationManager::setAnimation(EntityID id, ModelType modelType, AnimState animState) {
+    if (entityAnimMap.find(id) == entityAnimMap.end() || entityAnimMap[id].second != objAnimMap[modelType][animState]) {
+        entityAnimMap[id] = std::make_pair(0.0f, objAnimMap[modelType][animState]);
     }
     currEntity = id;
 }
 
-void AnimationManager::setFrameAnimation(EntityID id, ObjectType objType, AnimState animState) {
-    if (entityAnimFrameMap.find(id) == entityAnimFrameMap.end() || entityAnimFrameMap[id].second != objAnimMap[objType][animState]) {
+void AnimationManager::setFrameAnimation(EntityID id, ModelType modelType, AnimState animState) {
+    if (entityAnimFrameMap.find(id) == entityAnimFrameMap.end() || entityAnimFrameMap[id].second != objAnimMap[modelType][animState]) {
         std::random_device dev;
         std::mt19937 rng(dev());
         std::uniform_int_distribution<std::mt19937::result_type> dist(0,51);
-        entityAnimFrameMap[id] = std::make_pair(dist(rng), objAnimMap[objType][animState]);
+        entityAnimFrameMap[id] = std::make_pair(dist(rng), objAnimMap[modelType][animState]);
     }
     currEntity = id;
 }
 
-void AnimationManager::addAnimation(Animation* anim, ObjectType objType, AnimState animState) {
-    if (objAnimMap.find(objType) == objAnimMap.end()) {
+void AnimationManager::addAnimation(Animation* anim, ModelType modelType, AnimState animState) {
+    if (objAnimMap.find(modelType) == objAnimMap.end()) {
         std::unordered_map<AnimState, Animation*> animMap;
-        objAnimMap[objType] = animMap;
+        objAnimMap[modelType] = animMap;
     }
 
-    this->objAnimMap[objType][animState] = anim;
+    this->objAnimMap[modelType][animState] = anim;
 }
 
