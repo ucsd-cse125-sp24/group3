@@ -58,6 +58,7 @@ enum class ImgID {
     Sungod,
     Teleporter,
     Lightning,
+    LightCut,
     ArrowTrap,
     SpikeTrap,
     DMCD_10, DMCD_9, DMCD_8, DMCD_7, DMCD_6, DMCD_5, DMCD_4, DMCD_3, DMCD_2, DMCD_1, 
@@ -88,7 +89,7 @@ enum class ImgID {
         ImgID::Compass0, ImgID::Compass30, ImgID::Compass60, ImgID::Compass90, \
         ImgID::Compass120, ImgID::Compass150, ImgID::Compass180, ImgID::Compass210, \
         ImgID::Compass240, ImgID::Compass270, ImgID::Compass300, ImgID::Compass330, \
-        ImgID::FloorSpikeTrap, ImgID::Sungod, ImgID::Teleporter, ImgID::Lightning, \
+        ImgID::FloorSpikeTrap, ImgID::Sungod, ImgID::Teleporter, ImgID::Lightning, ImgID::LightCut, \
         ImgID::ArrowTrap, ImgID::SpikeTrap, \
         ImgID::DMTrapBG, ImgID::Needle, \
         ImgID::EventBG, ImgID::DMEventBG, \

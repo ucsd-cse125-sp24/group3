@@ -6,7 +6,7 @@
 #include "shared/utilities/rng.hpp"
 
 Minotaur::Minotaur(glm::vec3 corner, glm::vec3 facing) :
-    Enemy(corner, facing, ObjectType::Minotaur, ModelType::Cube, SharedStats(
+    Enemy(corner, facing, ObjectType::Minotaur, ModelType::WarrenBear, SharedStats(
         Stat(0, 50, 50),
         Stat(0, 7, 3)
     ))
@@ -19,7 +19,6 @@ Minotaur::Minotaur(glm::vec3 corner, glm::vec3 facing) :
     this->physics.velocityMultiplier.y = 0.2;
     this->physics.velocityMultiplier.x = 0.3;
     this->physics.velocityMultiplier.z = 0.3;
-    this->physics.shared.dimensions = glm::vec3(3.0f, 7.0f, 3.0f);
 }
 
 bool Minotaur::doBehavior(ServerGameState& state) {

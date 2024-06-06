@@ -42,5 +42,6 @@ enum class CellType {
 	Exit,
 	Lightning,
 	Mirror,
+	LightCut,
 	Unknown
 };

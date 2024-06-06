@@ -54,8 +54,10 @@ public:
      * @brief runs on every server tick to update torchlight flickering 
      * animations
      * @parm current ServerGameState
+     * @param the position the lightning hit (if exists)
+     * @param the position of the light cut action (if exists)
      */
-    void doTick(ServerGameState& state);
+    void doTick(ServerGameState& state, std::optional<glm::vec3> lightning_light_cut_pos, std::optional<glm::vec3> action_light_cut_pos);
 
     /**
      * @brief get current intensity of torch from 0-1
@@ -72,8 +74,10 @@ private:
 
     // curr_step from 0-1 in flickering animation
     float curr_step;
+
     // how much the intensity should change on every server tick
     float flickering_speed; 
+
     // if the flickering animation is inceasing in
     // intensity or decreasing
     bool inc_intensity;

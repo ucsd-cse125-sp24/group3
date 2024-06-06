@@ -15,7 +15,7 @@
 class AnimationManager
 {
 public:
-	AnimationManager();
+	explicit AnimationManager();
 
 	void updateAnimation(float dt);
 
