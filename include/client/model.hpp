@@ -140,6 +140,17 @@ class Model : public Renderable {
             bool fill) override;
 
     /**
+     * Draws all the meshes of a given model
+     *
+     * @param Shader to use while drawing all the
+     * meshes of the model
+     */
+    void draw(Shader* shader,
+            glm::vec3 camPos, 
+            bool fill,
+            glm::vec3 color);
+
+    /**
      * Sets the position of the Model to the given x,y,z
      * values
      *

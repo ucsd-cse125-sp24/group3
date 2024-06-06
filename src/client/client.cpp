@@ -208,8 +208,7 @@ bool Client::init() {
     auto pillar_model_path = env_models_dir / "pillar.obj";
     this->pillar_model = std::make_unique<Model>(pillar_model_path.string(), true);
 
-    // auto torchlight_model_path = env_models_dir / "exit.obj";
-    auto torchlight_model_path = env_models_dir / "fireball.obj";
+    auto torchlight_model_path = env_models_dir / "exit.obj";
     this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string(), true);
 
     auto slime_model_path = entity_models_dir / "slime.obj";
@@ -1305,7 +1304,8 @@ void Client::lightingPass() {
         // this->torchlight_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
         torch_frame_model->setDimensions(2.0f * sharedObject->physics.dimensions);
         torch_frame_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-        torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
+        // torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
+        torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true, properties.diffuse_color);
     }
 
 }
