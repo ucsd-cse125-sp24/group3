@@ -825,7 +825,12 @@ void Client::geometryPass() {
             }
         }
         
-        if (is_dm && (sharedObject->type == ObjectType::FloorSpike || sharedObject->type == ObjectType::Lava) && dist > RENDER_DISTANCE) {
+        if (is_dm && 
+            (sharedObject->type == ObjectType::FloorSpike || 
+             sharedObject->type == ObjectType::Lava || 
+             sharedObject->type == ObjectType::ArrowTrap ||
+             sharedObject->type == ObjectType::SpikeTrap || 
+             sharedObject->type == ObjectType::Projectile ) && dist > RENDER_DISTANCE) {
             continue; 
         }
         
