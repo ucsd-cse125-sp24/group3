@@ -1726,7 +1726,38 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
         if (cell->type != CellType::Empty) {
             return nullptr;
         }
-        return spawnArrowTrap(cell);
+		glm::vec3 corner(
+			(cell->x * Grid::grid_cell_width),
+			-3.0f,
+			(cell->y * Grid::grid_cell_width)
+		);
+
+		const float z_nudge = 0.55f;
+		const float x_nudge = 0.15f;
+		Direction dir;
+		if (type == CellType::ArrowTrapDown) {
+			dir = Direction::DOWN;
+			corner.x -= x_nudge;
+		}
+		else if (type == CellType::ArrowTrapUp) {
+			dir = Direction::UP;
+			corner.x -= x_nudge;
+		}
+		else if (type == CellType::ArrowTrapLeft) {
+			dir = Direction::LEFT;
+			corner.z += z_nudge;
+		}
+		else {
+			dir = Direction::RIGHT;
+			corner.z += z_nudge;
+		}
+
+
+		ArrowTrap* arrowTrap = new ArrowTrap(corner, dir);
+
+		this->objects.createObject(arrowTrap);
+
+		return arrowTrap;
 	}
 	case CellType::TeleporterTrap: {
 		if (cell->type != CellType::Empty)
