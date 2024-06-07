@@ -256,6 +256,9 @@ bool Client::init() {
     auto orb_model_path = item_models_dir / "orb_final/Orb 1.obj";
     this->orb_model = std::make_unique<Model>(orb_model_path.string(), false);
 
+    auto teleport_model_path = env_models_dir / "teleport" / "teleport.obj";
+    this->teleport_model = std::make_unique<Model>(teleport_model_path.string(), true);
+
     auto exit_model_path = env_models_dir / "exit.obj";
     this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
 
@@ -1194,9 +1197,9 @@ void Client::geometryPass() {
                 if (!is_dm && sharedObject->trapInfo->dm_hover) {
                     break;
                 }
-                this->orb_model->setDimensions( sharedObject->physics.dimensions);
-                this->orb_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->orb_model->draw(this->deferred_geometry_shader.get(),
+                this->teleport_model->setDimensions(sharedObject->physics.dimensions);
+                this->teleport_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->teleport_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
                 break;
