@@ -5,7 +5,7 @@
       "procedural": true,
       "maze_file": "test/big.maze"
     },
-    "disable_enemies": true
+    "disable_enemies": false
   },
   "network": {
       "server_ip": "localhost",
@@ -14,7 +14,7 @@
   "server": {
       "lobby_name": "Hope you're doing well!",
       "lobby_broadcast": true,
-      "max_players": 2,
+      "max_players": 4,
       "disable_dm": false,
       "skip_intro": true 
   },
