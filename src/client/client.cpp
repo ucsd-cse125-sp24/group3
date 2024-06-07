@@ -1255,6 +1255,9 @@ void Client::lightingPass() {
     glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    double currentTime = glfwGetTime();
+    double timeElapsed = currentTime - lastFrameTime;
+    lastFrameTime = currentTime;
 
     // render torch lights on top of scene
     this->deferred_light_box_shader->use();
@@ -1285,7 +1288,16 @@ void Client::lightingPass() {
         animManager->setFrameAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
 
         /* Update model animation */
-        Model* torch_frame_model = animManager->updateFrameAnimation(glfwGetTime()); 
+        // std::cout << currFrame << std::endl;
+        // /* Change this to a constant */
+        // if (time - lastFrameTime >= 0.01667) {
+        //     std::cout << "time: " << time << ", lastTime: " << lastFrameTime << ", diff: " << (time - lastFrameTime) << ", currFrame: " << currFrame << std::endl;
+        //     currFrame += 1;
+        //     lastFrameTime = time;
+        // }
+        // std::cout << currFrame << std::endl;
+
+        Model* torch_frame_model = animManager->updateFrameAnimation(timeElapsed); 
         glm::vec3 dims = torch_frame_model->getDimensions();
         this->deferred_light_box_shader->use();
         this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);
