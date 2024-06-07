@@ -74,7 +74,7 @@
 /*	Game	*/
 #define	GRAVITY					0.03f
 #define	PLAYER_SPEED 			1.65f
-#define JUMP_SPEED				0.55f
+#define JUMP_SPEED				0.59f
 
 /* DM Constants */
 #define MAX_TRAPS 10
