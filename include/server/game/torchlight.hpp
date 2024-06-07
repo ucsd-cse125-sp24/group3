@@ -43,8 +43,11 @@ public:
      * @brief get current intensity of torch from 0-1
      */
     float getIntensity() const;
+
+    bool is_cut;
 private:
     PointLightProperties properties;
+
 
     // current intensity from 0-1 that gets
     // sent to client

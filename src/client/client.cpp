@@ -690,6 +690,8 @@ void Client::processServerInput(bool allow_defer) {
                 this->closest_light_sources[i] = this->gameState.objects[light_id];
                 // update intensity with incoming intensity 
                 this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
+                this->closest_light_sources[i]->pointLightInfo->is_cut = updated_light_source.lightSources[i]->is_cut;
+                this->gameState.objects.at(light_id)->pointLightInfo->is_cut = updated_light_source.lightSources[i]->is_cut;
             }
         } else if (event.type == EventType::LoadIntroCutscene) {
             const auto& data = boost::get<LoadIntroCutsceneEvent>(event.data);
@@ -1426,14 +1428,25 @@ void Client::lightingPass() {
         Model* torch_frame_model = animManager->updateFrameAnimation(glfwGetTime()); 
         glm::vec3 dims = torch_frame_model->getDimensions();
         this->deferred_light_box_shader->use();
-        this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);
+
+        glm::vec3 flame_color;
+
+        if (sharedObject->pointLightInfo->is_cut) {
+            glm::vec3 black(0.1f, 0.1f, 0.1f);
+            flame_color = black;
+        } else {
+            flame_color = properties.diffuse_color;
+        }
+
+        this->deferred_light_box_shader->setVec3("lightColor", flame_color);
+
         // this->torchlight_model->setDimensions(2.0f * sharedObject->physics.dimensions);
         // this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
         // this->torchlight_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
         torch_frame_model->setDimensions(2.0f * sharedObject->physics.dimensions);
         torch_frame_model->translateAbsolute(sharedObject->physics.getCenterPosition());
         // torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
-        torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true, properties.diffuse_color);
+        torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true, flame_color);
     }
 
 }
