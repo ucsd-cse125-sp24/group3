@@ -14,9 +14,11 @@
 #include <iostream>
 #include <filesystem>
 
+#include "assimp/postprocess.h"
 #include "client/renderable.hpp"
 #include "client/constants.hpp"
 #include "client/util.hpp"
+#include "glm/ext/quaternion_geometric.hpp"
 #include "server/game/torchlight.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/constants.hpp"
@@ -44,11 +46,14 @@ Mesh::Mesh(
     const Material& material) : 
     vertices(vertices), indices(indices), textures(textures), material(material) {
 
+    setupNormalMaps();
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);  
 
@@ -75,6 +80,14 @@ Mesh::Mesh(
     glEnableVertexAttribArray(4);
     glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, m_weights)));
 
+    // tangents
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tangent)));
+
+    // bitangents
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, bitangent)));
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -85,6 +98,44 @@ Mesh::Mesh(
     // std::cout << "\t shininess" << this->material.shininess << std::endl;
 }
 
+void Mesh::setupNormalMaps() {
+    for (int i=0; i + 2 < indices.size(); i+=3){
+        // if (i + 1 > indices.size()) {
+        // }
+        // get 3 vertices for a triangle
+        Vertex& v0 = vertices.at(indices.at(i));
+        Vertex& v1 = vertices.at(indices.at(i+1));
+        Vertex& v2 = vertices.at(indices.at(i+2));
+
+        // Edges of the triangle : position delta
+        glm::vec3 deltaPos1 = v1.position - v0.position;
+        glm::vec3 deltaPos2 = v2.position - v0.position;
+
+        // UV delta
+        glm::vec2 deltaUV1 = v1.textureCoords - v0.textureCoords;
+        glm::vec2 deltaUV2 = v2.textureCoords - v0.textureCoords;
+
+        float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+        glm::vec3 tangent = (deltaPos1 * deltaUV2.y   - deltaPos2 * deltaUV1.y)*r;
+        glm::vec3 bitangent = (deltaPos2 * deltaUV1.x   - deltaPos1 * deltaUV2.x)*r;
+
+        v0.tangent += tangent;
+        v1.tangent += tangent;
+        v2.tangent += tangent;
+
+        v0.bitangent += bitangent;
+        v1.bitangent += bitangent;
+        v2.bitangent += bitangent;
+    }
+
+    for (int i = 0; i < vertices.size(); i++) {
+        // vertices.at(i).tangent = glm::normalize(vertices.at(i).tangent);
+        // // std::cout << "tangent " << glm::to_string(vertices.at(i).tangent) << "\n";
+        // // exit(1);
+        // vertices.at(i).bitangent = glm::normalize(vertices.at(i).bitangent);
+    }
+}
+
 void Mesh::draw(
     Shader* shader,
     glm::vec3 camPos,
@@ -93,10 +144,12 @@ void Mesh::draw(
     auto model = this->getModelMat();
     
     shader->setMat4("model", model);
+    shader->setVec3("viewPos", camPos);
 
     if (textures.size() != 0) {
         unsigned int diffuseNr = 1;
         unsigned int specularNr = 1;
+        unsigned int normalNr = 1;
         for(unsigned int i = 0; i < textures.size(); i++) {
             glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
             // retrieve texture number (the N in diffuse_textureN)
@@ -106,10 +159,19 @@ void Mesh::draw(
                 number = std::to_string(diffuseNr++);
             else if(name == "texture_specular")
                 number = std::to_string(specularNr++);
+            else if(name == "texture_normal")
+                number = std::to_string(normalNr++);
 
             std::string shaderTextureName = name + number;
             shader->setInt(shaderTextureName, i);
             glBindTexture(GL_TEXTURE_2D, textures[i].getID());
+        }
+
+        if (normalNr == 1) {
+            // never set any normal map texture uniform
+            shader->setBool("has_normal_map", false);
+        } else {
+            shader->setBool("has_normal_map", true);
         }
     } else {
         // shader->setFloat("shininess", this->material.shininess);
@@ -142,13 +204,15 @@ Model::Model(const std::string& filepath, bool flip_uvs) {
                 aiProcess_FlipUVs | 
                 aiProcess_SplitLargeMeshes | 
                 aiProcess_OptimizeMeshes | 
-                aiProcess_GenBoundingBoxes); // needed to query bounding box of the model later
+                aiProcess_GenBoundingBoxes | // needed to query bounding box of the model later
+                aiProcess_CalcTangentSpace); 
     } else {
         scene = importer.ReadFile(filepath, 
                 aiProcess_Triangulate | // flag to only creates geometry made of triangles
                 aiProcess_SplitLargeMeshes | 
                 aiProcess_OptimizeMeshes | 
-                aiProcess_GenBoundingBoxes); // needed to query bounding box of the model later
+                aiProcess_GenBoundingBoxes | // needed to query bounding box of the model later
+                aiProcess_CalcTangentSpace); 
     }
 
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
@@ -355,6 +419,9 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR);
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
+        std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_HEIGHT);
+        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+
         if(AI_SUCCESS != material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse_color)) {
             std::cout << "couldn't get diffuse color" << std::endl;
         }
@@ -442,7 +509,7 @@ void Model::extractBoneWeight(std::vector<Vertex>& vertices, aiMesh* mesh, const
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, const aiTextureType& type) {
     std::vector<Texture> textures;
-    // std::cout << "material has " << mat->GetTextureCount(type) << " textures of type " << aiTextureTypeToString(type) << std::endl;
+    std::cout << "material has " << mat->GetTextureCount(type) << " textures of type " << aiTextureTypeToString(type) << std::endl;
     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
         aiString str;
         mat->GetTexture(type, i, &str);
@@ -466,6 +533,9 @@ Texture::Texture(const std::string& filepath, const aiTextureType& type) {
             break;
         case aiTextureType_SPECULAR:
             this->type = "texture_specular";
+            break;
+        case aiTextureType_HEIGHT:
+            this->type = "texture_normal";
             break;
         default:
             throw std::invalid_argument(std::string("Unimplemented texture type ") + aiTextureTypeToString(type));
