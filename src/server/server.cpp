@@ -165,7 +165,7 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
     for(int i = 0; i < this->state.objects.getProjectiles().size(); i++) {
         auto proj = this->state.objects.getProjectiles().get(i);
         if (proj == nullptr) continue;
-        if (proj->modelType != ModelType::Arrow && proj->modelType != ModelType::Fireball) continue;
+        if (proj->modelType != ModelType::Arrow && proj->modelType != ModelType::Fireball && proj->modelType != ModelType::SpellOrb) continue;
         closestPointLights.push(proj->globalID);
 
     }

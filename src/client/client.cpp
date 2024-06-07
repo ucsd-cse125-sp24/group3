@@ -293,6 +293,7 @@ bool Client::init() {
     animManager->addAnimation(torchlight_animation, ModelType::Torchlight, AnimState::IdleAnim);
     Animation* fireball_animation = new Animation(fireball_anim_path.string(), "fireball", 60);
     animManager->addAnimation(fireball_animation, ModelType::Fireball, AnimState::IdleAnim);
+    animManager->addAnimation(fireball_animation, ModelType::SpellOrb, AnimState::IdleAnim);
     for (int i = 0; i < NUM_PLAYER_MODELS; i++) {
         Animation* player_walk = new Animation(player_walk_path.string(), player_models.at(i).second);
         Animation* player_jump = new Animation(player_jump_path.string(), player_models.at(i).second);
@@ -1113,15 +1114,15 @@ void Client::geometryPass() {
                         this->arrow_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(), true);
                         break;
-                   }
-                    case ModelType::Fireball: {
-                        break;
                     }
+                    // case ModelType::Fireball: {
+                    //     break;
+                    // }
                     default:
-                        this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
-                        this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                        this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
-                            this->cam->getPos(), true);
+                        // this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
+                        // this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        // this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
+                        //     this->cam->getPos(), true);
                         break;
                 }
                 break;
@@ -1462,6 +1463,19 @@ void Client::lightingPass() {
             }
             case ObjectType::Projectile: {
                 if (sharedObject->modelType == ModelType::Fireball) {
+                    glm::vec3 flame_color = properties.diffuse_color;
+
+                    animManager->setFrameAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
+                    Model* fireball_frame_model = animManager->updateFrameAnimation(timeElapsed);       
+
+                    this->deferred_light_box_shader->setVec3("lightColor", flame_color);
+
+                    fireball_frame_model->setDimensions(sharedObject->physics.dimensions);
+                    fireball_frame_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    fireball_frame_model->draw(this->deferred_light_box_shader.get(),
+                        this->cam->getPos(), true);
+                    break;
+                } else if (sharedObject->modelType == ModelType::SpellOrb) {
                     glm::vec3 flame_color = properties.diffuse_color;
 
                     animManager->setFrameAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);

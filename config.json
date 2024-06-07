@@ -3,7 +3,7 @@
     "maze": {
       "directory": "maps",
       "procedural": false,
-      "maze_file": "test/anim_test.maze"
+      "maze_file": "test/itemRoom.maze"
     },
     "disable_enemies": true
   },

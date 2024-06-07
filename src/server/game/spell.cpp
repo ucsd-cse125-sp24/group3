@@ -10,7 +10,7 @@
 #include "shared/audio/constants.hpp"
 
 Spell::Spell(glm::vec3 corner, glm::vec3 dimensions, SpellType spelltype):
-    Item(ObjectType::Spell, false, corner, ModelType::Cube, dimensions)
+    Item(ObjectType::Spell, false, corner, ModelType::SpellOrb, dimensions)
 {
     
     this->spellType = spelltype;

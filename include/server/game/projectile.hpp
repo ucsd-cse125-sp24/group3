@@ -154,7 +154,7 @@ public:
     SpellType sType;
 
     SpellOrb(glm::vec3 corner, glm::vec3 facing, SpellType type) :
-        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube, ServerSFX::FireballImpact,
+        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::SpellOrb, ServerSFX::FireballImpact,
             Options(true, DAMAGE, H_MULT, V_MULT, false, 0.0f, 0, {}))
     {
         this->sType = type;

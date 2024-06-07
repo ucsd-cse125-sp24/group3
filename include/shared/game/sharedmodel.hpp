@@ -17,6 +17,7 @@ enum class ModelType {
 	FireSpell,
 	HealSpell,
 	TeleportSpell,
+	SpellOrb,
 	Frame,
 	Orb,
 	FloorSpikeHorizontal,
