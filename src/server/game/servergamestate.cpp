@@ -512,10 +512,39 @@ void ServerGameState::update(const EventList& events) {
 					break;
 				}
 
+				auto end = dm->sharedTrapInventory.trapsInCooldown.end();
+				// handle arrowtrap / sungod seperately
+				if (trapPlacementEvent.cell == CellType::ArrowTrapDown ||
+					trapPlacementEvent.cell == CellType::ArrowTrapUp || 
+					trapPlacementEvent.cell == CellType::ArrowTrapLeft || 
+					trapPlacementEvent.cell == CellType::ArrowTrapRight) {
+					
+					if (!(dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapDown) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapUp) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapLeft) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapRight) == end)) {
+						break;
+					}
+				}
+
+				if (trapPlacementEvent.cell == CellType::FireballTrapDown ||
+					trapPlacementEvent.cell == CellType::FireballTrapUp ||
+					trapPlacementEvent.cell == CellType::FireballTrapLeft ||
+					trapPlacementEvent.cell == CellType::FireballTrapRight) {
+
+					if (!(dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapDown) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapUp) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapLeft) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapRight) == end)) {
+						break;
+					}
+				}
+
+				// handle remaining traps
 				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
 
 				// in cooldown map sadly
-				if (it != dm->sharedTrapInventory.trapsInCooldown.end()) {
+				if (it != end){
 					break;
 				}
 
