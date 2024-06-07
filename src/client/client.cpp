@@ -886,7 +886,6 @@ void Client::geometryPass() {
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y -= sharedObject->physics.dimensions.y / 2.0f;
                     pos.y += PLAYER_EYE_LEVEL;
-                    pos.z += 3.0f;
                     cam->updatePos(pos);
 
                     // update listener position & facing
@@ -902,7 +901,7 @@ void Client::geometryPass() {
                     if (!sharedObject->playerInfo->is_alive) {
                         this->gui_state = GUIState::DEAD_SCREEN;
                     }
-                    // break;
+                    break;
                 }
                 if (!sharedObject->playerInfo->is_alive) {
                     break; // don't render dead players
