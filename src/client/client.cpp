@@ -259,6 +259,9 @@ bool Client::init() {
     auto teleport_model_path = env_models_dir / "teleport" / "teleport.obj";
     this->teleport_model = std::make_unique<Model>(teleport_model_path.string(), true);
 
+    auto mirror_model_path = item_models_dir / "Mirror" / "mirror_rotated.obj";
+    this->mirror_model = std::make_unique<Model>(mirror_model_path.string(), false);
+
     auto exit_model_path = env_models_dir / "exit.obj";
     this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
 
@@ -880,17 +883,10 @@ void Client::geometryPass() {
                 
                 // don't render yourself
                 if (sharedObject->globalID == self_eid) {
-                    //  TODO: Update the player eye level to an acceptable level
-
-                    // glm::vec3 pos = sharedObject->physics.getCenterPosition();
-                    // pos.y -= (sharedObject->physics.dimensions.y / 2.0f);
-                    // pos.y += PLAYER_EYE_LEVEL;
-                    // cam->updatePos(pos);
-
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y -= sharedObject->physics.dimensions.y / 2.0f;
                     pos.y += PLAYER_EYE_LEVEL;
-                    // pos.z += 3.0f;
+                    pos.z += 3.0f;
                     cam->updatePos(pos);
 
                     // update listener position & facing
@@ -906,7 +902,7 @@ void Client::geometryPass() {
                     if (!sharedObject->playerInfo->is_alive) {
                         this->gui_state = GUIState::DEAD_SCREEN;
                     }
-                    break;
+                    // break;
                 }
                 if (!sharedObject->playerInfo->is_alive) {
                     break; // don't render dead players
@@ -958,6 +954,21 @@ void Client::geometryPass() {
                     this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
+
+                // draw mirror above head if holding
+                for (auto& [_, pair] : sharedObject->inventoryInfo->usedItems) {
+                    ModelType model = pair.first;
+                    if (model == ModelType::Mirror) {
+                        // im so FUCKING good at programming
+                        mirror_model->setDimensions(glm::vec3(1.438951, 0.052374, 0.955402));
+                        mirror_model->translateAbsolute(player_pos);
+                        mirror_model->translateRelative(glm::vec3(0.0f, 4.5f, 0.0f));
+                        mirror_model->draw(
+                            this->deferred_geometry_shader.get(),
+                            this->cam->getPos(),
+                            true);
+                    }
+                }
 
                 break;
             }

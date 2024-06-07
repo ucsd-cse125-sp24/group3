@@ -280,6 +280,7 @@ private:
     std::unique_ptr<Model> lightning_model;
     std::unique_ptr<Model> chest_model;
     std::unique_ptr<Model> teleport_model;
+    std::unique_ptr<Model> mirror_model;
 
     GLFWwindow *window;
 
