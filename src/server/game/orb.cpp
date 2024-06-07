@@ -104,7 +104,7 @@ SharedObject Orb::toShared() {
         .diffuse_color = this->properties.diffuse_color,
         .specular_color = this->properties.specular_color,
         .attenuation_linear = this->properties.attenuation_linear,
-        .attenuation_quadratic = this->properties.attenuation_quadratic,
+        .attenuation_quadratic = this->properties.attenuation_quadratic
     };
     return so;
 }

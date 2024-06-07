@@ -2,8 +2,8 @@
   "game": {
     "maze": {
       "directory": "maps",
-      "procedural": true,
-      "maze_file": "test/orb_drop.maze"
+      "procedural": false,
+      "maze_file": "test/itemRoom.maze"
     },
     "disable_enemies": true
   },
@@ -21,10 +21,10 @@
   "client": {
     "default_name": "Conan O'Brien",
     "lobby_discovery": true,
-    "fullscreen": true,
+    "fullscreen": false,
     "draw_bboxes": false,
     "fps_counter": true,
     "presentation": false,
-    "render": 75
+    "render": 50
   }
 }

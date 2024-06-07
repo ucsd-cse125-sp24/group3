@@ -174,13 +174,15 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
             if (torchlight != nullptr) {
                 event_data.lightSources[curr_light_num] = UpdateLightSourcesEvent::UpdatedLightSource {
                     .eid = light_id,
-                    .intensity = torchlight->getIntensity()
+                    .intensity = torchlight->getIntensity(),
+                    .is_cut = torchlight->is_cut
                 };
             } 
         } else {
             event_data.lightSources[curr_light_num] = UpdateLightSourcesEvent::UpdatedLightSource {
                 .eid = light_id,
-                .intensity = 1.0f
+                .intensity = 1.0f,
+                .is_cut = false
             };
         }
         curr_light_num++;

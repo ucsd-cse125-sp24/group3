@@ -256,6 +256,9 @@ bool Client::init() {
     auto exit_model_path = env_models_dir / "exit.obj";
     this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
 
+    auto lightning_model_path = env_models_dir / "Lightning1" / "Lightning1_translated.obj";
+    this->lightning_model = std::make_unique<Model>(lightning_model_path.string(), true);
+
     auto player_walk_path = graphics_assets_dir / "animations/walk.fbx";
     auto player_jump_path = graphics_assets_dir / "animations/jump.fbx";
     auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
@@ -687,6 +690,8 @@ void Client::processServerInput(bool allow_defer) {
                 this->closest_light_sources[i] = this->gameState.objects[light_id];
                 // update intensity with incoming intensity 
                 this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
+                this->closest_light_sources[i]->pointLightInfo->is_cut = updated_light_source.lightSources[i]->is_cut;
+                this->gameState.objects.at(light_id)->pointLightInfo->is_cut = updated_light_source.lightSources[i]->is_cut;
             }
         } else if (event.type == EventType::LoadIntroCutscene) {
             const auto& data = boost::get<LoadIntroCutsceneEvent>(event.data);
@@ -1228,19 +1233,21 @@ void Client::geometryPass() {
             case ObjectType::WeaponCollider: {
                 if (sharedObject->weaponInfo->lightning) {
                     if (!sharedObject->weaponInfo->attacked) {
-                        glm::vec3 preview_dims = sharedObject->physics.dimensions;
-                        preview_dims.y = 0.01f;
-                        this->item_model->setDimensions(preview_dims);
+                        this->exit_model->setDimensions(glm::vec3(3.0f, 0.01f, 3.0f));
                         glm::vec3 preview_pos = sharedObject->physics.getCenterPosition();
                         preview_pos.y = 0.0f;
-                        this->item_model->translateAbsolute(preview_pos);
-                        this->item_model->draw(this->deferred_geometry_shader.get(),
+                        this->exit_model->translateAbsolute(preview_pos);
+                        this->exit_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(),
                             true);
                     } else {
-                        this->item_model->setDimensions(sharedObject->physics.dimensions);
-                        this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                        this->item_model->draw(this->deferred_geometry_shader.get(),
+                        this->lightning_model->setDimensions(glm::vec3(1.314906, 2.238910 * 2.0f, 0.019732) * 10.0f);
+                        this->lightning_model->translateAbsolute(sharedObject->physics.corner);
+                        glm::vec3 facing_curr_player = rotate90DegreesAroundYAxis(glm::normalize(
+                            sharedObject->physics.getCenterPosition() - cam->getPos()
+                        ));
+                        this->lightning_model->rotateAbsolute(facing_curr_player);
+                        this->lightning_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(),
                             true);
                     }
@@ -1336,6 +1343,10 @@ void Client::lightingPass() {
     for (int i = 0; i < closest_lights->size(); i++) {
         boost::optional<SharedObject>& curr_source = closest_lights->at(i);
         if (!curr_source.has_value()) {
+            // put the light in africa so it isn't shown
+            // important for intro cutscene since other lights wont replace entries that are removed!
+            glm::vec3 FAR_AWAY(10000, 10000, 10000);
+            lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", FAR_AWAY);
             continue;
         }
 
@@ -1427,14 +1438,25 @@ void Client::lightingPass() {
         Model* torch_frame_model = animManager->updateFrameAnimation(glfwGetTime()); 
         glm::vec3 dims = torch_frame_model->getDimensions();
         this->deferred_light_box_shader->use();
-        this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);
+
+        glm::vec3 flame_color;
+
+        if (sharedObject->pointLightInfo->is_cut) {
+            glm::vec3 black(0.1f, 0.1f, 0.1f);
+            flame_color = black;
+        } else {
+            flame_color = properties.diffuse_color;
+        }
+
+        this->deferred_light_box_shader->setVec3("lightColor", flame_color);
+
         // this->torchlight_model->setDimensions(2.0f * sharedObject->physics.dimensions);
         // this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
         // this->torchlight_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
         torch_frame_model->setDimensions(2.0f * sharedObject->physics.dimensions);
         torch_frame_model->translateAbsolute(sharedObject->physics.getCenterPosition());
         // torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
-        torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true, properties.diffuse_color);
+        torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true, flame_color);
     }
 
 }

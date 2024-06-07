@@ -38,7 +38,7 @@ SharedObject Lava::toShared() {
         .diffuse_color = this->light_properties.diffuse_color,
         .specular_color = this->light_properties.specular_color,
         .attenuation_linear = this->light_properties.attenuation_linear,
-        .attenuation_quadratic = this->light_properties.attenuation_quadratic,
+        .attenuation_quadratic = this->light_properties.attenuation_quadratic
     };
 	return so;
 }

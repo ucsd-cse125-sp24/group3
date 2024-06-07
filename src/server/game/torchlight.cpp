@@ -16,7 +16,7 @@ SharedObject Torchlight::toShared() {
         .diffuse_color = this->properties.diffuse_color,
         .specular_color = this->properties.specular_color,
         .attenuation_linear = this->properties.attenuation_linear,
-        .attenuation_quadratic = this->properties.attenuation_quadratic,
+        .attenuation_quadratic = this->properties.attenuation_quadratic
     };
     return so;
 }
@@ -114,6 +114,8 @@ Torchlight::Torchlight(
 }
 
 void Torchlight::init() {
+    this->is_cut = false;
+
     this->inc_intensity = true;
     // if not flickering, set intensity to a static 
     // value
@@ -151,9 +153,12 @@ void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightni
         // if within threshold, black out (slightly expand the light cut action range)
         if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= (1.5 * LIGHT_CUT_RANGE)) {
             this->curr_intensity = 0.0f;
+            this->is_cut = true;
             return;
         }
     }
+
+    this->is_cut = false;
 
     // either increment or decrement intensity
     if (inc_intensity) {
@@ -186,4 +191,9 @@ void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightni
 
 float Torchlight::getIntensity() const {
     return this->curr_intensity;
+}
+
+
+void Torchlight::overrideIntensity(float val) {
+    this->curr_intensity = val;
 }

@@ -33,7 +33,7 @@ public:
     bool timeOut(ServerGameState& state);
     virtual SharedObject toShared() override;
 
-private:
+protected:
     std::chrono::time_point<std::chrono::system_clock> preparing_time;
     std::chrono::time_point<std::chrono::system_clock> attacked_time;
     Player* usedPlayer;
@@ -92,7 +92,7 @@ public:
 	virtual SharedObject toShared() override {
         auto so = WeaponCollider::toShared();
         so.pointLightInfo = SharedPointLightInfo {
-            .intensity = 1.0f,
+            .intensity = (this->info.attacked) ? 1.0f : 0.3f,
             .ambient_color = this->properties.ambient_color,
             .diffuse_color = this->properties.diffuse_color,
             .specular_color = this->properties.specular_color,
