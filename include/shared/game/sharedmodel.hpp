@@ -37,6 +37,7 @@ enum class ModelType {
 	Lightning,
     Arrow,
     ArrowTrap,
+	Fireball,
 	FireballTrapLeft,
 	FireballTrapRight,
 	FireballTrapUp,

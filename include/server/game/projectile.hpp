@@ -76,9 +76,14 @@ public:
 	 */
     bool doTick(ServerGameState& state);
 
+	virtual SharedObject toShared() override;
+
+
 private:
     Options opt;
     std::optional<ServerSFX> destroy_sound;
+    PointLightProperties properties;
+
 };
 
 class HomingFireball : public Projectile {
@@ -90,7 +95,7 @@ public:
     inline static const int HOMING_DURATION_TICKS = 80; // 2.4s
 
     HomingFireball(glm::vec3 corner, glm::vec3 facing, std::optional<EntityID> target):
-        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube, ServerSFX::FireballImpact,
+        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Fireball, ServerSFX::FireballImpact,
             Options(false, DAMAGE, H_MULT, V_MULT, true, HOMING_STRENGTH, HOMING_DURATION_TICKS, target))
     {
         this->physics.feels_gravity = false;
