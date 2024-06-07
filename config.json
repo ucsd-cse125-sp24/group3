@@ -3,7 +3,7 @@
     "maze": {
       "directory": "maps",
       "procedural": true,
-      "maze_file": "test/big.maze"
+      "maze_file": "demo/candidate4_player_tp"
     },
     "disable_enemies": false
   },
