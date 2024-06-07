@@ -70,6 +70,12 @@ void Projectile::doCollision(Object* other, ServerGameState& state) {
     //handle cases for spell projectiles
     else {
         SpellOrb* orb = dynamic_cast<SpellOrb*>(this);
+
+        if (orb == nullptr) {
+            std::cout << "Just saved us from a seg fault 6/7/2024 1:07am BRUHHHHHHHHHHHHHhhhhhhhhh\n";
+            return;
+        }
+
         switch (orb->sType) {
         case SpellType::Fireball: {
             // do damage if creature
