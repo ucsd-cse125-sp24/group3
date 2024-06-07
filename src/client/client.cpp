@@ -225,7 +225,6 @@ bool Client::init() {
 
     auto python_model_path = entity_models_dir / "flying-python.obj";
     this->python_model = std::make_unique<Model>(python_model_path.string(), true);
-    this->python_model->rotateAbsolute(M_PI / -2.0f, glm::vec3(0.0f,0.5f,1.0f));
 
     auto item_model_path = item_models_dir / "item.obj";
     this->item_model = std::make_unique<Model>(item_model_path.string(), true);
@@ -920,6 +919,8 @@ void Client::geometryPass() {
             case ObjectType::Python: {
                 this->python_model->setDimensions(sharedObject->physics.dimensions);
                 this->python_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->python_model->rotateAbsolute(sharedObject->physics.facing);
+
                 this->python_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
