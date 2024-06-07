@@ -202,13 +202,13 @@ bool Client::init() {
     auto deferred_light_box_frag_path = shaders_dir / "deferred_light_box.frag";
     this->deferred_light_box_shader = std::make_shared<Shader>(deferred_light_box_vert_path.string(), deferred_light_box_frag_path.string());
 
-    auto floor_model_path = env_models_dir / "floor.obj";
+    auto floor_model_path = env_models_dir / "floor-normal.obj";
     this->floor_model = std::make_unique<Model>(floor_model_path.string(), true);
 
-    auto wall_model_path = env_models_dir / "wall.obj";
+    auto wall_model_path = env_models_dir / "wall-normals.obj";
     this->wall_model = std::make_unique<Model>(wall_model_path.string(), true);
 
-    auto pillar_model_path = env_models_dir / "pillar.obj";
+    auto pillar_model_path = env_models_dir / "pillar-normals.obj";
     this->pillar_model = std::make_unique<Model>(pillar_model_path.string(), true);
 
     auto torchlight_model_path = env_models_dir / "exit.obj";
