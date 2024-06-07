@@ -99,7 +99,9 @@ Mesh::Mesh(
 }
 
 void Mesh::setupNormalMaps() {
-    for (int i=0; i<indices.size(); i+=3){
+    for (int i=0; i + 2 < indices.size(); i+=3){
+        // if (i + 1 > indices.size()) {
+        // }
         // get 3 vertices for a triangle
         Vertex& v0 = vertices.at(indices.at(i));
         Vertex& v1 = vertices.at(indices.at(i+1));
