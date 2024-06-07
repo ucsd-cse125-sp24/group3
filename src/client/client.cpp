@@ -1432,7 +1432,6 @@ void Client::lightingPass() {
         }
 
         if (!sharedObject->pointLightInfo.has_value()) {
-            std::cout << "got a torch without point light info for some reason" << std::endl;
             continue;
         }                
         

@@ -2,8 +2,8 @@
   "game": {
     "maze": {
       "directory": "maps",
-      "procedural": true,
-      "maze_file": "demo/candidate5"
+      "procedural": false,
+      "maze_file": "test/itemRoom.maze"
     },
     "disable_enemies": false
   },
@@ -14,14 +14,14 @@
   "server": {
     "lobby_name": "Hope you're doing well!",
     "lobby_broadcast": true,
-    "max_players": 4,
+    "max_players": 2,
     "disable_dm": false,
-    "skip_intro": true
+    "skip_intro": false
   },
   "client": {
     "default_name": "Conan O'Brien",
     "lobby_discovery": true,
-    "fullscreen": false,
+    "fullscreen": true,
     "draw_bboxes": false,
     "fps_counter": true,
     "presentation": false,
