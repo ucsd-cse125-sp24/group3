@@ -13,6 +13,9 @@ public:
 	void doCollision(Object* other, ServerGameState& state) override;
 
 	virtual SharedObject toShared() override;
+
+	void setIntensity(float val);
 private:
+	float intensity;
     PointLightProperties properties;
 };

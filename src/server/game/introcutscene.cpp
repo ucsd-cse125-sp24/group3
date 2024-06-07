@@ -4,6 +4,7 @@
 #include "server/game/weaponcollider.hpp"
 #include "shared/audio/constants.hpp"
 #include "shared/utilities/rng.hpp"
+#include "server/game/exit.hpp"
 
 #include <vector>
 
@@ -18,6 +19,7 @@ GameConfig getCutsceneConfig() {
 IntroCutscene::IntroCutscene():
     state(GamePhase::INTRO_CUTSCENE, getCutsceneConfig())
 {
+    this->ticks = 0;
     // state has loaded in the maze file we use for this cutscene,
 
     // hard code direction to face right based on the intro cutscene maze orientation
@@ -62,17 +64,23 @@ IntroCutscene::IntroCutscene():
     this->state.objects.createObject(dm);
     this->dm_eid = dm->globalID;
 
+    auto exits = this->state.objects.getExits();
+    for (int i = 0; i < exits.size(); i++) {
+        auto exit = exits.get(i);
+        if (exit == nullptr) continue;
+
+        exit->setIntensity(0.0f);
+    }
+
     // load this->lights before sending down so the torch tick stuff works right
 }
 
 bool IntroCutscene::update() {
     this->state.updateMovement();
-    this->state.doTorchlightTicks();
     this->state.updateItems();
     this->state.deleteEntities();
     this->state.updateAttacks();
 
-    static int ticks = 0;
     ticks++;
 
     Player* player = this->state.objects.getPlayer(0);
@@ -80,15 +88,6 @@ bool IntroCutscene::update() {
     Player* player_right = this->state.objects.getPlayer(2);
     DungeonMaster* dm = this->state.objects.getDM();
 
-    const int START_TICK = 1;
-    const int STOP_MOVING_TICK = START_TICK + 250;
-    const int GATE_RAISE_TICK = STOP_MOVING_TICK + 30;
-    const int GATE_STOP_RAISE_TICK = GATE_RAISE_TICK + 200;
-    const int LIGHTNING_1_TICK = GATE_STOP_RAISE_TICK + 80;
-    const int LIGHTNING_2_TICK = LIGHTNING_1_TICK + 50;
-    const int LIGHTNING_3_TICK = LIGHTNING_2_TICK + 40;
-    const int START_PLAYER_THEME_TICK = LIGHTNING_3_TICK + 110;
-    const int EXIT_CUTSCENE_TICK = START_PLAYER_THEME_TICK + 240;
 
     if (ticks == START_TICK) {
         this->state.soundTable().addNewSoundSource(SoundSource(
@@ -119,6 +118,18 @@ bool IntroCutscene::update() {
     }
 
     if (ticks >= GATE_RAISE_TICK && ticks <= GATE_STOP_RAISE_TICK) {
+        const int RAISE_TICK_DUR = GATE_STOP_RAISE_TICK - GATE_RAISE_TICK;
+        float intensity = static_cast<float>(ticks - GATE_RAISE_TICK) / RAISE_TICK_DUR;
+
+        // make exits slowly brighter as it opens
+        auto exits = this->state.objects.getExits();
+        for (int i = 0; i < exits.size(); i++) {
+            auto exit = exits.get(i);
+            if (exit == nullptr) continue;
+
+            exit->setIntensity(intensity);
+        }
+
         bool played_sound = false;
 
         auto walls = this->state.objects.getSolidSurfaces();
@@ -153,6 +164,25 @@ bool IntroCutscene::update() {
         .attenuation_quadratic = 0.0075f
     };
 
+    const int TORCH_DECAY_NUM_TICKS = 100;
+    static int decay_tick = 0;
+
+    if (ticks < LIGHTNING_1_TICK - TORCH_DECAY_NUM_TICKS) {
+        this->state.doTorchlightTicks();
+    } else if (ticks < LIGHTNING_1_TICK) {
+        auto torches = this->state.objects.getTorchlights();
+        for (int i = 0; i < torches.size(); i++) {
+            auto torch = torches.get(i);
+            if (torch == nullptr) continue;
+
+            float intensity = 0.3f * (static_cast<float>(TORCH_DECAY_NUM_TICKS - decay_tick) / TORCH_DECAY_NUM_TICKS) + 0.1f;
+
+            torch->overrideIntensity(intensity);
+        }
+        decay_tick++;
+    }
+
+
     if (ticks == LIGHTNING_1_TICK) {
         this->state.soundTable().addNewSoundSource(SoundSource(
             ServerSFX::ZeusStartTheme, 
@@ -162,6 +192,7 @@ bool IntroCutscene::update() {
             FAR_ATTEN
         ));
         this->state.objects.createObject(new Lightning(lightning_pos1, player->physics.shared.facing, light_properties));
+
     }
 
     if (ticks == LIGHTNING_2_TICK) {
@@ -170,7 +201,7 @@ bool IntroCutscene::update() {
     }
 
     if (ticks == LIGHTNING_3_TICK) {
-        glm::vec3 lightning_pos3 = player->physics.shared.getCenterPosition() + directionToFacing(Direction::RIGHT) * Grid::grid_cell_width * 1.5f;
+        glm::vec3 lightning_pos3 = player->physics.shared.getCenterPosition() + directionToFacing(Direction::RIGHT) * Grid::grid_cell_width * 2.0f;
         this->state.objects.createObject(new Lightning(lightning_pos3, player->physics.shared.facing, light_properties));
     }
 
@@ -185,6 +216,27 @@ bool IntroCutscene::update() {
     }
 
     if (ticks == EXIT_CUTSCENE_TICK) {
+        player->animState = AnimState::SprintAnim;
+        player->physics.velocity = glm::normalize(player->physics.shared.facing) * 0.20f;
+    }
+
+    if (ticks == EXIT_CUTSCENE_TICK + 20) {
+        player_left->animState = AnimState::SprintAnim;
+        player_left->physics.velocity = glm::normalize(player->physics.shared.facing) * 0.20f;
+        player_right->animState = AnimState::SprintAnim;
+        player_right->physics.velocity = glm::normalize(player->physics.shared.facing) * 0.20f;
+    }
+
+    if (ticks == EXIT_CUTSCENE_TICK + 100) {
+        this->state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::Teleport,
+            player->physics.shared.getCenterPosition(),
+            FULL_VOLUME,
+            FAR_DIST,
+            FAR_ATTEN
+        ));
+    }
+    if (ticks == EXIT_CUTSCENE_TICK + 105) {
         return true;
     }
 
@@ -203,12 +255,20 @@ LoadIntroCutsceneEvent IntroCutscene::toNetwork() {
         }
     }
 
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> empty; 
+    std::swap(this->lights, empty);
+
     std::size_t lights_idx = 0;
     for (int i = 0; i < this->state.objects.getObjects().size(); i++) {
         auto object = this->state.objects.getObject(i);
         if (object == nullptr) continue;
 
-        if (lights_idx < MAX_POINT_LIGHTS && object->type == ObjectType::Torchlight) {
+        if (lights_idx < MAX_POINT_LIGHTS && 
+            (object->type == ObjectType::Torchlight ||
+             object->type == ObjectType::Exit ||
+             object->type == ObjectType::WeaponCollider // lightning
+            )) {
+            
             this->lights[lights_idx] = object->toShared();
             lights_idx++;
         }

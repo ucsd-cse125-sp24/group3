@@ -11,7 +11,7 @@
 using namespace std::chrono_literals;
 
 ArrowTrap::ArrowTrap(glm::vec3 corner, Direction dir):
-    Trap(ObjectType::ArrowTrap, false, corner, Collider::Box, ModelType::ArrowTrap) 
+    Trap(ObjectType::ArrowTrap, false, corner, Collider::None, ModelType::ArrowTrap) 
 {
     this->dir = dir;
     this->shoot_time = std::chrono::system_clock::now();

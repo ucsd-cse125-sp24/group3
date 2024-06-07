@@ -74,7 +74,7 @@
 /*	Game	*/
 #define	GRAVITY					0.03f
 #define	PLAYER_SPEED 			1.65f
-#define JUMP_SPEED				0.55f
+#define JUMP_SPEED				0.59f
 
 /* DM Constants */
 #define MAX_TRAPS 10
@@ -85,4 +85,5 @@
 #define ITEM_SPAWN_BOUND 3
 #define LIGHTNING_LIGHT_CUT_TICKS 100
 #define LIGHT_CUT_TICKS 200
-#define LIGHT_CUT_RANGE 25.0
+#define LIGHT_CUT_RANGE 60.0
+#define LIGHT_CUT_RANGE_LIGHTNING 20.0

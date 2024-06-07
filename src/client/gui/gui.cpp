@@ -607,7 +607,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
                 if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
                     //  Subcase 3
                     playerRoleString = "Player " + std::to_string(playerIndex)
-                        + " wants to play as the Zeus.";
+                        + " wants to play as Zeus.";
                     color = font::Color::YELLOW;
                 }
                 else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
@@ -877,7 +877,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
                 color = font::Color::YELLOW;
             }
             else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
-                playerRoleString = "You want to play as the Player.";
+                playerRoleString = "You want to play as a Player.";
                 color = font::Color::WHITE;
             }
 
@@ -1945,7 +1945,7 @@ void GUI::_layoutGameHUD() {
     auto durationFlex = widget::Flexbox::make(
         glm::vec2(10.0f, FRAC_WINDOW_HEIGHT(1, 2)),
         glm::vec2(0.0f, 0.0f),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );
 
     std::unordered_map<SpecificID, std::pair<ModelType, double>>::iterator it = self->inventoryInfo->usedItems.begin();
@@ -1958,10 +1958,10 @@ void GUI::_layoutGameHUD() {
             name = "Invisibility: ";
         }
         else if (type == ModelType::InvincibilityPotion) {
-            name = "INVINCIBILITY: ";
+            name = "Invincibility: ";
         }
         else if (type == ModelType::NauseaPotion) {
-            name = "Nauseous: ";
+            name = "Nausea: ";
         }
         else if (type == ModelType::Mirror) {
             name = "Holding Mirror: ";
