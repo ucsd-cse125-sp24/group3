@@ -205,10 +205,10 @@ bool Client::init() {
     auto floor_model_path = env_models_dir / "floor-normal.obj";
     this->floor_model = std::make_unique<Model>(floor_model_path.string(), true);
 
-    auto wall_model_path = env_models_dir / "wall-normals.obj";
+    auto wall_model_path = env_models_dir / "wall-tops.obj";
     this->wall_model = std::make_unique<Model>(wall_model_path.string(), true);
 
-    auto pillar_model_path = env_models_dir / "pillar-normals.obj";
+    auto pillar_model_path = env_models_dir / "pillar-tops.obj";
     this->pillar_model = std::make_unique<Model>(pillar_model_path.string(), true);
 
     auto torchlight_model_path = env_models_dir / "exit.obj";
