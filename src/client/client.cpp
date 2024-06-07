@@ -1478,7 +1478,10 @@ void Client::lightingPass() {
                     glm::vec3 flame_color = properties.diffuse_color;
 
                     animManager->setFrameAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
-                    Model* fireball_frame_model = animManager->updateFrameAnimation(timeElapsed);       
+                    Model* fireball_frame_model = animManager->updateFrameAnimation(timeElapsed);
+                    if (fireball_frame_model == nullptr) {
+                        continue; // THIS IS BREAKING WHEN SUN GODS FIREBALLS ARE DESTROYED WHWEN LIGHTS ARE CUT
+                    }
 
                     this->deferred_light_box_shader->setVec3("lightColor", flame_color);
 
@@ -1491,7 +1494,10 @@ void Client::lightingPass() {
                     glm::vec3 flame_color = properties.diffuse_color;
 
                     animManager->setFrameAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
-                    Model* fireball_frame_model = animManager->updateFrameAnimation(timeElapsed);       
+                    Model* fireball_frame_model = animManager->updateFrameAnimation(timeElapsed);
+                    if (fireball_frame_model == nullptr) {
+                        continue; // THIS IS BREAKING WHEN SUN GODS FIREBALLS ARE DESTROYED WHWEN LIGHTS ARE CUT
+                    }
 
                     this->deferred_light_box_shader->setVec3("lightColor", flame_color);
 
