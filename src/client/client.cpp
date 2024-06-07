@@ -827,7 +827,16 @@ void Client::geometryPass() {
         auto dist = glm::distance(sharedObject->physics.corner, my_pos);
 
         if (!is_floor) {
-            if (!is_dm && !is_ceiling && dist > this->config.client.render) {
+            if (!is_dm && !is_ceiling &&
+                (sharedObject->type == ObjectType::FloorSpike ||
+                sharedObject->type == ObjectType::Lava ||
+                sharedObject->type == ObjectType::ArrowTrap ||
+                sharedObject->type == ObjectType::SpikeTrap ||
+                sharedObject->type == ObjectType::Projectile)
+                && dist > this->config.client.render / 2) {
+                continue;
+            }
+            else if (!is_dm && !is_ceiling && dist > this->config.client.render) {
                 continue;
             }
         }
