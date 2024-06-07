@@ -6,7 +6,7 @@
 
 /*  Constructors and Destructors    */
 Item::Item(ObjectType type, bool movable, glm::vec3 corner, ModelType model, glm::vec3 dimensions):
-    Object(type, Physics(movable, Collider::Box, corner, dimensions), ModelType::Cube),
+    Object(type, Physics(movable, Collider::Box, corner, dimensions), ModelType::Chest),
 	iteminfo(SharedItemInfo{ .held = false, .used = false })
 {}
 

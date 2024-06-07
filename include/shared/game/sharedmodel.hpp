@@ -44,5 +44,6 @@ enum class ModelType {
 	SunGod,
 	Mirror,
 	LightCut,
-	TorchPost
+	TorchPost,
+	Chest
 };

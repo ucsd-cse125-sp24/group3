@@ -238,6 +238,9 @@ bool Client::init() {
     auto lava_cross_model_path = env_models_dir / "lava" / "lava_cross.obj";
     this->lava_cross_model = std::make_unique<Model>(lava_cross_model_path.string(), false);
 
+    auto chest_model_path = item_models_dir / "Chest1" / "Chest1 1.obj";
+    this->chest_model = std::make_unique<Model>(chest_model_path.string(), false);
+
     auto lava_row_model_path = env_models_dir / "lava" / "lava_row.obj";
     this->lava_horizontal_model = std::make_unique<Model>(lava_row_model_path.string(), false);
     // thank you openai!
@@ -838,7 +841,8 @@ void Client::geometryPass() {
                 sharedObject->type == ObjectType::ArrowTrap ||
                 sharedObject->type == ObjectType::SpikeTrap ||
                 sharedObject->type == ObjectType::TeleporterTrap ||
-                sharedObject->type == ObjectType::Projectile)
+                sharedObject->type == ObjectType::Projectile ||
+                sharedObject->modelType == ModelType::Chest)
                 && dist > this->config.client.render / 2) {
                 continue;
             }
@@ -853,7 +857,8 @@ void Client::geometryPass() {
              sharedObject->type == ObjectType::ArrowTrap ||
              sharedObject->type == ObjectType::SpikeTrap || 
              sharedObject->type == ObjectType::Projectile ||
-             sharedObject->type == ObjectType::Torchlight) // dont render post from far away
+             sharedObject->type == ObjectType::Torchlight || // light post
+             sharedObject->modelType == ModelType::Chest)
              && dist > this->config.client.render) {
             continue; 
         }
@@ -1164,14 +1169,7 @@ void Client::geometryPass() {
             }
             case ObjectType::Potion: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    Model* model = this->item_model.get();
-                    if (sharedObject->modelType == ModelType::HealthPotion) {
-                        model = this->item_model.get();
-                    } else if (sharedObject->modelType == ModelType::NauseaPotion || sharedObject->modelType == ModelType::InvincibilityPotion) {
-                        model = this->item_model.get();
-                    } else if (sharedObject->modelType == ModelType::InvisibilityPotion) {
-                        model = this->item_model.get();
-                    }
+                    Model* model = this->chest_model.get();
 
                     model->setDimensions(sharedObject->physics.dimensions);
                     model->translateAbsolute(sharedObject->physics.getCenterPosition());
@@ -1183,20 +1181,9 @@ void Client::geometryPass() {
             }
             case ObjectType::Spell: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    glm::vec3 color;
-                    if (sharedObject->modelType == ModelType::FireSpell) {
-                        color = glm::vec3(0.9f, 0.1f, 0.0f);
-                    }
-                    else if (sharedObject->modelType == ModelType::HealSpell) {
-                        color = glm::vec3(1.0f, 1.0f, 0.0f);
-                    }
-                    else {
-                        color = glm::vec3(0.8f, 0.7f, 0.6f);
-                    }
-
-                    this->item_model->setDimensions(sharedObject->physics.dimensions);
-                    this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    this->item_model->draw(this->deferred_geometry_shader.get(),
+                    this->chest_model->setDimensions(sharedObject->physics.dimensions);
+                    this->chest_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    this->chest_model->draw(this->deferred_geometry_shader.get(),
                         this->cam->getPos(),
                         true);
                 }
@@ -1224,9 +1211,9 @@ void Client::geometryPass() {
             }
             case ObjectType::Weapon: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    this->item_model->setDimensions(sharedObject->physics.dimensions);
-                    this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    this->item_model->draw(this->deferred_geometry_shader.get(),
+                    this->chest_model->setDimensions(sharedObject->physics.dimensions);
+                    this->chest_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    this->chest_model->draw(this->deferred_geometry_shader.get(),
                         this->cam->getPos(),
                         true);
                 }
@@ -1259,9 +1246,9 @@ void Client::geometryPass() {
             }
             case ObjectType::Mirror: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    this->item_model->setDimensions(sharedObject->physics.dimensions);
-                    this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    this->item_model->draw(this->deferred_geometry_shader.get(),
+                    this->chest_model->setDimensions(sharedObject->physics.dimensions);
+                    this->chest_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    this->chest_model->draw(this->deferred_geometry_shader.get(),
                         this->cam->getPos(),
                         true);
                 }

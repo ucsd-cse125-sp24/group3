@@ -278,6 +278,7 @@ private:
     std::unique_ptr<Model> lava_vertical_model;
     std::unique_ptr<Model> lava_horizontal_model;
     std::unique_ptr<Model> lightning_model;
+    std::unique_ptr<Model> chest_model;
 
     GLFWwindow *window;
 
