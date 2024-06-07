@@ -358,6 +358,7 @@ private:
     float mouse_ypos = 0.0f;
 
     double lastTime = 0.0;
+    double lastFrameTime = 0.0;
 
     GameConfig config;
     tcp::resolver resolver;

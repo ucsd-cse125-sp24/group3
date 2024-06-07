@@ -13,6 +13,8 @@
 #include "client/bone.hpp"
 #include "shared/game/sharedobject.hpp"
 
+#define MAX_FRAME_TIME 0.033
+
 class AnimationManager
 {
 public:
@@ -20,7 +22,7 @@ public:
 
 	void updateAnimation(float dt);
 
-	Model* updateFrameAnimation(float time);
+	Model* updateFrameAnimation(float dt);
 
 	void playAnimation(Animation* pAnimation);
 
@@ -36,7 +38,7 @@ public:
 
 private:
 	std::vector<glm::mat4> m_finalBoneMatrices;
-	std::unordered_map<EntityID, std::pair<int, Animation*>> entityAnimFrameMap;
+	std::unordered_map<EntityID, std::pair<float, Animation*>> entityAnimFrameMap;
 	std::unordered_map<EntityID, std::pair<float, Animation*>> entityAnimMap;
 	std::unordered_map<ModelType, std::unordered_map<AnimState, Animation*>> objAnimMap;
 	Animation* m_currentAnimation;

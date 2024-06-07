@@ -8,20 +8,20 @@
     "disable_enemies": false
   },
   "network": {
-      "server_ip": "localhost",
-      "server_port": 2355
+    "server_ip": "localhost",
+    "server_port": 2355
   },
   "server": {
-      "lobby_name": "Hope you're doing well!",
-      "lobby_broadcast": true,
-      "max_players": 1,
-      "disable_dm": false,
-      "skip_intro": true 
+    "lobby_name": "Hope you're doing well!",
+    "lobby_broadcast": true,
+    "max_players": 4,
+    "disable_dm": false,
+    "skip_intro": true
   },
   "client": {
     "default_name": "Conan O'Brien",
     "lobby_discovery": true,
-    "fullscreen": true,
+    "fullscreen": false,
     "draw_bboxes": false,
     "fps_counter": true,
     "presentation": false,

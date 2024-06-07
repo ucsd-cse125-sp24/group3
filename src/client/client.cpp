@@ -272,7 +272,7 @@ bool Client::init() {
     auto player_atk_path = graphics_assets_dir / "animations/slash.fbx";
     auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
     auto torchlight_anim_path = graphics_assets_dir / "animations/fire-fix";
-
+    auto fireball_anim_path = graphics_assets_dir / "animations/fireball";
 
     auto fire_player_model_path = player_models_dir      / "char_1_rename/char1.fbx";
     auto lightning_player_model_path = player_models_dir / "char_2_rename/char2.fbx";
@@ -294,7 +294,9 @@ bool Client::init() {
     animManager = new AnimationManager();
     Animation* torchlight_animation = new Animation(torchlight_anim_path.string(), "fire-fix", 45);
     animManager->addAnimation(torchlight_animation, ModelType::Torchlight, AnimState::IdleAnim);
-
+    Animation* fireball_animation = new Animation(fireball_anim_path.string(), "fireball", 60);
+    animManager->addAnimation(fireball_animation, ModelType::Fireball, AnimState::IdleAnim);
+    animManager->addAnimation(fireball_animation, ModelType::SpellOrb, AnimState::IdleAnim);
     for (int i = 0; i < NUM_PLAYER_MODELS; i++) {
         Animation* player_walk = new Animation(player_walk_path.string(), player_models.at(i).second);
         Animation* player_jump = new Animation(player_jump_path.string(), player_models.at(i).second);
@@ -694,6 +696,9 @@ void Client::processServerInput(bool allow_defer) {
                 }
                 EntityID light_id = updated_light_source.lightSources[i].value().eid;
                 this->closest_light_sources[i] = this->gameState.objects[light_id];
+                if (!this->closest_light_sources[i].has_value()) {
+                    continue;
+                }
                 // update intensity with incoming intensity 
                 this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
                 this->closest_light_sources[i]->pointLightInfo->is_cut = updated_light_source.lightSources[i]->is_cut;
@@ -1112,12 +1117,15 @@ void Client::geometryPass() {
                         this->arrow_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(), true);
                         break;
-                   }
+                    }
+                    // case ModelType::Fireball: {
+                    //     break;
+                    // }
                     default:
-                        this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
-                        this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                        this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
-                            this->cam->getPos(), true);
+                        // this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
+                        // this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        // this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
+                        //     this->cam->getPos(), true);
                         break;
                 }
                 break;
@@ -1340,6 +1348,14 @@ void Client::lightingPass() {
             glm::vec3 FAR_AWAY(10000, 10000, 10000);
             lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", FAR_AWAY);
             continue;
+        } else if (!this->gameState.objects.contains(curr_source->globalID)) {
+            glm::vec3 FAR_AWAY(10000, 10000, 10000);
+            lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", FAR_AWAY);
+            continue;
+        } else if (!this->gameState.objects.at(curr_source->globalID).has_value()) {
+            glm::vec3 FAR_AWAY(10000, 10000, 10000);
+            lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", FAR_AWAY);
+            continue;
         }
 
         SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
@@ -1397,16 +1413,16 @@ void Client::lightingPass() {
     glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    double currentTime = glfwGetTime();
+    double timeElapsed = currentTime - lastFrameTime;
+    lastFrameTime = currentTime;
+
     // render torch lights on top of scene
     this->deferred_light_box_shader->use();
     glm::mat4 viewProj = this->cam->getViewProj();
     this->deferred_light_box_shader->setMat4("viewProj", viewProj);
     for (auto& [id, sharedObject] : *gamestate_objects) {
         if (!sharedObject.has_value()) {
-            continue;
-        }
-
-        if (sharedObject->type != ObjectType::Torchlight) {
             continue;
         }
 
@@ -1418,37 +1434,70 @@ void Client::lightingPass() {
         if (!sharedObject->pointLightInfo.has_value()) {
             std::cout << "got a torch without point light info for some reason" << std::endl;
             continue;
-        }
+        }                
+        
         SharedPointLightInfo& properties = sharedObject->pointLightInfo.value();
-
-        glm::vec3 v(1.0f);
-
-
-        animManager->setFrameAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
-
-        /* Update model animation */
-        Model* torch_frame_model = animManager->updateFrameAnimation(glfwGetTime()); 
-        glm::vec3 dims = torch_frame_model->getDimensions();
+        
         this->deferred_light_box_shader->use();
 
-        glm::vec3 flame_color;
+        switch (sharedObject->type) {
+            case ObjectType::Torchlight: {
 
-        if (sharedObject->pointLightInfo->is_cut) {
-            glm::vec3 black(0.1f, 0.1f, 0.1f);
-            flame_color = black;
-        } else {
-            flame_color = properties.diffuse_color;
+                glm::vec3 v(1.0f);
+
+                animManager->setFrameAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
+                Model* torch_frame_model = animManager->updateFrameAnimation(timeElapsed); 
+                glm::vec3 dims = torch_frame_model->getDimensions();
+
+                glm::vec3 flame_color;
+
+                if (sharedObject->pointLightInfo->is_cut) {
+                    glm::vec3 black(0.1f, 0.1f, 0.1f);
+                    flame_color = black;
+                } else {
+                    flame_color = properties.diffuse_color;
+                }
+
+                this->deferred_light_box_shader->setVec3("lightColor", flame_color);
+                torch_frame_model->setDimensions(2.0f * sharedObject->physics.dimensions);
+                torch_frame_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true, flame_color);
+                break;
+            }
+            case ObjectType::Projectile: {
+                if (sharedObject->modelType == ModelType::Fireball) {
+                    glm::vec3 flame_color = properties.diffuse_color;
+
+                    animManager->setFrameAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
+                    Model* fireball_frame_model = animManager->updateFrameAnimation(timeElapsed);       
+
+                    this->deferred_light_box_shader->setVec3("lightColor", flame_color);
+
+                    fireball_frame_model->setDimensions(sharedObject->physics.dimensions);
+                    fireball_frame_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    fireball_frame_model->draw(this->deferred_light_box_shader.get(),
+                        this->cam->getPos(), true);
+                    break;
+                } else if (sharedObject->modelType == ModelType::SpellOrb) {
+                    glm::vec3 flame_color = properties.diffuse_color;
+
+                    animManager->setFrameAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
+                    Model* fireball_frame_model = animManager->updateFrameAnimation(timeElapsed);       
+
+                    this->deferred_light_box_shader->setVec3("lightColor", flame_color);
+
+                    fireball_frame_model->setDimensions(sharedObject->physics.dimensions);
+                    fireball_frame_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    fireball_frame_model->draw(this->deferred_light_box_shader.get(),
+                        this->cam->getPos(), true);
+                    break;
+                }
+                break;
+            }
+            default:
+                continue;
         }
-
-        this->deferred_light_box_shader->setVec3("lightColor", flame_color);
-
-        // this->torchlight_model->setDimensions(2.0f * sharedObject->physics.dimensions);
-        // this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-        // this->torchlight_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
-        torch_frame_model->setDimensions(2.0f * sharedObject->physics.dimensions);
-        torch_frame_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-        // torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
-        torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true, flame_color);
+       
     }
 
 }

@@ -28,19 +28,13 @@ void AnimationManager::updateAnimation(float dt) {
     }
 }
 
-Model* AnimationManager::updateFrameAnimation(float time) {
+Model* AnimationManager::updateFrameAnimation(float dt) {
     if (entityAnimFrameMap[currEntity].second) {
         m_currentAnimation = entityAnimFrameMap[currEntity].second;
-        int currFrame = entityAnimFrameMap[currEntity].first + 1;
-        
-        // /* Change this to a constant */
-        // if (time - lastFrameTime >= 0.01667) {
-        //     std::cout << "time: " << time << ", lastTime: " << lastFrameTime << ", diff: " << (time - lastFrameTime) << ", currFrame: " << currFrame << std::endl;
-        //     currFrame += 1;
-        //     std::cout << currFrame << std::endl;
-        //     lastFrameTime = time;
-        // }
-        entityAnimFrameMap[currEntity].first = currFrame;
+        m_currentTime = entityAnimFrameMap[currEntity].first;
+        m_currentTime += dt;
+        int currFrame = static_cast<int> (m_currentTime / MAX_FRAME_TIME);
+        entityAnimFrameMap[currEntity].first = m_currentTime;
         return m_currentAnimation->getFrame(currFrame);
     } else {
         return nullptr;
@@ -97,7 +91,7 @@ void AnimationManager::setFrameAnimation(EntityID id, ModelType modelType, AnimS
         static std::random_device dev;
         static std::mt19937 rng(dev());
         static std::uniform_int_distribution<std::mt19937::result_type> dist(0,51);
-        entityAnimFrameMap[id] = std::make_pair(dist(rng), objAnimMap[modelType][animState]);
+        entityAnimFrameMap[id] = std::make_pair(dist(rng) * MAX_FRAME_TIME, objAnimMap[modelType][animState]);
     }
     currEntity = id;
 }

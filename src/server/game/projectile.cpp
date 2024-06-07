@@ -102,3 +102,49 @@ void Projectile::doCollision(Object* other, ServerGameState& state) {
         }
     }
 }
+
+/*	SharedGameState generation	*/
+SharedObject Projectile::toShared() {
+	auto so = Object::toShared();
+    if (so.modelType == ModelType::Fireball) {
+        so.pointLightInfo = SharedPointLightInfo {
+            .intensity = 1.0f,
+            .ambient_color = glm::vec3(0.72f, 0.14f, 0.01f),
+            .diffuse_color = glm::vec3(1.0f, 0.5f, 0.03f),
+            .specular_color = glm::vec3(0.1f, 0.1f, 0.1f),
+            .attenuation_linear = 0.35f,
+            .attenuation_quadratic = 0.44f
+        };
+    } else if (so.modelType == ModelType::SpellOrb) {
+        SpellOrb* sOrb = dynamic_cast<SpellOrb*>(this);
+        if (sOrb->sType == SpellType::Fireball) {
+            so.pointLightInfo = SharedPointLightInfo {
+                .intensity = 1.0f,
+                .ambient_color = glm::vec3(0.55f, 0.05f, 0.67f),
+                .diffuse_color = glm::vec3(0.65f, 0.12f, 0.75f),
+                .specular_color = glm::vec3(0.1f, 0.1f, 0.1f),
+                .attenuation_linear = 0.35f,
+                .attenuation_quadratic = 0.44f
+            };
+        } else if (sOrb->sType == SpellType::HealOrb) {
+            so.pointLightInfo = SharedPointLightInfo {
+                .intensity = 1.0f,
+                .ambient_color = glm::vec3(0.0, 0.72f, 0.14f),
+                .diffuse_color = glm::vec3(0.12f, 1.0f, 0.35f),
+                .specular_color = glm::vec3(0.1f, 0.1f, 0.1f),
+                .attenuation_linear = 0.35f,
+                .attenuation_quadratic = 0.44f
+            };
+        }
+    } else {
+        so.pointLightInfo = SharedPointLightInfo {
+            .intensity = 0.5f,
+            .ambient_color = glm::vec3(1.0f, 1.0f, 1.0f),
+            .diffuse_color = glm::vec3(1.0f, 1.0f, 1.0f),
+            .specular_color = glm::vec3(0.1f, 0.1f, 0.1f),
+            .attenuation_linear = 0.35f,
+            .attenuation_quadratic = 0.44f
+        };
+    }
+	return so;
+}
