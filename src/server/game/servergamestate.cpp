@@ -1185,7 +1185,9 @@ void ServerGameState::doTorchlightTicks() {
 		if (torchlight == nullptr) 
 			continue;
 
-		torchlight->doTick(*this, this->dmLightningCutLights, this->dmActionCutLights);
+		if (torchlight->doTick(*this, this->dmLightningCutLights, this->dmActionCutLights)) {
+			this->updated_entities.insert(torchlight->globalID);
+		}
 	}
 }
 

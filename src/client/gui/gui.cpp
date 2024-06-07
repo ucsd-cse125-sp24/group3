@@ -607,7 +607,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
                 if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
                     //  Subcase 3
                     playerRoleString = "Player " + std::to_string(playerIndex)
-                        + " wants to play as the Zeus.";
+                        + " wants to play as Zeus.";
                     color = font::Color::YELLOW;
                 }
                 else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
@@ -877,7 +877,7 @@ gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
                 color = font::Color::YELLOW;
             }
             else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
-                playerRoleString = "You want to play as the Player.";
+                playerRoleString = "You want to play as a Player.";
                 color = font::Color::WHITE;
             }
 

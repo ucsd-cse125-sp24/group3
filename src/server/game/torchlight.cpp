@@ -10,13 +10,14 @@
 
 SharedObject Torchlight::toShared() {
     auto so = Object::toShared();
-    so.pointLightInfo = SharedPointLightInfo {
+    so.pointLightInfo = SharedPointLightInfo{
         .intensity = this->curr_intensity,
         .ambient_color = this->properties.ambient_color,
         .diffuse_color = this->properties.diffuse_color,
         .specular_color = this->properties.specular_color,
         .attenuation_linear = this->properties.attenuation_linear,
-        .attenuation_quadratic = this->properties.attenuation_quadratic
+        .attenuation_quadratic = this->properties.attenuation_quadratic,
+        .is_cut = this->is_cut
     };
     return so;
 }
@@ -131,9 +132,9 @@ void Torchlight::init() {
 
 Torchlight::~Torchlight() {}
 
-void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightning_light_cut_pos, std::optional<glm::vec3> action_light_cut_pos) {
+bool Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightning_light_cut_pos, std::optional<glm::vec3> action_light_cut_pos) {
     if(!this->properties.flickering) {
-        return;
+        return false;
     }
 
     // cut this light if within position of light cut
@@ -141,9 +142,9 @@ void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightni
         glm::vec3 pos = lightning_light_cut_pos.value();
 
         // if within threshold, get out
-        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= LIGHT_CUT_RANGE) {
-            this->curr_intensity = 0.0f;
-            return;
+        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= LIGHT_CUT_RANGE_LIGHTNING) {
+            this->curr_intensity = 0.2f;
+            return false;
         }
     }
 
@@ -151,10 +152,10 @@ void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightni
         glm::vec3 pos = action_light_cut_pos.value();
 
         // if within threshold, black out (slightly expand the light cut action range)
-        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= (1.5 * LIGHT_CUT_RANGE)) {
-            this->curr_intensity = 0.0f;
+        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= (LIGHT_CUT_RANGE)) {
+            this->curr_intensity = 0.2f;
             this->is_cut = true;
-            return;
+            return true;
         }
     }
 
@@ -187,6 +188,7 @@ void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightni
     } else if (this->curr_intensity < this->properties.min_intensity) {
         this->curr_intensity = this->properties.min_intensity;
     }
+    return false;
 }
 
 float Torchlight::getIntensity() const {
