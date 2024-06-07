@@ -279,6 +279,7 @@ private:
     std::unique_ptr<Model> lava_horizontal_model;
     std::unique_ptr<Model> lightning_model;
     std::unique_ptr<Model> chest_model;
+    std::unique_ptr<Model> teleport_model;
 
     GLFWwindow *window;
 
