@@ -1945,7 +1945,7 @@ void GUI::_layoutGameHUD() {
     auto durationFlex = widget::Flexbox::make(
         glm::vec2(10.0f, FRAC_WINDOW_HEIGHT(1, 2)),
         glm::vec2(0.0f, 0.0f),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );
 
     std::unordered_map<SpecificID, std::pair<ModelType, double>>::iterator it = self->inventoryInfo->usedItems.begin();
@@ -1958,10 +1958,10 @@ void GUI::_layoutGameHUD() {
             name = "Invisibility: ";
         }
         else if (type == ModelType::InvincibilityPotion) {
-            name = "INVINCIBILITY: ";
+            name = "Invincibility: ";
         }
         else if (type == ModelType::NauseaPotion) {
-            name = "Nauseous: ";
+            name = "Nausea: ";
         }
         else if (type == ModelType::Mirror) {
             name = "Holding Mirror: ";
