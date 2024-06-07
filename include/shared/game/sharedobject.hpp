@@ -239,9 +239,11 @@ struct SharedPointLightInfo {
     float attenuation_linear;
     float attenuation_quadratic;
 
+	bool is_cut = false;
+
 	DEF_SERIALIZE(Archive& ar, const int version) {
 		ar & intensity & ambient_color & diffuse_color & specular_color &
-            attenuation_linear & attenuation_quadratic;
+            attenuation_linear & attenuation_quadratic & is_cut;
     }
 };
 

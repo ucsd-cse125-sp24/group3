@@ -17,6 +17,7 @@ enum class ModelType {
 	FireSpell,
 	HealSpell,
 	TeleportSpell,
+	SpellOrb,
 	Frame,
 	Orb,
 	FloorSpikeHorizontal,
@@ -37,11 +38,14 @@ enum class ModelType {
 	Lightning,
     Arrow,
     ArrowTrap,
+	Fireball,
 	FireballTrapLeft,
 	FireballTrapRight,
 	FireballTrapUp,
 	FireballTrapDown,
 	SunGod,
 	Mirror,
-	LightCut
+	LightCut,
+	TorchPost,
+	Chest
 };

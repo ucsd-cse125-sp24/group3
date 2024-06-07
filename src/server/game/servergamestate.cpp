@@ -512,10 +512,39 @@ void ServerGameState::update(const EventList& events) {
 					break;
 				}
 
+				auto end = dm->sharedTrapInventory.trapsInCooldown.end();
+				// handle arrowtrap / sungod seperately
+				if (trapPlacementEvent.cell == CellType::ArrowTrapDown ||
+					trapPlacementEvent.cell == CellType::ArrowTrapUp || 
+					trapPlacementEvent.cell == CellType::ArrowTrapLeft || 
+					trapPlacementEvent.cell == CellType::ArrowTrapRight) {
+					
+					if (!(dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapDown) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapUp) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapLeft) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapRight) == end)) {
+						break;
+					}
+				}
+
+				if (trapPlacementEvent.cell == CellType::FireballTrapDown ||
+					trapPlacementEvent.cell == CellType::FireballTrapUp ||
+					trapPlacementEvent.cell == CellType::FireballTrapLeft ||
+					trapPlacementEvent.cell == CellType::FireballTrapRight) {
+
+					if (!(dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapDown) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapUp) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapLeft) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapRight) == end)) {
+						break;
+					}
+				}
+
+				// handle remaining traps
 				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
 
 				// in cooldown map sadly
-				if (it != dm->sharedTrapInventory.trapsInCooldown.end()) {
+				if (it != end){
 					break;
 				}
 
@@ -903,7 +932,7 @@ void ServerGameState::updateMovement() {
 			currentPosition = object->physics.shared.corner;
 		}
 
-        const float spike_low_y = 3.0f;
+        const float spike_low_y = 2.9f;
         if (object->type == ObjectType::SpikeTrap && object->physics.shared.corner.y < spike_low_y) {
             object->physics.shared.corner.y = spike_low_y;
             object->physics.feels_gravity = false;
@@ -1049,7 +1078,9 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 					otherObj->type == ObjectType::Orb ||
 					otherObj->type == ObjectType::WeaponCollider ||
 					otherObj->type == ObjectType::Slime ||
-					otherObj->type == ObjectType::Torchlight) {
+					otherObj->type == ObjectType::TeleporterTrap ||
+					otherObj->type == ObjectType::Torchlight ||
+					otherObj->type == ObjectType::Mirror) {
 					continue;
 				}
 
@@ -1156,7 +1187,9 @@ void ServerGameState::doTorchlightTicks() {
 		if (torchlight == nullptr) 
 			continue;
 
-		torchlight->doTick(*this, this->dmLightningCutLights, this->dmActionCutLights);
+		if (torchlight->doTick(*this, this->dmLightningCutLights, this->dmActionCutLights)) {
+			this->updated_entities.insert(torchlight->globalID);
+		}
 	}
 }
 
@@ -1686,7 +1719,7 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 		if (cell->type != CellType::Empty)
 			return nullptr;
 
-		const float HEIGHT_SHOWING = 0.5;
+		const float HEIGHT_SHOWING = 0.4;
 		glm::vec3 dimensions(
 			Grid::grid_cell_width,
 			MAZE_CEILING_HEIGHT,
@@ -1775,9 +1808,9 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 			return nullptr;
 
 		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
+			cell->x * Grid::grid_cell_width + 1,
 			0.0f,
-			cell->y * Grid::grid_cell_width
+			cell->y * Grid::grid_cell_width + 1
 		);
 
 		TeleporterTrap* teleporterTrap = new TeleporterTrap(corner);
@@ -2066,7 +2099,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				case CellType::SpikeTrap: {
-                    const float HEIGHT_SHOWING = 0.5;
+                    const float HEIGHT_SHOWING = 0.4;
 					glm::vec3 dimensions(
 						Grid::grid_cell_width,
 						MAZE_CEILING_HEIGHT,
@@ -2128,9 +2161,9 @@ void ServerGameState::loadMaze(const Grid& grid) {
 
 				case CellType::TeleporterTrap: {
 					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
+						cell->x * Grid::grid_cell_width + 1,
 						0.0f,
-						cell->y * Grid::grid_cell_width
+						cell->y * Grid::grid_cell_width + 1
 					);
 
 					this->objects.createObject(new TeleporterTrap(corner));

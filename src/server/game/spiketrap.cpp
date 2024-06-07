@@ -14,7 +14,7 @@ const std::chrono::seconds SpikeTrap::TIME_UNTIL_RESET = 10s;
 SpikeTrap::SpikeTrap(glm::vec3 corner, glm::vec3 dimensions):
     Trap(ObjectType::SpikeTrap, true, corner, Collider::Box, ModelType::Cube, dimensions) 
 {
-    this->dropped_time = std::chrono::system_clock::now() - TIME_UNTIL_RESET;
+    this->dropped_time = std::chrono::system_clock::now() - 100000s;
     this->physics.feels_gravity = false;
 }
 

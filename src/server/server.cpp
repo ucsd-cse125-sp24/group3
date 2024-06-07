@@ -28,6 +28,7 @@
 #include "server/game/object.hpp"
 #include "shared/game/sharedmodel.hpp"
 #include "server/game/trap.hpp"
+#include "server/game/projectile.hpp"
 #include "shared/network/session.hpp"
 #include "shared/network/packet.hpp"
 #include "shared/network/constants.hpp"
@@ -161,6 +162,13 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
         closestPointLights.push(lava->globalID);
     }
 
+    for(int i = 0; i < this->state.objects.getProjectiles().size(); i++) {
+        auto proj = this->state.objects.getProjectiles().get(i);
+        if (proj == nullptr) continue;
+        if (proj->modelType != ModelType::Arrow && proj->modelType != ModelType::Fireball && proj->modelType != ModelType::SpellOrb) continue;
+        closestPointLights.push(proj->globalID);
+
+    }
 
     // put set into an array
     UpdateLightSourcesEvent event_data;
@@ -174,13 +182,15 @@ void Server::sendLightSourceUpdates(EntityID playerID) {
             if (torchlight != nullptr) {
                 event_data.lightSources[curr_light_num] = UpdateLightSourcesEvent::UpdatedLightSource {
                     .eid = light_id,
-                    .intensity = torchlight->getIntensity()
+                    .intensity = torchlight->getIntensity(),
+                    .is_cut = torchlight->is_cut
                 };
             } 
         } else {
             event_data.lightSources[curr_light_num] = UpdateLightSourcesEvent::UpdatedLightSource {
                 .eid = light_id,
-                .intensity = 1.0f
+                .intensity = 1.0f,
+                .is_cut = false
             };
         }
         curr_light_num++;
@@ -447,8 +457,8 @@ void Server::_doAccept() {
         [this](boost::system::error_code ec) {
             if (!ec) {
                 this->socket.set_option(boost::asio::ip::tcp::no_delay(true));
-                boost::asio::socket_base::send_buffer_size option(10000000); // 10x buffer size
-                this->socket.set_option(option);
+                // boost::asio::socket_base::send_buffer_size option(10000000); // 10x buffer size
+                // this->socket.set_option(option);
                 auto addr = this->socket.remote_endpoint().address();
                 auto new_session = this->_handleNewSession(addr);
 

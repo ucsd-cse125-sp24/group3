@@ -22,6 +22,8 @@ public:
 
 	Animation(const std::string& animationPath, Model* model);
 
+	Animation(const std::string& animationDirPath, const std::string& animName, int frames);
+
 	~Animation() {}
 
 	Bone* findBone(const std::string& name);
@@ -30,6 +32,8 @@ public:
 	inline float getDuration() { return m_duration;}
 	inline const AssimpNodeData& getRootNode() { return m_rootNode; }
 	inline const std::map<std::string,BoneInfo>& getBoneIDMap() { return m_boneInfoMap; }
+	inline Model* getFrame(int frame) { return model_keyframes[(frame % model_keyframes.size())]; }
+	inline int getKeyframeSize() { return model_keyframes.size(); }
 
 private:
 	void readMissingBones(const aiAnimation* animation, Model& model);
@@ -41,4 +45,5 @@ private:
 	std::vector<Bone> m_bones;
 	AssimpNodeData m_rootNode;
 	std::map<std::string, BoneInfo> m_boneInfoMap;
+	std::vector<Model*> model_keyframes;
 };

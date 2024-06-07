@@ -11,6 +11,9 @@ AnimationManager::AnimationManager() {
 
     for (int i = 0; i < 100; i++)
         m_finalBoneMatrices.push_back(glm::mat4(1.0f));
+
+    currFrame = 0;
+    lastFrameTime = 0.0;
 }
 
 void AnimationManager::updateAnimation(float dt) {
@@ -24,6 +27,20 @@ void AnimationManager::updateAnimation(float dt) {
         calculateBoneTransform(&m_currentAnimation->getRootNode(), glm::mat4(1.0f));
     }
 }
+
+Model* AnimationManager::updateFrameAnimation(float dt) {
+    if (entityAnimFrameMap[currEntity].second) {
+        m_currentAnimation = entityAnimFrameMap[currEntity].second;
+        m_currentTime = entityAnimFrameMap[currEntity].first;
+        m_currentTime += dt;
+        int currFrame = static_cast<int> (m_currentTime / MAX_FRAME_TIME);
+        entityAnimFrameMap[currEntity].first = m_currentTime;
+        return m_currentAnimation->getFrame(currFrame);
+    } else {
+        return nullptr;
+    }
+}
+
 
 void AnimationManager::playAnimation(Animation* pAnimation) {
     m_currentAnimation = pAnimation;
@@ -65,6 +82,16 @@ void AnimationManager::calculateBoneTransform(const AssimpNodeData* node, glm::m
 void AnimationManager::setAnimation(EntityID id, ModelType modelType, AnimState animState) {
     if (entityAnimMap.find(id) == entityAnimMap.end() || entityAnimMap[id].second != objAnimMap[modelType][animState]) {
         entityAnimMap[id] = std::make_pair(0.0f, objAnimMap[modelType][animState]);
+    }
+    currEntity = id;
+}
+
+void AnimationManager::setFrameAnimation(EntityID id, ModelType modelType, AnimState animState) {
+    if (entityAnimFrameMap.find(id) == entityAnimFrameMap.end() || entityAnimFrameMap[id].second != objAnimMap[modelType][animState]) {
+        static std::random_device dev;
+        static std::mt19937 rng(dev());
+        static std::uniform_int_distribution<std::mt19937::result_type> dist(0,51);
+        entityAnimFrameMap[id] = std::make_pair(dist(rng) * MAX_FRAME_TIME, objAnimMap[modelType][animState]);
     }
     currEntity = id;
 }

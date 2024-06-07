@@ -261,6 +261,7 @@ private:
 
     std::unique_ptr<Model> bear_model;
     std::unique_ptr<Model> torchlight_model;
+    std::unique_ptr<Model> torchpost_model;
     std::unique_ptr<Model> wall_model;
     std::unique_ptr<Model> pillar_model;
     std::unique_ptr<Model> sungod_model;
@@ -276,6 +277,9 @@ private:
     std::unique_ptr<Model> lava_cross_model;
     std::unique_ptr<Model> lava_vertical_model;
     std::unique_ptr<Model> lava_horizontal_model;
+    std::unique_ptr<Model> lightning_model;
+    std::unique_ptr<Model> chest_model;
+    std::unique_ptr<Model> teleport_model;
 
     GLFWwindow *window;
 
@@ -354,6 +358,7 @@ private:
     float mouse_ypos = 0.0f;
 
     double lastTime = 0.0;
+    double lastFrameTime = 0.0;
 
     GameConfig config;
     tcp::resolver resolver;
