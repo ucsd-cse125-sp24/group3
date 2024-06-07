@@ -226,7 +226,7 @@ bool Client::init() {
     auto sungod_model_path = entity_models_dir / "sungod.obj";
     this->sungod_model = std::make_unique<Model>(sungod_model_path.string(), true);
 
-    auto python_model_path = entity_models_dir / "python.obj";
+    auto python_model_path = entity_models_dir / "flying-python.obj";
     this->python_model = std::make_unique<Model>(python_model_path.string(), true);
 
     auto item_model_path = item_models_dir / "item.obj";
@@ -1001,6 +1001,8 @@ void Client::geometryPass() {
             case ObjectType::Python: {
                 this->python_model->setDimensions(sharedObject->physics.dimensions);
                 this->python_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->python_model->rotateAbsolute(sharedObject->physics.facing);
+
                 this->python_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
