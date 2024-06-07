@@ -932,7 +932,7 @@ void ServerGameState::updateMovement() {
 			currentPosition = object->physics.shared.corner;
 		}
 
-        const float spike_low_y = 3.0f;
+        const float spike_low_y = 2.9f;
         if (object->type == ObjectType::SpikeTrap && object->physics.shared.corner.y < spike_low_y) {
             object->physics.shared.corner.y = spike_low_y;
             object->physics.feels_gravity = false;
@@ -1078,6 +1078,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 					otherObj->type == ObjectType::Orb ||
 					otherObj->type == ObjectType::WeaponCollider ||
 					otherObj->type == ObjectType::Slime ||
+					otherObj->type == ObjectType::TeleporterTrap ||
 					otherObj->type == ObjectType::Torchlight) {
 					continue;
 				}
@@ -1717,7 +1718,7 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 		if (cell->type != CellType::Empty)
 			return nullptr;
 
-		const float HEIGHT_SHOWING = 0.5;
+		const float HEIGHT_SHOWING = 0.4;
 		glm::vec3 dimensions(
 			Grid::grid_cell_width,
 			MAZE_CEILING_HEIGHT,
@@ -1806,9 +1807,9 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 			return nullptr;
 
 		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
+			cell->x * Grid::grid_cell_width + 1,
 			0.0f,
-			cell->y * Grid::grid_cell_width
+			cell->y * Grid::grid_cell_width + 1
 		);
 
 		TeleporterTrap* teleporterTrap = new TeleporterTrap(corner);
@@ -2097,7 +2098,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				case CellType::SpikeTrap: {
-                    const float HEIGHT_SHOWING = 0.5;
+                    const float HEIGHT_SHOWING = 0.4;
 					glm::vec3 dimensions(
 						Grid::grid_cell_width,
 						MAZE_CEILING_HEIGHT,
@@ -2159,9 +2160,9 @@ void ServerGameState::loadMaze(const Grid& grid) {
 
 				case CellType::TeleporterTrap: {
 					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
+						cell->x * Grid::grid_cell_width + 1,
 						0.0f,
-						cell->y * Grid::grid_cell_width
+						cell->y * Grid::grid_cell_width + 1
 					);
 
 					this->objects.createObject(new TeleporterTrap(corner));

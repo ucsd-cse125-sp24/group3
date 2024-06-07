@@ -3,6 +3,7 @@
 #include "shared/utilities/rng.hpp"
 #include "server/game/objectmanager.hpp"
 #include "shared/audio/constants.hpp"
+#include "server/game/exit.hpp"
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -37,11 +38,31 @@ void TeleporterTrap::doCollision(Object* other, ServerGameState& state) {
     int r_row = 0;
     auto& grid = state.getGrid();
 
+    std::optional<glm::vec3> exit_pos;
+
+    auto exits = state.objects.getExits();
+    for (int i = 0; i < exits.size(); i++) {
+        auto exit = exits.get(i);
+        if (exit == nullptr) continue;
+
+        exit_pos = exit->physics.shared.getCenterPosition();
+        break;
+    }
+
+    int attempts = 0;
+    bool good = false;
+
     while (true) {
+        attempts++;
         r_col = randomInt(0, grid.getColumns() - 1);
         r_row = randomInt(0, grid.getRows() - 1);
 
+        if (attempts < 10 && exit_pos.has_value() && glm::distance(glm::vec2(Grid::getGridCellFromPosition(exit_pos.value())), glm::vec2(r_col, r_row)) < 20.0f) {
+            continue;
+        }
+
         if (grid.getCell(r_col, r_row)->type == CellType::Empty) {
+            good = true;
             break;
         }
     }

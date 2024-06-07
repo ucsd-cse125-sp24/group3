@@ -2,10 +2,10 @@
   "game": {
     "maze": {
       "directory": "maps",
-      "procedural": false,
-      "maze_file": "test/itemRoom.maze"
+      "procedural": true,
+      "maze_file": "demo/candidate5"
     },
-    "disable_enemies": true
+    "disable_enemies": false
   },
   "network": {
     "server_ip": "localhost",
@@ -14,8 +14,8 @@
   "server": {
     "lobby_name": "Hope you're doing well!",
     "lobby_broadcast": true,
-    "max_players": 1,
-    "disable_dm": true,
+    "max_players": 4,
+    "disable_dm": false,
     "skip_intro": true
   },
   "client": {

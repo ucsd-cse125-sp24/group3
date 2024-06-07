@@ -1257,12 +1257,12 @@ void GUI::_sharedGameHUD() {
                     break;
                 }
                 case ModelType::Lightning: {
-                    itemString = "Lightning Bolt (10)";
+                    itemString = "Lightning Bolt (6)";
                     
                     break;
                 }
                 case ModelType::LightCut: {
-                    itemString = "Cut Lights (5)";
+                    itemString = "Cut Lights (3)";
 
                     break;
                 }
@@ -1418,11 +1418,11 @@ void GUI::_sharedGameHUD() {
                         break;
                     }
                     case ModelType::Lightning: {
-                        itemString = "Lightning Bolt (10)";
+                        itemString = "Lightning Bolt (6)";
 
                         break;
                     }case ModelType::LightCut: {
-                        itemString = "Cut Lights (5)";
+                        itemString = "Cut Lights (3)";
 
                         break;
                     }
