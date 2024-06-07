@@ -1079,7 +1079,8 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 					otherObj->type == ObjectType::WeaponCollider ||
 					otherObj->type == ObjectType::Slime ||
 					otherObj->type == ObjectType::TeleporterTrap ||
-					otherObj->type == ObjectType::Torchlight) {
+					otherObj->type == ObjectType::Torchlight ||
+					otherObj->type == ObjectType::Mirror) {
 					continue;
 				}
 
