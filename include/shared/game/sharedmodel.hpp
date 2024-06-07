@@ -5,7 +5,9 @@
  */
 enum class ModelType {
 	Cube,
-	Player,
+	PlayerFire,
+	PlayerLightning,
+	PlayerWater,
 	WarrenBear,
 	HealthPotion,
 	InvisibilityPotion,
@@ -19,7 +21,10 @@ enum class ModelType {
 	Orb,
 	FloorSpikeHorizontal,
 	FloorSpikeVertical,
-	FloorSpikeFull,
+    FloorSpikeFull,
+	LavaCross,
+    LavaHorizontal,
+    LavaVertical,
 	ArrowTrapUp,
 	ArrowTrapDown,
 	ArrowTrapLeft,
@@ -38,5 +43,6 @@ enum class ModelType {
 	FireballTrapDown,
 	SunGod,
 	Mirror,
-	LightCut
+	LightCut,
+	TorchPost
 };

@@ -64,6 +64,7 @@ struct GameConfig {
         bool draw_bboxes;
         bool fps_counter;
         bool presentation;
+        int render;
     } client;
 
     /**

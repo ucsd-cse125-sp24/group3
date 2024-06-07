@@ -23,7 +23,9 @@ IntroCutscene::IntroCutscene():
     // hard code direction to face right based on the intro cutscene maze orientation
     Player* player = new Player(this->state.getGrid().getRandomSpawnPoint(), directionToFacing(Direction::RIGHT));
     Player* player_left = new Player(this->state.getGrid().getRandomSpawnPoint(), directionToFacing(Direction::RIGHT));
+    player_left->modelType = ModelType::PlayerLightning;
     Player* player_right = new Player(this->state.getGrid().getRandomSpawnPoint(), directionToFacing(Direction::RIGHT));
+    player_right->modelType = ModelType::PlayerWater;
 
     this->state.objects.createObject(player);
     this->state.objects.createObject(player_left);
@@ -140,6 +142,16 @@ bool IntroCutscene::update() {
     }
 
     glm::vec3 lightning_pos1 = player->physics.shared.corner + glm::normalize(player->physics.shared.facing) * 10.0f;
+    PointLightProperties light_properties{
+        .flickering = false,
+        .min_intensity = 1.0f,
+        .max_intensity = 1.0f,
+        .ambient_color = glm::vec3(1.0f, 0.94f, 0.0f),
+        .diffuse_color = glm::vec3(1.0f, 0.94f, 0.0f),
+        .specular_color = glm::vec3(0.1f, 0.1f, 0.1f),
+        .attenuation_linear = 0.045f,
+        .attenuation_quadratic = 0.0075f
+    };
 
     if (ticks == LIGHTNING_1_TICK) {
         this->state.soundTable().addNewSoundSource(SoundSource(
@@ -149,17 +161,17 @@ bool IntroCutscene::update() {
             FAR_DIST,
             FAR_ATTEN
         ));
-        this->state.objects.createObject(new Lightning(lightning_pos1, player->physics.shared.facing));
+        this->state.objects.createObject(new Lightning(lightning_pos1, player->physics.shared.facing, light_properties));
     }
 
     if (ticks == LIGHTNING_2_TICK) {
         glm::vec3 lightning_pos2 = lightning_pos1 + glm::vec3(3.0f, 0.0f, -3.0f);
-        this->state.objects.createObject(new Lightning(lightning_pos2, player->physics.shared.facing));
+        this->state.objects.createObject(new Lightning(lightning_pos2, player->physics.shared.facing, light_properties));
     }
 
     if (ticks == LIGHTNING_3_TICK) {
         glm::vec3 lightning_pos3 = player->physics.shared.getCenterPosition() + directionToFacing(Direction::RIGHT) * Grid::grid_cell_width * 1.5f;
-        this->state.objects.createObject(new Lightning(lightning_pos3, player->physics.shared.facing));
+        this->state.objects.createObject(new Lightning(lightning_pos3, player->physics.shared.facing, light_properties));
     }
 
     if (ticks == START_PLAYER_THEME_TICK) {

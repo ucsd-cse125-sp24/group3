@@ -22,6 +22,7 @@ set(FILES
     game/arrowtrap.cpp
     game/projectile.cpp
     game/floorspike.cpp
+    game/lava.cpp
     game/fakewall.cpp
     game/dungeonmaster.cpp
     game/potion.cpp

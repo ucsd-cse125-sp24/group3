@@ -61,7 +61,8 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
                 .fullscreen = json.at("client").at("fullscreen"),
                 .draw_bboxes = json.at("client").at("draw_bboxes"),
                 .fps_counter = json.at("client").at("fps_counter"),
-                .presentation = json.at("client").at("presentation")
+                .presentation = json.at("client").at("presentation"),
+                .render = json.at("client").at("render")
             }
         };
     } catch (nlohmann::json::exception& ex) {
