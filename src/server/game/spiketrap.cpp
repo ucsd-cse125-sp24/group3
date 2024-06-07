@@ -14,7 +14,7 @@ const std::chrono::seconds SpikeTrap::TIME_UNTIL_RESET = 10s;
 SpikeTrap::SpikeTrap(glm::vec3 corner, glm::vec3 dimensions):
     Trap(ObjectType::SpikeTrap, true, corner, Collider::Box, ModelType::Cube, dimensions) 
 {
-    this->dropped_time = std::chrono::system_clock::now() - TIME_UNTIL_RESET;
+    this->dropped_time = std::chrono::system_clock::now() - 100000s;
     this->physics.feels_gravity = false;
 }
 
@@ -86,8 +86,11 @@ void SpikeTrap::doCollision(Object* other, ServerGameState& state) {
     auto creature = dynamic_cast<Creature*>(other);
     if (creature == nullptr) return; // not a creature, so don't really care
 
+    std::cout << this->physics.velocity.y << "\n";
+    std::cout << this->physics.shared.corner.y << "\n";
     // if it is falling
     if (this->physics.velocity.y < 0 && this->physics.shared.corner.y != 0) {
+        std::cout << "in docollision" << "\n";
         creature->stats.health.decrease(DAMAGE);
     }
 }
