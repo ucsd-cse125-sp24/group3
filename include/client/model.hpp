@@ -31,6 +31,8 @@ struct Vertex {
     glm::vec2 textureCoords;
     int m_boneIDs[MAX_BONE_INFLUENCE]; /* Bone indices which influence the vertex */
     float m_weights[MAX_BONE_INFLUENCE]; /* Weights for each bone */
+    glm::vec3 tangent;
+    glm::vec3 bitangent;
 };
 
 class Texture {
@@ -115,6 +117,7 @@ class Mesh : public Renderable {
 
     //  render data opengl needs
     GLuint VAO, VBO, EBO;
+    void setupNormalMaps();
 };
 
 
