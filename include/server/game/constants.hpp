@@ -74,21 +74,7 @@
 /*	Game	*/
 #define	GRAVITY					0.03f
 #define	PLAYER_SPEED 			1.65f
-#define JUMP_SPEED				0.55f
-
-/* Default model sizes */
-#define BEAR_DIMENSIONS         glm::vec3(14.163582, 17.914591, 10.655818)
-
-#define FIRE_PLAYER_DIMENSIONS      glm::vec3(4.0f, 10.069769, 4.0f)
-#define LIGHTNING_PLAYER_DIMENSIONS glm::vec3(4.0f, 10.069769, 4.0f)
-#define WATER_PLAYER_DIMENSIONS     glm::vec3(4.0f, 10.069769, 4.0f)
-
-#define PLAYER_BBOX_SCALE           0.35f
-#define PLAYER_MODEL_SCALE          0.004f
-
-
-
-#define SUNGOD_DIMENSIONS       glm::vec3(3.281404, 9.543382, 7.974873) 
+#define JUMP_SPEED				0.59f
 
 /* DM Constants */
 #define MAX_TRAPS 10
@@ -99,4 +85,5 @@
 #define ITEM_SPAWN_BOUND 3
 #define LIGHTNING_LIGHT_CUT_TICKS 100
 #define LIGHT_CUT_TICKS 200
-#define LIGHT_CUT_RANGE 25.0
+#define LIGHT_CUT_RANGE 60.0
+#define LIGHT_CUT_RANGE_LIGHTNING 20.0

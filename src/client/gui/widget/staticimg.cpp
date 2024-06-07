@@ -35,6 +35,11 @@ StaticImg::~StaticImg() {
     glDeleteBuffers(1, &EBO);
 }
 
+void StaticImg::changeImage(gui::img::Img img) {
+    this->img = img;
+    this->texture_id = img.texture_id;
+}
+
 void StaticImg::render() {
     // ⚠ SUS SHIT ⚠
     float width_percent = (2.0f / (WINDOW_WIDTH)) * (this->width);

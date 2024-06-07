@@ -3,19 +3,21 @@
 #include "glm/fwd.hpp"
 #include "server/game/collider.hpp"
 #include "server/game/object.hpp"
+#include "shared/game/point_light.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/rng.hpp"
 #include "server/game/grid.hpp"
 
 SharedObject Torchlight::toShared() {
     auto so = Object::toShared();
-    so.pointLightInfo = SharedPointLightInfo {
+    so.pointLightInfo = SharedPointLightInfo{
         .intensity = this->curr_intensity,
         .ambient_color = this->properties.ambient_color,
         .diffuse_color = this->properties.diffuse_color,
         .specular_color = this->properties.specular_color,
         .attenuation_linear = this->properties.attenuation_linear,
         .attenuation_quadratic = this->properties.attenuation_quadratic,
+        .is_cut = this->is_cut
     };
     return so;
 }
@@ -60,7 +62,7 @@ Torchlight::Torchlight(
         const float blue_intensity = (MIN_ORB_DIST - dist_orb) / MIN_ORB_DIST;
 
         // close to orb, so shade blue
-        this->properties = TorchlightProperties {
+        this->properties = PointLightProperties {
             .flickering = true,
             .min_intensity = BLUE_MIN_INTENSITY,
             .max_intensity = BLUE_MAX_INTENSITY,
@@ -74,7 +76,7 @@ Torchlight::Torchlight(
         const float white_intensity = (MIN_EXIT_DIST - dist_exit) / MIN_EXIT_DIST;
         // close to exit, so shade white
         // TEMP: still amber
-        this->properties = TorchlightProperties {
+        this->properties = PointLightProperties {
             .flickering = true,
             .min_intensity = WHITE_MIN_INTENSITY,
             .max_intensity = WHITE_MAX_INTENSITY,
@@ -86,7 +88,7 @@ Torchlight::Torchlight(
         };
     } else {
         // shade normal amber
-        this->properties = TorchlightProperties {
+        this->properties = PointLightProperties {
             .flickering = true,
             .min_intensity = AMBER_MIN_INTENSITY,
             .max_intensity = AMBER_MAX_INTENSITY,
@@ -103,7 +105,7 @@ Torchlight::Torchlight(
 
 Torchlight::Torchlight(
     glm::vec3 corner,
-    const TorchlightProperties& properties):
+    const PointLightProperties& properties):
 	Object(ObjectType::Torchlight, Physics(false, 
 		Collider::Box, corner, glm::vec3(0.0f), glm::vec3(1.0f)),
 		ModelType::Torchlight),
@@ -113,6 +115,8 @@ Torchlight::Torchlight(
 }
 
 void Torchlight::init() {
+    this->is_cut = false;
+
     this->inc_intensity = true;
     // if not flickering, set intensity to a static 
     // value
@@ -128,9 +132,9 @@ void Torchlight::init() {
 
 Torchlight::~Torchlight() {}
 
-void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightning_light_cut_pos, std::optional<glm::vec3> action_light_cut_pos) {
+bool Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightning_light_cut_pos, std::optional<glm::vec3> action_light_cut_pos) {
     if(!this->properties.flickering) {
-        return;
+        return false;
     }
 
     // cut this light if within position of light cut
@@ -138,9 +142,9 @@ void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightni
         glm::vec3 pos = lightning_light_cut_pos.value();
 
         // if within threshold, get out
-        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= LIGHT_CUT_RANGE) {
-            this->curr_intensity = 0.0f;
-            return;
+        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= LIGHT_CUT_RANGE_LIGHTNING) {
+            this->curr_intensity = 0.2f;
+            return false;
         }
     }
 
@@ -148,11 +152,14 @@ void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightni
         glm::vec3 pos = action_light_cut_pos.value();
 
         // if within threshold, black out (slightly expand the light cut action range)
-        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= (1.5 * LIGHT_CUT_RANGE)) {
-            this->curr_intensity = 0.0f;
-            return;
+        if (glm::distance(pos, this->physics.shared.getCenterPosition()) <= (LIGHT_CUT_RANGE)) {
+            this->curr_intensity = 0.2f;
+            this->is_cut = true;
+            return true;
         }
     }
+
+    this->is_cut = false;
 
     // either increment or decrement intensity
     if (inc_intensity) {
@@ -181,8 +188,14 @@ void Torchlight::doTick(ServerGameState& state, std::optional<glm::vec3> lightni
     } else if (this->curr_intensity < this->properties.min_intensity) {
         this->curr_intensity = this->properties.min_intensity;
     }
+    return false;
 }
 
 float Torchlight::getIntensity() const {
     return this->curr_intensity;
+}
+
+
+void Torchlight::overrideIntensity(float val) {
+    this->curr_intensity = val;
 }

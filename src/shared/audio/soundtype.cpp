@@ -13,7 +13,7 @@ std::string getAudioPath(ClientSFX sound) {
             return (dir / "victory_players.flac").string();
         case ClientSFX::VictoryThemeDM:
             //  TODO: Replace with DM Victory theme!
-            return (dir / "victory_players.flac").string();
+            return (dir / "victory_dm.flac").string();
         default:
             std::cerr << "FATAL: no known path for ClientSFX " << static_cast<int>(sound) << std::endl;
             std::exit(1);
@@ -74,7 +74,7 @@ std::string getAudioPath(ServerSFX sfx) {
         case ServerSFX::IntroGateOpen:
             return (dir / "cutscene_gate_open.wav").string();
         case ServerSFX::ZeusStartTheme:
-            return (dir / "zeus_start_theme.mp3").string();
+            return (dir / "start_game_dm.flac").string();
         case ServerSFX::Wind:
             return (dir / "wind.wav").string();
         case ServerSFX::Teleport:
@@ -104,16 +104,16 @@ std::string getAudioPath(ClientMusic music) {
     switch (music) {
         case ClientMusic::MenuTheme:
             //  TODO: Replace with menu theme!
-            return (dir / "menu.mp3").string();
+            return (dir / "menu.flac").string();
         case ClientMusic::MazeExplorationPlayersTheme:
             return (dir / "maze_exploration_players.flac").string();
         case ClientMusic::MazeExplorationDMTheme:
             return (dir / "maze_exploration_dm.flac").string();
         case ClientMusic::RelayRacePlayersTheme:
-            return (dir / "relay_race_players.mp3").string();
+            return (dir / "relay_race_players.flac").string();
         case ClientMusic::RelayRaceDMTheme:
             //  TODO: Replace with DM Relay Race theme!
-            return (dir / "maze_exploration_dm.flac").string();
+            return (dir / "relay_race_dm.flac").string();
         default:
             std::cerr << "FATAL: no known path for ClientMusic " << static_cast<int>(music) << std::endl;
             std::exit(1);

@@ -10,12 +10,26 @@
 
 using namespace std::chrono_literals;
 
-ArrowTrap::ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir):
-    Trap(ObjectType::ArrowTrap, false, corner, Collider::Box, ModelType::Cube, dimensions) 
+ArrowTrap::ArrowTrap(glm::vec3 corner, Direction dir):
+    Trap(ObjectType::ArrowTrap, false, corner, Collider::None, ModelType::ArrowTrap) 
 {
     this->dir = dir;
     this->shoot_time = std::chrono::system_clock::now();
     this->physics.shared.facing = directionToFacing(dir);
+    // switch (dir) {
+    //     case Direction::LEFT:
+    //         this->physics.shared.facing = glm::vec3(0.0f, 0.0f, 1.0f);
+    //         break;
+    //     case Direction::RIGHT:
+    //         this->physics.shared.facing = glm::vec3(0.0f, 0.0f, -1.0f);
+    //         break;
+    //     case Direction::UP:
+    //         this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
+    //         break;
+    //     case Direction::DOWN:
+    //         this->physics.shared.facing = glm::vec3(-1.0f, 0.0f, 0.0f);
+    //         break;
+    // }
 }
 
 bool ArrowTrap::shouldTrigger(ServerGameState& state) {
@@ -33,6 +47,9 @@ bool ArrowTrap::shouldTrigger(ServerGameState& state) {
     glm::ivec2 curr_grid_pos = state.getGrid().getGridCellFromPosition(this->physics.shared.getCenterPosition());
     int dist = 0;
     while (dist < ArrowTrap::SIGHTLINE_M) { // max sightline
+        if (!state.getGrid().getCell(curr_grid_pos.x, curr_grid_pos.y)) {
+            break;
+        }
         //if (state.getGrid().getCell(curr_grid_pos.x, curr_grid_pos.y)->type == CellType::Wall) {
         //    return false; // didnt find a player before a wall
         //}
@@ -57,20 +74,20 @@ void ArrowTrap::trigger(ServerGameState& state) {
 
     glm::vec3 arrow_origin(
         this->physics.shared.getCenterPosition().x,
-        2.0f,
+        3.0f,
         this->physics.shared.getCenterPosition().z   
     );
 
     // TODO scale with grid size?
     switch (this->dir) {
-        case Direction::UP:
-            arrow_origin.z -= 3.0f;
-            break;
-        case Direction::DOWN:
-            arrow_origin.z += 2.0f;
-            break;
+        // case Direction::UP:
+        //     arrow_origin.z -= 3.0f;
+        //     break;
+        // case Direction::DOWN:
+        //     arrow_origin.z += 2.0f;
+        //     break;
         case Direction::LEFT:
-            arrow_origin.x -= 3.0f;
+            // arrow_origin.z -= Grid::grid_cell_width / 2.0f;
             break;
         case Direction::RIGHT:
             arrow_origin.x += 2.0f;

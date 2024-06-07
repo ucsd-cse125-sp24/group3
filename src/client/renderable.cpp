@@ -1,6 +1,7 @@
 #include "client/renderable.hpp"
 #include "glm/fwd.hpp"
 
+#include <cmath>
 #include <glm/glm.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -42,6 +43,10 @@ void Renderable::scaleAbsolute(const glm::vec3& scale) {
 void Renderable::rotateAbsolute(const glm::vec3& dir, bool is_player, const glm::vec3& axis) {
     float r = is_player ? glm::atan(dir.x, dir.z) : glm::atan(-dir.z, dir.x);
     this->rotation = glm::angleAxis(r, axis);
+}
+
+void Renderable::rotateAbsolute(const float& angle, const glm::vec3& axis) {
+    this->rotation = glm::angleAxis(angle, axis);
 }
 
 void Renderable::rotateRelative(const glm::vec3& dir, const glm::vec3& axis) {

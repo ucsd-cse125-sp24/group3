@@ -25,6 +25,17 @@ public:
 
     LoadIntroCutsceneEvent toNetwork();
 
+    inline static const int START_TICK = 1;
+    inline static const int STOP_MOVING_TICK = START_TICK + 250;
+    inline static const int GATE_RAISE_TICK = STOP_MOVING_TICK + 30;
+    inline static const int GATE_STOP_RAISE_TICK = GATE_RAISE_TICK + 200;
+    inline static const int LIGHTNING_1_TICK = GATE_STOP_RAISE_TICK + 80;
+    inline static const int LIGHTNING_2_TICK = LIGHTNING_1_TICK + 50;
+    inline static const int LIGHTNING_3_TICK = LIGHTNING_2_TICK + 40;
+    inline static const int START_PLAYER_THEME_TICK = LIGHTNING_3_TICK + 110;
+    inline static const int EXIT_CUTSCENE_TICK = START_PLAYER_THEME_TICK + 240;
+
+    int ticks;
 
     // just making everything public bc lazy
     ServerGameState state;

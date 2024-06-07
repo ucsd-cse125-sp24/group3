@@ -25,8 +25,10 @@
 #include "glm/fwd.hpp"
 #include "server/game/object.hpp"
 #include "server/game/solidsurface.hpp"
+#include "shared/game/constants.hpp"
 #include "shared/game/dir_light.hpp"
 #include "shared/game/event.hpp"
+#include "shared/game/sharedmodel.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/network/constants.hpp"
 #include "shared/utilities/rng.hpp"
@@ -48,6 +50,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
+#define M_PI 3.14159265358979323846
 
 using namespace boost::asio::ip;
 using namespace std::chrono_literals;
@@ -211,6 +214,9 @@ bool Client::init() {
     auto torchlight_model_path = env_models_dir / "exit.obj";
     this->torchlight_model = std::make_unique<Model>(torchlight_model_path.string(), true);
 
+    auto torchpost_model_path = env_models_dir / "Torch" / "Torch.obj";
+    this->torchpost_model = std::make_unique<Model>(torchpost_model_path.string(), false);
+
     auto slime_model_path = entity_models_dir / "slime.obj";
     this->slime_model = std::make_unique<Model>(slime_model_path.string(), true);
 
@@ -220,22 +226,42 @@ bool Client::init() {
     auto sungod_model_path = entity_models_dir / "sungod.obj";
     this->sungod_model = std::make_unique<Model>(sungod_model_path.string(), true);
 
-    auto python_model_path = entity_models_dir / "python.obj";
+    auto python_model_path = entity_models_dir / "flying-python.obj";
     this->python_model = std::make_unique<Model>(python_model_path.string(), true);
 
     auto item_model_path = item_models_dir / "item.obj";
     this->item_model = std::make_unique<Model>(item_model_path.string(), true);
 
-    auto spike_trap_model_path = env_models_dir / "spike_trap.obj";
-    this->spike_trap_model = std::make_unique<Model>(spike_trap_model_path.string(), true);
+    auto spike_trap_model_path = env_models_dir / "Spike_trap" / "Trap.obj";
+    this->spike_trap_model = std::make_unique<Model>(spike_trap_model_path.string(), false);
 
-    auto orb_model_path = item_models_dir / "orb.obj";
-    this->orb_model = std::make_unique<Model>(orb_model_path.string(), true);
+    auto lava_cross_model_path = env_models_dir / "lava" / "lava_cross.obj";
+    this->lava_cross_model = std::make_unique<Model>(lava_cross_model_path.string(), false);
+
+    auto chest_model_path = item_models_dir / "Chest1" / "Chest1 1.obj";
+    this->chest_model = std::make_unique<Model>(chest_model_path.string(), false);
+
+    auto lava_row_model_path = env_models_dir / "lava" / "lava_row.obj";
+    this->lava_horizontal_model = std::make_unique<Model>(lava_row_model_path.string(), false);
+    // thank you openai!
+    this->lava_horizontal_model->rotateAbsolute(rotate90DegreesAroundYAxis(glm::vec3(1.0f, 0.0f, 0.0f)));
+    this->lava_vertical_model = std::make_unique<Model>(lava_row_model_path.string(), false);
+    
+    auto arrow_model_path = entity_models_dir / "Arrow_red" / "Arrow.obj";
+    this->arrow_model = std::make_unique<Model>(arrow_model_path.string(), false);
+
+    auto arrow_trap_model_path = env_models_dir / "Arrow trap" / "levelout_21.obj";
+    this->arrow_trap_model = std::make_unique<Model>(arrow_trap_model_path.string(), false);
+
+    auto orb_model_path = item_models_dir / "orb_final/Orb 1.obj";
+    this->orb_model = std::make_unique<Model>(orb_model_path.string(), false);
 
     auto exit_model_path = env_models_dir / "exit.obj";
     this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
 
-    auto player_model_path = graphics_assets_dir / "player_models/char_2_rename/char2.fbx";
+    auto lightning_model_path = env_models_dir / "Lightning1" / "Lightning1_translated.obj";
+    this->lightning_model = std::make_unique<Model>(lightning_model_path.string(), true);
+
     auto player_walk_path = graphics_assets_dir / "animations/walk.fbx";
     auto player_jump_path = graphics_assets_dir / "animations/jump.fbx";
     auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
@@ -244,24 +270,43 @@ bool Client::init() {
     auto player_use_potion_path = graphics_assets_dir / "animations/drink.fbx";
     auto torchlight_anim_path = graphics_assets_dir / "animations/fire-fix";
 
-    this->player_model = std::make_unique<Model>(player_model_path.string(), false);
-    Animation* player_walk = new Animation(player_walk_path.string(), this->player_model.get());
-    Animation* player_jump = new Animation(player_jump_path.string(), this->player_model.get());
-    Animation* player_idle = new Animation(player_idle_path.string(), this->player_model.get());
-    Animation* player_run = new Animation(player_run_path.string(), this->player_model.get());
-    Animation* player_atk = new Animation(player_atk_path.string(), this->player_model.get());
-    Animation* player_use_potion = new Animation(player_use_potion_path.string(), this->player_model.get());
+
+    auto fire_player_model_path = player_models_dir      / "char_1_rename/char1.fbx";
+    auto lightning_player_model_path = player_models_dir / "char_2_rename/char2.fbx";
+    auto water_player_model_path = player_models_dir     / "char_3/model_char_3.fbx";
+
+    this->fire_player_model = std::make_unique<Model>(fire_player_model_path.string(), false);
+    this->lightning_player_model = std::make_unique<Model>(lightning_player_model_path.string(), false);
+    this->water_player_model = std::make_unique<Model>(water_player_model_path.string(), false);
+
+    const int NUM_PLAYER_MODELS = 3;
+    std::array<std::pair<ModelType, Model*>, NUM_PLAYER_MODELS> player_models = {
+        // for some reason the first one only works if it is std::make_pair but the other two are fine with the 
+        // curly brace syntax... WTF, just making them all use std::make_pair so they line up
+        std::make_pair(ModelType::PlayerFire,      this->fire_player_model.get()), 
+        std::make_pair(ModelType::PlayerLightning, this->lightning_player_model.get()), 
+        std::make_pair(ModelType::PlayerWater,     this->water_player_model.get())
+    };
+
+    animManager = new AnimationManager();
     Animation* torchlight_animation = new Animation(torchlight_anim_path.string(), "fire-fix", 45);
+    animManager->addAnimation(torchlight_animation, ModelType::Torchlight, AnimState::IdleAnim);
 
-    animManager = new AnimationManager(player_idle);
+    for (int i = 0; i < NUM_PLAYER_MODELS; i++) {
+        Animation* player_walk = new Animation(player_walk_path.string(), player_models.at(i).second);
+        Animation* player_jump = new Animation(player_jump_path.string(), player_models.at(i).second);
+        Animation* player_idle = new Animation(player_idle_path.string(), player_models.at(i).second);
+        Animation* player_run = new Animation(player_run_path.string(), player_models.at(i).second);
+        Animation* player_atk = new Animation(player_atk_path.string(), player_models.at(i).second);
+        Animation* player_use_potion = new Animation(player_use_potion_path.string(), player_models.at(i).second);
 
-    animManager->addAnimation(player_walk, ObjectType::Player, AnimState::WalkAnim);
-    animManager->addAnimation(player_jump, ObjectType::Player, AnimState::JumpAnim);
-    animManager->addAnimation(player_idle, ObjectType::Player, AnimState::IdleAnim);
-    animManager->addAnimation(player_run, ObjectType::Player, AnimState::SprintAnim);
-    animManager->addAnimation(player_atk, ObjectType::Player, AnimState::AttackAnim);
-    animManager->addAnimation(player_use_potion, ObjectType::Player, AnimState::DrinkPotionAnim);
-    animManager->addAnimation(torchlight_animation, ObjectType::Torchlight, AnimState::IdleAnim);
+        animManager->addAnimation(player_walk, player_models.at(i).first, AnimState::WalkAnim);
+        animManager->addAnimation(player_jump, player_models.at(i).first, AnimState::JumpAnim);
+        animManager->addAnimation(player_idle, player_models.at(i).first, AnimState::IdleAnim);
+        animManager->addAnimation(player_run, player_models.at(i).first, AnimState::SprintAnim);
+        animManager->addAnimation(player_atk, player_models.at(i).first, AnimState::AttackAnim);
+        animManager->addAnimation(player_use_potion, player_models.at(i).first, AnimState::DrinkPotionAnim);
+    }
 
     this->configureGBuffer();
 
@@ -648,6 +693,8 @@ void Client::processServerInput(bool allow_defer) {
                 this->closest_light_sources[i] = this->gameState.objects[light_id];
                 // update intensity with incoming intensity 
                 this->closest_light_sources[i]->pointLightInfo->intensity = updated_light_source.lightSources[i]->intensity;
+                this->closest_light_sources[i]->pointLightInfo->is_cut = updated_light_source.lightSources[i]->is_cut;
+                this->gameState.objects.at(light_id)->pointLightInfo->is_cut = updated_light_source.lightSources[i]->is_cut;
             }
         } else if (event.type == EventType::LoadIntroCutscene) {
             const auto& data = boost::get<LoadIntroCutsceneEvent>(event.data);
@@ -788,13 +835,41 @@ void Client::geometryPass() {
         auto dist = glm::distance(sharedObject->physics.corner, my_pos);
 
         if (!is_floor) {
-            if (!is_dm && !is_ceiling && dist > RENDER_DISTANCE) {
+            if (!is_dm && !is_ceiling &&
+                (sharedObject->type == ObjectType::FloorSpike ||
+                sharedObject->type == ObjectType::Lava ||
+                sharedObject->type == ObjectType::ArrowTrap ||
+                sharedObject->type == ObjectType::SpikeTrap ||
+                sharedObject->type == ObjectType::TeleporterTrap ||
+                sharedObject->type == ObjectType::Projectile ||
+                sharedObject->modelType == ModelType::Chest)
+                && dist > this->config.client.render / 2) {
+                continue;
+            }
+            else if (!is_dm && !is_ceiling && dist > this->config.client.render) {
                 continue;
             }
         }
         
+        if (is_dm && 
+            (sharedObject->type == ObjectType::FloorSpike || 
+             sharedObject->type == ObjectType::Lava || 
+             sharedObject->type == ObjectType::ArrowTrap ||
+             sharedObject->type == ObjectType::SpikeTrap || 
+             sharedObject->type == ObjectType::Projectile ||
+             sharedObject->type == ObjectType::Torchlight || // light post
+             sharedObject->modelType == ModelType::Chest)
+             && dist > this->config.client.render) {
+            continue; 
+        }
+
         switch (sharedObject->type) {
             case ObjectType::Player: {
+                // search all player inventories to see who has the orb and update it's position (while it's held by a player)
+                if (sharedObject->inventoryInfo->hasOrb) {
+                    player_has_orb_global_id = sharedObject->globalID;
+                }
+                
                 // don't render yourself
                 if (sharedObject->globalID == self_eid) {
                     //  TODO: Update the player eye level to an acceptable level
@@ -829,7 +904,7 @@ void Client::geometryPass() {
                     break; // don't render dead players
                 }
 
-                animManager->setAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
+                animManager->setAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
 
                 /* Update model animation */
                 animManager->updateAnimation(timeElapsed);
@@ -850,11 +925,28 @@ void Client::geometryPass() {
                     player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
                 }
                 player_dir.y = 0.0f;
-                this->player_model->rotateAbsolute(glm::normalize(player_dir), true);
-                this->player_model->translateAbsolute(player_pos);
-                // this->player_model->setDimensions(sharedObject->physics.dimensions);
-                this->player_model->scaleAbsolute(PLAYER_MODEL_SCALE);
-                this->player_model->draw(
+
+                Model* curr_player_model;
+                switch (sharedObject->modelType) {
+                    case ModelType::PlayerFire: 
+                        curr_player_model = this->fire_player_model.get();
+                        break;
+                    case ModelType::PlayerLightning:
+                        curr_player_model = this->lightning_player_model.get();
+                        break;
+                    case ModelType::PlayerWater:
+                        curr_player_model = this->water_player_model.get();
+                        break;
+                    default:
+                        std::cerr << "WARNING: player with non valid model type detected, defaulting to fire...";
+                        curr_player_model = this->fire_player_model.get();
+                        break;
+                }
+
+                curr_player_model->rotateAbsolute(glm::normalize(player_dir), true);
+                curr_player_model->translateAbsolute(player_pos);
+                curr_player_model->scaleAbsolute(PLAYER_MODEL_SCALE);
+                curr_player_model->draw(
                     this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
@@ -863,29 +955,29 @@ void Client::geometryPass() {
             }
             // CHANGE THIS
             case ObjectType::DungeonMaster: {
-                // don't render yourself
+                // shouldn't render DM at all?
+
                 if (sharedObject->globalID == self_eid) {
                     //  TODO: Update the player eye level to an acceptable level
                     glm::vec3 pos = sharedObject->physics.getCenterPosition();
                     pos.y += PLAYER_EYE_LEVEL;
                     cam->updatePos(pos);
-                    break;
                 }
 
-                auto player_pos = sharedObject->physics.corner;
-                auto player_dir = sharedObject->physics.facing;
+                // auto player_pos = sharedObject->physics.corner;
+                // auto player_dir = sharedObject->physics.facing;
 
-                // this->player_model->setDimensions(sharedObject->physics.dimensions);
-                this->player_model->translateAbsolute(player_pos);
-                if (player_dir == glm::vec3(0.0f)) {
-                    player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
-                }
-                player_dir.y = 0.0f;
-                this->player_model->rotateAbsolute(glm::normalize(player_dir), true);
-                this->player_model->draw(
-                    this->deferred_geometry_shader.get(),
-                    this->cam->getPos(),
-                    true);
+                // // this->player_model->setDimensions(sharedObject->physics.dimensions);
+                // this->player_model->translateAbsolute(player_pos);
+                // if (player_dir == glm::vec3(0.0f)) {
+                //     player_dir = glm::vec3(0.0f, 0.0f, 1.0f);
+                // }
+                // player_dir.y = 0.0f;
+                // this->player_model->rotateAbsolute(glm::normalize(player_dir), true);
+                // this->player_model->draw(
+                //     this->deferred_geometry_shader.get(),
+                //     this->cam->getPos(),
+                //     true);
                 break;
             }
             case ObjectType::Slime: {
@@ -909,6 +1001,8 @@ void Client::geometryPass() {
             case ObjectType::Python: {
                 this->python_model->setDimensions(sharedObject->physics.dimensions);
                 this->python_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->python_model->rotateAbsolute(sharedObject->physics.facing);
+
                 this->python_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
@@ -968,11 +1062,13 @@ void Client::geometryPass() {
                     break;
                 }
 
+                this->spike_trap_model->rotateAbsolute(M_PI, glm::vec3(0.0f, 0.0f, 1.0f));
                 this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
                 this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
+                this->spike_trap_model->rotateAbsolute(0.0f, glm::vec3(0.0f, 0.0f, 1.0f));
                 break;
             }
             case ObjectType::FireballTrap: {
@@ -982,7 +1078,6 @@ void Client::geometryPass() {
                 }
 
                 this->sungod_model->setDimensions(sharedObject->physics.dimensions);
-                this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->sungod_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->sungod_model->rotateAbsolute(sharedObject->physics.facing);
                 this->sungod_model->draw(this->deferred_geometry_shader.get(),
@@ -996,19 +1091,32 @@ void Client::geometryPass() {
                     break;
                 }
 
-                this->python_model->setDimensions(sharedObject->physics.dimensions);
-                this->python_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->python_model->draw(this->deferred_geometry_shader.get(),
+                this->arrow_trap_model->rotateAbsolute(sharedObject->physics.facing, true);
+                this->arrow_trap_model->setDimensions(sharedObject->physics.dimensions);
+                this->arrow_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->arrow_trap_model->draw(this->deferred_geometry_shader.get(),
                     this->cam->getPos(),
                     true);
                 break;
             }
-            case ObjectType::Projectile: {  
-                this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
-                this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getPos(),
-                    true);
+            case ObjectType::Projectile: {
+                switch (sharedObject->modelType) {
+                    case ModelType::Arrow: {
+                        auto dim = ARROW_DIMENSIONS * 0.005f;
+                        this->arrow_model->setDimensions(dim);
+                        this->arrow_model->rotateAbsolute(sharedObject->physics.facing);
+                        this->arrow_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        this->arrow_model->draw(this->deferred_geometry_shader.get(),
+                            this->cam->getPos(), true);
+                        break;
+                   }
+                    default:
+                        this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
+                        this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                        this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
+                            this->cam->getPos(), true);
+                        break;
+                }
                 break;
             }
             case ObjectType::FloorSpike: {
@@ -1020,8 +1128,33 @@ void Client::geometryPass() {
                 this->spike_trap_model->setDimensions(sharedObject->physics.dimensions);
                 this->spike_trap_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->spike_trap_model->draw(this->deferred_geometry_shader.get(),
-                    this->cam->getPos(),
-                    true);
+                    this->cam->getPos(), true);
+                break;
+            }
+            case ObjectType::Lava: {
+                Model* model;
+                switch (sharedObject->modelType) {
+                    case ModelType::LavaCross: {
+                        model = this->lava_cross_model.get();
+                        break;
+                    }
+                    case ModelType::LavaVertical: {
+                        model = this->lava_vertical_model.get();
+                        break;
+                    }
+                    case ModelType::LavaHorizontal: {
+                        model = this->lava_horizontal_model.get();
+                        break;
+                    }
+                    default: {
+                        model = this->lava_cross_model.get();
+                        break;
+                    }
+                }
+                model->setDimensions(sharedObject->physics.dimensions);
+                model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                model->draw(this->deferred_geometry_shader.get(),
+                    this->cam->getPos(), true);
                 break;
             }
             case ObjectType::Orb: {
@@ -1036,14 +1169,7 @@ void Client::geometryPass() {
             }
             case ObjectType::Potion: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    Model* model = this->item_model.get();
-                    if (sharedObject->modelType == ModelType::HealthPotion) {
-                        model = this->item_model.get();
-                    } else if (sharedObject->modelType == ModelType::NauseaPotion || sharedObject->modelType == ModelType::InvincibilityPotion) {
-                        model = this->item_model.get();
-                    } else if (sharedObject->modelType == ModelType::InvisibilityPotion) {
-                        model = this->item_model.get();
-                    }
+                    Model* model = this->chest_model.get();
 
                     model->setDimensions(sharedObject->physics.dimensions);
                     model->translateAbsolute(sharedObject->physics.getCenterPosition());
@@ -1055,20 +1181,9 @@ void Client::geometryPass() {
             }
             case ObjectType::Spell: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    glm::vec3 color;
-                    if (sharedObject->modelType == ModelType::FireSpell) {
-                        color = glm::vec3(0.9f, 0.1f, 0.0f);
-                    }
-                    else if (sharedObject->modelType == ModelType::HealSpell) {
-                        color = glm::vec3(1.0f, 1.0f, 0.0f);
-                    }
-                    else {
-                        color = glm::vec3(0.8f, 0.7f, 0.6f);
-                    }
-
-                    this->item_model->setDimensions(sharedObject->physics.dimensions);
-                    this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    this->item_model->draw(this->deferred_geometry_shader.get(),
+                    this->chest_model->setDimensions(sharedObject->physics.dimensions);
+                    this->chest_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    this->chest_model->draw(this->deferred_geometry_shader.get(),
                         this->cam->getPos(),
                         true);
                 }
@@ -1079,7 +1194,6 @@ void Client::geometryPass() {
                 if (!is_dm && sharedObject->trapInfo->dm_hover) {
                     break;
                 }
-
                 this->orb_model->setDimensions( sharedObject->physics.dimensions);
                 this->orb_model->translateAbsolute(sharedObject->physics.getCenterPosition());
                 this->orb_model->draw(this->deferred_geometry_shader.get(),
@@ -1097,9 +1211,9 @@ void Client::geometryPass() {
             }
             case ObjectType::Weapon: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    this->item_model->setDimensions(sharedObject->physics.dimensions);
-                    this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    this->item_model->draw(this->deferred_geometry_shader.get(),
+                    this->chest_model->setDimensions(sharedObject->physics.dimensions);
+                    this->chest_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    this->chest_model->draw(this->deferred_geometry_shader.get(),
                         this->cam->getPos(),
                         true);
                 }
@@ -1108,19 +1222,21 @@ void Client::geometryPass() {
             case ObjectType::WeaponCollider: {
                 if (sharedObject->weaponInfo->lightning) {
                     if (!sharedObject->weaponInfo->attacked) {
-                        glm::vec3 preview_dims = sharedObject->physics.dimensions;
-                        preview_dims.y = 0.01f;
-                        this->item_model->setDimensions(preview_dims);
+                        this->exit_model->setDimensions(glm::vec3(3.0f, 0.01f, 3.0f));
                         glm::vec3 preview_pos = sharedObject->physics.getCenterPosition();
                         preview_pos.y = 0.0f;
-                        this->item_model->translateAbsolute(preview_pos);
-                        this->item_model->draw(this->deferred_geometry_shader.get(),
+                        this->exit_model->translateAbsolute(preview_pos);
+                        this->exit_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(),
                             true);
                     } else {
-                        this->item_model->setDimensions(sharedObject->physics.dimensions);
-                        this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                        this->item_model->draw(this->deferred_geometry_shader.get(),
+                        this->lightning_model->setDimensions(glm::vec3(1.314906, 2.238910 * 2.0f, 0.019732) * 10.0f);
+                        this->lightning_model->translateAbsolute(sharedObject->physics.corner);
+                        glm::vec3 facing_curr_player = rotate90DegreesAroundYAxis(glm::normalize(
+                            sharedObject->physics.getCenterPosition() - cam->getPos()
+                        ));
+                        this->lightning_model->rotateAbsolute(facing_curr_player);
+                        this->lightning_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(),
                             true);
                     }
@@ -1130,13 +1246,24 @@ void Client::geometryPass() {
             }
             case ObjectType::Mirror: {
                 if (!sharedObject->iteminfo->held && !sharedObject->iteminfo->used) {
-                    this->item_model->setDimensions(sharedObject->physics.dimensions);
-                    this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                    this->item_model->draw(this->deferred_geometry_shader.get(),
+                    this->chest_model->setDimensions(sharedObject->physics.dimensions);
+                    this->chest_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                    this->chest_model->draw(this->deferred_geometry_shader.get(),
                         this->cam->getPos(),
                         true);
                 }
                 break;
+            }
+            case ObjectType::Torchlight: {
+                // render the post in the geometry pass, and the light in the lighting pass
+                // i fucked with the y value to make it the right height but the x and z are from the
+                // model coords
+                this->torchpost_model->setDimensions(glm::vec3(0.860699, 5.2f, 0.827778));
+                this->torchpost_model->translateAbsolute(sharedObject->physics.getCenterPosition());
+                this->torchpost_model->translateRelative(glm::vec3(0, -0.2f, 0));
+                this->torchpost_model->draw(this->deferred_geometry_shader.get(),
+                    this->cam->getPos(),
+                    true);
             }
             default:
                 break;
@@ -1205,11 +1332,23 @@ void Client::lightingPass() {
     for (int i = 0; i < closest_lights->size(); i++) {
         boost::optional<SharedObject>& curr_source = closest_lights->at(i);
         if (!curr_source.has_value()) {
+            // put the light in africa so it isn't shown
+            // important for intro cutscene since other lights wont replace entries that are removed!
+            glm::vec3 FAR_AWAY(10000, 10000, 10000);
+            lighting_shader->setVec3("pointLights[" + std::to_string(i) + "].position", FAR_AWAY);
             continue;
         }
+
         SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
 
         glm::vec3 pos = curr_source->physics.getCenterPosition();
+        if (curr_source->type == ObjectType::Orb && curr_source->iteminfo->held) {
+            pos = this->gameState.objects.at(player_has_orb_global_id)->physics.getCenterPosition();
+        }
+
+        if (curr_source->modelType == ModelType::Lightning) {
+            pos.y = 0.0f; 
+        }
 
         lighting_shader->setFloat("pointLights[" + std::to_string(i) + "].intensity", properties.intensity);
 
@@ -1273,7 +1412,7 @@ void Client::lightingPass() {
         }
 
         auto dist = glm::distance(sharedObject->physics.corner, my_pos);
-        if (!is_dm && dist > RENDER_DISTANCE) {
+        if (!is_dm && dist > this->config.client.render) {
             continue;
         }
 
@@ -1285,7 +1424,8 @@ void Client::lightingPass() {
 
         glm::vec3 v(1.0f);
 
-        animManager->setFrameAnimation(sharedObject->globalID, sharedObject->type, sharedObject->animState);
+
+        animManager->setFrameAnimation(sharedObject->globalID, sharedObject->modelType, sharedObject->animState);
 
         /* Update model animation */
         // std::cout << currFrame << std::endl;
@@ -1300,14 +1440,25 @@ void Client::lightingPass() {
         Model* torch_frame_model = animManager->updateFrameAnimation(timeElapsed); 
         glm::vec3 dims = torch_frame_model->getDimensions();
         this->deferred_light_box_shader->use();
-        this->deferred_light_box_shader->setVec3("lightColor", properties.diffuse_color);
+
+        glm::vec3 flame_color;
+
+        if (sharedObject->pointLightInfo->is_cut) {
+            glm::vec3 black(0.1f, 0.1f, 0.1f);
+            flame_color = black;
+        } else {
+            flame_color = properties.diffuse_color;
+        }
+
+        this->deferred_light_box_shader->setVec3("lightColor", flame_color);
+
         // this->torchlight_model->setDimensions(2.0f * sharedObject->physics.dimensions);
         // this->torchlight_model->translateAbsolute(sharedObject->physics.getCenterPosition());
         // this->torchlight_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
         torch_frame_model->setDimensions(2.0f * sharedObject->physics.dimensions);
         torch_frame_model->translateAbsolute(sharedObject->physics.getCenterPosition());
         // torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true);
-        torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true, properties.diffuse_color);
+        torch_frame_model->draw(this->deferred_light_box_shader.get(), this->cam->getPos(), true, flame_color);
     }
 
 }

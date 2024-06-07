@@ -255,9 +255,13 @@ private:
     std::shared_ptr<Shader> deferred_light_box_shader;
 
     /* Character models and lighting objects, might need to move to different classes later */
-    std::unique_ptr<Model> player_model;
+    std::unique_ptr<Model> fire_player_model;
+    std::unique_ptr<Model> lightning_player_model;
+    std::unique_ptr<Model> water_player_model;
+
     std::unique_ptr<Model> bear_model;
     std::unique_ptr<Model> torchlight_model;
+    std::unique_ptr<Model> torchpost_model;
     std::unique_ptr<Model> wall_model;
     std::unique_ptr<Model> pillar_model;
     std::unique_ptr<Model> sungod_model;
@@ -268,6 +272,13 @@ private:
     std::unique_ptr<Model> orb_model;
     std::unique_ptr<Model> exit_model;
     std::unique_ptr<Model> floor_model;
+    std::unique_ptr<Model> arrow_model;
+    std::unique_ptr<Model> arrow_trap_model;
+    std::unique_ptr<Model> lava_cross_model;
+    std::unique_ptr<Model> lava_vertical_model;
+    std::unique_ptr<Model> lava_horizontal_model;
+    std::unique_ptr<Model> lightning_model;
+    std::unique_ptr<Model> chest_model;
 
     GLFWwindow *window;
 
@@ -368,5 +379,8 @@ private:
      * @brief boolean to see if a phase change from LOBBY to GAME already happened
      */
     bool phase_change;
+
+    // id of last known player which is holding the orb
+    EntityID player_has_orb_global_id;
 };
 

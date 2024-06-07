@@ -288,8 +288,9 @@ struct UpdateLightSourcesEvent {
     struct UpdatedLightSource {
         EntityID eid;
         float intensity;
+        bool is_cut;
         DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-            ar & eid & intensity;
+            ar & eid & intensity & is_cut;
         }
     };
     std::array<boost::optional<UpdatedLightSource>, MAX_POINT_LIGHTS> lightSources;
