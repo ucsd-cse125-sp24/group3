@@ -14,7 +14,13 @@ Animation::Animation(const std::string& animationPath, Model* model) {
     readMissingBones(animation, *model);
 }
 
-Animation::Animation(const std::string& animationDirPath, const std::string& animName, int frames) {
+Animation::Animation(const std::string& animationDirPath, const std::string& animName, int frames):
+    m_rootNode({})
+{
+    // not used by this constructor
+    m_duration = 0;
+    m_ticksPerSecond = 0;
+
     for (int i = 1; i <= frames; i++) {
         auto frame_model_path = animationDirPath + "/" + animName + std::to_string(i) + ".obj";
         auto frame_model = new Model(frame_model_path, true);
