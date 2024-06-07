@@ -50,7 +50,6 @@ void TeleporterTrap::doCollision(Object* other, ServerGameState& state) {
     }
 
     int attempts = 0;
-    bool good = false;
 
     while (true) {
         attempts++;
@@ -62,7 +61,6 @@ void TeleporterTrap::doCollision(Object* other, ServerGameState& state) {
         }
 
         if (grid.getCell(r_col, r_row)->type == CellType::Empty) {
-            good = true;
             break;
         }
     }
