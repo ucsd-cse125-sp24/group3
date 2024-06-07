@@ -256,6 +256,9 @@ bool Client::init() {
     auto exit_model_path = env_models_dir / "exit.obj";
     this->exit_model = std::make_unique<Model>(exit_model_path.string(), true);
 
+    auto lightning_model_path = env_models_dir / "Lightning1" / "Lightning1_translated.obj";
+    this->lightning_model = std::make_unique<Model>(lightning_model_path.string(), true);
+
     auto player_walk_path = graphics_assets_dir / "animations/walk.fbx";
     auto player_jump_path = graphics_assets_dir / "animations/jump.fbx";
     auto player_idle_path = graphics_assets_dir / "animations/idle.fbx";
@@ -1218,19 +1221,21 @@ void Client::geometryPass() {
             case ObjectType::WeaponCollider: {
                 if (sharedObject->weaponInfo->lightning) {
                     if (!sharedObject->weaponInfo->attacked) {
-                        glm::vec3 preview_dims = sharedObject->physics.dimensions;
-                        preview_dims.y = 0.01f;
-                        this->item_model->setDimensions(preview_dims);
+                        this->exit_model->setDimensions(glm::vec3(3.0f, 0.01f, 3.0f));
                         glm::vec3 preview_pos = sharedObject->physics.getCenterPosition();
                         preview_pos.y = 0.0f;
-                        this->item_model->translateAbsolute(preview_pos);
-                        this->item_model->draw(this->deferred_geometry_shader.get(),
+                        this->exit_model->translateAbsolute(preview_pos);
+                        this->exit_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(),
                             true);
                     } else {
-                        this->item_model->setDimensions(sharedObject->physics.dimensions);
-                        this->item_model->translateAbsolute(sharedObject->physics.getCenterPosition());
-                        this->item_model->draw(this->deferred_geometry_shader.get(),
+                        this->lightning_model->setDimensions(glm::vec3(1.314906, 2.238910 * 2.0f, 0.019732) * 10.0f);
+                        this->lightning_model->translateAbsolute(sharedObject->physics.corner);
+                        glm::vec3 facing_curr_player = rotate90DegreesAroundYAxis(glm::normalize(
+                            sharedObject->physics.getCenterPosition() - cam->getPos()
+                        ));
+                        this->lightning_model->rotateAbsolute(facing_curr_player);
+                        this->lightning_model->draw(this->deferred_geometry_shader.get(),
                             this->cam->getPos(),
                             true);
                     }
