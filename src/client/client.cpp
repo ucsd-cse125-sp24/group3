@@ -832,6 +832,7 @@ void Client::geometryPass() {
                 sharedObject->type == ObjectType::Lava ||
                 sharedObject->type == ObjectType::ArrowTrap ||
                 sharedObject->type == ObjectType::SpikeTrap ||
+                sharedObject->type == ObjectType::TeleporterTrap ||
                 sharedObject->type == ObjectType::Projectile)
                 && dist > this->config.client.render / 2) {
                 continue;
