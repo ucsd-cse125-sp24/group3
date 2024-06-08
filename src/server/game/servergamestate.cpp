@@ -17,10 +17,15 @@
 #include "server/game/orb.hpp"
 #include "server/game/weapon.hpp"
 #include "server/game/weaponcollider.hpp"
+#include "server/game/mirror.hpp"
+#include "server/game/spawner.hpp"
+#include "server/game/lava.hpp"
 
+#include "shared/game/celltype.hpp"
 #include "shared/game/sharedgamestate.hpp"
 #include "shared/audio/constants.hpp"
 #include "shared/audio/utilities.hpp"
+#include "shared/game/sharedmodel.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/root_path.hpp"
 #include "shared/utilities/time.hpp"
@@ -29,15 +34,17 @@
 #include "shared/utilities/rng.hpp"
 #include "server/game/mazegenerator.hpp"
 
+#include <cmath>
 #include <fstream>
 
 /*	Constructors and Destructors	*/
 
 ServerGameState::ServerGameState() : ServerGameState(getDefaultConfig()) {}
 
-ServerGameState::ServerGameState(GameConfig config) {
+ServerGameState::ServerGameState(GameConfig config) : config(config) {
 	this->phase = GamePhase::LOBBY;
 	this->timestep = FIRST_TIMESTEP;
+	this->lobby = Lobby(config.server.max_players);
 	this->lobby.max_players = config.server.max_players;
 	this->lobby.name = config.server.lobby_name;
 
@@ -47,13 +54,22 @@ ServerGameState::ServerGameState(GameConfig config) {
 	//	Initialize game instance match phase data
 	//	Match begins in MazeExploration phase (no timer)
 	this->matchPhase = MatchPhase::MazeExploration;
-	this->timesteps_left = TIME_LIMIT_MS / TIMESTEP_LEN;
+	this->relay_finish_time = 0;
 	//	Player victory is by default false (need to collide with an open exit
 	//	while holding the Orb to win, whereas DM wins on time limit expiration)
 	this->playerVictory = false;
 
 	//	No player died yet
 	this->numPlayerDeaths = 0;
+
+	this->currentGhostTrap = nullptr;
+	this->spawner = std::make_unique<Spawner>();
+	this->spawner->spawnDummy(*this);
+	this->spawner->spawnSmallDummy(*this);
+
+	this->dmLightningCutLights = {};
+	this->dmActionCutLights = {};
+	this->lastLightCut = 0;
 
     MazeGenerator generator(config);
     int attempts = 1;
@@ -98,7 +114,6 @@ ServerGameState::~ServerGameState() {}
 /*	SharedGameState generation	*/
 std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_all) {
 	std::vector<SharedGameState> partial_updates;
-	auto all_objects = this->objects.toShared();
 
 	auto getUpdateTemplate = [this]() {
 		SharedGameState curr_update;
@@ -106,13 +121,15 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 		curr_update.lobby = this->lobby;
 		curr_update.phase = this->phase;
 		curr_update.matchPhase = this->matchPhase;
-		curr_update.timesteps_left = this->timesteps_left;
+		curr_update.relay_finish_time = this->relay_finish_time;
 		curr_update.playerVictory = this->playerVictory;
 		curr_update.numPlayerDeaths = this->numPlayerDeaths;
 		return curr_update;
 	};
 
 	if (send_all) {
+		auto all_objects = this->objects.toShared();
+
 		for (int i = 0; i < all_objects.size(); i += OBJECTS_PER_UPDATE) {
 			SharedGameState curr_update = getUpdateTemplate();
 
@@ -128,7 +145,14 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 
 		int num_in_curr_update = 0;
 		for (EntityID id : this->updated_entities) {
-			curr_update.objects.insert({id, all_objects.at(id)});
+
+			Object* obj = this->objects.getObject(id);
+			if (obj == nullptr) {
+				curr_update.objects.insert({ id, boost::none });
+			} else {
+				curr_update.objects.insert({ id, obj->toShared() });
+			}
+
 			num_in_curr_update++;
 
 			if (num_in_curr_update >= OBJECTS_PER_UPDATE) {
@@ -138,7 +162,11 @@ std::vector<SharedGameState> ServerGameState::generateSharedGameState(bool send_
 			}
 		}
 
-		if (num_in_curr_update > 0) {
+		//	Make sure that SharedGameState updates are sent while the server is in the
+		//	Lobby phase (to ensure players can see other players lobby status updates)
+		if (num_in_curr_update > 0 || 
+		   this->getPhase() == GamePhase::LOBBY ||
+		   this->getPhase() == GamePhase::INTRO_CUTSCENE) {
 			partial_updates.push_back(curr_update);
 		}
 
@@ -171,6 +199,11 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::ChangeFacing: {
 			auto changeFacingEvent = boost::get<ChangeFacingEvent>(event.data);
 			obj = this->objects.getObject(changeFacingEvent.entity_to_change_face);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster
+				&& dynamic_cast<DungeonMaster*>(obj)->isParalyzed()) break;
+
 			obj->physics.shared.facing = changeFacingEvent.facing;
 			this->updated_entities.insert({ obj->globalID });
 			break;
@@ -179,6 +212,11 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StartAction: {
 			auto startAction = boost::get<StartActionEvent>(event.data);
 			obj = this->objects.getObject(startAction.entity_to_act);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster 
+				&& dynamic_cast<DungeonMaster *>(obj)->isParalyzed()) break;
+
 			this->updated_entities.insert({ obj->globalID });
 
 			//switch case for action (currently using keys)
@@ -186,11 +224,17 @@ void ServerGameState::update(const EventList& events) {
 			case ActionType::MoveCam: {
 				obj->physics.velocity.x = (startAction.movement * PLAYER_SPEED).x;
 				obj->physics.velocity.z = (startAction.movement * PLAYER_SPEED).z;
+				if (obj->is_sprinting) {
+					obj->animState = (obj->animState == AnimState::JumpAnim) ? obj->animState : AnimState::SprintAnim;
+				} else {
+					obj->animState = (obj->animState == AnimState::JumpAnim) ? obj->animState : AnimState::WalkAnim;
+				}
 				break;
 			}
 			case ActionType::Jump: {
 				if (!obj->physics.feels_gravity || obj->physics.velocity.y != 0) { break; }
 				obj->physics.velocity.y += (startAction.movement * JUMP_SPEED / 2.0f).y;
+				obj->animState = AnimState::JumpAnim;
 				this->sound_table.addNewSoundSource(SoundSource(
 					ServerSFX::PlayerJump,
 					obj->physics.shared.corner,
@@ -201,14 +245,26 @@ void ServerGameState::update(const EventList& events) {
 				break;
 			}
 			case ActionType::Sprint: {
-				obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
+				if (obj->type == ObjectType::DungeonMaster) {
+					DungeonMaster* dm = this->objects.getDM();
+
+					obj->physics.velocityMultiplier = (dm->physics.shared.corner.y/5.0f) * glm::vec3(1.5f, 1.1f, 1.5f);
+				}
+				else {
+					obj->physics.velocityMultiplier = glm::vec3(1.5f, 1.1f, 1.5f);
+					obj->animState = (obj->animState == AnimState::WalkAnim) ? AnimState::SprintAnim : obj->animState;
+					obj->is_sprinting = true;
+				}
 				break;
 			}
 			case ActionType::Zoom: { // only for DM
 				DungeonMaster * dm = this->objects.getDM();
 
-				if ((dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f))
+				if (dm != nullptr && (dm->physics.shared.corner.y + startAction.movement.y >= 10.0f) && (dm->physics.shared.corner.y + startAction.movement.y <= 100.0f)) {
 					dm->physics.shared.corner += startAction.movement;
+
+					obj->physics.velocityMultiplier = (dm->physics.shared.corner.y / 10.0f) * glm::vec3(1.5f, 1.1f, 1.5f);
+				}
 
 				break;
 			}
@@ -220,16 +276,36 @@ void ServerGameState::update(const EventList& events) {
 		case EventType::StopAction: {
 			auto stopAction = boost::get<StopActionEvent>(event.data);
 			obj = this->objects.getObject(stopAction.entity_to_act);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster
+				&& dynamic_cast<DungeonMaster*>(obj)->isParalyzed()) break;
+
 			this->updated_entities.insert({ obj->globalID });
 			//switch case for action (currently using keys)
 			switch (stopAction.action) {
 			case ActionType::MoveCam: {
 				obj->physics.velocity.x = 0.0f;
 				obj->physics.velocity.z = 0.0f;
+				obj->animState = AnimState::IdleAnim;
 				break;
 			}
 			case ActionType::Sprint: {
 				obj->physics.velocityMultiplier = glm::vec3(1.0f, 1.0f, 1.0f);
+
+				// if DM gotta re-adjust velocity to be based on height
+				if (obj->type == ObjectType::DungeonMaster) {
+					obj->physics.velocityMultiplier = (obj->physics.shared.corner.y / 10.0f) * glm::vec3(1.5f, 1.1f, 1.5f);
+				}
+
+				if (obj->physics.velocity.x != 0.0f && obj->physics.velocity.z != 0.0f) {
+					obj->animState = AnimState::WalkAnim;
+				} else {
+					obj->animState = AnimState::IdleAnim;
+				}
+
+				obj->is_sprinting = false;
+
 				break;
 			}
 			default: { break; }
@@ -242,11 +318,17 @@ void ServerGameState::update(const EventList& events) {
 			//currently just sets the velocity to given 
 			auto moveRelativeEvent = boost::get<MoveRelativeEvent>(event.data);
 			obj = this->objects.getObject(moveRelativeEvent.entity_to_move);
+
+			//	If the object is the DM and the DM is paralyzed, ignore the event
+			if (obj->type == ObjectType::DungeonMaster
+				&& dynamic_cast<DungeonMaster*>(obj)->isParalyzed()) break;
+
 			obj->physics.velocity += moveRelativeEvent.movement;
 			this->updated_entities.insert(obj->globalID);
 			break;
 
 		}
+
 		case EventType::SelectItem:
 		{
 			auto selectItemEvent = boost::get<SelectItemEvent>(event.data);
@@ -260,6 +342,9 @@ void ServerGameState::update(const EventList& events) {
 			if (obj->type == ObjectType::DungeonMaster) {
 				DungeonMaster* dm = this->objects.getDM();
 
+				//	If the dungeon master is paralyzed, do nothing
+				if (dm->isParalyzed()) break;
+
 				if (dm->sharedTrapInventory.selected + selectItemEvent.itemNum == 0)
 					dm->sharedTrapInventory.selected = TRAP_INVENTORY_SIZE;
 				else if (dm->sharedTrapInventory.selected + selectItemEvent.itemNum == TRAP_INVENTORY_SIZE + 1)
@@ -270,11 +355,32 @@ void ServerGameState::update(const EventList& events) {
 				this->updated_entities.insert(dm->globalID);
 			}
 			else {
-				player->sharedInventory.selected = selectItemEvent.itemNum;
+				//	If the current selected item is a Mirror and it is used, set it to not be used
+				SpecificID currentItemSelected = player->inventory[player->sharedInventory.selected - 1];
+
+				if (currentItemSelected != -1) {
+					Item* selectedItem = this->objects.getItem(currentItemSelected);
+
+					if (selectedItem->type == ObjectType::Mirror && selectedItem->iteminfo.used) {
+						//	Set mirror to be unused
+						Mirror* mirror = dynamic_cast<Mirror*>(selectedItem);
+					
+						mirror->revertEffect(*this);
+					}
+				}
+
+				if (player->sharedInventory.selected + selectItemEvent.itemNum == 0)
+					player->sharedInventory.selected = INVENTORY_SIZE;
+				else if (player->sharedInventory.selected + selectItemEvent.itemNum == INVENTORY_SIZE + 1)
+					player->sharedInventory.selected = 1;
+				else
+					player->sharedInventory.selected = player->sharedInventory.selected + selectItemEvent.itemNum;
+
 				this->updated_entities.insert(player->globalID);
 			}
 			break;
 		}
+
 		case EventType::UseItem:
 		{
 			auto useItemEvent = boost::get<UseItemEvent>(event.data);
@@ -284,11 +390,18 @@ void ServerGameState::update(const EventList& events) {
 				Item* item = this->objects.getItem(player->inventory[itemSelected]);
 				item->useItem(player, *this, itemSelected);
 
+				if (dynamic_cast<Potion*>(item) != nullptr) {
+					player->animState = AnimState::DrinkPotionAnim;
+				} else if (dynamic_cast<Weapon*>(item) != nullptr) {
+					player->animState = AnimState::AttackAnim;
+				}
+
 				this->updated_entities.insert(player->globalID);
 				this->updated_entities.insert(item->globalID);
 			}
 			break;
 		}
+
 		case EventType::DropItem:
 		{
 			auto dropItemEvent = boost::get<DropItemEvent>(event.data);
@@ -303,30 +416,26 @@ void ServerGameState::update(const EventList& events) {
 			}
 			break;
 		}
+
 		case EventType::TrapPlacement: 
 		{
+			DungeonMaster* dm = this->objects.getDM();
+
+			// exit if DM is null?
+			if (dm == nullptr) 
+				break;
+
 			auto trapPlacementEvent = boost::get<TrapPlacementEvent>(event.data);
 
 			Grid& currGrid = this->getGrid();
 
 			float cellWidth = currGrid.grid_cell_width;
 
-			DungeonMaster* dm = this->objects.getDM();
+			//	If the DM is paralyzed, do nothing
+			if (dm->isParalyzed()) 
+				break;
 
 			glm::vec3 dir = glm::normalize(trapPlacementEvent.world_pos-dm->physics.shared.corner);
-
-			//if (trapPlacementEvent.world_pos.z < glm::floor(trapPlacementEvent.world_pos.z) + 0.5) {
-			//	trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z) - DM_Z_DISCOUNT;
-			//} else {
-			//	trapPlacementEvent.world_pos.z = glm::floor(trapPlacementEvent.world_pos.z + DM_Z_DISCOUNT);
-			//}
-
-			//if (trapPlacementEvent.world_pos.x > glm::floor(trapPlacementEvent.world_pos.x) + 0.5) {
-			//	trapPlacementEvent.world_pos.x = glm::ceil(trapPlacementEvent.world_pos.x) + DM_Z_DISCOUNT;
-			//}
-			//else {
-			//	trapPlacementEvent.world_pos.x = glm::ceil(trapPlacementEvent.world_pos.x - DM_Z_DISCOUNT);
-			//}
 
 			trapPlacementEvent.world_pos += (dir*(float)DM_Z_DISCOUNT);
 
@@ -337,45 +446,116 @@ void ServerGameState::update(const EventList& events) {
 			if (cell == nullptr)
 				break;
 
+			this->updated_entities.insert(dm->globalID);
 
-			// unhighlight if highlighted
-			for (SolidSurface* surface : this->previouslyHighlighted) {
-				this->updated_entities.insert(surface->globalID);
-				surface->setDMHighlight(false);
+			// mark previous ghost trap for deletion, if exists
+			if (this->currentGhostTrap != nullptr) {
+				markForDeletion(this->currentGhostTrap->globalID);
+				this->currentGhostTrap = nullptr; // reset ghost trap variable
 			}
-
-			// std::vector<SolidSurface*> surfaces = solidSurfaceInGridCells[{cell->x, cell->y}];
-
-			// this->previouslyHighlighted = surfaces;
 
 			if (trapPlacementEvent.hover) {
-				/*for (SolidSurface* surface : surfaces) {
-					this->updated_entities.insert(surface->globalID);
-					surface->setDMHighlight(true);
-				}*/
+				// only hover for traps, not lightning
+				if (trapPlacementEvent.cell == CellType::Lightning || trapPlacementEvent.cell == CellType::LightCut)
+					break;
+
+				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
+
+				if (trap == nullptr)
+					break;
+
+				this->currentGhostTrap = trap;
+
+				this->currentGhostTrap->setIsDMTrapHover(true);
+
+				this->updated_entities.insert(trap->globalID);
 			}
 			else if(trapPlacementEvent.place) {
+				auto curr_time = std::chrono::system_clock::now();
+
+				// Lightning now has its own mana system
+				if (trapPlacementEvent.cell == CellType::Lightning) {
+					if (dm->dmInfo.mana_remaining >= LIGHTNING_MANA) {
+						Weapon* lightning = dm->lightning;
+						glm::vec3 corner(
+							cell->x * Grid::grid_cell_width,
+							0.0f,
+							cell->y * Grid::grid_cell_width
+						);
+
+						lightning->useLightning(dm, *this, corner);
+						dm->useMana(LIGHTNING_MANA);
+
+						this->dmLightningCutLights = corner;
+						this->lastLightningLightCut = this->timestep;
+					}
+
+					break;
+				}
+
+				if (trapPlacementEvent.cell == CellType::LightCut) {
+					if (dm->dmInfo.mana_remaining >= LIGHT_CUT_MANA) {
+						this->dmActionCutLights = trapPlacementEvent.world_pos;
+
+						// go back 150 ticks (light cut is longer)
+						this->lastLightCut = this->timestep;
+
+						dm->useMana(LIGHT_CUT_MANA);
+					}
+
+					break;
+				}
+
 				int trapsPlaced = dm->getPlacedTraps();
 
 				if (trapsPlaced == MAX_TRAPS) {
 					break;
 				}
 
-				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
-
-				// in cooldown and haven't elapsed enough time yet
-				if (it != dm->sharedTrapInventory.trapsInCooldown.end() && 
-					std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(it->second)) < std::chrono::seconds(TRAP_COOL_DOWN)) {
-					break;
+				auto end = dm->sharedTrapInventory.trapsInCooldown.end();
+				// handle arrowtrap / sungod seperately
+				if (trapPlacementEvent.cell == CellType::ArrowTrapDown ||
+					trapPlacementEvent.cell == CellType::ArrowTrapUp || 
+					trapPlacementEvent.cell == CellType::ArrowTrapLeft || 
+					trapPlacementEvent.cell == CellType::ArrowTrapRight) {
+					
+					if (!(dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapDown) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapUp) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapLeft) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::ArrowTrapRight) == end)) {
+						break;
+					}
 				}
 
-				auto curr_time = std::chrono::system_clock::now();
+				if (trapPlacementEvent.cell == CellType::FireballTrapDown ||
+					trapPlacementEvent.cell == CellType::FireballTrapUp ||
+					trapPlacementEvent.cell == CellType::FireballTrapLeft ||
+					trapPlacementEvent.cell == CellType::FireballTrapRight) {
+
+					if (!(dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapDown) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapUp) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapLeft) == end &&
+						dm->sharedTrapInventory.trapsInCooldown.find(CellType::FireballTrapRight) == end)) {
+						break;
+					}
+				}
+
+				// handle remaining traps
+				auto it = dm->sharedTrapInventory.trapsInCooldown.find(trapPlacementEvent.cell);
+
+				// in cooldown map sadly
+				if (it != end){
+					break;
+				}
 
 				Trap* trap = placeTrapInCell(cell, trapPlacementEvent.cell);
 
 				if (trap == nullptr) { 
 					break;
 				}
+
+				// change cell type
+				cell->type = trapPlacementEvent.cell;
 
 				trap->setIsDMTrap(true);
 				trap->setExpiration(curr_time + std::chrono::seconds(10));
@@ -384,16 +564,169 @@ void ServerGameState::update(const EventList& events) {
 
 				dm->sharedTrapInventory.trapsInCooldown[trapPlacementEvent.cell] = std::chrono::system_clock::to_time_t(curr_time);
 
+				// Store remaining CD in milliseconds
+				dm->sharedTrapInventory.trapsCooldown[trapPlacementEvent.cell] = TRAP_COOL_DOWN * 1000;
+
 				dm->setPlacedTraps(trapsPlaced + 1);
+
+				dm->sharedTrapInventory.trapsPlaced = trapsPlaced + 1;
+
+				// SPAWN AN ITEM FOR EACH PLAYER
+				float randFloat = randomDouble(0.0, 1.0);
+
+				if (randFloat <= ITEM_SPAWN_PROB) {
+					auto players = this->objects.getPlayers();
+
+					for (int p = 0; p < players.size(); p++) {
+						auto _player = players.get(p);
+
+						if (_player == nullptr)
+							continue;
+
+						GridCell* _cell = this->getGrid().getCell(_player->physics.shared.corner.x / Grid::grid_cell_width, _player->physics.shared.corner.z / Grid::grid_cell_width);
+
+						int randomC = randomInt(std::max(_cell->x - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND));
+						int randomR = randomInt(std::max(_cell->y - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getRows() - 1, _cell->y + ITEM_SPAWN_BOUND));
+
+						GridCell* random_cell = grid.getCell(randomC, randomR);
+						CellType celltype = random_cell->type;
+
+						int counter = 0;
+
+						// keep finding that cell!
+						while ((randomC == _cell->x && randomR == _cell->y) || celltype != CellType::Empty) {
+							randomC = randomInt(std::max(_cell->x - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getColumns() - 1, _cell->x + ITEM_SPAWN_BOUND));
+							randomR = randomInt(std::max(_cell->y - ITEM_SPAWN_BOUND, 0), std::min(this->grid.getRows() - 1, _cell->y + ITEM_SPAWN_BOUND));
+
+							random_cell = grid.getCell(randomC, randomR);
+							celltype = random_cell->type;
+
+							counter += 1;
+
+							// this allows us to break out in case infinite loop
+							if (counter >= ((ITEM_SPAWN_BOUND + 1) * (ITEM_SPAWN_BOUND + 1))) {
+								break;
+							}
+						}
+
+						// early exit, just couldn't place anything sadly
+						if ((randomC == _cell->x && randomR == _cell->y) || celltype != CellType::Empty) {
+							std::cout << "COULDNT PLACE ANY ITEMS!" << std::endl;
+							break;
+						}
+
+						if (!this->hasObjectCollided(this->spawner->smallDummyItem,
+							glm::vec3(randomC * Grid::grid_cell_width + 0.01f, 0, randomR * Grid::grid_cell_width + 0.01f)))
+						{
+							this->objects.moveObject(this->spawner->smallDummyItem, glm::vec3(-1, 0, -1));
+
+							glm::vec3 dimensions(1.0f);
+
+							glm::vec3 corner(
+								random_cell->x * Grid::grid_cell_width + 1,
+								0,
+								random_cell->y * Grid::grid_cell_width + 1
+							);
+
+							int randomCellType = randomInt(1, 3);
+
+							if (randomCellType == 1) {
+								int r = randomInt(1, 3);
+								if (r == 1) {
+									random_cell->type = CellType::HealthPotion;
+								}
+								else if (r == 2) {
+									random_cell->type = CellType::InvisibilityPotion;
+								}
+								else {
+									random_cell->type = CellType::InvincibilityPotion;
+								}
+							}
+							else if (randomCellType == 2) {
+								int r = randomInt(1, 3);
+								if (r == 1) {
+									random_cell->type = CellType::FireSpell;
+								}
+								else if (r == 2) {
+									random_cell->type = CellType::HealSpell;
+								}
+								else {
+									random_cell->type = CellType::TeleportSpell;
+								}
+							}
+							else {
+								int r = randomInt(1, 4);
+								if (r == 1) {
+									random_cell->type = CellType::Dagger;
+								}
+								else if (r == 2) {
+									random_cell->type = CellType::Sword;
+								}
+								else if (r == 3) {
+									random_cell->type = CellType::Mirror;
+								}
+								else {
+									random_cell->type = CellType::Hammer;
+								}
+							}
+
+							Object* spawned_object = nullptr;
+
+							switch (random_cell->type) {
+							case CellType::Dagger: {
+								spawned_object= new Weapon(corner, dimensions, WeaponType::Dagger);
+								break;
+							}
+							case CellType::Sword: {
+								spawned_object = new Weapon(corner, dimensions, WeaponType::Sword);
+								break;
+							}
+							case CellType::Hammer: {
+								spawned_object = new Weapon(corner, dimensions, WeaponType::Hammer);
+								break;
+							}
+							case CellType::TeleportSpell: {
+								spawned_object = new Spell(corner, dimensions, SpellType::Teleport);
+								break;
+							}
+							case CellType::FireSpell: {
+								spawned_object = new Spell(corner, dimensions, SpellType::Fireball);
+								break;
+							}
+							case CellType::HealSpell: {
+								spawned_object = new Spell(corner, dimensions, SpellType::HealOrb);
+								break;
+							}
+							case CellType::HealthPotion: {
+								spawned_object = new Potion(corner, dimensions, PotionType::Health);
+								break;
+							}
+							case CellType::InvisibilityPotion: {
+								spawned_object = new Potion(corner, dimensions, PotionType::Invisibility);
+								break;
+							}
+							case CellType::InvincibilityPotion: {
+								spawned_object = new Potion(corner, dimensions, PotionType::Invincibility);
+								break;
+							}
+							default:
+								std::cerr << "WARNING: unknown item spawned in DM care package code." << std::endl;
+							}
+
+							if (spawned_object != nullptr) {
+								this->objects.createObject(spawned_object);
+								this->updated_entities.insert(spawned_object->globalID);
+							}
+						}
+					}
+				}
+
 			}
+
 			break;
 		}
-
-		// default:
-		//     std::cerr << "Unimplemented EventType (" << event.type << ") received" << std::endl;
 		}
 	}
-
 
 	//	TODO: fill update() method with updating object movement
 	doProjectileTicks();
@@ -406,18 +739,36 @@ void ServerGameState::update(const EventList& events) {
 	handleDeaths();
 	handleRespawns();
 	deleteEntities();
-	spawnEnemies();
+    if (!this->config.game.disable_enemies) {
+        spawnEnemies();
+    }
+	handleTickVelocity();
+	handleDM();
 	tickStatuses();
-	
+	updateCompass();
+	updatePlayerLightningInvulnerabilityStatus();
+
+	//	Only do this if the DM exists
+	if (this->objects.getDM() != nullptr)
+		updateDungeonMasterParalysis();
+
+	// after some amount of timesteps uncut lights
+	if ((this->timestep - this->lastLightningLightCut) >= LIGHTNING_LIGHT_CUT_TICKS && this->dmLightningCutLights.has_value()) {
+		this->dmLightningCutLights = {};
+	}
+
+	// after some amount of timesteps uncut lights
+	if ((this->timestep - this->lastLightCut) >= LIGHT_CUT_TICKS && this->dmActionCutLights.has_value()) {
+		this->dmActionCutLights = {};
+	}
+
 	//	Increment timestep
 	this->timestep++;
 
 	//	Countdown timer if the Orb has been picked up by a Player and the match
 	//	phase is now RelayRace
 	if (this->matchPhase == MatchPhase::RelayRace) {
-		this->timesteps_left--;
-
-		if (this->timesteps_left == 0) {
+		if (std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) > this->relay_finish_time) {
 			//	Dungeon Master won on time limit expiration
 			this->phase = GamePhase::RESULTS;
 		}
@@ -468,7 +819,7 @@ void ServerGameState::updateMovement() {
 
 		//	Object is movable - compute total movement step
 		glm::vec3 totalMovementStep = 
-			object->physics.velocity * object->physics.velocityMultiplier;
+			object->physics.velocity * object->physics.velocityMultiplier + object->physics.currTickVelocity;
 		totalMovementStep.x *= object->physics.nauseous;
 		totalMovementStep.z *= object->physics.nauseous;
 
@@ -581,10 +932,37 @@ void ServerGameState::updateMovement() {
 			currentPosition = object->physics.shared.corner;
 		}
 
+        const float spike_low_y = 2.9f;
+        if (object->type == ObjectType::SpikeTrap && object->physics.shared.corner.y < spike_low_y) {
+            object->physics.shared.corner.y = spike_low_y;
+            object->physics.feels_gravity = false;
+            object->physics.velocity.y = 0;
+            if (starting_corner_pos.y != 3.0f) {
+                this->sound_table.addNewSoundSource(SoundSource(
+                    ServerSFX::CeilingSpikeImpact,
+                    object->physics.shared.corner,
+                    FULL_VOLUME,
+                    FAR_DIST,
+                    FAR_ATTEN
+                ));
+            }
+        }
+
 		//	Vertical movement
 		if (object->physics.shared.corner.y < 0) {
 			//	Clamp object to floor if corner's y position is lower than the floor
 			object->physics.shared.corner.y = 0;
+
+			// After landing, set object's animation to non-jump (idle)
+			if (object->physics.velocity.x != 0.0f && object->physics.velocity.z != 0.0f) {
+				if (object->is_sprinting) {
+					object->animState = AnimState::SprintAnim;
+				} else {
+					object->animState = AnimState::WalkAnim;
+				}
+			} else {
+				object->animState = AnimState::IdleAnim;
+			}
 
 			// Play relevant landing sounds
 			if (starting_corner_pos.y != 0.0f) {
@@ -596,15 +974,7 @@ void ServerGameState::updateMovement() {
 						MEDIUM_DIST,
 						MEDIUM_ATTEN
 					));
-				} else if (object->type == ObjectType::SpikeTrap) {
-					this->sound_table.addNewSoundSource(SoundSource(
-						ServerSFX::CeilingSpikeImpact,
-						object->physics.shared.corner,
-						FULL_VOLUME,
-						FAR_DIST,
-						FAR_ATTEN
-					));
-				}
+				} 
 			}
 		}
 
@@ -675,7 +1045,9 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 			//	doesn't have a collider
 			if (object->globalID == otherObj->globalID
 				|| otherObj->physics.collider == Collider::None
-				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Player)) {
+				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Player)
+				|| (object->type == ObjectType::Item && otherObj->type == ObjectType::Player)
+				|| (object->type == ObjectType::Player && otherObj->type == ObjectType::Item)) {
 				continue;
 			}
 
@@ -699,12 +1071,16 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 				//	perform collision handling but do not return true as the
 				//	trap doesn't affect the movement of the object it hits
 				if (otherObj->type == ObjectType::FloorSpike || 
+					otherObj->type == ObjectType::Lava || 
 					otherObj->type == ObjectType::Potion || 
 					otherObj->type == ObjectType::Spell ||
 					otherObj->type == ObjectType::Weapon ||
 					otherObj->type == ObjectType::Orb ||
 					otherObj->type == ObjectType::WeaponCollider ||
-					otherObj->type == ObjectType::Slime) {
+					otherObj->type == ObjectType::Slime ||
+					otherObj->type == ObjectType::TeleporterTrap ||
+					otherObj->type == ObjectType::Torchlight ||
+					otherObj->type == ObjectType::Mirror) {
 					continue;
 				}
 
@@ -717,31 +1093,7 @@ bool ServerGameState::hasObjectCollided(Object* object, glm::vec3 newCornerPosit
 }
 
 void ServerGameState::spawnEnemies() {
-	// temp numbers, to tune later...
-	// 1/300 chance every 30ms -> expected spawn every 9s 
-	// TODO 1: small slimes are weighted the same as large slimes
-	// TODO 2: check that no collision in the cell you are spawning in
-	if (randomInt(1, 300) == 1 && this->objects.getEnemies().numElements() < MAX_ALIVE_ENEMIES) {
-		int cols = this->grid.getColumns();
-		int rows = this->grid.getRows();
-
-		glm::ivec2 random_cell;
-		while (true) {
-			random_cell.x = randomInt(0, cols - 1);
-			random_cell.y = randomInt(0, rows - 1); // corresponds to z in the world
-
-			if (this->grid.getCell(random_cell.x, random_cell.y)->type == CellType::Empty) {
-				break;
-			}
-		}
-
-		int size = randomInt(2, 4);
-		this->objects.createObject(new Slime(
-			glm::vec3(random_cell.x * Grid::grid_cell_width, 0, random_cell.y * Grid::grid_cell_width),
-			glm::vec3(0, 0, 0),
-			size
-		));
-	}
+	this->spawner->spawn(*this);
 }
 
 void ServerGameState::updateItems() {
@@ -761,6 +1113,16 @@ void ServerGameState::updateItems() {
 				if (pot->timeOut()) {
 					pot->revertEffect(*this);
 					this->updated_entities.insert(pot->globalID);
+				}
+			}
+		}
+
+		if (item->type == ObjectType::Mirror) {
+			Mirror* mirror = dynamic_cast<Mirror*>(item);
+			if (mirror->iteminfo.used) {
+				if (mirror->timeOut()) {
+					mirror->revertEffect(*this);
+					this->updated_entities.insert(mirror->globalID);
 				}
 			}
 		}
@@ -803,7 +1165,7 @@ void ServerGameState::updateAttacks() {
 		auto weaponCollider = weaponColliders.get(i);
 		if (weaponCollider == nullptr) { continue; }
 		weaponCollider->updateMovement(*this);
-		if(weaponCollider->readyTime()){
+		if(weaponCollider->readyTime(*this)){
 			if (weaponCollider->timeOut(*this)) {
 				this->markForDeletion(weaponCollider->globalID);
 			}
@@ -818,43 +1180,77 @@ void ServerGameState::updateAttacks() {
 
 void ServerGameState::doTorchlightTicks() {
 	auto torchlights = this->objects.getTorchlights();
+
 	for (int t = 0; t < torchlights.size(); t++) {
 		auto torchlight = torchlights.get(t);
-		if (torchlight == nullptr) continue;
 
-		torchlight->doTick(*this);
+		if (torchlight == nullptr) 
+			continue;
+
+		if (torchlight->doTick(*this, this->dmLightningCutLights, this->dmActionCutLights)) {
+			this->updated_entities.insert(torchlight->globalID);
+		}
 	}
 }
 
 void ServerGameState::updateTraps() {
-	// check for activations
+	// get current time when calling this function
+	auto current_time = std::chrono::system_clock::now();
+	DungeonMaster* dm = this->objects.getDM();
 
-	// This object moved, so we should check to see if a trap should trigger because of it
+	// update DM trap cooldown
+	if (dm != nullptr) {
+		auto& coolDownMap = dm->sharedTrapInventory.trapsInCooldown;
+
+		for (auto it = dm->sharedTrapInventory.trapsInCooldown.cbegin(); it != dm->sharedTrapInventory.trapsInCooldown.cend();) {
+			auto key = it->first;
+			auto passedTime = std::chrono::round<std::chrono::milliseconds>(current_time - std::chrono::system_clock::from_time_t(it->second));
+			auto diff = std::chrono::milliseconds(TRAP_COOL_DOWN * 1000) - passedTime;
+
+			// update remaining time
+			dm->sharedTrapInventory.trapsCooldown[key] = diff.count();
+
+			if (std::chrono::round<std::chrono::seconds>(current_time - std::chrono::system_clock::from_time_t(it->second)) >= std::chrono::seconds(TRAP_COOL_DOWN)) {
+				dm->sharedTrapInventory.trapsCooldown.erase(key);
+				it = dm->sharedTrapInventory.trapsInCooldown.erase(it);
+			}
+			else {
+				it++;
+			}
+		}
+
+		this->updated_entities.insert(dm->globalID);
+	}
+
 	auto traps = this->objects.getTraps();
 	for (int i = 0; i < traps.size(); i++) {
 		auto trap = traps.get(i);
-		if (trap == nullptr) { continue; } // unsure if i need this?
-		if (trap->getIsDMTrap()) {
-			auto current_time = std::chrono::system_clock::now();
-			
+		if (trap == nullptr) { continue; }
+		if (trap->getIsDMTrap() && dm != nullptr) {
 			if (current_time >= trap->getExpiration()) {
-				DungeonMaster* dm = this->objects.getDM();
 				int trapsPlaced = dm->getPlacedTraps();
-
 				this->markForDeletion(trap->globalID);
 				dm->setPlacedTraps(trapsPlaced - 1);
+				dm->sharedTrapInventory.trapsPlaced = trapsPlaced - 1;
+
+				// change cell type to empty
+				GridCell* _cell = this->getGrid().getCell(trap->physics.shared.corner.x / Grid::grid_cell_width, trap->physics.shared.corner.z / Grid::grid_cell_width);
+
+				_cell->type = CellType::Empty;
+
 				continue;
 			}
 		}
 
+		// check for activations
 		if (trap->shouldTrigger(*this)) {
 			trap->trigger(*this);
 			this->updated_entities.insert(trap->globalID);
 		}
-        if (trap->shouldReset(*this)) {
-            trap->reset(*this);
+		if (trap->shouldReset(*this)) {
+			trap->reset(*this);
 			this->updated_entities.insert(trap->globalID);
-        }
+		}
 	}
 }
 
@@ -875,6 +1271,16 @@ void ServerGameState::handleDeaths() {
 		if (player->stats.health.current() <= 0 && player->info.is_alive) {
 			//	Player died - increment number of player deaths
 			this->numPlayerDeaths++;
+
+			if (numPlayerDeaths < PLAYER_DEATHS_TO_RELAY_RACE) {
+				this->soundTable().addNewSoundSource(SoundSource(
+					ServerSFX::Thunder,
+					player->physics.shared.getCenterPosition(),
+					DEFAULT_VOLUME,
+					FAR_DIST,
+					FAR_ATTEN
+				));
+			}
 
 			if (numPlayerDeaths == PLAYER_DEATHS_TO_RELAY_RACE) {
 				this->transitionToRelayRace();
@@ -907,6 +1313,7 @@ void ServerGameState::handleDeaths() {
 			}
 
 			this->updated_entities.insert(player->globalID);
+			player->physics.velocity = glm::vec3(0.0f);
 			player->info.is_alive = false;
 			player->info.respawn_time = getMsSinceEpoch() + 5000; // currently hardcode to wait 5s
 		}
@@ -921,7 +1328,15 @@ void ServerGameState::handleDeaths() {
 			this->updated_entities.insert(enemy->globalID);
 			if (enemy->doDeath(*this)) {
 				this->entities_to_delete.insert(enemy->globalID);
-				this->alive_enemy_weight--;
+			}
+			if (enemy->type == ObjectType::Minotaur) {
+				this->soundTable().addNewSoundSource(SoundSource(
+					ServerSFX::MinotaurDeath,
+					enemy->physics.shared.getCenterPosition(),
+					DEFAULT_VOLUME,
+					MEDIUM_DIST,
+					MEDIUM_ATTEN
+				));
 			}
 		}
 	}
@@ -965,13 +1380,191 @@ void ServerGameState::tickStatuses() {
 		player->statuses.tickStatus();
 	}
 	auto enemies = this->objects.getEnemies();
-	for (auto e = 0; e < players.size(); e++) {
+	for (auto e = 0; e < enemies.size(); e++) {
 		auto enemy = enemies.get(e);
 		if (enemy == nullptr) continue;
 
 		enemy->statuses.tickStatus();
 	}
 }
+
+void ServerGameState::handleDM() {
+	DungeonMaster* dm = this->objects.getDM();
+	if (dm != nullptr) {
+		dm->manaRegen();
+	}
+}
+
+void ServerGameState::updateCompass() {
+	/*
+	std::optional<glm::vec3> orb_pos;
+
+	
+	for (auto p = 0; p < players.size(); p++) {
+		Player* player = players.get(p);
+		if (player == nullptr) continue;
+
+		if (player->sharedInventory.hasOrb) {
+			orb_pos = player->physics.shared.corner;
+			orb_pos->y = 0;
+			break;
+		}
+	}
+
+	if (!orb_pos.has_value()) {
+		auto items = this->objects.getItems();
+		for (auto i = 0; i < items.size(); i++) {
+			Item* item = items.get(i);
+			if (item == nullptr) continue;
+			if (item->type == ObjectType::Orb) {
+				orb_pos = item->physics.shared.corner;
+				orb_pos->y = 0;
+				break;
+			}
+		}
+	}*/
+
+	auto players = this->objects.getPlayers();
+	for (auto p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		//auto x = player->physics.shared.getCenterPosition().x - orb_pos->x;
+		//auto y = player->physics.shared.getCenterPosition().y - orb_pos->y;
+
+		auto angle = atan2(player->physics.shared.facing.z, player->physics.shared.facing.x)
+			* (180.0 / 3.141592653589793238463);
+		if (angle < 0) {
+			angle += 360;
+		}
+		player->compass.angle = angle;
+	}
+}
+
+void ServerGameState::handleTickVelocity() {
+	auto players = this->objects.getPlayers();
+	for (auto p = 0; p < players.size(); p++) {
+		auto player = players.get(p);
+		if (player == nullptr) continue;
+
+		// is this actually the best i can do...? -ted
+		if (player->physics.currTickVelocity != glm::vec3(0.0f)) {
+			if (player->physics.currTickVelocity.x > 0) {
+				player->physics.currTickVelocity.x -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.x < 0) {
+				player->physics.currTickVelocity.x += 0.05f;
+			}
+
+			if (player->physics.currTickVelocity.y > 0) {
+				player->physics.currTickVelocity.y -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.y < 0) {
+				player->physics.currTickVelocity.y += 0.05f;
+			}
+
+			if (player->physics.currTickVelocity.z > 0) {
+				player->physics.currTickVelocity.z -= 0.05f;
+			}
+			else if (player->physics.currTickVelocity.z < 0) {
+				player->physics.currTickVelocity.z += 0.05f;
+			}
+
+			if (abs(player->physics.currTickVelocity.x) <= 0.05f) {
+				player->physics.currTickVelocity.x = 0.0f;
+			}
+			if (abs(player->physics.currTickVelocity.y) <= 0.05f) {
+				player->physics.currTickVelocity.y = 0.0f;
+			}
+			if (abs(player->physics.currTickVelocity.z) <= 0.05f) {
+				player->physics.currTickVelocity.z = 0.0f;
+			}
+		}
+	}
+
+	auto enemies = this->objects.getEnemies();
+	for (auto e = 0; e < enemies.size(); e++) {
+		auto enemy = enemies.get(e);
+		if (enemy == nullptr) continue;
+
+		if (enemy->physics.currTickVelocity != glm::vec3(0.0f)) {
+			if (enemy->physics.currTickVelocity.x > 0) {
+				enemy->physics.currTickVelocity.x -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.x < 0) {
+				enemy->physics.currTickVelocity.x += 0.05f;
+			}
+
+			if (enemy->physics.currTickVelocity.y > 0) {
+				enemy->physics.currTickVelocity.y -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.y < 0) {
+				enemy->physics.currTickVelocity.y += 0.05f;
+			}
+
+			if (enemy->physics.currTickVelocity.z > 0) {
+				enemy->physics.currTickVelocity.z -= 0.05f;
+			}
+			else if (enemy->physics.currTickVelocity.z < 0) {
+				enemy->physics.currTickVelocity.z += 0.05f;
+			}
+
+			if (abs(enemy->physics.currTickVelocity.x) <= 0.05f) {
+				enemy->physics.currTickVelocity.x = 0.0f;
+			}
+			if (abs(enemy->physics.currTickVelocity.y) <= 0.05f) {
+				enemy->physics.currTickVelocity.y = 0.0f;
+			}
+			if (abs(enemy->physics.currTickVelocity.z) <= 0.05f) {
+				enemy->physics.currTickVelocity.z = 0.0f;
+			}
+		}
+	}
+}
+
+void ServerGameState::updatePlayerLightningInvulnerabilityStatus() {
+	//	Iterate through all players. If one of the players has a
+	//	lightning invulernability, check whether it should be turned
+	//	off, and if so, turn it off.
+	for (int i = 0; i < this->objects.getPlayers().size(); i++) {
+		Player* player = this->objects.getPlayers().get(i);
+
+		if (player == nullptr)
+			continue;
+
+		if (player->isInvulnerableToLightning()) {
+			//	Player is invulnerable to lightning - check whether timeout
+			//	has occurred and if so, set as vulnerable to lightning again
+			auto now = std::chrono::system_clock::now();
+			std::chrono::duration<double> elapsed_seconds{ now - player->getLightningInvulnerabilityStartTime()};
+
+			if (elapsed_seconds.count() > player->getLightningInvulnerabilityDuration()) {
+				std::cout << "Removing a player's lightning invulnerability." << std::endl;
+				player->setInvulnerableToLightning(false, -1);
+
+				//	If the player gained invulnerability due to reflecting a
+				//	lightning bolt with a mirror, undo that boolean
+				player->info.used_mirror_to_reflect_lightning = false;
+			}
+		}
+	}
+}
+
+void ServerGameState::updateDungeonMasterParalysis() {
+	//	Check whether the DM is paralyzed
+	DungeonMaster* dm = this->objects.getDM();
+	if (dm->isParalyzed()) {
+		//	Check whether timeout has occurred and if so, set as not paralyzed
+		auto now = std::chrono::system_clock::now();
+		std::chrono::duration<double> elapsed_seconds{ now - dm->getParalysisStartTime() };
+
+		if (elapsed_seconds.count() > dm->getParalysisDuration()) {
+			std::cout << "Ending DM's paralysis" << std::endl;
+			dm->setParalysis(false, -1);
+		}
+	}
+}
+
 
 unsigned int ServerGameState::getTimestep() const {
 	return this->timestep;
@@ -996,6 +1589,7 @@ void ServerGameState::transitionToRelayRace() {
 
 	this->matchPhase = MatchPhase::RelayRace;
 
+	this->relay_finish_time = getSecSinceEpoch() + TIME_LIMIT_S.count();
 	//	Open all exits!
 	for (int i = 0; i < this->objects.getExits().size(); i++) {
 		Exit* exit = this->objects.getExits().get(i);
@@ -1011,12 +1605,68 @@ void ServerGameState::setPlayerVictory(bool playerVictory) {
 	this->playerVictory = playerVictory;
 }
 
-void ServerGameState::addPlayerToLobby(EntityID id, const std::string& name) {
-	this->lobby.players[id] = name;
+void ServerGameState::addPlayerToLobby(LobbyPlayer player) {
+	//this->lobby.players[id] = name;
+
+	//	Only add the player if a player with the given EntityID doesn't exist
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (this->lobby.players[i].has_value()
+			&& this->lobby.players[i].get().id == player.id)
+		{
+			//	A player with this EntityID already exists in this
+			//	ServerGameState's Lobby - return without adding player
+			//	again to this server's Lobby
+			return;
+		}
+	}
+
+	bool freeIndex = false;
+
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (!this->lobby.players[i].has_value()) {
+			//	Found a free index! Adding player here
+			freeIndex = true;
+			this->lobby.players[i] = player;
+			std::cout << "Added new player in index " << std::to_string(i) << std::endl;
+			std::cout << "Player's eid: " << player.id << std::endl;
+			break;
+		}
+	}
+
+	//	Crash server if no free index was found
+	assert(freeIndex);
+}
+
+void ServerGameState::updateLobbyPlayer(EntityID id, LobbyPlayer player) {
+	//	Iterate through the players vector and update the player with the given
+	//	EntityID
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (!this->lobby.players[i].has_value())
+			continue;
+
+		if (this->lobby.players[i].get().id == id) {
+			//	Update player
+			this->lobby.players[i] = player;
+		}
+	}
 }
 
 void ServerGameState::removePlayerFromLobby(EntityID id) {
-	this->lobby.players.erase(id);
+	//	Iterate through the players vector and remove the player with the given
+	//	EntityID
+	for (int i = 0; i < this->lobby.max_players; i++) {
+		if (!this->lobby.players[i].has_value())
+			continue;
+
+		if (this->lobby.players[i].get().id == id) {
+			//	Remove player
+			this->lobby.players[i] = boost::none;
+		}
+	}
+
+	//	Note: this method doesn't check that the removal was successful. It's
+	//	possible that an EntityID was passed in that no player in the lobby has
+	//	and so the removal had no effect
 }
 
 const Lobby& ServerGameState::getLobby() const {
@@ -1025,22 +1675,43 @@ const Lobby& ServerGameState::getLobby() const {
 
 Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 	switch (type) {
-	case CellType::FireballTrap: {
+	case CellType::FireballTrapLeft:
+	case CellType::FireballTrapRight:
+	case CellType::FireballTrapUp:
+	case CellType::FireballTrapDown: {
 		if (cell->type != CellType::Empty)
 			return nullptr;
 
-		glm::vec3 dimensions(
-			Grid::grid_cell_width / 2,
-			0.5f,
-			Grid::grid_cell_width / 2
-		);
+		glm::vec3 dimensions = Object::models.at(ModelType::SunGod);
 		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
-			1.0f,
-			cell->y * Grid::grid_cell_width
+			(cell->x * Grid::grid_cell_width),
+			0.0f,
+			(cell->y * Grid::grid_cell_width)
 		);
+		Direction dir;
+		switch (type) {
+		case CellType::FireballTrapLeft:
+			dir = Direction::LEFT;
+			// corner.z -= (dimensions.z / 2.0f);
+			break;
+		case CellType::FireballTrapRight:
+			dir = Direction::RIGHT;
+			// corner.z -= (dimensions.z / 2.0f);
+			break;
+		case CellType::FireballTrapUp:
+			dir = Direction::UP;
+			corner.x += (dimensions.x / 2.0f);
+			break;
+		case CellType::FireballTrapDown:
+			corner.x += (dimensions.x / 2.0f);
+			dir = Direction::DOWN;
+			break;
+		default:
+			dir = Direction::LEFT;
+			break;
+		}
 
-		FireballTrap* fireBallTrap = new FireballTrap(corner, dimensions);
+		FireballTrap* fireBallTrap = new FireballTrap(corner, dir);
 		this->objects.createObject(fireBallTrap);
 		return fireBallTrap;
 	}
@@ -1048,7 +1719,7 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 		if (cell->type != CellType::Empty)
 			return nullptr;
 
-		const float HEIGHT_SHOWING = 0.5;
+		const float HEIGHT_SHOWING = 0.4;
 		glm::vec3 dimensions(
 			Grid::grid_cell_width,
 			MAZE_CEILING_HEIGHT,
@@ -1059,7 +1730,7 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 			MAZE_CEILING_HEIGHT - HEIGHT_SHOWING,
 			cell->y * Grid::grid_cell_width
 		);
-		
+
 		SpikeTrap* spikeTrap = new SpikeTrap(corner, dimensions);
 		this->objects.createObject(spikeTrap);
 		return spikeTrap;
@@ -1087,79 +1758,59 @@ Trap* ServerGameState::placeTrapInCell(GridCell* cell, CellType type) {
 	case CellType::FloorSpikeHorizontal:
 	case CellType::FloorSpikeVertical: {
 		if (cell->type != CellType::Empty) {
-
-			std::cout << "trying to place in non empty cell\n";
 			return nullptr;
-
 		}
 
-		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
-			0.0f,
-			cell->y * Grid::grid_cell_width
-		);
-
-		FloorSpike::Orientation orientation;
-		if (type == CellType::FloorSpikeFull) {
-			orientation = FloorSpike::Orientation::Full;
-		}
-		else if (type == CellType::FloorSpikeHorizontal) {
-			orientation = FloorSpike::Orientation::Horizontal;
-			corner.z += Grid::grid_cell_width * 0.25f;
-		}
-		else {
-			orientation = FloorSpike::Orientation::Vertical;
-			corner.x += Grid::grid_cell_width * 0.25f;
-		}
-
-		FloorSpike* floorSpike = new FloorSpike(corner, orientation, Grid::grid_cell_width);
-		this->objects.createObject(floorSpike);
-		return floorSpike;
+        return spawnFloorSpike(cell);
 	}
-	/*
-	TODO: ADD BACK ARROWS!
-
 	case CellType::ArrowTrapDown:
 	case CellType::ArrowTrapLeft:
 	case CellType::ArrowTrapRight:
 	case CellType::ArrowTrapUp: {
-		ArrowTrap::Direction dir;
-		if (cell->type == CellType::ArrowTrapDown) {
-			dir = ArrowTrap::Direction::DOWN;
-		}
-		else if (cell->type == CellType::ArrowTrapUp) {
+        if (cell->type != CellType::Empty) {
+            return nullptr;
+        }
+		glm::vec3 corner(
+			(cell->x * Grid::grid_cell_width),
+			-3.0f,
+			(cell->y * Grid::grid_cell_width)
+		);
 
+		const float z_nudge = 0.55f;
+		const float x_nudge = 0.15f;
+		Direction dir;
+		if (type == CellType::ArrowTrapDown) {
+			dir = Direction::DOWN;
+			corner.x -= x_nudge;
 		}
-		else if (cell->type == CellType::ArrowTrapLeft) {
-			dir = ArrowTrap::Direction::LEFT;
+		else if (type == CellType::ArrowTrapUp) {
+			dir = Direction::UP;
+			corner.x -= x_nudge;
+		}
+		else if (type == CellType::ArrowTrapLeft) {
+			dir = Direction::LEFT;
+			corner.z += z_nudge;
 		}
 		else {
-			dir = ArrowTrap::Direction::RIGHT;
+			dir = Direction::RIGHT;
+			corner.z += z_nudge;
 		}
 
-		glm::vec3 dimensions(
-			Grid::grid_cell_width,
-			MAZE_CEILING_HEIGHT,
-			Grid::grid_cell_width
-		);
-		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
-			0.0f,
-			cell->y * Grid::grid_cell_width
-		);
 
-		this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
-		break;
-	}*/
+		ArrowTrap* arrowTrap = new ArrowTrap(corner, dir);
 
+		this->objects.createObject(arrowTrap);
+
+		return arrowTrap;
+	}
 	case CellType::TeleporterTrap: {
 		if (cell->type != CellType::Empty)
 			return nullptr;
 
 		glm::vec3 corner(
-			cell->x * Grid::grid_cell_width,
+			cell->x * Grid::grid_cell_width + 1,
 			0.0f,
-			cell->y * Grid::grid_cell_width
+			cell->y * Grid::grid_cell_width + 1
 		);
 
 		TeleporterTrap* teleporterTrap = new TeleporterTrap(corner);
@@ -1214,28 +1865,59 @@ void ServerGameState::loadMaze(const Grid& grid) {
 		}
 	}
 
-	//	Step 5:	Add floor and ceiling SolidSurfaces.
+	std::optional<glm::vec3> orb_pos;
+	std::optional<glm::vec3> exit_pos;
+	// go through and mark distance to orb and exit
+	for (int c = 0; c < this->grid.getColumns(); c++) {
+		for (int r = 0; r < this->grid.getRows(); r++) {
+			CellType type = this->grid.getCell(c, r)->type;
+			if (type == CellType::Orb || type == CellType::Exit) {
+				glm::vec3 corner(c * Grid::grid_cell_width, 0.0f, r * Grid::grid_cell_width);
 
-	// Create Ceiling
-	this->objects.createObject(new SolidSurface(false, Collider::Box, SurfaceType::Ceiling, 
-		glm::vec3(0.0f, MAZE_CEILING_HEIGHT, 0.0f),
-		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
-			this->grid.getRows() * Grid::grid_cell_width)
-	));
+				if (type == CellType::Orb) {
+					orb_pos = corner;
+				} else {
+					exit_pos = corner;
+				}
 
-	// create floor
-	glm::vec3 corner = glm::vec3(0.0f, -0.1f, 0.0f);
+			}
+		}
 
-	SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
-		corner,
-		glm::vec3(this->grid.getColumns() * Grid::grid_cell_width, 0.1,
-			this->grid.getRows() * Grid::grid_cell_width)
-	);
+		if (orb_pos.has_value() && exit_pos.has_value()) {
+			break; // early exit, not really needed though probably
+		}
+	}
 
-	this->objects.createObject(floor);
+    // create multiple floor and ceiling objects to populate the size of the entire maze. 
+    // currently doing this to stretch out the floor texture by the desired factor. here
+    // in the maze generation we can have a lot of control over how frequently the floor texture
+    // will repeat. I'd like to have this done on the client side instead and repeat the texture
+    // many times across one huge floor, but unfortuantely I cannot figure out how to get
+    // OpenGL to repeat the texture that many times.
+	for (int c = 0; c < this->grid.getColumns(); c+=GRIDS_PER_FLOOR_OBJECT) {
+		for (int r = 0; r < this->grid.getRows(); r+=GRIDS_PER_FLOOR_OBJECT) {
+            auto type = this->grid.getCell(c, r)->type;
+			if(type == CellType::OutsideTheMaze) {
+				continue;
+            }
 
-	// this is for floor highlighting
-	std::vector<std::vector<bool>> freeSpots(grid.getRows(), std::vector<bool>(grid.getColumns(), false));
+			glm::vec3 floor_corner = glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width);
+			SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
+				floor_corner,
+				glm::vec3(Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT, 0.1,
+					Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT)
+			);
+			this->objects.createObject(floor);
+
+			glm::vec3 ceiling_corner = glm::vec3(c * Grid::grid_cell_width, MAZE_CEILING_HEIGHT, r * Grid::grid_cell_width);
+			SolidSurface* ceiling = new SolidSurface(false, Collider::Box, SurfaceType::Ceiling,
+                ceiling_corner,
+                glm::vec3(Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT, 0.1,
+                    Grid::grid_cell_width * GRIDS_PER_FLOOR_OBJECT)
+			);
+			this->objects.createObject(ceiling);
+		}
+	}
 
 	//	Step 6:	For each GridCell, add an object (if not empty) at the 
 	//	GridCell's position.
@@ -1265,12 +1947,15 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					cell->type = CellType::TeleportSpell;
 				}
 			} else if (cell->type == CellType::RandomWeapon) {
-				int r = randomInt(1, 3);
+				int r = randomInt(1, 4);
 				if (r == 1) {
 					cell->type = CellType::Dagger;
 				}
 				else if (r == 2) {
 					cell->type = CellType::Sword;
+				}
+				else if (r == 3) {
+					cell->type = CellType::Mirror;
 				}
 				else {
 					cell->type = CellType::Hammer;
@@ -1286,23 +1971,27 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						0,
 						cell->y * Grid::grid_cell_width + 1);
 
-					this->objects.createObject(new Orb(corner, dimensions));
+                    PointLightProperties lightProperties{
+                        .flickering = false,
+                        .min_intensity = 1.0f,
+                        .max_intensity = 1.0f,
+                        .ambient_color = glm::vec3(0.0f, 0.75f, 0.67f),
+                        .diffuse_color = glm::vec3(0.0f, 0.75f, 0.67f),
+                        .specular_color = glm::vec3(0.0f, 0.35f, 0.33f),
+                        .attenuation_linear = 0.07f,
+                        .attenuation_quadratic = 0.017f
+                    };
+
+
+					this->objects.createObject(new Orb(corner, dimensions, lightProperties));
 					break;
 				}
-				case CellType::FireballTrap: {
-					glm::vec3 dimensions(
-						Grid::grid_cell_width / 2,
-						0.5f,
-						Grid::grid_cell_width / 2
-					);
-					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
-						1.0f,
-						cell->y * Grid::grid_cell_width
-					);
-					this->objects.createObject(new FireballTrap(corner, dimensions));
+				case CellType::FireballTrapLeft:
+                case CellType::FireballTrapRight:
+                case CellType::FireballTrapUp:
+                case CellType::FireballTrapDown:
+                    spawnFireballTrap(cell);
 					break;
-				}
 				case CellType::Dagger: {
 					glm::vec3 dimensions(1.0f);
 
@@ -1410,7 +2099,7 @@ void ServerGameState::loadMaze(const Grid& grid) {
 					break;
 				}
 				case CellType::SpikeTrap: {
-                    const float HEIGHT_SHOWING = 0.5;
+                    const float HEIGHT_SHOWING = 0.4;
 					glm::vec3 dimensions(
 						Grid::grid_cell_width,
 						MAZE_CEILING_HEIGHT,
@@ -1443,31 +2132,22 @@ void ServerGameState::loadMaze(const Grid& grid) {
                 case CellType::TorchDown:
                 case CellType::TorchRight:
                 case CellType::TorchLeft: {
-                    this->spawnTorch(cell);
+					// if no orb or exit in maze then just tell it that they are very far off so not
+					// considered in color calculations
+					const glm::vec3 FAR_OFF_POS(10000, 10000, 10000);
+					this->spawnTorch(cell, orb_pos.value_or(FAR_OFF_POS), exit_pos.value_or(FAR_OFF_POS));
                     this->spawnWall(cell, col, row, internal_walls.contains(glm::ivec2(col, row)));
                     break;
                 }
-				case CellType::FloorSpikeFull:
+                case CellType::LavaCross:
+                case CellType::LavaHorizontal:
+                case CellType::LavaVertical: {
+                    this->spawnLava(cell);
+					break;
+				}
 				case CellType::FloorSpikeHorizontal:
 				case CellType::FloorSpikeVertical: {
-					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
-						0.0f, 
-						cell->y * Grid::grid_cell_width
-					);
-
-					FloorSpike::Orientation orientation;
-					if (cell->type == CellType::FloorSpikeFull) {
-						orientation = FloorSpike::Orientation::Full;
-					} else if (cell->type == CellType::FloorSpikeHorizontal) {
-						orientation = FloorSpike::Orientation::Horizontal;
-						corner.z += Grid::grid_cell_width * 0.25f;
-					} else {
-						orientation = FloorSpike::Orientation::Vertical;
-						corner.x += Grid::grid_cell_width * 0.25f;
-					}
-
-					this->objects.createObject(new FloorSpike(corner, orientation, Grid::grid_cell_width));
+                    this->spawnFloorSpike(cell);
 					break;
 				}
 
@@ -1475,37 +2155,15 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				case CellType::ArrowTrapLeft:
 				case CellType::ArrowTrapRight:
 				case CellType::ArrowTrapUp: {
-					ArrowTrap::Direction dir;
-					if (cell->type == CellType::ArrowTrapDown) {
-						dir = ArrowTrap::Direction::DOWN;
-					} else if (cell->type == CellType::ArrowTrapUp) {
-						dir = ArrowTrap::Direction::UP;
-					} else if (cell->type == CellType::ArrowTrapLeft) {
-						dir = ArrowTrap::Direction::LEFT;
-					} else {
-						dir = ArrowTrap::Direction::RIGHT;
-					}
-
-					glm::vec3 dimensions(
-						Grid::grid_cell_width,
-						MAZE_CEILING_HEIGHT,
-						Grid::grid_cell_width
-					);
-					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
-						0.0f, 
-						cell->y * Grid::grid_cell_width
-					);
-
-					this->objects.createObject(new ArrowTrap(corner, dimensions, dir));
+                    spawnArrowTrap(cell);
 					break;
 				}
 
 				case CellType::TeleporterTrap: {
 					glm::vec3 corner(
-						cell->x * Grid::grid_cell_width,
+						cell->x * Grid::grid_cell_width + 1,
 						0.0f,
-						cell->y * Grid::grid_cell_width
+						cell->y * Grid::grid_cell_width + 1
 					);
 
 					this->objects.createObject(new TeleporterTrap(corner));
@@ -1513,9 +2171,9 @@ void ServerGameState::loadMaze(const Grid& grid) {
 				}
 				case CellType::Exit: {
 					glm::vec3 corner(
-						cell->x* Grid::grid_cell_width,
+						cell->x * Grid::grid_cell_width,
 						0.0f,
-						cell->y* Grid::grid_cell_width
+						cell->y * Grid::grid_cell_width
 					);
 
 					glm::vec3 dimensions(
@@ -1523,41 +2181,37 @@ void ServerGameState::loadMaze(const Grid& grid) {
 						MAZE_CEILING_HEIGHT,
 						Grid::grid_cell_width
 					);
+                    PointLightProperties lightProperties{
+                        .flickering = false,
+                        .min_intensity = 1.0f,
+                        .max_intensity = 1.0f,
+                        .ambient_color = glm::vec3(1.05f, 1.05f, 1.05f),
+                        .diffuse_color = glm::vec3(1.0f, 1.0f, 1.0f),
+                        .specular_color = glm::vec3(0.5f, 0.5f, 0.5f),
+                        .attenuation_linear = 0.07f,
+                        .attenuation_quadratic = 0.017f
+                    };
 
-					this->objects.createObject(new Exit(false, corner, dimensions));
+
+					this->objects.createObject(new Exit(false, corner, dimensions, lightProperties));
+					break;
+				}
+				case CellType::Mirror: {
+					glm::vec3 dimensions(1.0f);
+
+					glm::vec3 corner(cell->x* Grid::grid_cell_width + 1,
+						0,
+						cell->y* Grid::grid_cell_width + 1);
+
+					this->objects.createObject(new Mirror(corner, dimensions));
 					break;
 				}
 				default: {
-					freeSpots[row][col] = true;
+
 				}
 			}
 		}
 	}
-
-	// Create Floor
-	//for (int c = 0; c < this->grid.getColumns(); c++) {
-	//	for (int r = 0; r < this->grid.getRows(); r++) {
-	//		auto type = this->grid.getCell(c, r)->type;
-	//		if (isWallLikeCell(type) || type == CellType::OutsideTheMaze) {
-	//			continue;
-	//		}
-
-	//		glm::vec3 corner = glm::vec3(c * Grid::grid_cell_width, -0.1f, r * Grid::grid_cell_width);
-
-	//		SolidSurface* floor = new SolidSurface(false, Collider::None, SurfaceType::Floor,
-	//			corner,
-	//			glm::vec3(Grid::grid_cell_width, 0.1,
-	//				Grid::grid_cell_width)
-	//		);
-
-	//		this->objects.createObject(floor);
-
-	//		if(freeSpots[r][c]) {
-	//			solidSurfaceInGridCells.insert({{c, r}, {floor}});
-	//		}
-	//	}
-	//}
-
 }
 
 void ServerGameState::spawnWall(GridCell* cell, int col, int row, bool is_internal) {
@@ -1585,20 +2239,19 @@ void ServerGameState::spawnWall(GridCell* cell, int col, int row, bool is_intern
 		SolidSurface* wall = new SolidSurface(false, Collider::Box, surface_type, corner, dimensions);
 		wall->shared.is_internal = is_internal;
         this->objects.createObject(wall);
-		if (cell->type == CellType::Wall || cell->type == CellType::Pillar) {
-			// don't let the DM select walls with torches
-			solidSurfaceInGridCells.insert({{col, row}, { wall }});
-		}	
     }
 }
 
-void ServerGameState::spawnTorch(GridCell *cell) {
+void ServerGameState::spawnTorch(GridCell *cell, glm::vec3 orb_pos, glm::vec3 exit_pos) {
     glm::vec3 dimensions = Object::models.at(ModelType::Torchlight);
     glm::vec3 corner(
         cell->x * this->grid.grid_cell_width,
         MAZE_CEILING_HEIGHT / 2.0f,
         cell->y * this->grid.grid_cell_width
     );
+
+	float orb_dist = glm::distance(corner, orb_pos);
+	float exit_dist = glm::distance(corner, exit_pos);
 
     switch (cell->type) {
         case CellType::TorchDown: {
@@ -1636,7 +2289,120 @@ void ServerGameState::spawnTorch(GridCell *cell) {
 		true
 	));
 
-    this->objects.createObject(new Torchlight(corner));
+    this->objects.createObject(new Torchlight(corner, orb_dist, exit_dist));
+}
+
+Trap* ServerGameState::spawnFireballTrap(GridCell *cell) {
+    glm::vec3 dimensions = Object::models.at(ModelType::SunGod);
+    glm::vec3 corner(
+        (cell->x * Grid::grid_cell_width),
+        0.0f,
+        (cell->y * Grid::grid_cell_width)
+    );
+    Direction dir;
+    switch (cell->type) {
+        case CellType::FireballTrapLeft:
+            dir = Direction::LEFT;
+            // corner.z -= (dimensions.z / 2.0f);
+            break;
+        case CellType::FireballTrapRight:
+            dir = Direction::RIGHT;
+            // corner.z -= (dimensions.z / 2.0f);
+            break;
+        case CellType::FireballTrapUp:
+            dir = Direction::UP;
+            corner.x += (dimensions.x / 2.0f);
+            break;
+        case CellType::FireballTrapDown:
+            corner.x += (dimensions.x / 2.0f);
+            dir = Direction::DOWN;
+            break;
+        default:
+            dir = Direction::LEFT;
+            break;
+    }
+    FireballTrap* fireBallTrap = new FireballTrap(corner, dir);
+    this->objects.createObject(fireBallTrap);
+    return fireBallTrap;
+}
+
+Trap* ServerGameState::spawnArrowTrap(GridCell* cell) {
+    glm::vec3 corner(
+        (cell->x* Grid::grid_cell_width),
+        -3.0f,
+        (cell->y* Grid::grid_cell_width)
+    );
+
+    const float z_nudge = 0.55f;
+    const float x_nudge = 0.15f;
+    Direction dir;
+    if (cell->type == CellType::ArrowTrapDown) {
+        dir = Direction::DOWN;
+        corner.x -= x_nudge;
+    }
+    else if (cell->type == CellType::ArrowTrapUp) {
+        dir = Direction::UP;
+        corner.x -= x_nudge;
+    }
+    else if (cell->type == CellType::ArrowTrapLeft) {
+        dir = Direction::LEFT;
+        corner.z += z_nudge;
+    }
+    else {
+        dir = Direction::RIGHT;
+        corner.z += z_nudge;
+    }
+
+
+    ArrowTrap* arrowTrap = new ArrowTrap(corner, dir);
+
+    this->objects.createObject(arrowTrap);
+    
+    return arrowTrap;
+}
+
+Trap* ServerGameState::spawnFloorSpike(GridCell* cell) {
+    glm::vec3 corner(
+        cell->x * Grid::grid_cell_width,
+        -0.5f,
+        cell->y * Grid::grid_cell_width
+    );
+
+    FloorSpike* floorSpike = new FloorSpike(corner, Grid::grid_cell_width);
+    this->objects.createObject(floorSpike);
+    return floorSpike;
+}
+
+Trap* ServerGameState::spawnLava(GridCell* cell) {
+    glm::vec3 corner(
+        cell->x * Grid::grid_cell_width,
+        0.0f,
+        cell->y * Grid::grid_cell_width
+    );
+
+    ModelType model_type;
+    if (cell->type == CellType::LavaCross) {
+		model_type = ModelType::LavaCross;	
+    } else if (cell->type == CellType::LavaHorizontal) {
+		model_type = ModelType::LavaHorizontal;	
+    } else {
+		model_type = ModelType::LavaVertical;	
+    }
+
+    PointLightProperties light_properties{
+        .flickering = false,
+        .min_intensity = 1.0f,
+        .max_intensity = 1.0f,
+        .ambient_color = glm::vec3(0.72f, 0.14f, 0.01f),
+        .diffuse_color = glm::vec3(0.8f, 0.14f, 0.0f),
+        .specular_color = glm::vec3(0.1f, 0.1f, 0.1f),
+        .attenuation_linear = 0.35f,
+        .attenuation_quadratic = 0.44f
+    };
+
+    Lava* lava = new Lava(corner, model_type, Grid::grid_cell_width, light_properties);
+    this->objects.createObject(lava);
+    return lava;
 }
 
 Grid& ServerGameState::getGrid() {

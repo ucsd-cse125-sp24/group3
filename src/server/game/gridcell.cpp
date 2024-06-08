@@ -19,14 +19,20 @@ CellType charToCellType(char c) {
 		return CellType::Enemy;
 	case 'X':
 		return CellType::SpikeTrap;
-	case '&':
-		return CellType::FireballTrap;
+	case '1':
+		return CellType::FireballTrapLeft;
+	case '2':
+		return CellType::FireballTrapRight;
+	case '3':
+		return CellType::FireballTrapDown;
+	case '4':
+		return CellType::FireballTrapUp;
 	case '+':
-		return CellType::FloorSpikeFull;
+		return CellType::LavaCross;
 	case '|':
-		return CellType::FloorSpikeVertical;
+		return CellType::LavaVertical;
 	case '-':
-		return CellType::FloorSpikeHorizontal;
+		return CellType::LavaHorizontal;
 	case 'F':
 		return CellType::FakeWall;
 	case '^':
@@ -79,6 +85,12 @@ CellType charToCellType(char c) {
 		return CellType::TeleporterTrap;
 	case 'o':
 		return CellType::Exit;
+	case 'M':
+		return CellType::Mirror;
+	case '5':
+		return CellType::FloorSpikeHorizontal;
+	case '6':
+		return CellType::FloorSpikeVertical;
 	default:
 		std::cerr << "Unknown cell type: " << c << "\n";
 		return CellType::Unknown;
@@ -99,13 +111,19 @@ char cellTypeToChar(CellType type) {
 		return 'E';
 	case CellType::SpikeTrap:
 		return 'X';
-	case CellType::FireballTrap:
-		return '&';
-	case CellType::FloorSpikeFull:
+	case CellType::FireballTrapLeft:
+		return '1';
+	case CellType::FireballTrapRight:
+		return '2';
+	case CellType::FireballTrapDown:
+		return '3';
+	case CellType::FireballTrapUp:
+		return '4';
+	case CellType::LavaCross:
 		return '+';
-	case CellType::FloorSpikeVertical:
+	case CellType::LavaVertical:
 		return '|';
-	case CellType::FloorSpikeHorizontal:
+	case CellType::LavaHorizontal:
 		return '-';
 	case CellType::FakeWall:
 		return 'F';
@@ -159,6 +177,12 @@ char cellTypeToChar(CellType type) {
 		return 'T';
 	case CellType::Exit:
 		return 'o';
+	case CellType::Mirror:
+		return 'M';
+	case CellType::FloorSpikeHorizontal:
+		return '5';
+	case CellType::FloorSpikeVertical:
+		return '6';
 	default:
 		return '?';
 	}

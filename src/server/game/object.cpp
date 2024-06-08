@@ -2,6 +2,7 @@
 #include "server/game/constants.hpp"
 #include "shared/game/sharedmodel.hpp"
 #include "shared/game/sharedobject.hpp"
+#include "shared/game/constants.hpp"
 
 /*	Constructors and Destructors	*/
 
@@ -12,6 +13,8 @@ Object::Object(ObjectType type, Physics physics, ModelType modelType):
 	this->type = type;
 	this->setModel(modelType);
 	this->distance_moved = 0.0f;
+	this->animState = AnimState::IdleAnim;
+	this->is_sprinting = false;
 }
 
 Object::~Object() {}
@@ -38,9 +41,26 @@ std::unordered_map<ModelType, glm::vec3> Object::models ({
     // can't move around anywhere. we should eventually solve this
     // by tucking in the player's arms since right now they're 
     // spread out in the model
-	{ModelType::Player, (FIRE_PLAYER_DIMENSIONS / 4.0f)},
+	{ModelType::PlayerFire, {FIRE_PLAYER_DIMENSIONS * PLAYER_BBOX_SCALE}}, 
+	{ModelType::PlayerLightning, {LIGHTNING_PLAYER_DIMENSIONS * PLAYER_BBOX_SCALE}}, 
+	{ModelType::PlayerWater, {WATER_PLAYER_DIMENSIONS * PLAYER_BBOX_SCALE}}, 
 	{ModelType::WarrenBear, (BEAR_DIMENSIONS / 4.0f)},
-    {ModelType::Torchlight, glm::vec3(1.0f)}
+    {ModelType::Torchlight, glm::vec3(1.0f)},
+    {ModelType::SunGod, (SUNGOD_DIMENSIONS / 2.0f)},
+    {ModelType::Arrow, glm::vec3(0.5f, 0.5f, 2.0f)},
+    {ModelType::ArrowTrap, (ARROW_TRAP_DIMENSIONS * 1.2f)},
+    {ModelType::LavaCross, LAVA_DIMENSIONS},
+    {ModelType::LavaHorizontal, LAVA_DIMENSIONS},
+    {ModelType::LavaVertical, LAVA_DIMENSIONS},
+    {ModelType::FloorSpikeFull, FLOOR_SPIKE_DIMENSIONS},
+    {ModelType::FloorSpikeHorizontal, FLOOR_SPIKE_DIMENSIONS},
+    {ModelType::FloorSpikeVertical, FLOOR_SPIKE_DIMENSIONS},
+    {ModelType::Lightning, glm::vec3(3.0f, 100.0f, 3.0f)},
+	{ModelType::Orb, glm::vec3(0.887116, 0.941508, 0.950092)},
+	{ModelType::Chest, glm::vec3(1.377020, 1.355794, 1.092905)},
+	{ModelType::Fireball, glm::vec3(0.4f, 0.4f, 0.4f)},
+	{ModelType::SpellOrb, glm::vec3(0.4f, 0.4f, 0.4f)},
+	{ModelType::TeleporterTrap, glm::vec3(1.0f, 3.0f, 1.0f)}
 });
 
 /*	SharedGameState generation	*/
@@ -51,6 +71,7 @@ SharedObject Object::toShared() {
 	shared.type = this->type;
 	shared.physics = this->physics.shared;
 	shared.modelType = this->modelType;
+	shared.animState = this->animState;
 
 	return shared;
 }
@@ -93,4 +114,17 @@ std::string Physics::to_string(unsigned int tab_offset) {
 	representation += tabs + "}";
 
 	return representation;
+}
+
+glm::vec3 directionToFacing(const Direction& dir) {
+    switch (dir) {
+        case Direction::LEFT:
+            return glm::vec3(-1.0f, 0.0f, 0.0f);
+        case Direction::RIGHT:
+            return glm::vec3(1.0f, 0.0f, 0.0f);
+        case Direction::UP:
+            return glm::vec3(0.0f, 0.0f, -1.0f);
+        case Direction::DOWN:
+            return glm::vec3(0.0f, 0.0f, 1.0f);
+    }
 }

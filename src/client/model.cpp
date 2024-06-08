@@ -14,10 +14,11 @@
 #include <iostream>
 #include <filesystem>
 
-#include "client/lightsource.hpp"
+#include "assimp/postprocess.h"
 #include "client/renderable.hpp"
 #include "client/constants.hpp"
 #include "client/util.hpp"
+#include "glm/ext/quaternion_geometric.hpp"
 #include "server/game/torchlight.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/constants.hpp"
@@ -25,9 +26,6 @@
 #include "assimp/types.h"
 #include "assimp/aabb.h"
 #include "assimp/material.h"
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -48,11 +46,14 @@ Mesh::Mesh(
     const Material& material) : 
     vertices(vertices), indices(indices), textures(textures), material(material) {
 
+    setupNormalMaps();
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);  
 
@@ -71,6 +72,22 @@ Mesh::Mesh(
     glEnableVertexAttribArray(2);	
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, textureCoords)));
 
+    // vertex bone ids
+    glEnableVertexAttribArray(3);
+    glVertexAttribIPointer(3, 4, GL_INT, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, m_boneIDs)));
+
+    // vertex bone weights
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, m_weights)));
+
+    // tangents
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tangent)));
+
+    // bitangents
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, bitangent)));
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -81,69 +98,58 @@ Mesh::Mesh(
     // std::cout << "\t shininess" << this->material.shininess << std::endl;
 }
 
+void Mesh::setupNormalMaps() {
+    for (int i=0; i + 2 < indices.size(); i+=3){
+        // if (i + 1 > indices.size()) {
+        // }
+        // get 3 vertices for a triangle
+        Vertex& v0 = vertices.at(indices.at(i));
+        Vertex& v1 = vertices.at(indices.at(i+1));
+        Vertex& v2 = vertices.at(indices.at(i+2));
+
+        // Edges of the triangle : position delta
+        glm::vec3 deltaPos1 = v1.position - v0.position;
+        glm::vec3 deltaPos2 = v2.position - v0.position;
+
+        // UV delta
+        glm::vec2 deltaUV1 = v1.textureCoords - v0.textureCoords;
+        glm::vec2 deltaUV2 = v2.textureCoords - v0.textureCoords;
+
+        float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+        glm::vec3 tangent = (deltaPos1 * deltaUV2.y   - deltaPos2 * deltaUV1.y)*r;
+        glm::vec3 bitangent = (deltaPos2 * deltaUV1.x   - deltaPos1 * deltaUV2.x)*r;
+
+        v0.tangent += tangent;
+        v1.tangent += tangent;
+        v2.tangent += tangent;
+
+        v0.bitangent += bitangent;
+        v1.bitangent += bitangent;
+        v2.bitangent += bitangent;
+    }
+
+    for (int i = 0; i < vertices.size(); i++) {
+        // vertices.at(i).tangent = glm::normalize(vertices.at(i).tangent);
+        // // std::cout << "tangent " << glm::to_string(vertices.at(i).tangent) << "\n";
+        // // exit(1);
+        // vertices.at(i).bitangent = glm::normalize(vertices.at(i).bitangent);
+    }
+}
+
 void Mesh::draw(
     Shader* shader,
-    glm::mat4 viewProj,
     glm::vec3 camPos,
-    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
     bool fill) {
-    // activate the shader program
-    shader->use();
-
     // vertex shader uniforms
-    shader->setMat4("viewProj", viewProj);
     auto model = this->getModelMat();
+    
     shader->setMat4("model", model);
-
-    if (this->solidColor.has_value()) {
-        shader->setVec3("material.ambient", this->solidColor.value());
-    }
-    else {
-        shader->setVec3("material.ambient", this->material.ambient);
-    }
-
-
-    // fragment shader uniforms
-    shader->setVec3("material.diffuse", this->material.diffuse);
-    shader->setVec3("material.specular", this->material.specular);
-    shader->setFloat("material.shininess", this->material.shininess);
-
     shader->setVec3("viewPos", camPos);
 
-    // set lightsource uniforms 
-    unsigned int curr_light_num = 0;
-    for (auto curr_source : lightSources) {
-        if (curr_light_num > MAX_POINT_LIGHTS) {
-            break;
-        }
-        if (!curr_source.has_value()) {
-            continue;
-        }
-
-        SharedPointLightInfo& properties = curr_source->pointLightInfo.value();
-        glm::vec3 pos = curr_source->physics.getCenterPosition();
-
-        std::string pointLight = "pointLights[" + std::to_string(curr_light_num) + "]";
-        shader->setBool(pointLight + ".enabled", true);
-        shader->setFloat(pointLight + ".intensity", properties.intensity);
-        shader->setVec3(pointLight + ".position", pos);
-        // needed for attenuation
-        shader->setFloat(pointLight + ".constant", 1.0f);
-        shader->setFloat(pointLight + ".linear", properties.attenuation_linear);
-        shader->setFloat(pointLight + ".quadratic", properties.attenuation_quadratic);
-
-        // light color
-        shader->setVec3(pointLight + ".ambient", properties.ambient_color);
-        shader->setVec3(pointLight + ".diffuse", properties.diffuse_color);
-        shader->setVec3(pointLight + ".specular", properties.specular_color);
-
-        curr_light_num++;
-    }
-
-    if (textures.size() == 0) {
-    } else {
+    if (textures.size() != 0) {
         unsigned int diffuseNr = 1;
         unsigned int specularNr = 1;
+        unsigned int normalNr = 1;
         for(unsigned int i = 0; i < textures.size(); i++) {
             glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
             // retrieve texture number (the N in diffuse_textureN)
@@ -153,13 +159,28 @@ void Mesh::draw(
                 number = std::to_string(diffuseNr++);
             else if(name == "texture_specular")
                 number = std::to_string(specularNr++);
+            else if(name == "texture_normal")
+                number = std::to_string(normalNr++);
 
-            std::string shaderTextureName = "material." + name + number;
+            std::string shaderTextureName = name + number;
             shader->setInt(shaderTextureName, i);
             glBindTexture(GL_TEXTURE_2D, textures[i].getID());
         }
-        glActiveTexture(GL_TEXTURE0);
+
+        if (normalNr == 1) {
+            // never set any normal map texture uniform
+            shader->setBool("has_normal_map", false);
+        } else {
+            shader->setBool("has_normal_map", true);
+        }
+    } else {
+        // shader->setFloat("shininess", this->material.shininess);
     }
+    // if (solidColor.has_value()) {
+    //     shader->setVec3("diffuse", solidColor.value());
+    //     float s = 1.0f;
+    //     shader->setFloat("shininess", s);
+    // }
 
     // draw mesh
     glBindVertexArray(VAO);
@@ -168,21 +189,32 @@ void Mesh::draw(
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
-    glUseProgram(0);
 }
 
-Model::Model(const std::string& filepath) {
+Model::Model(const std::string& filepath, bool flip_uvs) {
     this->directory = std::filesystem::path(filepath).parent_path().string();
 
     Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(filepath, 
-            aiProcess_Triangulate | // flag to only creates geometry made of triangles
-            aiProcess_FlipUVs | 
-            aiProcess_SplitLargeMeshes | 
-            aiProcess_OptimizeMeshes | 
-            aiProcess_GenBoundingBoxes); // needed to query bounding box of the model later
+    const aiScene *scene;
+    if (flip_uvs) {
+        scene = importer.ReadFile(filepath, 
+                aiProcess_Triangulate | // flag to only creates geometry made of triangles
+                aiProcess_FlipUVs | 
+                aiProcess_SplitLargeMeshes | 
+                aiProcess_OptimizeMeshes | 
+                aiProcess_GenBoundingBoxes | // needed to query bounding box of the model later
+                aiProcess_CalcTangentSpace); 
+    } else {
+        scene = importer.ReadFile(filepath, 
+                aiProcess_Triangulate | // flag to only creates geometry made of triangles
+                aiProcess_SplitLargeMeshes | 
+                aiProcess_OptimizeMeshes | 
+                aiProcess_GenBoundingBoxes | // needed to query bounding box of the model later
+                aiProcess_CalcTangentSpace); 
+    }
+
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
         throw std::invalid_argument(std::string("ERROR::ASSIMP::") + importer.GetErrorString());
     }
@@ -193,13 +225,24 @@ Model::Model(const std::string& filepath) {
 }
 
 void Model::draw(Shader* shader,
-    glm::mat4 viewProj,
     glm::vec3 camPos, 
-    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
     bool fill) {
 
     for(Mesh& mesh : this->meshes) {
-        mesh.draw(shader, viewProj, camPos, lightSources, fill);
+        mesh.draw(shader, camPos, fill);
+    }
+}
+
+void Model::draw(Shader* shader,
+    glm::vec3 camPos, 
+    bool fill,
+    glm::vec3 color) {
+    float scale = 1.1f;
+    for(Mesh& mesh : this->meshes) {
+        glm::vec3 scaledColor = scale * color;
+        shader->setVec3("lightColor", scaledColor);
+        mesh.draw(shader, camPos, fill);
+        scale += 0.15f;
     }
 }
 
@@ -213,7 +256,7 @@ void Model::translateAbsolute(const glm::vec3& new_pos) {
 void Model::translateRelative(const glm::vec3& delta) {
     Renderable::translateRelative(delta);
     for(Mesh& mesh : this->meshes) {
-        mesh.translateAbsolute(delta);
+        mesh.translateRelative(delta);
     }
 }
 
@@ -242,6 +285,27 @@ void Model::scaleRelative(const glm::vec3& scale) {
     Renderable::scaleRelative(scale);
     for(Mesh& mesh : this->meshes) {
         mesh.scaleRelative(scale);
+    }
+}
+
+void Model::rotateAbsolute(const glm::vec3& dir, bool is_player, const glm::vec3& axis) {
+    Renderable::rotateAbsolute(dir, is_player, axis);
+    for(Mesh& mesh : this->meshes) {
+        mesh.rotateAbsolute(dir, is_player, axis);
+    }
+}
+
+void Model::rotateAbsolute(const float& angle, const glm::vec3& axis) {
+    Renderable::rotateAbsolute(angle, axis);
+    for(Mesh& mesh : this->meshes) {
+        mesh.rotateAbsolute(angle, axis);
+    }
+}
+
+void Model::rotateRelative(const glm::vec3& dir, const glm::vec3& axis) {
+    Renderable::rotateRelative(dir, axis);
+    for(Mesh& mesh : this->meshes) {
+        mesh.rotateRelative(dir, axis);
     }
 }
 
@@ -279,6 +343,7 @@ void Model::processNode(aiNode *node, const aiScene *scene) {
     // process all the node's meshes (if any)
     for(unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]]; 
+        // std::cout << "processing mesh at index[" << i << "]" << std::endl;
         meshes.push_back(processMesh(mesh, scene));			
 
         // update model's bounding box with new mesh
@@ -304,11 +369,16 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
                 mesh->mVertices[i].x,
                 mesh->mVertices[i].y,
                 mesh->mVertices[i].z);
-        glm::vec3 normal(
-                mesh->mNormals[i].x,
-                mesh->mNormals[i].y,
-                mesh->mNormals[i].z);
-        
+
+        glm::vec3 normal = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
+        if (mesh->mNormals) {
+            normal = glm::vec3(
+                    mesh->mNormals[i].x,
+                    mesh->mNormals[i].y,
+                    mesh->mNormals[i].z);
+
+        }
+
         // check if the mesh contain texture coordinates
         glm::vec2 texture(0.0f, 0.0f);
         if(mesh->mTextureCoords[0]) {
@@ -322,6 +392,11 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
             texture
         });
     }
+
+    for (int i = 0; i < vertices.size(); i++) {
+        setDefaultVertexBoneData(vertices[i]);
+    }
+
     // process indices
     for(unsigned int i = 0; i < mesh->mNumFaces; i++) {
         aiFace face = mesh->mFaces[i];
@@ -336,7 +411,6 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     float shininess = 0.0f;
 
     if(mesh->mMaterialIndex >= 0) {
-        // std::cout << "processing material of id: " << mesh->mMaterialIndex << std::endl;
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
         std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
@@ -344,6 +418,9 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
 
         std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR);
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+
+        std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_HEIGHT);
+        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
         if(AI_SUCCESS != material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse_color)) {
             std::cout << "couldn't get diffuse color" << std::endl;
@@ -362,6 +439,8 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         }
     }
 
+    extractBoneWeight(vertices, mesh, scene);
+
     return Mesh(
         vertices,
         indices,
@@ -375,10 +454,62 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     );
 }  
 
+void Model::setDefaultVertexBoneData(Vertex& vertex) {
+    for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
+        vertex.m_boneIDs[i] = -1;
+        vertex.m_weights[i] = 0.0f;
+    }
+}
+
+void Model::setVertexBoneData(Vertex& vertex, int boneID, float weight) {
+    // std::cout << "setting vertex bone data" << std::endl;
+    for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
+        if (vertex.m_boneIDs[i] < 0) {
+            vertex.m_boneIDs[i] = boneID;
+            vertex.m_weights[i] = weight;
+            return;
+        }
+    }
+}
+
+void Model::extractBoneWeight(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene) {
+    auto& boneInfoMap = m_boneInfoMap;
+    int& boneCount = m_boneCounter;
+
+    for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
+    {
+        int boneID = -1;
+        std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+        if (boneInfoMap.find(boneName) == boneInfoMap.end())
+        {
+            BoneInfo newBoneInfo;
+            newBoneInfo.id = boneCount;
+            newBoneInfo.offset = matrixToGLM(mesh->mBones[boneIndex]->mOffsetMatrix);
+            boneInfoMap[boneName] = newBoneInfo;
+            boneID = boneCount;
+            boneCount++;
+        }
+        else
+        {
+            boneID = boneInfoMap[boneName].id;
+        }
+        assert(boneID != -1);
+        auto weights = mesh->mBones[boneIndex]->mWeights;
+        int numWeights = mesh->mBones[boneIndex]->mNumWeights;
+
+        for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex)
+        {
+            int vertexId = weights[weightIndex].mVertexId;
+            float weight = weights[weightIndex].mWeight;
+            assert(vertexId <= vertices.size());
+            setVertexBoneData(vertices[vertexId], boneID, weight);
+        }
+    }
+}
 
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, const aiTextureType& type) {
     std::vector<Texture> textures;
-    // std::cout << "material has " << mat->GetTextureCount(type) << " textures of type " << aiTextureTypeToString(type) << std::endl;
+    std::cout << "material has " << mat->GetTextureCount(type) << " textures of type " << aiTextureTypeToString(type) << std::endl;
     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
         aiString str;
         mat->GetTexture(type, i, &str);
@@ -403,6 +534,9 @@ Texture::Texture(const std::string& filepath, const aiTextureType& type) {
         case aiTextureType_SPECULAR:
             this->type = "texture_specular";
             break;
+        case aiTextureType_HEIGHT:
+            this->type = "texture_normal";
+            break;
         default:
             throw std::invalid_argument(std::string("Unimplemented texture type ") + aiTextureTypeToString(type));
     }
@@ -412,13 +546,14 @@ Texture::Texture(const std::string& filepath, const aiTextureType& type) {
 
     int width, height, nrComponents;
     // std::cout << "Attempting to load texture at " << filepath << std::endl;
+    stbi_set_flip_vertically_on_load(true);  
     unsigned char *data = stbi_load(filepath.c_str(), &width, &height, &nrComponents, 0);
     if (!data) {
         std::cout << "Texture failed to load at path: " << filepath << std::endl;
         stbi_image_free(data);
         throw std::exception();
     }
-    // std::cout << "Succesfully loaded texture at " << filepath << std::endl;
+    // std::cout << "Succesfully loaded " << this->type << " texture at " << filepath << std::endl;
     GLenum format = GL_RED;
     if (nrComponents == 1)
         format = GL_RED;

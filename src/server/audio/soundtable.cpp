@@ -12,20 +12,26 @@ SoundTable::SoundTable() {
     this->next_id = 0;
 }
 
-std::unordered_map<EntityID, std::vector<SoundCommand>> SoundTable::getCommandsPerPlayer(SmartVector<Player*>& players) {
+std::unordered_map<EntityID, std::vector<SoundCommand>> SoundTable::getCommandsPerPlayer(const std::vector<Object*>& players) {
     std::vector<SoundCommand> commands;
     std::swap(this->current_commands, commands);
     // current commands is now empty, and we can parse these commands as we wish
 
     std::unordered_map<EntityID, std::vector<SoundCommand>> commands_per_player;
 
-    for (int i = 0; i < players.size(); i++) {
-        Player* player = players.get(i);
-        if (player == nullptr) continue;
-
+    for (const auto& obj : players) {
         for (const SoundCommand& command : commands) {
-            if (command.source.canBeHeardFrom(player->physics.shared.getCenterPosition())) {
-                commands_per_player[player->globalID].push_back(command);
+            // hack to prevent the dm and players from hearing the wrong sounds in intro cutscene...
+            if ((command.source.sfx == ServerSFX::ZeusStartTheme ||
+                 command.source.sfx == ServerSFX::Wind) && obj->type ==ObjectType::Player) {
+                continue;
+            }
+            if (command.source.sfx == ServerSFX::PlayersStartTheme && obj->type == ObjectType::DungeonMaster) {
+                continue;
+            }
+
+            if (command.source.canBeHeardFrom(obj->physics.shared.getCenterPosition())) {
+                commands_per_player[obj->globalID].push_back(command);
             }
         }
     }

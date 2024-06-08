@@ -166,13 +166,6 @@ public:
 
     /**
      * Converts the PackagedPacket into asio::buffer format. 
-     * Note: it is important when doing an async write THAT THE PackagedPacket DOES NOT
-     * GET DESTROYED BEFORE THE ASYNC WRITE ACTUALLY OCCURS. If the PackagedPacket is
-     * destroyed before the buffer is read from, the underlying data will be deleted
-     * and garbage will be written to the network socket.
-     * 
-     * Since we only expose a way to make this class as a shared_ptr, you should pass
-     * this shared_ptr into any callback that needs to read from the packet
      * 
      * @return The packet in buffer format, which can easily be passed into boost::asio::write
      * or similar function.

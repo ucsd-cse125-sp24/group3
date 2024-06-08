@@ -41,7 +41,8 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
                     .directory = json.at("game").at("maze").at("directory"),
                     .procedural = json.at("game").at("maze").at("procedural"),
                     .maze_file = json.at("game").at("maze").at("maze_file")
-                }
+                },
+                .disable_enemies = json.at("game").at("disable_enemies") 
             },
             .network = {
                 .server_ip = json.at("network").at("server_ip"),
@@ -51,13 +52,17 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
                 .lobby_name = json.at("server").at("lobby_name"),
                 .lobby_broadcast = json.at("server").at("lobby_broadcast"),
                 .max_players = json.at("server").at("max_players"),
+                .disable_dm = json.at("server").at("disable_dm"),
+                .skip_intro = json.at("server").at("skip_intro")
             },
             .client = {
                 .default_name = json.at("client").at("default_name"),
                 .lobby_discovery = json.at("client").at("lobby_discovery"),
-                .window_width = json.at("client").at("window_width"),
+                .fullscreen = json.at("client").at("fullscreen"),
                 .draw_bboxes = json.at("client").at("draw_bboxes"),
-                .fps_counter = json.at("client").at("fps_counter")
+                .fps_counter = json.at("client").at("fps_counter"),
+                .presentation = json.at("client").at("presentation"),
+                .render = json.at("client").at("render")
             }
         };
     } catch (nlohmann::json::exception& ex) {
@@ -73,7 +78,8 @@ GameConfig getDefaultConfig() {
                 .directory = "maps",
                 .procedural = true,
                 .maze_file = "default_maze.maze"
-            }
+            },
+            .disable_enemies = false 
         },
         .network = {
             .server_ip = "localhost",
@@ -83,10 +89,16 @@ GameConfig getDefaultConfig() {
             .lobby_name = "My Test Lobby",
             .lobby_broadcast = false,
             .max_players = 1,
+            .disable_dm = false,
+            .skip_intro = false
         },
         .client = {
             .default_name = "Player",
-            .lobby_discovery = false
+            .lobby_discovery = false,
+            .fullscreen = false,
+            .draw_bboxes = false,
+            .fps_counter = false,
+            .presentation = false
         }
     };
 }

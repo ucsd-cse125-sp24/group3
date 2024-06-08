@@ -42,7 +42,8 @@ enum class EventType {
     UseItem,
     DropItem,
     UpdateLightSources,
-    TrapPlacement
+    TrapPlacement,
+    LoadIntroCutscene,
 };
 
 enum class ActionType {
@@ -73,23 +74,38 @@ struct ChangeFacingEvent {
     }
 };
 
+
 /**
- * Event representing an action a player can take during the lobby screen
+ *  Enum representing a player's desired role (as selected with the radio buttons
+ *  in the client lobby screen (in GUIState::Lobby)
+ */
+enum class PlayerRole {
+    Player,
+    DungeonMaster,
+    Unknown
+};
+
+/**
+ * Event representing an action a player can take during the Lobby GUI
+ * screen.
+ * (Only handle this event in the server while the game phase is set to
+ * GamePhase::LOBBY)
  */
 struct LobbyActionEvent {
     enum class Action {
-        LEAVE,
-        READY_UP,
-        UNREADY
+        Ready,
+        StartGame
     };
 
     LobbyActionEvent() {}
-    explicit LobbyActionEvent(Action action) : action(action) {}
+    explicit LobbyActionEvent(Action action, PlayerRole role) : action(action),
+        role(role) {}
 
     Action action;
+    PlayerRole role;
 
     DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-        ar& action;
+        ar& action & role;
     }
 };
 
@@ -272,8 +288,9 @@ struct UpdateLightSourcesEvent {
     struct UpdatedLightSource {
         EntityID eid;
         float intensity;
+        bool is_cut;
         DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-            ar & eid & intensity;
+            ar & eid & intensity & is_cut;
         }
     };
     std::array<boost::optional<UpdatedLightSource>, MAX_POINT_LIGHTS> lightSources;
@@ -283,6 +300,25 @@ struct UpdateLightSourcesEvent {
     }
 };
 
+struct LoadIntroCutsceneEvent {
+    LoadIntroCutsceneEvent() = default;
+
+    explicit LoadIntroCutsceneEvent(
+        const SharedGameState& state,
+        EntityID pov_eid,
+        EntityID dm_eid,
+        const std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS>& lights
+    ) : state(state), pov_eid(pov_eid), dm_eid(dm_eid), lights(lights) {}
+
+    SharedGameState state;
+    EntityID pov_eid;
+    EntityID dm_eid;
+    std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lights;
+
+    DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+        ar & state & lights & pov_eid & dm_eid;
+    }
+};
 
 /**
  * All of the different kinds of events in a tagged union, so we can
@@ -302,7 +338,8 @@ using EventData = boost::variant<
     UseItemEvent,
     UpdateLightSourcesEvent,
     DropItemEvent,
-    TrapPlacementEvent
+    TrapPlacementEvent,
+    LoadIntroCutsceneEvent
 >;
 
 /**

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "server/game/gridcell.hpp"
 #include "shared/utilities/constants.hpp"
 #include "shared/utilities/typedefs.hpp"
 #include "shared/game/sharedgamestate.hpp"
@@ -11,6 +12,7 @@
 #include "shared/game/event.hpp"
 #include "server/game/grid.hpp"
 #include "server/game/objectmanager.hpp"
+#include "server/game/spawner.hpp"
 
 #include <string>
 #include <vector>
@@ -45,6 +47,11 @@ public:
 	 * instance at the current timestep.
 	 */
 	ObjectManager objects;
+
+	/**
+	 * @brief Controls the spawns for the enemies
+	 */
+	std::unique_ptr<Spawner> spawner;
 
 	/**
 	 * @brief Creates a ServerGameState instance. The intial GamePhase is set to
@@ -123,11 +130,30 @@ public:
 
 	void handleRespawns();
 
+	void handleDM();
+
+	void updateCompass();
+
 	void tickStatuses();
 
 	void spawnEnemies();
 
+	void handleTickVelocity();
+
 	void deleteEntities();
+
+	/**
+	 * @brief Updates player's lightning invulnerability status
+	 * (sets to false once the player's lightning invulnerability duration
+	 * is past)
+	 */
+	void updatePlayerLightningInvulnerabilityStatus();
+
+	/**
+	 * @brief Updates the DungeonMaster's paralysis status
+	 * (sets to false once the DungeonMaster's paralysis duration is past)
+	 */
+	void updateDungeonMasterParalysis();
 
 	/*	SharedGameState generation	*/
 
@@ -195,7 +221,27 @@ public:
 	 * player is already in the mapping, as nothing will happen. If a player's name
 	 * has changed, then this will update their name as well.
 	 */
-	void addPlayerToLobby(EntityID id, const std::string& name);
+
+	/**
+	 * @brief Adds a new LobbyPlayer to this ServerGameState's Lobby struct.
+	 * This method will assign the new player's LobbyPlayer to the first free
+	 * index in the Lobby.players vector.
+	 * Note: this method will CAUSE THE SERVER TO CRASH if all LobbyPlayer indices
+	 * are currently in use (i.e., if Lobby.max_players players have already
+	 * connected to this server's lobby).
+	 * @param player LobbyPlayer struct of the new player to add to this
+	 * ServerGameState instance's Lobby.
+	 */
+	void addPlayerToLobby(LobbyPlayer player);
+
+	/**
+	 * @brief Updates the LobbyPlayer with the given EntityID to the given
+	 * LobbyPlayer struct
+	 * @param id EntityID of the LobbyPlayer to update
+	 * @param player LobbyPlayer struct to copy to the current lobby player
+	*/
+	void updateLobbyPlayer(EntityID id, LobbyPlayer player);
+
 	/**
 	 * Removes a player from the lobby with the specified id.
 	 */
@@ -228,8 +274,6 @@ public:
 	 * @return A string representation of this ServerGameState object.
 	 */
 	std::string to_string();
-
-	Trap* createTrap(CellType type, glm::vec3 corner);
 
 private:
 	/**
@@ -266,11 +310,11 @@ private:
 	MatchPhase matchPhase;
 
 	/**
-	 * @brief Amount of time, in timesteps, left until the end of the match
-	 * This value only becomes relevant when matchPhase is set to
+	 * @brief epoch timestamp of when the match will end
+	 * This value only becomes set when matchPhase is set to
 	 * MatchPhase::RelayRace
 	 */
-	unsigned int timesteps_left;
+	time_t relay_finish_time;
 
 	/**
 	 * @brief Player victory is by default false - only becomes true if a Player
@@ -307,10 +351,30 @@ private:
 	 */
 	std::unordered_set<std::pair<Object*, Object*>, pair_hash> collidedObjects;
 
+	/**
+	 * @brief Field that stores the current trap the DM is hovering (not placed yet)
+	 */
+	Trap* currentGhostTrap;
 
-	std::unordered_map<std::pair<int, int>, std::vector<SolidSurface*>, IntPairHash> solidSurfaceInGridCells;
+	/**
+	 * @brief Field that stores the lightning pos for cutting lights
+	 */
+	std::optional<glm::vec3> dmLightningCutLights;
 
-	std::vector<SolidSurface*> previouslyHighlighted;
+	/**
+	 * @brief Field that stores the light cut action for cutting lights
+	 */
+	std::optional<glm::vec3> dmActionCutLights;
+
+	/**
+	 * @brief last light cut for light cut action
+	 */
+	unsigned int lastLightCut;
+
+	/**
+	 * @brief last light cut for lightning action
+	 */
+	unsigned int lastLightningLightCut;
 
 	/**
     /**
@@ -326,11 +390,32 @@ private:
      * cell
      * @param cell is a single cell of the maze's grid where a wall + torch
      * should be placed
+	 * @param orb_pos position of the orb so that we can calculate the distance
+	 * for coloring purposes
+	 * @param exit_pos position of the exit so that we can calculate the distance
+	 * for coloring purposes
      * @param cellType determines which direction the torch should face. 
      * This means that only TorchUp, TorchDown, TorchRight, and TorchLeft
      * are acceptable values of cellType 
      */
-    void spawnTorch(GridCell *cell);
+    void spawnTorch(GridCell *cell, glm::vec3 orb_pos, glm::vec3 exit_pos);
+
+    /**
+     * @brief helper function to spawn a fireball trap 
+     * @param cell is a single cell of the maze's grid where the fireball
+     * trap should be placed
+     * @param cellType determines which direction the trap should face. 
+     * This means that only FireballTrapUp, FireballTrapDown, FireballTrapRight, and FireballTrapLeft
+     * are acceptable values of cellType 
+     * @return a pointer to the fireball trap that was spawned
+     */
+    Trap* spawnFireballTrap(GridCell *cell);
+
+    Trap* spawnArrowTrap(GridCell* cell);
+
+    Trap* spawnFloorSpike(GridCell* cell);
+
+    Trap* spawnLava(GridCell* cell);
 
     std::unordered_map<EntityID, std::array<std::optional<EntityID>, MAX_POINT_LIGHTS>> lightSourcesPerPlayer;
 
@@ -338,8 +423,6 @@ private:
 	 * @brief table of all currently playing sounds
 	 */
 	SoundTable sound_table;
-	/**
-	 * @brief number of enemies currently in the maze
-	 */
-	int alive_enemy_weight;
+
+    GameConfig config;
 };

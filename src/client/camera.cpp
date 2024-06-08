@@ -67,9 +67,9 @@ void Camera::update(float xpos, float ypos) {
         pitch = -70.0f;
 
     glm::vec3 front;
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.x = cos(glm::radians(yaw + 90.0f)) * cos(glm::radians(pitch));
     front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw + 90.0f)) * cos(glm::radians(pitch));
     cameraFront = glm::normalize(front);
 
     glm::vec3 oldCamUp = cameraUp;
@@ -95,6 +95,10 @@ glm::vec3 Camera::move(bool is_x_axis, float dir) {
 
 void Camera::updatePos(glm::vec3 pos) {
     cameraPos = pos;
+}
+
+void Camera::setPitch(float pitch) {
+    this->pitch = pitch;
 }
 
 DungeonMasterCamera::DungeonMasterCamera() : Camera() {
@@ -149,3 +153,4 @@ void DungeonMasterCamera::update(float xpos, float ypos) {
 
     viewProjMat = this->projection * this->view;
 }
+

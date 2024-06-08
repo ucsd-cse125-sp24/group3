@@ -7,9 +7,10 @@
 #include "server/game/object.hpp"
 #include "server/game/projectile.hpp"
 #include "shared/utilities/rng.hpp"
+#include "shared/audio/constants.hpp"
 
 Spell::Spell(glm::vec3 corner, glm::vec3 dimensions, SpellType spelltype):
-    Item(ObjectType::Spell, false, corner, ModelType::Cube, dimensions)
+    Item(ObjectType::Spell, false, corner, ModelType::SpellOrb, dimensions)
 {
     
     this->spellType = spelltype;
@@ -42,6 +43,7 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
 
     spell_origin += player->physics.shared.facing * 2.0f;
 
+    auto sound = ServerSFX::Spell;
     switch (this->spellType) {
     case SpellType::Fireball: {
         state.objects.createObject(new SpellOrb(spell_origin, player->physics.shared.facing, SpellType::Fireball));
@@ -52,17 +54,22 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
         break;
     }
     case SpellType::Teleport: {
-        auto players = state.objects.getPlayers();
-        Player* rand_player;
-        while (true) {
-            rand_player = players.get(randomInt(0, players.size() - 1));
-            if (players.size() == 1) { 
-                break; 
-            }
-            if (player->typeID != rand_player->typeID) {
-                break;
+        sound = ServerSFX::Teleport;
+
+        std::vector<Player*> valid_players;
+
+        auto all_players = state.objects.getPlayers();
+        for (int i = 0; i < all_players.size(); i++) {
+            if (all_players.get(i) != nullptr && all_players.get(i)->typeID != player->typeID) {
+                valid_players.push_back(all_players.get(i));
             }
         }
+
+        if (valid_players.size() < 1) {
+            return;
+        }
+
+        Player* rand_player = valid_players.at(randomInt(0, valid_players.size() - 1));
 
         auto& grid = state.getGrid();
         int r_col = 0;
@@ -86,6 +93,15 @@ void Spell::useItem(Object* other, ServerGameState& state, int itemSelected) {
         state.objects.moveObject(player, glm::vec3(r_col * grid.grid_cell_width, 0.0f, r_row * grid.grid_cell_width));
     }
     }
+
+    // Play sound
+    state.soundTable().addNewSoundSource(SoundSource(
+        sound,
+        player->physics.shared.getCenterPosition(),
+        DEFAULT_VOLUME,
+        SHORT_DIST,
+        SHORT_ATTEN
+    ));
 
     this->castLimit -= 1;
     player->sharedInventory.usesRemaining[itemSelected] = this->castLimit;
@@ -118,5 +134,12 @@ void Spell::doCollision(Object* other, ServerGameState& state) {
     if (pickedUp) {
         this->iteminfo.held = true;
         this->physics.collider = Collider::None;
+        state.soundTable().addNewSoundSource(SoundSource(
+            ServerSFX::ItemPickUp,
+            other->physics.shared.getCenterPosition(),
+            DEFAULT_VOLUME,
+            SHORT_DIST,
+            SHORT_ATTEN
+        ));
     }
 }

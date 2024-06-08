@@ -22,7 +22,8 @@ class StaticImg : public Widget {
 public:
     using Ptr = std::unique_ptr<StaticImg>;
     static std::unique_ptr<Shader> shader;
-    int size;
+    float size_width;
+    float size_height;
 
     /**
      * @brief creates a StaticImg unique ptr widget
@@ -37,11 +38,11 @@ public:
         return std::make_unique<StaticImg>(std::forward<Params>(params)...);
     }
 
-    StaticImg(glm::vec2 origin, gui::img::Img img, int size);
-    StaticImg(glm::vec2 origin, gui::img::Img img);
+    StaticImg(glm::vec2 origin, gui::img::Img img, float size = 1.0f);
     explicit StaticImg(gui::img::Img img);
     ~StaticImg();
 
+    void changeImage(gui::img::Img img);
     void render() override;
 
 private:

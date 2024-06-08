@@ -14,8 +14,10 @@
 namespace gui {
 
 
-GUI::GUI(Client* client): capture_keystrokes(false) {
+GUI::GUI(Client* client, const GameConfig& config): capture_keystrokes(false), logo() {
     this->client = client;
+    this->config = config;
+    this->controlDisplayed = true; // start with help on
 }
 
 bool GUI::init()
@@ -47,12 +49,18 @@ bool GUI::init()
         return false;
     }
 
+    if (!this->logo.init()) {
+        return false;
+    }
+    
+    this->recentEvents.push_back("");
+
     std::cout << "Initialized GUI\n";
     return true;
 }
 
 void GUI::beginFrame() {
-    std::unordered_map<widget::Handle, widget::Widget::Ptr> empty;
+    std::map<widget::Handle, widget::Widget::Ptr> empty;
     std::swap(this->widgets, empty);
 }
 
@@ -70,12 +78,15 @@ void GUI::renderFrame() {
     glDisable(GL_BLEND);
 }
 
-void GUI::handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down) {
+void GUI::handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down, bool& is_right_mouse_down) {
     // convert to gui coords, where (0,0) is bottome left
     mouse_ypos = WINDOW_HEIGHT - mouse_ypos;
     if (is_left_mouse_down) {
         this->_handleClick(mouse_xpos, mouse_ypos);
         is_left_mouse_down = false;
+    }
+    if (is_right_mouse_down) {
+        is_right_mouse_down = false;
     }
     this->_handleHover(mouse_xpos, mouse_ypos);
 }
@@ -131,7 +142,7 @@ std::shared_ptr<font::Loader> GUI::getFonts() {
 }
 
 void GUI::layoutFrame(GUIState state) {
-    if (client->config.client.fps_counter) {
+    if (client->config.client.fps_counter && state != GUIState::INITIAL_LOAD) {
         _layoutFPSCounter();
     }
     switch (state) {
@@ -152,9 +163,13 @@ void GUI::layoutFrame(GUIState state) {
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             this->_layoutLobbyBrowser();
             break;
+        case GUIState::INTRO_CUTSCENE:
+            glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            // draw nothing
+            break;
         case GUIState::GAME_HUD:
             glfwSetInputMode(client->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
+            //this->_layoutDeadScreen();
             this->_sharedGameHUD();
             this->_layoutGameHUD();
             break;
@@ -188,71 +203,97 @@ void GUI::_layoutFPSCounter() {
     ));
 }
 
+void GUI::displayControl() {
+    this->controlDisplayed = this->controlDisplayed ? false : true;
+}
+
 void GUI::_layoutLoadingScreen() {
-    this->addWidget(widget::CenterText::make(
-        "made by",
-        font::Font::MENU,
-        font::Size::MEDIUM,
-        font::Color::WHITE,
-        fonts,
-        FRAC_WINDOW_HEIGHT(7,8)
-    ));
-    this->addWidget(widget::CenterText::make(
-        "Torchlight Games",
-        font::Font::MENU,
-        font::Size::XLARGE,
-        font::Color::TORCHLIGHT_GAMES,
-        fonts,
-        FRAC_WINDOW_HEIGHT(2,3)
-    ));
-    this->addWidget(widget::CenterText::make(
-        "Loading...",
-        font::Font::MENU,
-        font::Size::MEDIUM,
-        font::Color::WHITE,
-        fonts,
-        FRAC_WINDOW_HEIGHT(1,3)
-    ));
+    static bool first = true;
+
+    auto logo_flex = widget::Flexbox::make(glm::vec2(0,0), glm::vec2(WINDOW_WIDTH, 0),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f));
+    logo_flex->push(widget::StaticImg::make(glm::vec2(0, 0), this->logo.getNextFrame(), 0.75f));
+    this->addWidget(std::move(logo_flex));
+
+    if (first) {
+        // the first frame will be rendered before it loads everything, then everything after will
+        // be once it has loaded
+        this->addWidget(widget::CenterText::make(
+            "Loading...",
+            font::Font::MENU,
+            font::Size::MEDIUM,
+            font::Color::YELLOW,
+            fonts,
+            FRAC_WINDOW_HEIGHT(1,2)
+        ));
+        first = false;
+    } else {
+        this->addWidget(widget::CenterText::make(
+            "Press any key to continue",
+            font::Font::MENU,
+            font::Size::MEDIUM,
+            font::Color::YELLOW,
+            fonts,
+            FRAC_WINDOW_HEIGHT(1,2)
+        ));
+        first = false;
+    }
 }
 
 void GUI::_layoutTitleScreen() {
-    this->addWidget(widget::CenterText::make(
-        "Arcana",
-        font::Font::MENU,
-        font::Size::XLARGE,
-        font::Color::RED,
-        fonts,
-        FRAC_WINDOW_HEIGHT(2, 3)
-    ));
+    auto logo_flex = widget::Flexbox::make(glm::vec2(0, 0), glm::vec2(WINDOW_WIDTH, 0), 
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f));
+    auto logo = widget::StaticImg::make(glm::vec2(0,0), this->logo.getNextFrame(), 0.75f); 
+    logo_flex->push(std::move(logo));
+    this->addWidget(std::move(logo_flex));
+    
+    auto title_flex = widget::Flexbox::make(glm::vec2(0, FRAC_WINDOW_HEIGHT(2,3)), glm::vec2(WINDOW_WIDTH, 0), 
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f));
+    
+    title_flex->push(widget::StaticImg::make(glm::vec2(0,0), images.getImg(img::ImgID::Title)));
+    this->addWidget(std::move(title_flex));
 
     auto start_text = widget::DynText::make(
-        "(Start Game)",
+        "Play",
         fonts,
-        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+        widget::DynText::Options(font::Font::TITLE, font::Size::MEDIUM, font::Color::WHITE)
     );
     start_text->addOnHover([this](widget::Handle handle) {
         auto widget = this->borrowWidget<widget::DynText>(handle);
-        widget->changeColor(font::Color::RED);
+        widget->changeColor(font::Color::YELLOW);
     });
     start_text->addOnClick([this](widget::Handle handle) {
         client->gui_state = GUIState::LOBBY_BROWSER;
     });
-    auto start_flex = widget::Flexbox::make(
-        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 3)),
+    auto exit_text = widget::DynText::make(
+        "Exit",
+        fonts,
+        widget::DynText::Options(font::Font::TITLE, font::Size::MEDIUM, font::Color::WHITE)
+    );
+    exit_text->addOnHover([this](widget::Handle handle) {
+        auto widget = this->borrowWidget<widget::DynText>(handle);
+        widget->changeColor(font::Color::YELLOW);
+    });
+    exit_text->addOnClick([this](widget::Handle handle) {
+        glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
+    });
+    auto menu_flex = widget::Flexbox::make(
+        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 2)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, font::getRelativePixels(30))
     );
 
-    start_flex->push(std::move(start_text));
-    this->addWidget(std::move(start_flex));
+    menu_flex->push(std::move(exit_text));
+    menu_flex->push(std::move(start_text));
+    this->addWidget(std::move(menu_flex));
 }
 
 void GUI::_layoutLobbyBrowser() {
     this->addWidget(widget::CenterText::make(
         "Lobbies",
-        font::Font::MENU,
+        font::Font::TITLE,
         font::Size::LARGE,
-        font::Color::BLACK,
+        font::Color::YELLOW,
         this->fonts,
         WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE)
     ));
@@ -265,121 +306,769 @@ void GUI::_layoutLobbyBrowser() {
 
     for (const auto& [ip, packet]: client->lobby_finder.getFoundLobbies()) {
         std::stringstream ss;
-        ss << "(" << packet.lobby_name << "     " << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken << ")";
+        ss << "" << packet.lobby_name << "     (" << packet.slots_taken << "/" << packet.slots_avail + packet.slots_taken << ")";
 
         auto entry = widget::DynText::make(ss.str(), this->fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK));
+            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::WHITE));
         entry->addOnClick([ip, this](widget::Handle handle){
             std::cout << "Connecting to " << ip.address() << " ...\n";
-            if (this->client->connectAndListen(ip.address().to_string())) {
+            if (this->client->connect(ip.address().to_string())) {
                 this->client->gui_state = GUIState::LOBBY;
                 this->clearCapturedKeyboardInput();
             }
         });
         entry->addOnHover([this](widget::Handle handle){
             auto widget = this->borrowWidget<widget::DynText>(handle);
-            widget->changeColor(font::Color::RED);
+            widget->changeColor(font::Color::YELLOW);
         });
         lobbies_flex->push(std::move(entry));
     }
 
     if (client->lobby_finder.getFoundLobbies().empty()) {
         lobbies_flex->push(widget::DynText::make(
-            "No lobbies found...",
+            "Searching for lobbies...",
             this->fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
+            widget::DynText::Options(font::Font::TITLE, font::Size::MEDIUM, font::Color::YELLOW)
         ));
     }
 
     this->addWidget(std::move(lobbies_flex));
 
-    auto input_flex = widget::Flexbox::make(
-        glm::vec2(0.0f, font::getRelativePixels(30) + 2 * font::getFontSizePx(font::Size::MEDIUM)),
-        glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, font::getRelativePixels(20))
-    );
-    input_flex->push(widget::TextInput::make(
-        glm::vec2(0.0f, 0.0f),
-        "Manual IP",
-        this,
-        fonts,
-        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::BLACK)
-    ));
-    this->addWidget(std::move(input_flex));
-
     auto connect_flex = widget::Flexbox::make(
-        glm::vec2(0.0f, font::getRelativePixels(30)),
-        glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, font::getRelativePixels(20))
-    );
+        glm::vec2(FRAC_WINDOW_WIDTH(1, 3), font::getRelativePixels(30)),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::LEFT, font::getRelativePixels(50)
+    ));
 
     std::stringstream ss;
-    ss << "(Connect to \"" << this->getCapturedKeyboardInput() << "\")";
     auto connect_btn = widget::DynText::make(
-        ss.str(),
+        "Connect",
         fonts,
-        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
+        widget::DynText::Options(font::Font::TITLE, font::Size::MEDIUM, font::Color::WHITE)
     );
     connect_btn->addOnHover([this](widget::Handle handle) {
         auto btn = this->borrowWidget<widget::DynText>(handle);
-        btn->changeColor(font::Color::RED);
+        btn->changeColor(font::Color::YELLOW);
     });
     connect_btn->addOnClick([this](widget::Handle handle) {
         auto input = this->getCapturedKeyboardInput();
-        if (client->connectAndListen(input)) {
+        if (client->connect(input)) {
             client->gui_state = GUIState::LOBBY;
             this->clearCapturedKeyboardInput();
         }
     });
     connect_flex->push(std::move(connect_btn));
+    connect_flex->push(widget::TextInput::make(
+        glm::vec2(0.0f, 0.0f),
+        "Enter IP",
+        this,
+        fonts,
+        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
+    ));
     this->addWidget(std::move(connect_flex));
 }
 
 void GUI::_layoutLobby() {
+    //  The lobby UI has 3 subsections:
+    //  1.  Lobby Name
+    //  2.  Player Status Table
+    //  3.  Start Game Button
+
+    /*  GUI Subsection 1:   Lobby Name  */
+
+    //  Specify lobby title text height
+    float lobby_title_height = WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE);
+
+    //  Create lobby title CenterText widget
     auto lobby_title = widget::CenterText::make(
         this->client->gameState.lobby.name,
         font::Font::MENU,
         font::Size::LARGE,
-        font::Color::BLACK,
+        font::Color::WHITE,
         this->fonts,
-        WINDOW_HEIGHT - font::getFontSizePx(font::Size::LARGE)
+        lobby_title_height
     );
+
+    //  Add lobby title CenterText widget to lobby screen
     this->addWidget(std::move(lobby_title));
-    std::stringstream ss;
-    ss << this->client->gameState.lobby.players.size() << " / " << this->client->gameState.lobby.max_players;
-    auto player_count = widget::CenterText::make(
-        ss.str(),
-        font::Font::MENU,
-        font::Size::MEDIUM,
-        font::Color::BLACK,
-        this->fonts,
-        WINDOW_HEIGHT - (2 * font::getFontSizePx(font::Size::LARGE)) - 10.0f
-    );
-    this->addWidget(std::move(player_count));
 
-    auto players_flex = widget::Flexbox::make(
-        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 5)),
-        glm::vec2(WINDOW_WIDTH, 0.0f),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 10.0f)
-    );
-    for (const auto& [_eid, player_name] : this->client->gameState.lobby.players) {
-        players_flex->push(widget::DynText::make(
-            player_name,
-            this->fonts,
-            widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
-        ));
+    /*  GUI Subsection 2:   Player Status Table */
+
+    //  Define table column widths
+    //glm::vec3 columnWidths(400.0f, 850.0f, 400.0f);
+    glm::vec3 columnWidths(font::getRelativePixelsHorizontal(400.0f), 
+        font::getRelativePixelsHorizontal(900.0f),
+        font::getRelativePixelsHorizontal(400.0f));
+
+    float rowHeight = font::getFontSizePx(font::Size::LARGE);
+
+    //  Create max_players rows in the Player Status Table
+    for (int i = 0; i < this->client->gameState.lobby.max_players; i++) {
+        //  Get iterating LobbyPlayer struct
+        boost::optional<LobbyPlayer> lobbyPlayer =
+            this->client->gameState.lobby.players[i];
+
+        //  Create a status row for this player
+        auto player_status_row = _createPlayerStatusRow(
+            lobbyPlayer,
+            columnWidths,
+            glm::vec2(0, lobby_title_height - rowHeight * (i + 1)),
+            i + 1
+        );
+
+        //  Add table row to the screen
+        this->addWidget(std::move(player_status_row));
     }
-    this->addWidget(std::move(players_flex));
 
-    auto waiting_msg = widget::CenterText::make(
-        "Waiting for players...",
-        font::Font::MENU,
-        font::Size::MEDIUM,
-        font::Color::GRAY,
-        this->fonts,
-        30.0f
+    /*  GUI Subsection 3:   Start Game Button   */
+
+    auto start_game_button = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::StartGame), 1);
+    start_game_button->addOnHover([this](widget::Handle handle) {
+        auto widget = this->borrowWidget<widget::StaticImg>(handle);
+        widget->changeImage(images.getImg(img::ImgID::StartGameSelected));
+    });
+
+    //  Display differently based on whether all players in the lobby are ready
+    bool allReady = true;
+
+    for (boost::optional<LobbyPlayer> player : this->client->gameState.lobby.players) {
+        if (!player.has_value() || !player.get().ready) {
+            //  Either there aren't enough players in the lobby or at least
+            //  one player isn't ready
+            allReady = false;
+            break;
+        }
+    }
+
+    if (allReady) {
+        //  Add radio button on click
+        start_game_button->addOnClick([this](widget::Handle handle) {
+            auto widget = this->borrowWidget<widget::StaticImg>(handle);
+
+            //  Send StartGame event to the server
+            this->client->session->sendEvent(Event(
+                this->client->session->getInfo().client_eid.value(),
+                EventType::LobbyAction,
+                LobbyActionEvent(
+                    LobbyActionEvent::Action::StartGame,
+                    PlayerRole::Unknown
+                )
+            ));
+        });
+    }
+
+    //  Create flexbox to contain start button
+    auto start_game_flex = widget::Flexbox::make(
+        glm::vec2(0, 200),
+        glm::vec2(WINDOW_WIDTH, 0),
+        widget::Flexbox::Options(
+            widget::Dir::HORIZONTAL,
+            widget::Align::CENTER,
+            0.0f
+        )
     );
-    this->addWidget(std::move(waiting_msg));
+
+    //  Push start button text widget to flex row
+    start_game_flex->push(std::move(start_game_button));
+
+    this->addWidget(std::move(start_game_flex));
+}
+
+gui::widget::Flexbox::Ptr GUI::_createPlayerStatusRow(
+    boost::optional<LobbyPlayer> lobbyPlayer, glm::vec3 columnWidths,
+    glm::vec2 origin, int playerIndex) {
+    //  Determine whether the player is connected to the lobby
+    bool connected = lobbyPlayer.has_value();
+
+    //  Create table row Flexbox
+
+    //  Row Flexbox configurations
+    glm::vec2 rowSize(WINDOW_WIDTH, 0);
+    widget::Flexbox::Options rowFlexboxOptions(
+        widget::Dir::HORIZONTAL,
+        widget::Align::CENTER,
+        0.0f
+    );
+
+    auto playerstatusBG = widget::Flexbox::make(
+        origin - glm::vec2(65, 26),
+        rowSize,
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 30.0f)
+    );
+    playerstatusBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RowBG), 2));
+    this->addWidget(std::move(playerstatusBG));
+
+    auto player_status_row = widget::Flexbox::make(
+        origin,
+        rowSize,
+        rowFlexboxOptions
+    );
+
+    //  Optional: Add a left margin Empty widget here if necessary
+    //  at the start of the row
+
+    /*  Add Player Identification Column    */
+    //  There are 3 possible values in the Player Identification column,
+    //  all of which are strings
+    //  Case 1: "Empty"
+    //      This is displayed when the lobby player isn't connected
+    //      (i.e., the lobbyPlayer boost::optional doesn't have a value)
+    //  Case 2: "Player X"
+    //      This is displayed if the given player is in the lobby and
+    //      isn't this client's player
+    //  Case 3: "Player X (You)"
+    //      This is displayed if the given player is in the lobby and
+    //      is this client's player
+    std::string playerIdString;
+
+    if (!connected) {
+        //  Player in this row is not connected (Case 1)
+        playerIdString = "Empty";
+    }
+    else {
+        //  Player is connected to the lobby (Case 2 or Case 3)
+        //  Note that in both of these cases, the player identification
+        //  string has the same prefix, "Player X"
+        playerIdString = "Player " + std::to_string(playerIndex);
+
+        //  Check whether this player is this client's player (Case 3)
+        //  This code assumes that the client's eid should always have
+        //  a value if we're in GUIState::Lobby
+        //  NOTE: I have gotten an exception here since that wasn't true
+        //  so there might be some sort of race condition. For now, I
+        //  will simply add a has_value() check ahead of this
+        if (this->client->session.get()->getInfo().client_eid.has_value()
+            && this->client->session.get()->getInfo().client_eid.value()
+            == lobbyPlayer.get().id) {
+            playerIdString += " (You)";
+        }
+    }
+
+    //  Create the player identification text widget
+    auto playerID = widget::DynText::make(
+        playerIdString,
+        this->fonts,
+        widget::DynText::Options(
+            font::Font::TEXT,
+            font::Size::MEDIUM,
+            font::Color::WHITE
+        )
+    );
+
+    //  Calculate the remaining column width and create an Empty widget with this width
+    float column1_empty_width = columnWidths.x - playerID->getSize().first;
+
+    auto column1_empty = widget::Empty::make(column1_empty_width);
+
+    //  Push both the text widget and the Empty widget to the row Flexbox
+    player_status_row->push(std::move(playerID));
+    player_status_row->push(std::move(column1_empty));
+
+    //  Optional: Can add column padding here for additional padding between
+    //  columns 1 and 2
+
+    /*  Add Player Role Column  */
+    //  There are two different behaviors based on whether the given lobbyPlayer
+    //  is this client's player or not.
+
+    if (!connected
+        || (this->client->session.get()->getInfo().client_eid.has_value() 
+            && lobbyPlayer.get().id != this->client->session.get()->getInfo().client_eid.value())) {
+        //  Case 1: This player is NOT the client player
+        //  In this case, there are 4 possible subcases, all of which are composed
+        //  of a single text widget:
+        //  Subcase 1: "..."
+        //      Displays if this player isn't connected
+        //  Subcase 2: "Player X isn't ready..."
+        //      Displays if this player is connected but not ready
+        //  Subcase 3: "Player X wants to play as the DM."
+        //      Displays if this player is ready and their desired player role is
+        //      PlayerRole::DungeonMaster
+        //  Subcase 4: "Player X wants to play as a Player."
+        //      Displays if this player is ready and their desired player role is
+        //      PlayerRole::Player
+        
+        std::string playerRoleString;
+        font::Color color = font::Color::WHITE;
+
+        if (!connected) {
+            //  Subcase 1
+            playerRoleString = "...";
+        }
+        else {
+            //  Subcase 2, 3, or 4
+            if (!lobbyPlayer.get().ready) {
+                //  Subcase 2
+                playerRoleString = "Player " + std::to_string(playerIndex)
+                    + " isn't ready...";
+            }
+            else {
+                //  Subcase 3 or 4
+                if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
+                    //  Subcase 3
+                    playerRoleString = "Player " + std::to_string(playerIndex)
+                        + " wants to play as Zeus.";
+                    color = font::Color::YELLOW;
+                }
+                else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
+                    //  subcase 4
+                    playerRoleString = "Player " + std::to_string(playerIndex)
+                        + " wants to play as a Player.";
+                }
+                else {
+                    //  Error - player is in the ready state but their desired
+                    //  role isn't the DM or a Player!
+                    playerRoleString = "Error! Player " + std::to_string(playerIndex)
+                        + " wants to play as ???";
+                }
+            }
+        }
+
+        //  Create player role text widget
+        auto player_role = widget::DynText::make(
+            playerRoleString,
+            this->fonts,
+            widget::DynText::Options(
+                font::Font::TEXT,
+                font::Size::MEDIUM,
+                color
+            )
+        );
+
+        //  Compute the remaining column width and create an Empty widget
+        float column2_empty_width = columnWidths.y - player_role->getSize().first;
+
+        auto column2_empty = widget::Empty::make(column2_empty_width);
+
+        //  Push both the player role text widget and the Empty widget to the row
+        player_status_row->push(std::move(player_role));
+        player_status_row->push(std::move(column2_empty));
+    }
+    else {
+
+        //  Case 2: This player IS the client player
+
+        if (this->client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+
+            //  Add a text widget which says "Play as:"
+            auto radio_buttons_label = widget::DynText::make(
+                "Play as:",
+                this->fonts,
+                widget::DynText::Options(
+                    font::Font::TEXT,
+                    font::Size::MEDIUM,
+                    font::Color::WHITE
+                )
+            );
+
+            //  Add Empty widget been radio buttons label and first radio
+            //  button
+            auto radio_label_first_option_empty = widget::Empty::make(
+                50.0f
+            );
+
+            //  Add radio buttons "Player" and "DM"
+
+            //  "Player" radio button
+            auto player_radio_button = widget::DynText::make(
+                "Player",
+                fonts,
+                widget::DynText::Options(
+                    font::Font::TEXT,
+                    font::Size::MEDIUM,
+                    font::Color::WHITE
+                )
+            );
+
+            //  "DM" radio button
+            auto dm_radio_button = widget::DynText::make(
+                "Zeus",
+                fonts,
+                widget::DynText::Options(
+                    font::Font::TEXT,
+                    font::Size::MEDIUM,
+                    font::Color::WHITE
+                )
+            );
+
+            //  Add radio button hover
+            player_radio_button->addOnHover([this](widget::Handle handle) {
+                if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                    auto widget = this->borrowWidget<widget::DynText>(handle);
+                    widget->changeColor(font::Color::YELLOW);
+                }
+                });
+
+            //  Add radio button on click
+            player_radio_button->addOnClick([this](widget::Handle handle) {
+                auto widget = this->borrowWidget<widget::DynText>(handle);
+
+                //  TODO: Change button text to be surrounded by two brackets
+                //  Change other radio button text to not be surrounded by brackets
+                if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                    client->roleSelection = Client::RadioButtonState::FirstOption;
+                    client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+
+                    //  Update this radio button text to show it's selected
+                    //widget->changeText("[Player]");
+
+                    //  Update dm radio button text show it's not selected
+                    //dm_button->changeText("DM");
+                }
+                });
+
+            //  Add Empty widget between first radio button and second radio
+            //  button
+            auto radio_first_second_option_empty = widget::Empty::make(
+                50.0f
+            );
+
+            //  Add radio button hover
+            dm_radio_button->addOnHover([this](widget::Handle handle) {
+                if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                    auto widget = this->borrowWidget<widget::DynText>(handle);
+                    widget->changeColor(font::Color::YELLOW);
+                }
+                });
+
+            //  Add radio button on click
+            dm_radio_button->addOnClick([this](widget::Handle handle) {
+                auto widget = this->borrowWidget<widget::DynText>(handle);
+
+                //  TODO: Change button text to be surrounded by two brackets
+                //  Change other radio button text to not be surrounded by brackets
+                if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                    client->roleSelection = Client::RadioButtonState::SecondOption;
+                    client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+
+                    //  Update this radio button text to show it's selected
+                    //widget->changeText("[DM]");
+
+                    //  Update player radio button text show it's not selected
+                    //player_button->changeText("Player");
+                }
+                });
+
+            //  Compute the remaining column width and create an Empty widget
+            /*
+            float column2_empty_width = columnWidths.y
+                - radio_buttons_label->getSize().first
+                - radio_label_first_option_empty->getSize().first
+                - player_radio_button->getSize().first
+                - radio_first_second_option_empty->getSize().first
+                - dm_radio_button->getSize().first;*/
+
+            float column2_empty_width = columnWidths.y - radio_buttons_label->getSize().first;
+            auto column2_empty = widget::Empty::make(column2_empty_width);
+
+            auto row_buttons = widget::Flexbox::make(
+                origin - glm::vec2(120, 16),
+                rowSize,
+                widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 20.0f)
+            );
+
+            // When first selecting
+            if (this->client->lobbyPlayerState == Client::LobbyPlayerState::Connected) {
+                auto playerButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Player), 1);
+                playerButton->addOnHover([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::StaticImg>(handle);
+                    widget->changeImage(images.getImg(img::ImgID::PlayerSelected));
+                    });
+                playerButton->addOnClick([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::DynText>(handle);
+                    if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                        client->roleSelection = Client::RadioButtonState::FirstOption;
+                        client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                    }
+                    });
+
+                auto zeusButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Zeus), 1);
+                zeusButton->addOnHover([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::StaticImg>(handle);
+                    widget->changeImage(images.getImg(img::ImgID::ZeusSelected));
+                    });
+                zeusButton->addOnClick([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::DynText>(handle);
+                    if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                        client->roleSelection = Client::RadioButtonState::SecondOption;
+                        client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                    }
+                    });
+                row_buttons->push(std::move(playerButton));
+                row_buttons->push(std::move(zeusButton));
+            }
+            // After one is selected
+            else {
+                if (this->client->roleSelection == Client::RadioButtonState::FirstOption) {
+                    auto playerButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::PlayerSelected), 1);
+                    playerButton->addOnClick([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::DynText>(handle);
+                        if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                            client->roleSelection = Client::RadioButtonState::FirstOption;
+                            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                        }
+                        });
+
+                    auto zeusButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Zeus), 1);
+                    zeusButton->addOnHover([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::StaticImg>(handle);
+                        widget->changeImage(images.getImg(img::ImgID::ZeusSelected));
+                        });
+                    zeusButton->addOnClick([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::DynText>(handle);
+                        if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                            client->roleSelection = Client::RadioButtonState::SecondOption;
+                            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                        }
+                        });
+                    row_buttons->push(std::move(playerButton));
+                    row_buttons->push(std::move(zeusButton));
+                }
+                else {
+                    auto playerButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Player), 1);
+                    playerButton->addOnHover([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::StaticImg>(handle);
+                        widget->changeImage(images.getImg(img::ImgID::PlayerSelected));
+                        });
+                    playerButton->addOnClick([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::DynText>(handle);
+                        if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                            client->roleSelection = Client::RadioButtonState::FirstOption;
+                            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                        }
+                        });
+
+                    auto zeusButton = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ZeusSelected), 1);
+                    zeusButton->addOnClick([this](widget::Handle handle) {
+                        auto widget = this->borrowWidget<widget::DynText>(handle);
+                        if (client->lobbyPlayerState != Client::LobbyPlayerState::Ready) {
+                            client->roleSelection = Client::RadioButtonState::SecondOption;
+                            client->lobbyPlayerState = Client::LobbyPlayerState::SelectedRole;
+                        }
+                        });
+                    row_buttons->push(std::move(playerButton));
+                    row_buttons->push(std::move(zeusButton));
+                }
+            }
+            this->addWidget(std::move(row_buttons));
+            
+            // fill in empty spaces in row
+            player_status_row->push(std::move(radio_buttons_label));
+            player_status_row->push(std::move(column2_empty));
+
+            //  Push all widgets to the row
+            /*
+            player_status_row->push(std::move(radio_buttons_label));
+            player_status_row->push(std::move(radio_label_first_option_empty));
+            player_status_row->push(std::move(player_radio_button));
+            player_status_row->push(std::move(radio_first_second_option_empty));
+            player_status_row->push(std::move(dm_radio_button));
+            player_status_row->push(std::move(column2_empty)); */
+        }
+        else {
+
+            // After selected role for yourself
+
+            std::string playerRoleString;
+            font::Color color;
+
+            if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
+                playerRoleString = "You want to play as Zeus.";
+                color = font::Color::YELLOW;
+            }
+            else if (lobbyPlayer.get().desired_role == PlayerRole::Player) {
+                playerRoleString = "You want to play as a Player.";
+                color = font::Color::WHITE;
+            }
+
+            //  Create player role text widget
+            auto player_role = widget::DynText::make(
+                playerRoleString,
+                this->fonts,
+                widget::DynText::Options(
+                    font::Font::TEXT,
+                    font::Size::MEDIUM,
+                    color
+                )
+            );
+
+            //  Compute the remaining column width and create an Empty widget
+            float column2_empty_width = columnWidths.y - player_role->getSize().first;
+
+            auto column2_empty = widget::Empty::make(column2_empty_width);
+
+            //  Push both the player role text widget and the Empty widget to the row
+            player_status_row->push(std::move(player_role));
+            player_status_row->push(std::move(column2_empty));
+        }
+    }
+
+    //  Optional: Can add column padding here for additional padding between
+    //  columns 2 and 3
+
+    /*  Add Ready Status Column */
+    //  There are two different behaviors based on whether the given lobbyPlayer
+    //  is this client's player or not.
+
+    if (!connected
+        || (this->client->session.get()->getInfo().client_eid.has_value()
+            && lobbyPlayer.get().id != this->client->session.get()->getInfo().client_eid.value())
+        ) {
+        //  Case 1: This player is NOT the client player
+        //  In this case, there are 2 possible subcases, all of which are composed
+        //  of a single text widget:
+        //  Subcase 1: "..."
+        //      Displays if this player isn't connected or not ready
+        //  Subcase 2: "Ready!"
+        //      Displays if this player is ready
+
+        std::string readyStatusString;
+        font::Color color = font::Color::WHITE;;
+
+        if (!connected || !lobbyPlayer.get().ready) {
+            //  Subcase 1
+            readyStatusString = "...";
+        }
+        else {
+            //  Subcase 2
+            readyStatusString = "Ready!";
+            if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
+                color = font::Color::YELLOW;
+            }
+        }
+
+        //  Create ready status string text widget
+        auto ready_status = widget::DynText::make(
+            readyStatusString,
+            this->fonts,
+            widget::DynText::Options(
+                font::Font::TEXT,
+                font::Size::MEDIUM,
+                color
+            )
+        );
+
+        //  Compute the remaining column width and create an Empty widget
+        float column3_empty_width = columnWidths.z - ready_status->getSize().first;
+
+        auto column3_empty = widget::Empty::make(column3_empty_width);
+
+        //  Push all widgets to the row
+        player_status_row->push(std::move(ready_status));
+        player_status_row->push(std::move(column3_empty));
+    }
+    else {
+        //  Case 2: This player IS the client player
+
+        //  In this case, there are 3 possible subcases:
+        //  Subcase 1: Text widget with value "Not Ready"
+        //      Displays initially (when the player's state is Connected)
+        //  Subcase 2: Clickable text widget with value "Ready? (DM/Player)"
+        //      Displays when the client's player is in the SelectedRole state
+        //  Subcase 3: Text widget with value "Ready!"
+        //      Displays when the client's player is in the Ready state.
+
+        std::string readyStatusString;
+        font::Color color = font::Color::WHITE;
+
+        auto ready_button = widget::Flexbox::make(
+            origin - glm::vec2(-595, 16),
+            rowSize,
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 20.0f)
+        );
+
+        //  First, set string text
+        switch (this->client->lobbyPlayerState) {
+            case Client::LobbyPlayerState::Connected: {
+                //  Subcase 1
+                readyStatusString = "Not Ready";
+                break;
+            }
+            case Client::LobbyPlayerState::SelectedRole: {
+                //  Subcase 2
+                img::ImgID readyRole;
+                switch (this->client->roleSelection) {
+                case Client::RadioButtonState::FirstOption:
+                    readyRole = img::ImgID::ReadyPlayer;
+                    break;
+                case Client::RadioButtonState::SecondOption:
+                    readyRole = img::ImgID::ReadyZeus;
+                    break;
+                }
+
+                auto readyImg = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(readyRole), 1);
+                readyImg->addOnHover([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::StaticImg>(handle);
+                    img::ImgID readyRoleSelected;
+                    switch (this->client->roleSelection) {
+                    case Client::RadioButtonState::FirstOption:
+                        readyRoleSelected = img::ImgID::ReadyPlayerSelected;
+                        break;
+                    case Client::RadioButtonState::SecondOption:
+                        readyRoleSelected = img::ImgID::ReadyZeusSelected;
+                        break;
+                    }
+                    widget->changeImage(images.getImg(readyRoleSelected));
+                    });
+
+                readyImg->addOnClick([this](widget::Handle handle) {
+                    auto widget = this->borrowWidget<widget::DynText>(handle);
+                    client->lobbyPlayerState = Client::LobbyPlayerState::Ready;
+                    PlayerRole role;
+                    switch (this->client->roleSelection) {
+                    case Client::RadioButtonState::FirstOption:
+                        role = PlayerRole::Player;
+                        break;
+                    case Client::RadioButtonState::SecondOption:
+                        role = PlayerRole::DungeonMaster;
+                        break;
+                    }
+                    this->client->session->sendEvent(Event(
+                        this->client->session->getInfo().client_eid.value(),
+                        EventType::LobbyAction,
+                        LobbyActionEvent(
+                            LobbyActionEvent::Action::Ready,
+                            role
+                        )
+                    ));
+                    });
+                ready_button->push(std::move(readyImg));
+                break;
+            }
+            case Client::LobbyPlayerState::Ready: {
+                //  Subcase 3
+                readyStatusString = "Ready!";
+                if (lobbyPlayer.get().desired_role == PlayerRole::DungeonMaster) {
+                    color = font::Color::YELLOW;
+                }
+                break;
+            }
+        }
+
+        //  Create text widget
+        auto ready_status = widget::DynText::make(
+            readyStatusString,
+            this->fonts,
+            widget::DynText::Options(
+                font::Font::TEXT,
+                font::Size::MEDIUM,
+                color
+            )
+        );
+
+        //  Calculate remaining empty space and create Empty widget
+        float column3_empty_width = columnWidths.z - ready_status->getSize().first;
+
+        auto column3_empty = widget::Empty::make(column3_empty_width);
+
+        this->addWidget(std::move(ready_button));
+
+        //  Push both widgets to row
+        player_status_row->push(std::move(ready_status));
+        player_status_row->push(std::move(column3_empty));
+    }
+    
+    return player_status_row;
 }
 
 void GUI::_sharedGameHUD() {
@@ -392,8 +1081,74 @@ void GUI::_sharedGameHUD() {
         return;
     }
 
-    auto self = client->gameState.objects.at(*self_eid);
 
+    // Add controls Help
+    if (this->controlDisplayed) {
+        auto controlBG = widget::Flexbox::make(
+            glm::vec2(WINDOW_WIDTH - font::getRelativePixels(360), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(10)),
+            glm::vec2(0.0f, 0.0f),
+            widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(10))
+        );
+        if (!is_dm.value()) {
+            controlBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HelpBG), 2));
+        }
+        else {
+            controlBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HelpDMBG), 2));
+        }
+        this->addWidget(std::move(controlBG));
+
+        auto controlsFlex = widget::Flexbox::make(
+            glm::vec2(WINDOW_WIDTH - font::getRelativePixels(350), FRAC_WINDOW_HEIGHT(1, 2)),
+            glm::vec2(0.0f, 0.0f),
+            widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(10))
+        );
+        auto actionsFlex = widget::Flexbox::make(
+            glm::vec2(WINDOW_WIDTH - font::getRelativePixels(150), FRAC_WINDOW_HEIGHT(1, 2)),
+            glm::vec2(0.0f, 0.0f),
+            widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(10))
+        );
+
+        std::vector<std::pair<std::string, std::string>> controls;
+        // Controls for Player
+        if (!is_dm.value()) {
+            controls.push_back({ "CONTROLS", " " });
+            controls.push_back({ "WASD:", "Move" });
+            controls.push_back({ "Left Shift:", "Sprint" });
+            controls.push_back({ "Spacebar:", "Jump" });
+            controls.push_back({ "Q:", "Drop Item" });
+            controls.push_back({ "Left Click:", "Use Item" });
+            controls.push_back({ "Mouse Wheel:", "Select Item" });
+            controls.push_back({ "ESC:", "Menu" });
+            controls.push_back({ "H:", "Controls" });
+        }
+        // Controls for DM
+        else {
+            controls.push_back({ "CONTROLS", " " });
+            controls.push_back({ "WASD:", "Move" });
+            controls.push_back({ "Left Shift:", "Zoom In" });
+            controls.push_back({ "Spacebar:", "Zoom Out" });
+            controls.push_back({ "Left Control:", "Boost" });
+            controls.push_back({ "Left Click:", "Place Trap" });
+            controls.push_back({ "Right Click:", "Rotate Trap" });
+            controls.push_back({ "Mouse Wheel:", "Select Trap" });
+            controls.push_back({ "ESC:", "Menu" });
+            controls.push_back({ "H:", "Controls" });
+        }
+
+        for (int i = controls.size() - 1; i >= 0; i--) {
+            controlsFlex->push(widget::DynText::make(controls[i].first, fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::WHITE))
+            );
+            actionsFlex->push(widget::DynText::make(controls[i].second, fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::WHITE))
+            );
+        }
+        
+        this->addWidget(std::move(controlsFlex));
+        this->addWidget(std::move(actionsFlex));
+    }
+
+    auto self = client->gameState.objects.at(*self_eid);
     auto inventory_size = !is_dm.value() ? self->inventoryInfo->inventory_size : self->trapInventoryInfo->inventory_size;
     auto selected = !is_dm.value() ? self->inventoryInfo->selected - 1 : self->trapInventoryInfo->selected - 1;
 
@@ -448,6 +1203,10 @@ void GUI::_sharedGameHUD() {
                     itemString = "Hammer";
                     break;
                 }
+                case ModelType::Mirror: {
+                    itemString = "Mirror";
+                    break;
+                }
             }
         }
     } else { // DM hotbar
@@ -455,26 +1214,113 @@ void GUI::_sharedGameHUD() {
             switch (self->trapInventoryInfo->inventory[selected]) {
                 case ModelType::FloorSpikeFull: {
                     itemString = "Floor Spike Full";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeFull) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
                     break;
                 }
                 case ModelType::FloorSpikeHorizontal: {
                     itemString = "Floor Spike Horizontal";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeHorizontal) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
                     break;
                 }
                 case ModelType::FloorSpikeVertical: {
                     itemString = "Floor Spike Vertical";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeVertical) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+                    
                     break;
                 }
-                case ModelType::FireballTrap: {
+                case ModelType::SunGod: {
                     itemString = "Fireball Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
                     break;
                 }
                 case ModelType::SpikeTrap: {
                     itemString = "Ceiling Spike Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::SpikeTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+                    break;
+                }
+                case ModelType::Lightning: {
+                    itemString = "Lightning Bolt (6)";
+                    
+                    break;
+                }
+                case ModelType::LightCut: {
+                    itemString = "Cut Lights (3)";
+
+                    break;
+                }
+                case ModelType::TeleporterTrap: {
+                    itemString = "Teleporter Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::TeleporterTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+
+
+                    break;
+                }
+                case ModelType::ArrowTrap: {
+                    itemString = "Arrow Trap";
+
+                    if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()
+                        || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                        itemString += " (IN COOLDOWN)";
+                    }
+
                     break;
                 }
             }
         }
+    }
+
+    auto txtHeight = font::getRelativePixels(145.0);
+    auto flexHeight = font::getRelativePixels(45.0);
+    if(this->config.client.presentation){
+        txtHeight += font::getRelativePixels(80.0);
+        flexHeight += font::getRelativePixels(85.0);
+    }
+
+    // Item Description Background
+    if (itemString != "" || is_dm.value()) {
+        auto itemBGFlexHeight = txtHeight - 7;
+        if (!this->config.client.fullscreen) {
+            itemBGFlexHeight++;
+        }
+        auto itemBGFlex = widget::Flexbox::make(
+            glm::vec2(0.0f, itemBGFlexHeight),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        if (!is_dm.value()) {
+            itemBGFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemBG), 2));
+        }
+        else {
+            itemBGFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMTrapBG), 2));
+        }
+        this->addWidget(std::move(itemBGFlex));
+    }
+
+    if (!is_dm.value()) {
+        txtHeight -= font::getRelativePixels(2.0);
     }
 
     // Text for item description
@@ -484,14 +1330,190 @@ void GUI::_sharedGameHUD() {
         font::Size::SMALL,
         font::Color::WHITE,
         fonts,
-        font::getRelativePixels(70)
+        txtHeight
     );
     this->addWidget(std::move(item_txt));
+
+    // Flexbox for the item frames
+    auto frameflex = widget::Flexbox::make(
+        glm::vec2(0.0f, flexHeight),          //position relative to screen
+        glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
+    );
+
+    if (!is_dm.value()) {
+        frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LeftHotbar), 2));
+        for (int i = 0; i < inventory_size; i++) {
+            if (selected == i) {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleSelected), 2));
+
+            }
+            else {
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::MiddleHotbar), 2));
+            }
+        }
+        frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::RightHotbar), 2));
+    } else {
+        frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMLeftHotbar), 2));
+
+        for (int i = 0; i < inventory_size; i++) {
+            bool idxInCooldown = false;
+            int cdRemaining = 0;
+
+            if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
+                switch (self->trapInventoryInfo->inventory[i]) {
+                    case ModelType::FloorSpikeFull: {
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeFull) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FloorSpikeFull);
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::FloorSpikeVertical: {
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeVertical) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FloorSpikeVertical);
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::FloorSpikeHorizontal: {
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FloorSpikeHorizontal) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FloorSpikeHorizontal);
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::SunGod: {
+                        itemString = "Fireball Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()) 
+                        {
+                            if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FireballTrapUp);
+                            }
+                            else if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FireballTrapLeft);
+                            }
+                            else if (self->trapInventoryInfo->trapsInCooldown.find(CellType::FireballTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FireballTrapRight);
+                            }
+                            else {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::FireballTrapDown);
+                            }
+                            
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::SpikeTrap: {
+                        itemString = "Ceiling Spike Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::SpikeTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::SpikeTrap);
+                            idxInCooldown = true;
+                        }
+                        break;
+                    }
+                    case ModelType::Lightning: {
+                        itemString = "Lightning Bolt (6)";
+
+                        break;
+                    }case ModelType::LightCut: {
+                        itemString = "Cut Lights (3)";
+
+                        break;
+                    }
+                    case ModelType::TeleporterTrap: {
+                        itemString = "Teleporter Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::TeleporterTrap) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                            cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::TeleporterTrap);
+                            idxInCooldown = true;
+                        }
+
+                        break;
+                    }
+                    case ModelType::ArrowTrap: {
+                        itemString = "Arrow Trap";
+
+                        if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()
+                            || self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapRight) != self->trapInventoryInfo->trapsInCooldown.end()) 
+                        {
+                            if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapUp) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::ArrowTrapUp);
+                            }
+                            else if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapLeft) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::ArrowTrapLeft);
+                            }
+                            else if (self->trapInventoryInfo->trapsInCooldown.find(CellType::ArrowTrapDown) != self->trapInventoryInfo->trapsInCooldown.end()) {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::ArrowTrapDown);
+                            }
+                            else {
+                                cdRemaining = self->trapInventoryInfo->trapsCooldown.at(CellType::ArrowTrapRight);
+                            }
+                            idxInCooldown = true;
+                        }
+
+                        break;
+                    }
+                }
+            }
+            
+            if (!idxInCooldown) {
+                if (selected == i) {
+                    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleSelected), 2));
+
+                }
+                else {
+                    frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMMiddleHotbar), 2));
+                }
+            }
+            else {
+                auto imgSelect = img::ImgID::DMCD_10;
+                if (cdRemaining > 4500) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_10 : img::ImgID::DMCD_Selected_10;
+                } 
+                else if (cdRemaining > 4000) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_9 : img::ImgID::DMCD_Selected_9;
+                }
+                else if (cdRemaining > 3500) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_8 : img::ImgID::DMCD_Selected_8;
+                }
+                else if (cdRemaining > 3000) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_7 : img::ImgID::DMCD_Selected_7;
+                }
+                else if (cdRemaining > 2500) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_6 : img::ImgID::DMCD_Selected_6;
+                }
+                else if (cdRemaining > 2000) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_5 : img::ImgID::DMCD_Selected_5;
+                }
+                else if (cdRemaining > 1500) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_4 : img::ImgID::DMCD_Selected_4;
+                }
+                else if (cdRemaining > 1000) {
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_3 : img::ImgID::DMCD_Selected_3;
+                }
+                else {
+                    // Doesn't use DMCD_1 b/c it looks better without it
+                    imgSelect = (selected != i) ? img::ImgID::DMCD_2 : img::ImgID::DMCD_Selected_2;
+                }
+                frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(imgSelect), 2));
+            }
+        }
+        frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMRightHotbar), 2));
+    }
+    this->addWidget(std::move(frameflex));
 
     // Flexbox for the items 
     // Loading itemframe again if no item
     auto itemflex = widget::Flexbox::make(
-        glm::vec2(0.0f, 0.0f),         
+        glm::vec2(0.0f, flexHeight),
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
     );
@@ -540,61 +1562,118 @@ void GUI::_sharedGameHUD() {
                         itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Hammer), 2));
                         break;
                     }
+                    case ModelType::Mirror: {
+                        //  TODO: Replace with an img of a mirror
+                        itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Mirror), 2));
+                    }
                 }
             } else {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Blank), 2));
             }
         } else {
             if (self->trapInventoryInfo->inventory[i] != ModelType::Frame) {
                 switch (self->trapInventoryInfo->inventory[i]) {
                 case ModelType::FloorSpikeFull: { // TODO: CHANGE images
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::FloorSpikeTrap), 2));
                     break;
                 }
                 case ModelType::FloorSpikeHorizontal: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Teleporter), 2));
                     break;
                 }
                 case ModelType::FloorSpikeVertical: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ArrowTrap), 2));
                     break;
                 }
-                case ModelType::FireballTrap: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                case ModelType::SunGod: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Sungod), 2));
                     break;
                 }
                 case ModelType::SpikeTrap: {
-                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Orb), 2));
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SpikeTrap), 2));
+                    break;
+                }
+                case ModelType::Lightning: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Lightning), 2));
+                    break;
+                }case ModelType::LightCut: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::LightCut), 2));
+                    break;
+                }
+                case ModelType::ArrowTrap: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ArrowTrap), 2));
+                    break;
+                }
+                case ModelType::TeleporterTrap: {
+                    itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Teleporter), 2));
                     break;
                 }
                 }
             }
             else {
-                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
+                itemflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Blank), 2));
             }
         }
     }
 
     this->addWidget(std::move(itemflex));
 
-    // Flexbox for the item frames
-    auto frameflex = widget::Flexbox::make(
-        glm::vec2(0.0f, 0.0f),          //position relative to screen
-        glm::vec2(WINDOW_WIDTH, 0.0f),  //dimensions of the flexbox
-        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f) //last one is padding
-    );
-
-    for (int i = 0; i < inventory_size; i++) {
-        if (selected == i) {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SelectedFrame), 2));
-        }
-        else {
-            frameflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ItemFrame), 2));
-        }
+    auto barHeight = font::getRelativePixels(5.0);
+    if (this->config.client.presentation) {
+        barHeight += font::getRelativePixels(90.0);
     }
+    if (!is_dm.value()) {
+        // Flexbox for the health bar
+        auto healthflex = widget::Flexbox::make(
+            glm::vec2(0.0f, barHeight),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        healthflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthBar), 2));
+        this->addWidget(std::move(healthflex));
 
-    this->addWidget(std::move(frameflex));
+        auto healthtickflex = widget::Flexbox::make(
+            glm::vec2(0.0f, barHeight),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        for (int i = 1; i <= self->stats->health.max(); i++) {
+            if (i <= self->stats->health.current()) {
+                healthtickflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthTickFull), 2));
+            }
+            else {
+                healthtickflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::HealthTickEmpty), 2));
+            }
+        }
 
+        this->addWidget(std::move(healthtickflex));
+    }
+    else {
+        // Flexbox for the mana bar for DM
+        auto manaflex = widget::Flexbox::make(
+            glm::vec2(0.0f, barHeight),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        manaflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ManaBar), 2));
+        this->addWidget(std::move(manaflex));
+
+        auto manatickflex = widget::Flexbox::make(
+            glm::vec2(0.0f, barHeight),
+            glm::vec2(WINDOW_WIDTH, 0.0f),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        for (int i = 1; i <= 30; i++) {
+            if (i <= self->DMInfo->mana_remaining) {
+                manatickflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ManaTickFull), 2));
+            }
+            else {
+                manatickflex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ManaTickEmpty), 2));
+            }
+        }
+
+        this->addWidget(std::move(manatickflex));
+    }
 }
 
 void GUI::_layoutGameHUD() {
@@ -613,30 +1692,60 @@ void GUI::_layoutGameHUD() {
     if (!self_eid.has_value()) {
         return;
     }
+
     auto self = client->gameState.objects.at(*self_eid);
 
-    auto matchPhaseFlex = widget::Flexbox::make(
-        glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(150))),
+    auto eventBGHeight = 0;
+    auto eventTxtHeight = font::getRelativePixels(25);
+    if (this->config.client.presentation) {
+        eventBGHeight += font::getRelativePixels(85.0);
+        eventTxtHeight += font::getRelativePixels(85.0);
+    }
+
+    auto matchPhaseBGFlex = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(5), eventBGHeight),
         glm::vec2(0, 0),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(10))
+    );
+    auto bgSize = 2.5;
+    if (!is_dm.value()) {
+        matchPhaseBGFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::EventBG), bgSize));
+    }
+    else {
+        matchPhaseBGFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DMEventBG), bgSize));
+    }
+    this->addWidget(std::move(matchPhaseBGFlex));
+
+    auto matchPhaseFlex = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(25), eventTxtHeight),
+        glm::vec2(0, 0),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(7))
     );
 
+    std::optional<glm::vec3> orb_pos;
     std::string orbStateString;
     if (client->gameState.matchPhase == MatchPhase::MazeExploration) {
-        orbStateString = "The Orb is hidden somewhere in the Labyrinth...";
+        orbStateString = "The Orb is hidden...";
     }
     else {
         bool orbIsCarried = false;
-        for (auto [id, name] : client->gameState.lobby.players) {
-            auto player = client->gameState.objects.at(id);
 
-            if (!player.has_value())    continue;
+        for (int i = 0; i < client->gameState.lobby.max_players; i++) {
+            auto lobbyPlayer = client->gameState.lobby.players[i];
+
+            if (!lobbyPlayer.has_value()) continue;
+
+            auto player = client->gameState.objects.at(lobbyPlayer.get().id);
+
+            if (!player.has_value()) continue;
 
             SharedObject playerObj = player.get();
 
+            if (playerObj.type == ObjectType::DungeonMaster) continue;
+
             if (playerObj.inventoryInfo.get().hasOrb) {
                 orbIsCarried = true;
-                orbStateString = name + " has the Orb!";
+                orbStateString = "Player " + std::to_string(i + 1) + " has the Orb!";
                 break;
             }
         }
@@ -645,9 +1754,10 @@ void GUI::_layoutGameHUD() {
             orbStateString = "The Orb has been dropped!";
         }
 
-        std::optional<glm::vec3> orb_pos;
-
         for (const auto& [eid, obj] : client->gameState.objects) {
+            if (!obj.has_value()) {
+                continue;
+            }
             if (obj->type == ObjectType::Player && obj->inventoryInfo->hasOrb) {
                 orb_pos = obj->physics.corner;
                 orb_pos->y = 0;
@@ -657,6 +1767,9 @@ void GUI::_layoutGameHUD() {
 
         if (!orb_pos.has_value()) {
             for (const auto& [eid, obj] : client->gameState.objects) {
+                if (!obj.has_value()) {
+                    continue;
+                }
                 if (obj->type == ObjectType::Orb) {
                     orb_pos = obj->physics.corner;
                     orb_pos->y = 0;
@@ -675,81 +1788,164 @@ void GUI::_layoutGameHUD() {
             auto distance = glm::distance(orb_pos.value(), player_pos_ground);
 
             std::stringstream ss;
-            ss << distance << "m to Orb.";
 
-            matchPhaseFlex->push(widget::DynText::make(ss.str(), fonts, widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)));
+            // bruh
+            ss << std::fixed << std::setprecision(1) << distance << "m to Orb.";
+
+            const float MAX_DIST = 150.0f;
+            float dist_frac = std::max(std::min(distance / MAX_DIST, 1.0f), 0.0f);
+
+            glm::vec3 close_color = font::getRGB(font::Color::GREEN);
+            glm::vec3 far_color = font::getRGB(font::Color::RED);
+
+            glm::vec3 color = (dist_frac * far_color) + ((1 - dist_frac) * close_color);
+
+            
+            matchPhaseFlex->push(widget::DynText::make(ss.str(), fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALLMEDIUM, color))
+            );
         }
     }
 
+    auto eventSize = this->recentEvents.size();
+    if (this->recentEvents[eventSize - 1] != orbStateString) {
+        if (eventSize >= 5) {
+            this->recentEvents.erase(this->recentEvents.begin());
+        }
+        this->recentEvents.push_back(orbStateString);
+    }
+    
+    for (int i = this->recentEvents.size() - 1; i >= 0; i--) {
+        if (i == this->recentEvents.size() - 1) {
+            matchPhaseFlex->push(widget::DynText::make(
+                this->recentEvents[i],
+                fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALLMEDIUM, font::Color::WHITE)
+            ));
+        }
+        else {
+            matchPhaseFlex->push(widget::DynText::make(
+                this->recentEvents[i],
+                fonts,
+                widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, font::Color::GRAY)
+            ));
+        }
+    }
+    this->addWidget(std::move(matchPhaseFlex));
 
-    matchPhaseFlex->push(widget::DynText::make(
-        orbStateString,
-        fonts,
-        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
-    ));
+    // Show death or timer on the top
+    auto death_flexBG = widget::Flexbox::make(
+        glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(100))),
+        glm::vec2(WINDOW_WIDTH, 0),
+        widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+    );
+    death_flexBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::SkullBG), 2));
+    this->addWidget(std::move(death_flexBG));
 
     //  Add timer string
     if (client->gameState.matchPhase == MatchPhase::RelayRace) {
-        std::string timerString = "Time Left: ";
-        int timerSeconds = client->gameState.timesteps_left * ((float)TIMESTEP_LEN.count()) / 1000;
-        timerString += std::to_string(timerSeconds);
+        auto remainingTime = client->gameState.relay_finish_time - std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        int min = (int) remainingTime / 60;
+        int sec = remainingTime % 60;
 
-        timerString += (timerSeconds > 1) ? " seconds" : " second";
+        auto timeFlex = widget::Flexbox::make(
+            glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(70))),
+            glm::vec2(WINDOW_WIDTH, 0),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
 
-        matchPhaseFlex->push(widget::DynText::make(
+        std::string timerString = std::to_string(min) + "min " + std::to_string(sec) + "sec ";
+
+        float time_frac = remainingTime / 300.0f;
+        glm::vec3 close_color = font::getRGB(font::Color::GREEN);
+        glm::vec3 far_color = font::getRGB(font::Color::RED);
+        glm::vec3 color = ((1- time_frac) * far_color) + (time_frac * close_color);
+
+        timeFlex->push(widget::DynText::make(
             timerString,
             fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
+            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, color)
         ));
+        this->addWidget(std::move(timeFlex));
+    }
+    else {
+        auto death_flex = widget::Flexbox::make(
+            glm::vec2(0, WINDOW_HEIGHT - (font::getRelativePixels(95))),
+            glm::vec2(WINDOW_WIDTH, 0),
+            widget::Flexbox::Options(widget::Dir::HORIZONTAL, widget::Align::CENTER, 0.0f)
+        );
+        for(int i = 0; i < PLAYER_DEATHS_TO_RELAY_RACE; i++){
+            if(PLAYER_DEATHS_TO_RELAY_RACE - client->gameState.numPlayerDeaths > i){
+                death_flex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Skull), 2));
+            } else {
+                death_flex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::DestroyedSkull), 2));
+            }  
+        }
+        this->addWidget(std::move(death_flex));
     }
 
-    //  Add player deaths string
-    std::string playerDeathsString = std::to_string(client->gameState.numPlayerDeaths)
-        + " / " + std::to_string(PLAYER_DEATHS_TO_RELAY_RACE)
-        + " Player Deaths";
-
-    matchPhaseFlex->push(widget::DynText::make(
-        playerDeathsString,
-        fonts,
-        widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::RED)
-    ));
-
-    this->addWidget(std::move(matchPhaseFlex));
+    auto txtHeight = font::getRelativePixels(163);
+    auto bartxtHeight = font::getRelativePixels(13);
+    if (this->config.client.presentation) {
+        txtHeight += font::getRelativePixels(80.0);
+        bartxtHeight += font::getRelativePixels(90.0);
+    }
 
     if (is_dm.has_value() && is_dm.value()) {
+        // add some DM specific stuff in here
+        auto traps_placed_txt = widget::CenterText::make(
+            "Traps Placed: " + std::to_string(self->trapInventoryInfo->trapsPlaced) + " / " + std::to_string(MAX_TRAPS),
+            font::Font::TEXT,
+            font::Size::SMALL,
+            font::Color::YELLOW,
+            fonts,
+            txtHeight
+        );
+        this->addWidget(std::move(traps_placed_txt));
+
+        auto mana_txt = widget::CenterText::make(
+            std::to_string(self->DMInfo->mana_remaining) + " / " + std::to_string(30),
+            font::Font::TEXT,
+            font::Size::SMALL,
+            font::Color::WHITE,
+            fonts,
+            bartxtHeight
+        );
+        this->addWidget(std::move(mana_txt));
+
+        //  Show a large splash text at the center of the screen for the DM if the DM is paralyzed
+        if (self.get().DMInfo.get().paralyzed) {
+            std::cout << "DM is paralyzed!" << std::endl;
+            auto paralyzedSplashText = widget::CenterText::make(
+                "PARALYZED!",
+                gui::font::Font::TITLE,
+                gui::font::Size::LARGE,
+                gui::font::Color::RED,
+                this->fonts,
+                WINDOW_HEIGHT / 2
+            );
+
+            this->addWidget(std::move(paralyzedSplashText));
+        }
+
         return;
     }
 
     auto health_txt = widget::CenterText::make(
         std::to_string(self->stats->health.current()) + " / " + std::to_string(self->stats->health.max()),
-        font::Font::MENU,
-        font::Size::MEDIUM,
-        font::Color::RED,
+        font::Font::TEXT,
+        font::Size::SMALL,
+        font::Color::WHITE,
         fonts,
-        font::getRelativePixels(90)
+        bartxtHeight
     );
     this->addWidget(std::move(health_txt));
 
-    auto status_flex = widget::Flexbox::make(
-        glm::vec2(font::getRelativePixels(20), font::getRelativePixels(20)),
-        glm::vec2(0.0f, 0.0f),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
-    );
-
-    for (const std::string& status: self->statuses->getStatusStrings()) {
-        status_flex->push(widget::DynText::make(
-            status,
-            fonts,
-            widget::DynText::Options(font::Font::TEXT, font::Size::MEDIUM, font::Color::WHITE)
-        ));
-    }
-
-    this->addWidget(std::move(status_flex));
     // Flexbox for item durations
     auto durationFlex = widget::Flexbox::make(
         glm::vec2(10.0f, FRAC_WINDOW_HEIGHT(1, 2)),
         glm::vec2(0.0f, 0.0f),
-        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, 0.0f)
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
     );
 
     std::unordered_map<SpecificID, std::pair<ModelType, double>>::iterator it = self->inventoryInfo->usedItems.begin();
@@ -762,10 +1958,13 @@ void GUI::_layoutGameHUD() {
             name = "Invisibility: ";
         }
         else if (type == ModelType::InvincibilityPotion) {
-            name = "INVINCIBILITY: ";
+            name = "Invincibility: ";
         }
         else if (type == ModelType::NauseaPotion) {
-            name = "Nauseous: ";
+            name = "Nausea: ";
+        }
+        else if (type == ModelType::Mirror) {
+            name = "Holding Mirror: ";
         }
 
         durationFlex->push(widget::DynText::make(
@@ -776,28 +1975,160 @@ void GUI::_layoutGameHUD() {
         ++it;
     }
     this->addWidget(std::move(durationFlex));
+
+    auto compassHeight = font::getRelativePixels(10);
+    if (this->config.client.presentation) {
+        compassHeight += font::getRelativePixels(85.0);
+    }
+
+    auto compassFlex = widget::Flexbox::make(
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixelsHorizontal(700), compassHeight),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
+    );
+
+    if (self->compass->angle > 345 || self->compass->angle <= 15) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass0), 2));
+    }
+    else if (self->compass->angle > 15 && self->compass->angle <= 45) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass330), 2));
+    }
+    else if (self->compass->angle > 45 && self->compass->angle <= 75) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass300), 2));
+    }
+    else if (self->compass->angle > 75 && self->compass->angle <= 105) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass270), 2));
+    }
+    else if (self->compass->angle > 105 && self->compass->angle <= 135) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass240), 2));
+    }
+    else if (self->compass->angle > 135 && self->compass->angle <= 165) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass210), 2));
+    }
+    else if (self->compass->angle > 165 && self->compass->angle <= 195) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass180), 2));
+    }
+    else if (self->compass->angle > 195 && self->compass->angle <= 225) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass150), 2));
+    }
+    else if (self->compass->angle > 225 && self->compass->angle <= 255) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass120), 2));
+    }
+    else if (self->compass->angle > 255 && self->compass->angle <= 285) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass90), 2));
+    } 
+    else if (self->compass->angle > 285 && self->compass->angle <= 315) {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass60), 2));
+    }
+    else {
+        compassFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Compass30), 2));
+    }
+    this->addWidget(std::move(compassFlex));
+
+    auto needleFlex = widget::Flexbox::make(
+        glm::vec2(WINDOW_WIDTH - font::getRelativePixelsHorizontal(700), compassHeight),
+        glm::vec2(0.0f, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::LEFT, font::getRelativePixels(5))
+    );
+    needleFlex->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Needle), 2));
+
+    if (orb_pos.has_value()) {
+        auto player_pos_ground = self->physics.corner;
+        player_pos_ground.y = 0;
+
+        auto distance = glm::distance(orb_pos.value(), player_pos_ground);
+
+        std::stringstream ss;
+
+        ss << std::fixed << std::setprecision(1) << "  " << distance << "m";
+
+        const float MAX_DIST = 150.0f;
+        float dist_frac = std::max(std::min(distance / MAX_DIST, 1.0f), 0.0f);
+
+        glm::vec3 close_color = font::getRGB(font::Color::GREEN);
+        glm::vec3 far_color = font::getRGB(font::Color::RED);
+
+        glm::vec3 color = (dist_frac * far_color) + ((1 - dist_frac) * close_color);
+
+        needleFlex->push(widget::DynText::make(ss.str(), fonts,
+            widget::DynText::Options(font::Font::TEXT, font::Size::SMALL, color))
+        );
+    }
+    this->addWidget(std::move(needleFlex));
+
+    //  Show a large splash text at the center of the screen for the player if the player
+    //  successfully reflected a lightning bolt
+    if (self.get().playerInfo.get().used_mirror_to_reflect_lightning) {
+        std::cout << "Player used a mirror to reflect a lightning bolt!" << std::endl;
+        auto reflectedLightningSplashText = widget::CenterText::make(
+            "Reflected Lightning using Mirror!",
+            gui::font::Font::TITLE,
+            gui::font::Size::MEDIUM,
+            gui::font::Color::WHITE,
+            this->fonts,
+            WINDOW_HEIGHT / 2
+        );
+
+        this->addWidget(std::move(reflectedLightningSplashText));
+    }
 }
 
 void GUI::_layoutGameEscMenu() {
-    auto exit_game_txt = widget::DynText::make(
-        "(Exit Game)",
-        fonts,
-        widget::DynText::Options(font::Font::MENU, font::Size::MEDIUM, font::Color::BLACK)
-    );
-    exit_game_txt->addOnHover([this](widget::Handle handle) {
-        auto widget = this->borrowWidget<widget::DynText>(handle);
-        widget->changeColor(font::Color::RED);
-    });
-    exit_game_txt->addOnClick([this](widget::Handle handle) {
-        glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
-    });
-    auto flex = widget::Flexbox::make(
-        glm::vec2(0.0f, FRAC_WINDOW_HEIGHT(1, 2)),
+    auto self_eid = client->session->getInfo().client_eid;
+    auto is_dm = client->session->getInfo().is_dungeon_master;
+
+    auto exitBG = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(17)),
         glm::vec2(WINDOW_WIDTH, 0.0f),
         widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
     );
-    flex->push(std::move(exit_game_txt));
 
+    /*
+    auto changeimage = [this](widget::Handle handle) {
+        auto widget = this->borrowWidget<widget::StaticImg>(handle);
+        widget->changeImage(images.getImg(img::ImgID::ExitBG));
+    };*/
+
+    
+    if(!is_dm.value()){
+        auto img = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ExitBG), 2);
+        img->addOnHover([this](widget::Handle handle) {
+            auto widget = this->borrowWidget<widget::StaticImg>(handle);
+            widget->changeImage(images.getImg(img::ImgID::ExitBGSelected));
+            });
+        exitBG->push(std::move(img));
+    } 
+    else {
+        auto img = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::ExitDMBG), 2);
+        img->addOnHover([this](widget::Handle handle) {
+            auto widget = this->borrowWidget<widget::StaticImg>(handle);
+            widget->changeImage(images.getImg(img::ImgID::ExitDMBGSelected));
+        });
+        exitBG->push(std::move(img));
+    }
+    
+    exitBG->addOnClick([this](widget::Handle handle) {
+        glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
+    });
+
+    this->addWidget(std::move(exitBG));
+
+    auto flex = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(15)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
+    );
+
+    auto img = widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Exit), 1);
+    img->addOnHover([this](widget::Handle handle) {
+        auto widget = this->borrowWidget<widget::StaticImg>(handle);
+        widget->changeImage(images.getImg(img::ImgID::ExitSelected));
+        });
+    flex->push(std::move(img));
+
+    flex->addOnClick([this](widget::Handle handle) {
+        glfwSetWindowShouldClose(this->client->getWindow(), GL_TRUE);
+    });
     this->addWidget(std::move(flex));
 }
 
@@ -807,14 +2138,29 @@ void GUI::_layoutDeadScreen() {
         return;
     }
     auto self = client->gameState.objects.at(*self_eid);
-
     auto time_until_respawn = (self->playerInfo->respawn_time - getMsSinceEpoch()) / 1000;
+
+    auto diedBG = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(45)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
+    );
+    diedBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Death), 2));
+    auto respawnBG = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(5), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(210)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
+    );
+    respawnBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Respawn), 2));
+
+    this->addWidget(std::move(diedBG));
+    this->addWidget(std::move(respawnBG));
 
     this->addWidget(widget::CenterText::make(
         "You died...",
         font::Font::MENU,
         font::Size::LARGE,
-        font::Color::RED,
+        font::Color::WHITE,
         fonts,
         FRAC_WINDOW_HEIGHT(1, 2)
     ));
@@ -822,7 +2168,7 @@ void GUI::_layoutDeadScreen() {
         "Respawning in " + std::to_string(time_until_respawn),
         font::Font::TEXT,
         font::Size::MEDIUM,
-        font::Color::BLACK,
+        font::Color::WHITE,
         fonts,
         FRAC_WINDOW_HEIGHT(1, 3)
     ));
@@ -846,6 +2192,21 @@ void GUI::_layoutResultsScreen() {
     }
 
     std::string result_string = won ? "Victory" : "Defeat";
+
+    auto victoryBG = widget::Flexbox::make(
+        glm::vec2(font::getRelativePixels(2), FRAC_WINDOW_HEIGHT(1, 2) - font::getRelativePixels(55)),
+        glm::vec2(WINDOW_WIDTH, 0.0f),
+        widget::Flexbox::Options(widget::Dir::VERTICAL, widget::Align::CENTER, 0.0f)
+    );
+
+    if (won) {
+        victoryBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Victory), 2));
+    }
+    else {
+        victoryBG->push(widget::StaticImg::make(glm::vec2(0.0f), images.getImg(img::ImgID::Defeat), 2));
+    }
+
+    this->addWidget(std::move(victoryBG));
 
     this->addWidget(widget::CenterText::make(
         result_string,

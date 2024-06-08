@@ -2,10 +2,12 @@
 #include "server/game/constants.hpp"
 #include "server/game/arrowtrap.hpp"
 #include "server/game/spell.hpp"
+#include "shared/game/sharedmodel.hpp"
 
 #include <optional>
 #include <deque>
 #include <iostream>
+#include <variant>
 
 /**
  * Class for any possible Projectile.
@@ -25,15 +27,16 @@ public:
          * @param v_mult vertical velocity multiplier
          * @param homing whether or not the projectile homes in on a specified target
          * @param homing_strength value from 0-1, where the closer to 1 the more strong the homing is
+         * @param homing_duration how many ticks it should home for
          * @param target Target towards which the projectile homes, if it is homing
          */
         Options(bool isSpell, int damage, float h_mult, float v_mult,
-            bool homing, float homing_strength, 
+            bool homing, float homing_strength, int homing_duration,
             std::optional<EntityID> target
         ):
             isSpell(isSpell), damage(damage), h_mult(h_mult), 
             v_mult(v_mult), homing(homing), homing_strength(homing_strength),
-            target(target)
+            homing_duration(homing_duration), target(target)
         {
             if (homing && !target.has_value()) {
                 std::cerr << "FATAL: homing projectile created without target.\n"
@@ -49,6 +52,7 @@ public:
         int damage;
         bool homing;
         float homing_strength;
+        int homing_duration;
         std::optional<EntityID> target;
     };
 
@@ -72,22 +76,30 @@ public:
 	 */
     bool doTick(ServerGameState& state);
 
+	virtual SharedObject toShared() override;
+
+
 private:
     Options opt;
     std::optional<ServerSFX> destroy_sound;
+    PointLightProperties properties;
+
 };
 
 class HomingFireball : public Projectile {
 public:
-    inline static const int DAMAGE = 25;
+    inline static const int DAMAGE = 15;
     inline static const float H_MULT = 0.4;
-    inline static const float V_MULT = 0.0; // not affected by gravity
+    inline static const float V_MULT = 0.1;
     inline static const float HOMING_STRENGTH = 0.1f;
+    inline static const int HOMING_DURATION_TICKS = 80; // 2.4s
 
     HomingFireball(glm::vec3 corner, glm::vec3 facing, std::optional<EntityID> target):
-        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube, ServerSFX::FireballImpact,
-            Options(false, DAMAGE, H_MULT, V_MULT, true, HOMING_STRENGTH, target))
-    {}
+        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Fireball, ServerSFX::FireballImpact,
+            Options(false, DAMAGE, H_MULT, V_MULT, true, HOMING_STRENGTH, HOMING_DURATION_TICKS, target))
+    {
+        this->physics.feels_gravity = false;
+    }
 };
 
 /**
@@ -98,37 +110,38 @@ public:
 class Arrow : public Projectile {
 public:
     inline static const int DAMAGE = 10;
-    inline static const float H_MULT = 1.20f;
+    inline static const float H_MULT = 0.55f;
     inline static const float V_MULT = 0.0f; // not affected by gravity
 
-    Arrow(glm::vec3 corner, glm::vec3 facing, ArrowTrap::Direction dir):
-        Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Cube, ServerSFX::ArrowImpact,
-            Options(false, DAMAGE, H_MULT, V_MULT, false, 0.0f, {}))
+    Arrow(glm::vec3 corner, glm::vec3 facing, Direction dir):
+        Projectile(corner, facing, glm::vec3(0.0f, 0.0f, 0.0f), ModelType::Arrow, ServerSFX::ArrowImpact,
+            Options(false, DAMAGE, H_MULT, V_MULT, false, 0.0f, 0, {})), dir(dir)
     {
-        // temp hack to get the correct direction until we load in a model and can rotate it
-
-        const float ARROW_WIDTH = 0.2f;    
-        const float ARROW_LENGTH = 1.0f;    
-        const float ARROW_HEIGHT = 0.2f;
-
-        float arrow_x_dim;
-        float arrow_z_dim;
-
+        const float clear_model_nudge = 1.5f;
         switch (dir) {
-            case ArrowTrap::Direction::UP:
-            case ArrowTrap::Direction::DOWN:
-                arrow_x_dim = ARROW_WIDTH;
-                arrow_z_dim = ARROW_LENGTH;
+            case Direction::LEFT:
+                std::swap(this->physics.shared.dimensions.x, this->physics.shared.dimensions.z);
+                this->physics.shared.facing = glm::vec3(0.0f, 0.0f, -1.0f);
+                this->physics.shared.corner.x -= clear_model_nudge;
                 break;
-            case ArrowTrap::Direction::LEFT:
-            case ArrowTrap::Direction::RIGHT:
-                arrow_x_dim = ARROW_LENGTH;
-                arrow_z_dim = ARROW_WIDTH;
+            case Direction::RIGHT:
+                std::swap(this->physics.shared.dimensions.x, this->physics.shared.dimensions.z);
+                this->physics.shared.facing = glm::vec3(0.0f, 0.0f, 1.0f);
+                // right doesn't need nudge for some reason
+                // this->physics.shared.corner.x += clear_model_nudge;
+                break;
+            case Direction::UP:
+                this->physics.shared.facing = glm::vec3(1.0f, 0.0f, 0.0f);
+                this->physics.shared.corner.z -= (2.0f * clear_model_nudge);
+                break;
+            case Direction::DOWN:
+                this->physics.shared.facing = glm::vec3(-1.0f, 0.0f, 0.0f);
+                this->physics.shared.corner.z += clear_model_nudge;
                 break;
         }
-
-        this->physics.shared.dimensions = glm::vec3(arrow_x_dim, ARROW_HEIGHT, arrow_z_dim);
     }
+
+    Direction dir;
 };
 
 class SpellOrb : public Projectile {
@@ -141,8 +154,8 @@ public:
     SpellType sType;
 
     SpellOrb(glm::vec3 corner, glm::vec3 facing, SpellType type) :
-        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::Cube, ServerSFX::FireballImpact,
-            Options(true, DAMAGE, H_MULT, V_MULT, false, 0.0f, {}))
+        Projectile(corner, facing, glm::vec3(0.4f, 0.4f, 0.4f), ModelType::SpellOrb, ServerSFX::FireballImpact,
+            Options(true, DAMAGE, H_MULT, V_MULT, false, 0.0f, 0, {}))
     {
         this->sType = type;
     }

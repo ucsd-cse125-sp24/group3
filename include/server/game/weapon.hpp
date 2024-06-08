@@ -12,6 +12,7 @@ enum class WeaponType {
 	Dagger,
     Sword,
     Hammer,
+    Lightning,
 };
 
 class Weapon : public Item {
@@ -28,6 +29,9 @@ public:
 
     void useItem(Object* other, ServerGameState& state, int itemSelected) override;
     void reset(ServerGameState& state);
+
+    // for DM
+    void useLightning(Object* other, ServerGameState& state, glm::vec3 corner);
 
 private:
     int delay;

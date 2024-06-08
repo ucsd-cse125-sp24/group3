@@ -39,8 +39,8 @@ struct Physics {
 		glm::vec3 corner, glm::vec3 facing,
 		glm::vec3 dimensions = glm::vec3(1.0f)):
 		shared{.corner=corner, .facing=facing, .dimensions=dimensions},
-		movable(movable), feels_gravity(true), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)), nauseous(1.0f),
-		collider(collider)
+		movable(movable), feels_gravity(true), velocity(glm::vec3(0.0f)), velocityMultiplier(glm::vec3(1.0f)), \
+		currTickVelocity(glm::vec3(0.0f)), nauseous(1.0f), collider(collider)
 	{}
 
 	/**
@@ -71,6 +71,11 @@ struct Physics {
 	 * @brief 3-D vector that denotes this object's velocity multiplier.
 	 */
 	glm::vec3 velocityMultiplier;
+
+	/**
+	 * @brief Tick velocity for knockbacks
+	 */
+	glm::vec3 currTickVelocity;
 
 	/**
 	 * @brief Factor for potion of nausea
@@ -122,6 +127,18 @@ public:
 	 * to the client)
 	 */
 	ModelType modelType;
+
+	/**
+	 * @brief Object's animation state and current action. For non-animated
+	 * objects, this defaults as AnimState::IdleAnim.
+	 * 
+	 */
+	AnimState animState;
+
+	/**
+	 * @brief used to determine if the player is sprinting for animation purposes
+	 */
+    bool is_sprinting;
 
 	/**
 	 * @brief Vector of (x, y) positions of GridCells currently occupied by this
@@ -177,3 +194,12 @@ public:
 	std::string to_string(unsigned int tab_offset);
 	std::string to_string() { return this->to_string(0); }
 };
+
+enum class Direction {
+    LEFT,
+    UP,
+    DOWN,
+    RIGHT
+};
+
+glm::vec3 directionToFacing(const Direction& direction);

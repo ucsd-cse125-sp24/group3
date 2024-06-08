@@ -1,11 +1,15 @@
 #include "client/renderable.hpp"
 #include "glm/fwd.hpp"
 
+#include <cmath>
 #include <glm/glm.hpp>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 
-Renderable::Renderable() : model(1.0f) { }
+
+Renderable::Renderable() : model(1.0f), rotation(1.0f, 0.0f, 0.0f, 0.0f) { }
 
 void Renderable::translateAbsolute(const glm::vec3 &new_pos) {
     this->model[3] = glm::vec4(new_pos, 1.0f);
@@ -36,8 +40,24 @@ void Renderable::scaleAbsolute(const glm::vec3& scale) {
     this->model[2][2] = scale.z;
 }
 
+void Renderable::rotateAbsolute(const glm::vec3& dir, bool is_player, const glm::vec3& axis) {
+    float r = is_player ? glm::atan(dir.x, dir.z) : glm::atan(-dir.z, dir.x);
+    this->rotation = glm::angleAxis(r, axis);
+}
+
+void Renderable::rotateAbsolute(const float& angle, const glm::vec3& axis) {
+    this->rotation = glm::angleAxis(angle, axis);
+}
+
+void Renderable::rotateRelative(const glm::vec3& dir, const glm::vec3& axis) {
+    // float rot = glm::acos(glm::dot(dir, this->facing));
+    float r1 = glm::atan(dir.x, dir.z);
+    float r2 = glm::angle(rotation);
+    this->rotation = glm::rotate(rotation, r1 - r2, axis);
+}
+
 glm::mat4 Renderable::getModelMat() {
-    return this->model;
+    return this->model * glm::mat4_cast(rotation);
 }
 
 void Renderable::clear() {

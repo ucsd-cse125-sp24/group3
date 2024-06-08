@@ -11,7 +11,23 @@ glm::vec3 aiColorToGLM(const aiColor3D& color) {
     return glm::vec3(color.r, color.g, color.b);
 }
 
-glm::vec3 Bbox::getDimensions() {
+glm::mat4 matrixToGLM(const aiMatrix4x4& from) {
+    glm::mat4 to;
+    //the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+    to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
+    to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
+    to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
+    to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
+    return to;
+}
+
+glm::vec3 getGLMVec(const aiVector3D& vec) { 
+    return glm::vec3(vec.x, vec.y, vec.z); 
+}
+
+glm::quat getGLMQuat(const aiQuaternion& pOrientation) {
+    return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
+}glm::vec3 Bbox::getDimensions() {
     return glm::abs(this->corners.first - this->corners.second);
 }
 
@@ -76,4 +92,26 @@ Bbox combineBboxes(const Bbox& bbox1, const Bbox& bbox2) {
             glm::vec3(maxX, maxY, maxZ)
         )
     };
+}
+
+glm::vec3 rotate90DegreesAroundXAxis(const glm::vec3& direction) {
+    // Create a 90-degree rotation matrix around the Y-axis
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    // Apply the rotation to the direction vector
+    glm::vec4 rotatedDirection = rotationMatrix * glm::vec4(direction, 1.0f);
+
+    // Return the rotated vector as a vec3
+    return glm::vec3(rotatedDirection);
+}
+
+glm::vec3 rotate90DegreesAroundYAxis(const glm::vec3& direction) {
+    // Create a 90-degree rotation matrix around the Y-axis
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    // Apply the rotation to the direction vector
+    glm::vec4 rotatedDirection = rotationMatrix * glm::vec4(direction, 1.0f);
+
+    // Return the rotated vector as a vec3
+    return glm::vec3(rotatedDirection);
 }

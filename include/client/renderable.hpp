@@ -4,12 +4,20 @@
 #include <vector>
 #include <set>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
+
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 
 #include "client/shader.hpp"
 #include "client/util.hpp"
 #include "shared/game/sharedobject.hpp"
 #include "shared/utilities/constants.hpp"
+
+
 
 class Renderable {
  public:
@@ -22,9 +30,7 @@ class Renderable {
      * @param
      */
     virtual void draw(Shader* shader,
-            glm::mat4 viewProj,
             glm::vec3 camPos, 
-            std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
             bool fill) = 0;
 
     /**
@@ -87,6 +93,38 @@ class Renderable {
     virtual void scaleRelative(const glm::vec3& scale);
 
     /**
+     * @brief Rotates the item along the specified axis. If
+     * no axis is specified, then assumes a rotation on the
+     * y-axis. This will not stack upon previous rotations.
+     * 
+     * @param dir The direction the model is facing 
+     * @param change behavior if rotating the player model
+     * @param axis The axis of rotation 
+     */
+    virtual void rotateAbsolute(const glm::vec3& dir, bool is_player = false, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f));
+
+    /**
+     * @brief Rotates the item along the specified axis. If
+     * no axis is specified, then assumes a rotation on the
+     * y-axis. This will not stack upon previous rotations.
+     * 
+     * @param angle The angle of rotation
+     * @param axis The axis of rotation 
+     */
+    virtual void rotateAbsolute(const float& angle, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f));
+
+    /**
+     * @brief Rotates the item along the specified axis. If
+     * no axis is specified, then assumes a rotation on the
+     * y-axis. This will stack upon previous rotations.
+     * 
+     * @param angle The angle of rotation
+     * @param axis The axis of rotation 
+     */
+    virtual void rotateRelative(const glm::vec3& dir, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f));
+
+
+    /**
      * Gets the model matrix given all the transformations 
      * applied to it
      *
@@ -109,6 +147,8 @@ class Renderable {
      * Reset translation to position (0, 0, 0)
      */
     virtual void clearPosition();
+
  private:
     glm::mat4 model;
+    glm::quat rotation;
 };

@@ -7,7 +7,9 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <memory>
+#include <array>
 #include <queue>
+#include <vector>
 #include <mutex>
 #include <thread>
 #include <string>
@@ -71,9 +73,17 @@ public:
     ~Session();
 
     /**
-     * Starts listening for packets on the socket 
+     * @returns true if there has been no fatal socket error, false otherwise
      */
-    void startListen();
+    bool isOkay() const;
+
+    /**
+     * handles all of the incoming packets and puts the events in the event queue, which you
+     * can get by calling getEvents
+     * 
+     * @returns list of all received events
+     */
+    std::vector<Event> handleAllReceivedPackets();
 
     /**
      * Connects to the ip
@@ -84,18 +94,11 @@ public:
         bool connectTo(basic_resolver_results<class boost::asio::ip::tcp> endpoints);
 
     /**
-     * Gets all of the received packets since the last time this function was called.
-     * 
-     * @returns received packets on the socket
-     */
-    std::vector<Event> getEvents();
-
-    /**
-     * Sends a packet on the socket
+     * Puts a packet in the queue of packets to send
      * 
      * @param packet The packet to send.
      */
-    void sendPacketAsync(std::shared_ptr<PackagedPacket> packet);
+    void sendPacket(std::shared_ptr<PackagedPacket> packet);
 
     /**
      * Sends an event on the socket after packaging it into
@@ -103,17 +106,26 @@ public:
      * 
      * @param evt The event object to send
      */
-    void sendEventAsync(Event evt);
+    void sendEvent(Event evt);
 
     /**
      * Get the information associated with this session.
      */
     const SessionInfo& getInfo() const;
 
+    void setDM(bool is_dm);
+
 private:
+    /// @brief true until there is a fatal error on the socket
+    bool okay;
+
+    std::optional<PacketHeader> prev_hdr;
+
     tcp::socket socket;
 
-    std::vector<Event> received_events;
+    std::vector<std::shared_ptr<PackagedPacket>> packets_to_send;
+
+    std::array<char, NETWORK_BUFFER_SIZE> buffer;
 
     SessionInfo info;
 
@@ -124,16 +136,9 @@ private:
      * 
      * @param type Type of the packet received
      * @param data Serialized format of the data received on the network.
+     * @returns Event if the packet was an event, nullopt otherwise
      */
-    void _handleReceivedPacket(PacketType type, const std::string& data);
-
-    /**
-     * Sets up one async callback to receive a packet. This callback ends up calling
-     * receivePacketAsync again, if there was no FATAL error, meaning this only needs
-     * be called once, and then another time if there was a FATAL error and we are
-     * sure we fixed the error on the socket.
-     */
-    void _receivePacketAsync();
+    std::optional<Event> _handleReceivedPacket(PacketType type, const std::string& data);
 
     /**
      * Classifies the error reported by boost::asio based on how we should respond to it.
@@ -143,6 +148,12 @@ private:
      * be displayed in an error message.
      */
     SocketError _classifySocketError(boost::system::error_code ec, const char* where);
+
+    /**
+     * @param bytes number of bytes to check for
+     * @returns true if the socket has received enough bytes, false otherwise
+     */
+    bool socketHasEnoughBytes(std::size_t bytes);
 };
 
 /**
@@ -158,7 +169,7 @@ struct SessionEntry {
     EntityID id;
     bool is_dungeon_master;
     boost::asio::ip::address ip;
-    std::weak_ptr<Session> session;
+    std::shared_ptr<Session> session;
 };
 
 /**

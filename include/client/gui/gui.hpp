@@ -9,14 +9,23 @@
 #include "client/gui/widget/staticimg.hpp"
 #include "client/gui/widget/centertext.hpp"
 #include "client/gui/widget/textinput.hpp"
+#include "client/gui/widget/empty.hpp"
 #include "client/gui/font/font.hpp"
 #include "client/gui/font/loader.hpp"
 #include "client/gui/img/img.hpp"
 #include "client/gui/img/loader.hpp"
+#include "server/game/constants.hpp"
+#include "client/gui/img/logo.hpp"
+#include "shared/utilities/config.hpp"
 
 #include <iostream>
+#include <vector>
 #include <memory>
-#include <unordered_map>
+#include <map>
+#include <boost/optional/optional.hpp>
+
+//  Forward declarration of LobbyPlayer struct
+struct LobbyPlayer;
 
 class Client;
 
@@ -33,6 +42,7 @@ enum class GUIState {
     TITLE_SCREEN,
     LOBBY_BROWSER,
     LOBBY,
+    INTRO_CUTSCENE,
     GAME_HUD,
     GAME_ESC_MENU,
     DEAD_SCREEN,
@@ -67,7 +77,7 @@ public:
      * @param client Pointer to the client object. Note that GUI is a friend class to client, so GUI can
      * access private client data members for ease of use.
      */
-    explicit GUI(Client* client);
+    explicit GUI(Client* client, const GameConfig& config);
     /**
      * @brief Initializes all of the necessary file loading for all of the GUI elements, and
      * registers all of the static shader variables for each of the derived widget classes
@@ -120,8 +130,12 @@ public:
      * is down. Note: this is a reference so that if a click is captured it can toggle the
      * mouse down flag to false, so that click doesn't get "double counted" in subsequent
      * frames.
+     * @param is_right_mouse_down reference to flag which stores whether or not the right mouse
+     * is down. Note: this is a reference so that if a click is captured it can toggle the
+     * mouse down flag to false, so that click doesn't get "double counted" in subsequent
+     * frames.
      */
-    void handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down);
+    void handleInputs(float mouse_xpos, float mouse_ypos, bool& is_left_mouse_down, bool& is_right_mouse_down);
     /**
      * Renders the current state of the GUI to the screen, based on all of the widgets
      * that have been added and any changes caused by inputs.
@@ -252,6 +266,10 @@ public:
      */
     void clearCapturedKeyboardInput();
     /**
+     * @brief Displays controls for the player
+     */
+    void displayControl();
+    /**
      * @brief Returns all of the captured keyboard input without clearing it. 
      * 
      * @returns all of the captured keyboard input as an std::string
@@ -272,7 +290,7 @@ public:
 
 private:
     widget::Handle next_handle {0};
-    std::unordered_map<widget::Handle, widget::Widget::Ptr> widgets;
+    std::map<widget::Handle, widget::Widget::Ptr> widgets;
 
     std::shared_ptr<font::Loader> fonts;
     img::Loader images;
@@ -281,6 +299,13 @@ private:
     std::string keyboard_input;
 
     Client* client;
+
+    GameConfig config;
+    bool controlDisplayed;
+
+    std::vector<std::string> recentEvents;
+
+    img::Logo logo;
 
     /// =<INTERNAL HELPERS>==========================================================
     /**
@@ -347,6 +372,19 @@ private:
      * Displays the lobby name and all of the players who are currently in the lobby.
      */
     void _layoutLobby();
+
+    /**
+     * @brief Creates a player status row (which is represented as a Flexbox widget) for the
+     * given player. This function generates the player status row such that the 3 columns
+     * have the specified width (this is done using the Empty widget).
+     * @param lobbyPlayer Player for whom the player status row is created.
+     * @param columnWidths Widths for the 3 columns of the player status row.
+     * @param origin Origin for this player status row's Flexbox.
+     * @param playerIndex 1-indexed player index for the given LobbyPlayer.
+     * @return gui::widget::Flexbox::Ptr of a Flexbox storing the generated player status row.
+    */
+    gui::widget::Flexbox::Ptr _createPlayerStatusRow(boost::optional<LobbyPlayer> lobbyPlayer,
+        glm::vec3 columnWidths, glm::vec2 origin, int playerIndex);
     /**
      * @brief Displays the Game HUD layout
      * 

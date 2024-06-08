@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include <memory>
 #include <optional>
 #include <set>
@@ -16,6 +17,9 @@
 #include "client/renderable.hpp"
 #include "client/shader.hpp"
 #include "client/util.hpp"
+#include "client/bone.hpp"
+
+#define MAX_BONE_INFLUENCE 4
 
 /**
  * Stores position, normal vector, and coordinates 
@@ -25,6 +29,10 @@ struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 textureCoords;
+    int m_boneIDs[MAX_BONE_INFLUENCE]; /* Bone indices which influence the vertex */
+    float m_weights[MAX_BONE_INFLUENCE]; /* Weights for each bone */
+    glm::vec3 tangent;
+    glm::vec3 bitangent;
 };
 
 class Texture {
@@ -60,6 +68,14 @@ struct Material {
     float shininess;
 };
 
+struct BoneInfo {
+	/*id is index in finalBoneMatrices*/
+	int id;
+
+	/*offset matrix transforms vertex from model space to bone space*/
+	glm::mat4 offset;
+};
+
 /**
  * Mesh holds the data needed to render a mesh (collection of triangles).
  *
@@ -88,9 +104,7 @@ class Mesh : public Renderable {
      * mesh
      */
     void draw(Shader* shader,
-            glm::mat4 viewProj,
             glm::vec3 camPos, 
-            std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
             bool fill) override;
 
 
@@ -103,6 +117,7 @@ class Mesh : public Renderable {
 
     //  render data opengl needs
     GLuint VAO, VBO, EBO;
+    void setupNormalMaps();
 };
 
 
@@ -115,7 +130,7 @@ class Model : public Renderable {
      *
      * @param Filepath to model file.
      */
-    explicit Model(const std::string& filepath);
+    explicit Model(const std::string& filepath, bool flip_uvs);
 
     /**
      * Draws all the meshes of a given model
@@ -124,10 +139,19 @@ class Model : public Renderable {
      * meshes of the model
      */
     void draw(Shader* shader,
-            glm::mat4 viewProj,
             glm::vec3 camPos, 
-            std::array<boost::optional<SharedObject>, MAX_POINT_LIGHTS> lightSources,
             bool fill) override;
+
+    /**
+     * Draws all the meshes of a given model
+     *
+     * @param Shader to use while drawing all the
+     * meshes of the model
+     */
+    void draw(Shader* shader,
+            glm::vec3 camPos, 
+            bool fill,
+            glm::vec3 color);
 
     /**
      * Sets the position of the Model to the given x,y,z
@@ -189,6 +213,36 @@ class Model : public Renderable {
     void scaleRelative(const glm::vec3& scale) override;
 
     /**
+     * @brief Rotates the item along the specified axis. If
+     * no axis is specified, then assumes a rotation on the
+     * y-axis. This will not stack upon previous rotations.
+     * 
+     * @param angle The angle of rotation
+     * @param axis The axis of rotation 
+     */
+    void rotateAbsolute(const glm::vec3& dir,  bool is_player = false, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f)) override;
+
+    /**
+     * @brief Rotates the item along the specified axis. If
+     * no axis is specified, then assumes a rotation on the
+     * y-axis. This will not stack upon previous rotations.
+     * 
+     * @param angle The angle of rotation
+     * @param axis The axis of rotation 
+     */
+    void rotateAbsolute(const float& angle, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f)) override;
+
+    /**
+     * @brief Rotates the item along the specified axis. If
+     * no axis is specified, then assumes a rotation on the
+     * y-axis. This will stack upon previous rotations.
+     * 
+     * @param angle The angle of rotation
+     * @param axis The axis of rotation 
+     */
+    void rotateRelative(const glm::vec3& dir, const glm::vec3& axis = glm::vec3(0.0f, 1.0f, 0.0f)) override;
+
+    /**
      * Clear transformations and reset the model matrix 
      * to the identity.
      */
@@ -223,13 +277,26 @@ class Model : public Renderable {
 
     void overrideSolidColor(std::optional<glm::vec3> color);
 
+
+	auto& getBoneInfoMap() { return m_boneInfoMap; }
+	int& getBoneCount() { return m_boneCounter; }
+	
+
  private:
     std::vector<Mesh> meshes;
     Bbox bbox;
     glm::vec3 dimensions;
+    
+	std::map<std::string, BoneInfo> m_boneInfoMap;
+	int m_boneCounter = 0;
+
 
     void processNode(aiNode* node, const aiScene* scene);
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+	void setDefaultVertexBoneData(Vertex& vertex);
+	void setVertexBoneData(Vertex& vertex, int boneID, float weight);
+	void extractBoneWeight(std::vector<Vertex>& vertices, aiMesh* mesh, const aiScene* scene);
+
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, const aiTextureType& type);
 
 

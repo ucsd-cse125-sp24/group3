@@ -9,8 +9,11 @@ static auto audio_dir = getRepoRoot() / "assets" / "sounds";
 std::string getAudioPath(ClientSFX sound) {
     static auto dir = audio_dir / "client_sfx";
     switch (sound) {
-        case ClientSFX::TEMP:
-            return (dir / "vine-boom-mono.mp3").string();
+        case ClientSFX::VictoryThemePlayers:
+            return (dir / "victory_players.flac").string();
+        case ClientSFX::VictoryThemeDM:
+            //  TODO: Replace with DM Victory theme!
+            return (dir / "victory_dm.flac").string();
         default:
             std::cerr << "FATAL: no known path for ClientSFX " << static_cast<int>(sound) << std::endl;
             std::exit(1);
@@ -46,12 +49,48 @@ std::string getAudioPath(ServerSFX sfx) {
             return (dir / "player_walk_4_mono.wav").string();
         case ServerSFX::PlayerWalk5:
             return (dir / "player_walk_5_mono.wav").string();
+        case ServerSFX::Dagger:
+            return (dir / "dagger.wav").string();
+        case ServerSFX::Sword:
+            return (dir / "sword.wav").string();
+        case ServerSFX::Hammer:
+            return (dir / "hammer.wav").string();
+        case ServerSFX::Minotaur:
+            return (dir / "minotaur.wav").string();
+        case ServerSFX::Python:
+            return (dir / "python.wav").string();
         case ServerSFX::CeilingSpikeImpact:
             return (dir / "ceiling_spike_impact_short_mono.wav").string();
         case ServerSFX::CeilingSpikeTrigger:
             return (dir / "ceiling_spike_trigger_mono.wav").string();
+        case ServerSFX::Thunder:
+            return (dir / "thunder.wav").string();
         case ServerSFX::TorchLoop:
             return (dir / "torch_loop_mono.wav").string();
+        case ServerSFX::PlayersStartTheme:
+            return (dir / "players_start_theme.mp3").string();
+        case ServerSFX::ElectricHum:
+            return (dir / "electric_hum.wav").string();
+        case ServerSFX::IntroGateOpen:
+            return (dir / "cutscene_gate_open.wav").string();
+        case ServerSFX::ZeusStartTheme:
+            return (dir / "start_game_dm.flac").string();
+        case ServerSFX::Wind:
+            return (dir / "wind.wav").string();
+        case ServerSFX::Teleport:
+            return (dir / "teleport.wav").string();
+        case ServerSFX::Potion:
+            return (dir / "potion.wav").string();
+        case ServerSFX::Spell:
+            return (dir / "spell.wav").string();
+        case ServerSFX::ItemPickUp:
+            return (dir / "itempickup.wav").string();
+        case ServerSFX::ItemDrop:
+            return (dir / "itemdrop.wav").string();
+        case ServerSFX::MirrorShatter:
+            return (dir / "mirror_shatter.mp3").string();
+        case ServerSFX::MinotaurDeath:
+            return (dir / "minotaur_death.wav").string();
         
         default:
             std::cerr << "FATAL: no known path for ServerSFX " << static_cast<int>(sfx) << std::endl;
@@ -63,10 +102,18 @@ std::string getAudioPath(ClientMusic music) {
     static auto dir = audio_dir / "client_music";
 
     switch (music) {
-        case ClientMusic::TitleTheme:
-            return (dir / "piano.wav").string();
-        case ClientMusic::GameTheme:
-            return (dir / "mono-retrowave.mp3").string();
+        case ClientMusic::MenuTheme:
+            //  TODO: Replace with menu theme!
+            return (dir / "menu.flac").string();
+        case ClientMusic::MazeExplorationPlayersTheme:
+            return (dir / "maze_exploration_players.flac").string();
+        case ClientMusic::MazeExplorationDMTheme:
+            return (dir / "maze_exploration_dm.flac").string();
+        case ClientMusic::RelayRacePlayersTheme:
+            return (dir / "relay_race_players.flac").string();
+        case ClientMusic::RelayRaceDMTheme:
+            //  TODO: Replace with DM Relay Race theme!
+            return (dir / "relay_race_dm.flac").string();
         default:
             std::cerr << "FATAL: no known path for ClientMusic " << static_cast<int>(music) << std::endl;
             std::exit(1);

@@ -19,22 +19,15 @@
  */
 class ArrowTrap: public Trap {
 public:
-    enum class Direction {
-        LEFT,
-        UP,
-        DOWN,
-        RIGHT
-    };
-
     /**
      * @param corner Corner position of the spike trap
-     * @param dimensions TODO: remove once we use real model with size
      * @param dir What direction it should shoot in
      */
-    ArrowTrap(glm::vec3 corner, glm::vec3 dimensions, Direction dir);
+    ArrowTrap(glm::vec3 corner, Direction dir);
 
     /// how long from initial activation until it can activate again
-    const static std::chrono::seconds TIME_UNTIL_RESET;
+    const static inline std::chrono::seconds TIME_UNTIL_RESET = 4s;
+    const static inline float SIGHTLINE_M = 15;
 
     bool shouldTrigger(ServerGameState& state) override;
     void trigger(ServerGameState& state) override;

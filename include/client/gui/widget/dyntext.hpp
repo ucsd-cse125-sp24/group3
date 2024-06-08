@@ -18,11 +18,13 @@ public:
 
     struct Options {
         Options(font::Font font, font::Size size, font::Color color):
+            font(font), size(size), color(font::getRGB(color)) {}
+        Options(font::Font font, font::Size size, glm::vec3 color):
             font(font), size(size), color(color) {}
 
         font::Font font {font::Font::TEXT};
         font::Size size {font::Size::SMALL};
-        font::Color color {font::Color::BLACK};
+        glm::vec3 color;
     };
 
     /**
@@ -47,6 +49,8 @@ public:
 
     void changeColor(font::Color new_color);
 
+    void changeText(const std::string& new_text);
+
 private:
     Options options;
     std::string text;
@@ -54,6 +58,13 @@ private:
 
     unsigned int VAO;
     unsigned int VBO;
+
+    /**
+     * @brief Calculates the size of this DynText widget based on
+     * its stored text and sets this DynText widget's height and width
+     * fields.
+    */
+    void _calculateSize();
 };
 
 }

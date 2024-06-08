@@ -11,14 +11,16 @@ namespace gui::font {
 
 /**
  * Abstract representation of the different fonts to use in our game
- * 
- * NOTE: currently I haven't found a good font for "Text", so both of these
- * map to the same font.
  */
 enum class Font {
     MENU,
-    TEXT
+    TEXT,
+    TITLE,
 };
+
+#define ALL_FONTS() { \
+    Font::MENU, Font::TEXT, Font::TITLE \
+}
 
 /**
  * Mappings from our specified abstract fonts to the file to load
@@ -31,10 +33,11 @@ std::string getFilepath(Font font);
 enum class Color {
     BLACK,
     RED,
+    GREEN,
     BLUE,
     GRAY,
     WHITE,
-    TORCHLIGHT_GAMES
+    YELLOW,
 };
 
 /**
@@ -45,15 +48,17 @@ glm::vec3 getRGB(Color color);
 const int UNIT_LARGE_SIZE_PX = 128; // how many pixels a small font is on the unit screen size
 enum class Size {
     SMALL,
+    SMALLMEDIUM,
     MEDIUM,
     LARGE,
     XLARGE
 };
 const std::unordered_map<Size, float> SIZE_TO_SCALE = {
-    {Size::SMALL,   0.25f},
-    {Size::MEDIUM,  0.50f},
-    {Size::LARGE,   1.0f},
-    {Size::XLARGE,  2.0f},
+    {Size::SMALL,       0.25f},
+    {Size::SMALLMEDIUM, 0.35f},
+    {Size::MEDIUM,      0.50f},
+    {Size::LARGE,       1.0f},
+    {Size::XLARGE,      2.0f},
 };
 
 int getFontSizePx(Size size);
@@ -67,5 +72,6 @@ float getScaleFactor(Size size);
  */
 float getRelativePixels(float pixels);
 
+float getRelativePixelsHorizontal(float pixels);
 
 }

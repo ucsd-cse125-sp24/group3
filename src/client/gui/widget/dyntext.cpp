@@ -28,21 +28,8 @@ DynText::DynText(glm::vec2 origin, const std::string& text,
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    // Calculate size of string of text
-    this->width = 0;
-    this->height = 0;
-
-    float scale = font::getScaleFactor(this->options.size);
-
-    for (int i = 0; i < text.size(); i++) {
-        font::Character ch = this->fonts->loadChar(this->text[i], this->options.font);
-        this->height = std::max(this->height, static_cast<std::size_t>(ch.size.y * scale));
-        if (i != text.size() - 1 && i != 0) {
-            this->width += (ch.advance >> 6) * scale;
-        } else {
-            this->width += ch.size.x * scale;
-        }
-    }
+    //  Set height and width based on the stored text
+    _calculateSize();
 }
 
 DynText::DynText(const std::string& text, std::shared_ptr<gui::font::Loader> fonts, DynText::Options options):
@@ -53,7 +40,7 @@ void DynText::render() {
 
     auto projection = GUI_PROJECTION_MATRIX();
     DynText::shader->setMat4("projection", projection);
-    auto color = font::getRGB(this->options.color);
+    auto color = this->options.color;
     DynText::shader->setVec3("textColor", color);
     glBindVertexArray(VAO);
 
@@ -83,6 +70,7 @@ void DynText::render() {
             { xpos + w, ypos + h,   1.0f, 0.0f }           
         };
         // render glyph texture over quad
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, ch.texture_id);
         // update content of VBO memory
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -100,7 +88,33 @@ void DynText::render() {
 }
 
 void DynText::changeColor(font::Color new_color) {
-    this->options.color = new_color;
+    this->options.color = font::getRGB(new_color);
+}
+
+void DynText::changeText(const std::string& new_text) {
+    this->text = new_text;
+
+    //  Update height and width based on the new text
+    _calculateSize();
+}
+
+void DynText::_calculateSize() {
+    // Calculate size of string of text
+    this->width = 0;
+    this->height = 0;
+
+    float scale = font::getScaleFactor(this->options.size);
+
+    for (int i = 0; i < text.size(); i++) {
+        font::Character ch = this->fonts->loadChar(this->text[i], this->options.font);
+        this->height = std::max(this->height, static_cast<std::size_t>(ch.size.y * scale));
+        if (i != text.size() - 1 && i != 0) {
+            this->width += (ch.advance >> 6) * scale;
+        }
+        else {
+            this->width += ch.size.x * scale;
+        }
+    }
 }
 
 }

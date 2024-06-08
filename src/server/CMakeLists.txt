@@ -22,6 +22,7 @@ set(FILES
     game/arrowtrap.cpp
     game/projectile.cpp
     game/floorspike.cpp
+    game/lava.cpp
     game/fakewall.cpp
     game/dungeonmaster.cpp
     game/potion.cpp
@@ -33,7 +34,11 @@ set(FILES
     game/orb.cpp
     game/weapon.cpp
     game/weaponcollider.cpp
-
+    game/spawner.cpp
+    game/minotaur.cpp
+    game/python.cpp
+    game/introcutscene.cpp
+    game/mirror.cpp
     audio/soundtable.cpp
 )
 

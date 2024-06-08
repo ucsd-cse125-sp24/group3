@@ -37,7 +37,12 @@ public:
 	 * SpecificID to the newly created object (NOTE: the Object constructor does
 	 * NOT do this!)
 	 * 
-	 * @param type the type of object to create
+	 * @note this is a public wrapper for the _createObject() method.
+	 * 
+	 * @param object pointer to the newly created object to add to the ObjectManager.
+	 * @param id boost::optional<EntityID> which is by default boost::none. If given
+	 * a value for a specific EntityID, the new object will be added with the given
+	 * EntityID. Note that this may 
 	 * @return the SpecificID of the newly created object
 	 */
 	SpecificID createObject(Object* object);
@@ -59,6 +64,16 @@ public:
 	 * @return true if the object was successfully removed and false otherwise.
 	 */
 	bool removeObject(Object** object_dbl_ptr);
+
+	/**
+	 * @brief Replaces the object with the given EntityID with the given
+	 * Object, if there currently exists an object with the given EntityID.
+	 * The original object is deleted.
+	 * @param globalID EntityID of object to replace.
+	 * @param object Pointer to new object that will replace the existing one.
+	 * @return true if replacement was successful and false otherwise.
+	 */
+	bool replaceObject(EntityID globalID, Object* object);
 
 	/**
 	 * @brief Attempts to retrieve the object with the given EntityID.
@@ -259,6 +274,23 @@ public:
 	std::vector<boost::optional<SharedObject>> toShared();
 
 private:
+
+	/**
+	 * @brief Creates a new object (adds the given object pointer to the ObjectManager).
+	 *
+	 * @note This method assigns a unique global EntityID and a type-specific
+	 * SpecificID to the newly created object (NOTE: the Object constructor does
+	 * NOT do this!)
+	 *
+	 * @param object pointer to the newly created object to add to the ObjectManager.
+	 * @param id boost::optional<EntityID> which is by default boost::none. If given
+	 * a value for a specific EntityID, the new object will be added with the given
+	 * EntityID. Note that this may overwrite an existing object, so only specify the
+	 * EntityID if you know that that EntityID is available!
+	 * @return the SpecificID of the newly created object
+	 */
+	SpecificID _createObject(Object* object, boost::optional<EntityID> id = boost::none);
+
 	/*
 	 * Note on how Objects are stored:
 	 * 

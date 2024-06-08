@@ -49,6 +49,10 @@ void set_callbacks(GLFWwindow* window) {
     glfwSetCharCallback(window, [](GLFWwindow* w, unsigned int codepoint) {
         static_cast<Client*>(glfwGetWindowUserPointer(w))->charCallback(w, codepoint);
     });
+
+    glfwSetScrollCallback(window, [](GLFWwindow* w, double xposOffset, double yposOffset) {
+        static_cast<Client*>(glfwGetWindowUserPointer(w))->scrollCallback(w, xposOffset, yposOffset);
+    });
 }
 
 void set_opengl_settings(GLFWwindow* window) {
@@ -64,9 +68,6 @@ void set_opengl_settings(GLFWwindow* window) {
 
     // Sets initial background color.
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-
-    // Set cursor position to (0, 0)
-    glfwSetCursorPos(window, 0, 0);
 }
 
 int main(int argc, char* argv[])
@@ -108,7 +109,7 @@ int main(int argc, char* argv[])
         client->displayCallback();
 
         // Idle callback. Updating objects, etc. can be done here.
-        client->idleCallback(context);
+        client->idleCallback();
     }
 
     client->cleanup();

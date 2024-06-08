@@ -28,16 +28,20 @@ enum class ObjectType {
 	FireballTrap,
 	Projectile,
 	FloorSpike,
+    Lava,
 	FakeWall,
 	ArrowTrap,
 	TeleporterTrap,
 	Spell,
 	Slime,
+	Minotaur,
+	Python,
 	Item,
 	Exit,
 	Orb,
 	Weapon,
 	WeaponCollider,
+	Mirror
 };
 
 /**
@@ -124,9 +128,11 @@ struct SharedTrapInventory {
 	int inventory_size;
 	std::vector<ModelType> inventory;
 	std::unordered_map<CellType, std::time_t> trapsInCooldown;
+	std::unordered_map<CellType, int> trapsCooldown;
+	int trapsPlaced;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& selected& inventory_size& inventory& trapsInCooldown;
+		ar& selected& inventory_size& inventory& trapsInCooldown& trapsPlaced & trapsCooldown;
 	}
 };
 
@@ -142,9 +148,10 @@ struct SharedItemInfo {
 
 struct SharedWeaponInfo {
 	bool attacked;
+	bool lightning;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar& attacked;
+		ar& attacked& lightning;
 	}
 };
 
@@ -162,11 +169,10 @@ struct SharedSolidSurface {
 	 */
 	SurfaceType surfaceType;
 
-	bool dm_highlight;
 	bool is_internal;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & surfaceType & dm_highlight & is_internal;
+		ar & surfaceType & is_internal;
 	}
 };
 
@@ -203,9 +209,10 @@ struct SharedPhysics {
 
 struct SharedTrapInfo {
 	bool triggered;
+	bool dm_hover;
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & triggered;
+		ar & triggered & dm_hover;
 	}
 };
 
@@ -213,9 +220,10 @@ struct SharedPlayerInfo {
 	bool is_alive;
 	time_t respawn_time; // unix timestamp in ms when the player will be respawned
 	bool render; // for invis potion
+	bool used_mirror_to_reflect_lightning;	//	To tell the player that they successfully reflected lightning
 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & is_alive & respawn_time & render;
+		ar & is_alive & respawn_time & render & used_mirror_to_reflect_lightning;
 	}
 };
 
@@ -231,9 +239,11 @@ struct SharedPointLightInfo {
     float attenuation_linear;
     float attenuation_quadratic;
 
+	bool is_cut = false;
+
 	DEF_SERIALIZE(Archive& ar, const int version) {
 		ar & intensity & ambient_color & diffuse_color & specular_color &
-            attenuation_linear & attenuation_quadratic;
+            attenuation_linear & attenuation_quadratic & is_cut;
     }
 };
 
@@ -248,6 +258,43 @@ struct SharedExit {
 	}
 };
 
+enum class AnimState {
+	IdleAnim,
+	WalkAnim,
+	SprintAnim,
+	JumpAnim,
+	LandAnim,
+	AttackAnim,
+	DrinkPotionAnim,
+	DeathAnim
+};
+
+struct SharedDMInfo {
+	/**
+	 * @brief The Dungeon Master can become paralyzed if a player used a Mirror
+	 * object to reflect a lightning bolt back at the Dungeon Master.
+	 * When the Dungeon Master is paralyzed, all input events from the DM should
+	 * be ignored for the duration of the paralysis.
+	 */
+	bool paralyzed;
+
+	int mana_remaining;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar & paralyzed & mana_remaining;
+	}
+};
+
+
+struct SharedCompass {
+
+	float angle;
+
+	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
+		ar& angle;
+	}
+};
+
 /**
  * @brief Representation of the Object class used by ServerGameState, containing
  * exactly the subset of Object data required by the client.
@@ -258,6 +305,7 @@ public:
 	ObjectType type;
 	SharedPhysics physics;
 	ModelType modelType;
+	AnimState animState;
 
 	boost::optional<SharedStats> stats;
 	boost::optional<SharedItemInfo> iteminfo;
@@ -270,15 +318,17 @@ public:
 	boost::optional<SharedStatuses> statuses;
 	boost::optional<SharedExit> exit;
 	boost::optional<SharedWeaponInfo> weaponInfo;
+	boost::optional<SharedDMInfo> DMInfo;
+	boost::optional<SharedCompass> compass;
 
 	SharedObject() {} // cppcheck-suppress uninitMemberVar
 	~SharedObject() {}
 	 
 	DEF_SERIALIZE(Archive& ar, const unsigned int version) {
-		ar & globalID & type & physics & modelType & stats & 
+		ar & globalID & type & physics & modelType & animState & stats & 
 			 iteminfo & solidSurface & trapInfo & playerInfo & 
 			 inventoryInfo & statuses & trapInventoryInfo & pointLightInfo &
-             exit & weaponInfo;
+             exit & weaponInfo & DMInfo & compass;
 	}
 private:
 };

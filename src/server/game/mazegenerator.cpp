@@ -84,7 +84,6 @@ std::optional<Grid> MazeGenerator::generate() {
         this->frontier.pop();
 
         if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 2) {
-            std::cout << "placing exit\n";
             // optimize the placing of the exit and orb to make the exit as far away from the entrance as possible
             // essentially go through the frontier and throw out everything but the farthest away
             // from the spawn
@@ -103,7 +102,7 @@ std::optional<Grid> MazeGenerator::generate() {
                     coord = other_coord;
                     required_entryway = other_req_entry;
                 } else {
-                    this->frontier.push({other_coord, required_entryway});
+                    this->frontier.push({other_coord, other_req_entry});
                 }
             }
             exit_coord_f = coord;
@@ -112,7 +111,6 @@ std::optional<Grid> MazeGenerator::generate() {
         }
 
         if (_num_rooms_placed == REQUIRED_NUM_ROOMS - 1) {
-            std::cout << "placing orb\n";
             // go through frontier, and get coord and required entry to be as far from exit_coord as possible
             int size = this->frontier.size();
             int count = 0;
@@ -129,7 +127,7 @@ std::optional<Grid> MazeGenerator::generate() {
                     coord = other_coord;
                     required_entryway = other_req_entry;
                 } else {
-                    this->frontier.push({other_coord, required_entryway});
+                    this->frontier.push({other_coord, other_req_entry});
                 }
             }
         }
@@ -142,6 +140,8 @@ std::optional<Grid> MazeGenerator::generate() {
             auto room = _pullRoomByPolicy();
 
             if ( (room->rclass.entries & required_entryway) == 0) {
+                // we don't want to skip this room type, so put back at the front of the frontier
+                _policy.push_front(room->rclass.type);
                 continue; // can't connect, so pull again
             }
 
@@ -170,10 +170,31 @@ std::optional<Grid> MazeGenerator::generate() {
             }
 
             _placeRoom(room, origin_coord.value());
+
+            // stupid extra complicated logic about keeping track of the "number" of rooms
+            // could refactor this or just keep slapping bandaids on everything
+            if (_num_rooms_placed >= REQUIRED_NUM_ROOMS - 2) {
+                _num_rooms_placed++; // always transition to placing orb , which is
+                // signified by _num_rooms_placed being at REQUIRED_NUM_ROOMS - 1
+            } else {
+                if (room->rclass.size == RoomSize::_10x10) {
+                    _num_rooms_placed++;
+                } else if (room->rclass.size == RoomSize::_20x20) {
+                    _num_rooms_placed += 4;
+                } else if (room->rclass.size == RoomSize::_40x40) {
+                    _num_rooms_placed += 16;
+                }
+
+                if (_num_rooms_placed > REQUIRED_NUM_ROOMS - 2) {
+                    // mark ready to place exit, since we met the quota
+                    _num_rooms_placed = REQUIRED_NUM_ROOMS - 2;
+                }
+            }
+
+
             break;
         }
 
-        _num_rooms_placed++;
     }
 
     std::cout << "Done: created " << _num_rooms_placed << " rooms.\n";
@@ -378,7 +399,6 @@ void MazeGenerator::_loadRoom(boost::filesystem::path path, bool procedural) {
     rclass.entries = this->_identifyEntryways(grid);
     rclass.type = this->_getRoomType(path);
     rclass.size = size;
-
 
     if (procedural) {
         this->_validateRoom(grid, rclass);
@@ -585,9 +605,22 @@ std::shared_ptr<Room> MazeGenerator::_pullRoomByPolicy() {
 }
 
 std::shared_ptr<Room> MazeGenerator::_pullRoomByType(RoomType type) {
-    int random_index = randomInt(0, this->rooms_by_type.at(type).size() - 1);
+    std::shared_ptr<Room> room = nullptr;
+    while (true) {
+        int random_index = randomInt(0, this->rooms_by_type.at(type).size() - 1);
+        room = this->rooms_by_type.at(type).at(random_index);
+        if (!this->used_room_ids.contains(room->id)) {
+            // keep going until we find a new room we haven't placed yet
+            break;
+        }
+    }
 
-    return this->rooms_by_type.at(type).at(random_index);
+    if (room->rclass.size == RoomSize::_20x20 || room->rclass.size == RoomSize::_40x40) {
+        // don't place the same 20x20 or 40x40 rooms in the same maze twice
+        this->used_room_ids.insert(room->id);
+    }
+
+    return room;
 }
 
 std::vector<glm::ivec2> MazeGenerator::_getRoomCoordsTakenBy(RoomSize size, glm::ivec2 top_left) {
@@ -637,12 +670,12 @@ std::vector<std::pair<glm::ivec2, RoomEntry>> MazeGenerator::_getAdjRoomCoords(s
     if ((room->rclass.entries & RoomEntry::T) != 0) {
         adj_coords.push_back({origin_coord + glm::ivec2(0, -1), RoomEntry::B}); // need bottom entry for whatever would be placed here
         if (room->rclass.size == RoomSize::_20x20) {
-            adj_coords.push_back({origin_coord + glm::ivec2(1, 1), RoomEntry::B});
+            adj_coords.push_back({origin_coord + glm::ivec2(1, -1), RoomEntry::B});
         } else if (room->rclass.size == RoomSize::_40x40) {
-            adj_coords.push_back({origin_coord + glm::ivec2(1, 1), RoomEntry::B});
+            adj_coords.push_back({origin_coord + glm::ivec2(1, -1), RoomEntry::B});
 
-            adj_coords.push_back({origin_coord + glm::ivec2(2, 1), RoomEntry::B});
-            adj_coords.push_back({origin_coord + glm::ivec2(3, 1), RoomEntry::B});
+            adj_coords.push_back({origin_coord + glm::ivec2(2, -1), RoomEntry::B});
+            adj_coords.push_back({origin_coord + glm::ivec2(3, -1), RoomEntry::B});
         }
     }
 
@@ -773,7 +806,7 @@ void MazeGenerator::_generatePolicy() {
 
     using RatioMapping = const std::pair<int, RoomType>;
 
-    RatioMapping NUM_EASY   = {7, RoomType::EASY}; // X easy
+    RatioMapping NUM_EASY   = {15, RoomType::EASY}; // X easy
     RatioMapping NUM_MEDIUM = {5, RoomType::MEDIUM}; // for every Y mediums
     RatioMapping NUM_HARD   = {3, RoomType::HARD}; // for every Z hards
     RatioMapping NUM_LOOT   = {1, RoomType::LOOT}; // for every alpha loots

@@ -16,7 +16,7 @@ public:
      * @param model What model should be used to render the trap
      * @param dimensions Dimensions to use for the trap, if it won't be overridden by the model info
      */
-    Trap(ObjectType type, bool movable, glm::vec3 corner, Collider collider, ModelType model, glm::vec3 dimensions);
+    Trap(ObjectType type, bool movable, glm::vec3 corner, Collider collider, ModelType model, glm::vec3 dimensions = glm::vec3(1.0f));
 
     /**
      * Determines if the trap should be triggered
@@ -60,15 +60,51 @@ public:
 
     SharedObject toShared() override;
 
+    /**
+     * Set the is_dm_trap field
+     *
+     * @param boolean for if this trap is a DM trap or not
+     */
     void setIsDMTrap(bool is_dm_trap);
 
+    /**
+     * Set the SharedTrapInfo info dm_hover field
+     *
+     * @param boolean for if this trap is a a DM hover or not
+     */
+    void setIsDMTrapHover(bool is_dm_trap_hover);
+
+    /**
+     * Set the expiration of this trap
+     *
+     * @param expiration time
+     */
     void setExpiration(std::chrono::time_point<std::chrono::system_clock> expiration);
 
+    /**
+     * Gets if this trap is a DM trap or not
+     * 
+     * @returns True if the trap is a DM trap and false otherwise
+     */
     bool getIsDMTrap();
 
+    /**
+     * Gets the expiration time of this trap
+     * 
+     * @returns the expiration time of this trap
+     */
     std::chrono::time_point<std::chrono::system_clock> getExpiration();
+
 protected:
+    /**
+     * is this trap a DM trap?
+     */
     bool is_dm_trap;
+
+    /**
+     * the expiration time of this trap
+     */
     std::chrono::time_point<std::chrono::system_clock> expiration;
+
     SharedTrapInfo info;
 };
