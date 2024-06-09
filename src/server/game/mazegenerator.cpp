@@ -35,8 +35,8 @@ MazeGenerator::MazeGenerator(GameConfig config) {
     }
 
     // has to happen after the for loop loading in the type vectors
-    if (!config.game.maze.procedural) {
-        auto path = getRepoRoot() / config.game.maze.directory / config.game.maze.maze_file;
+    if (!config.server.maze.procedural) {
+        auto path = getRepoRoot() / config.server.maze.directory / config.server.maze.maze_file;
         this->_loadRoom(path, false);
         return;
     }

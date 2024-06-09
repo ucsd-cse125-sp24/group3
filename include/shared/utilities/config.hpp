@@ -10,8 +10,20 @@
  * to know the exact string indices to use to index into the nlohmann::json object.
  */
 struct GameConfig {
-    /// @brief Game config options
+    /// @brief Config settings for the server
     struct {
+        /// @brief port the server should run on
+        int port;
+        /// @brief Name of the server's lobby
+        std::string lobby_name;
+        /// @brief Whether or not the server should broadcast that the server is 
+        bool lobby_broadcast;
+        /// @brief max number of players this server allows
+        int max_players;
+        /// @brief whether or not the server will spawn a DM
+        bool disable_dm;
+        /// @brief whether or not to skip the intro cutscene
+        bool skip_intro;
         struct {
             /**
              * @brief Path of the directory (contained in the repository
@@ -31,37 +43,15 @@ struct GameConfig {
             std::string maze_file;
 
         } maze;
+        /// @brief whether or not to disable enemy spawns
         bool disable_enemies;
-    } game;
-    /// @brief Shared config settings for the network
-    struct {
-        /// @brief IP that the server is being hosted on. E.g. "127.0.0.1" for localhost.
-        std::string server_ip;
-        /// @brief Port that the server is running on. This should be a value between
-        /// 2302-2400, or 6073 so that it can be accepted through the firewall on lab computers
-        int server_port;
-    } network;
-    /// @brief Config settings for the server
-    struct {
-        /// @brief Name of the server's lobby
-        std::string lobby_name;
-        /// @brief Whether or not the server should broadcast that the server is 
-        bool lobby_broadcast;
-        /// @brief max number of players this server allows
-        int max_players;
-        /// @brief whether or not the server will spawn a DM
-        bool disable_dm;
-        /// @brief whether or not to skip the intro cutscene
-        bool skip_intro;
     } server;
     /// @brief Config settings for the client
     struct {
-        /// @brief Default name of the client
-        std::string default_name;
         /// @brief Whether or not the client should listen for server lobby broadcasts
         bool lobby_discovery;
+        /// @brief whether or not the client should open in fullscreen
         bool fullscreen;
-        bool draw_bboxes;
         bool fps_counter;
         bool presentation;
         int render;
@@ -89,11 +79,3 @@ struct GameConfig {
      */
     static GameConfig parse(int argc, char** argv);
 };
-
-
-/** 
- * @brief Generates a GameConfig with default values.
- * Note: Not using a constructor as then aggregate initialization will not be
- * possible for GameConfig structs
- */
-GameConfig getDefaultConfig();

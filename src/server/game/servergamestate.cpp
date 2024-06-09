@@ -39,8 +39,6 @@
 
 /*	Constructors and Destructors	*/
 
-ServerGameState::ServerGameState() : ServerGameState(getDefaultConfig()) {}
-
 ServerGameState::ServerGameState(GameConfig config) : config(config) {
 	this->phase = GamePhase::LOBBY;
 	this->timestep = FIRST_TIMESTEP;
@@ -48,8 +46,8 @@ ServerGameState::ServerGameState(GameConfig config) : config(config) {
 	this->lobby.max_players = config.server.max_players;
 	this->lobby.name = config.server.lobby_name;
 
-	this->maps_directory = config.game.maze.directory;
-	this->maze_file = config.game.maze.maze_file;
+	this->maps_directory = config.server.maze.directory;
+	this->maze_file = config.server.maze.maze_file;
 
 	//	Initialize game instance match phase data
 	//	Match begins in MazeExploration phase (no timer)
@@ -85,10 +83,10 @@ ServerGameState::ServerGameState(GameConfig config) : config(config) {
         attempts++;
     }
 
-	if (config.game.maze.procedural) {
+	if (config.server.maze.procedural) {
 		std::cout << "Took " << attempts << " attempts to generate a full procedural maze\n";
 		std::string filename = std::to_string(getMsSinceEpoch()) + ".maze";
-		auto path = getRepoRoot() / config.game.maze.directory / "generated" / filename;
+		auto path = getRepoRoot() / config.server.maze.directory / "generated" / filename;
 		std::cout << "Saving procedural maze to " << path << std::endl;
 		grid->writeToFile(path.string());
 	}
@@ -97,11 +95,6 @@ ServerGameState::ServerGameState(GameConfig config) : config(config) {
 	//	ServerGameState constructors MUST call this constructor to load the
 	//	maze environment from a file)
 	this->loadMaze(*grid);
-}
-
-ServerGameState::ServerGameState(GamePhase start_phase) 
-	: ServerGameState(getDefaultConfig()) {
-	this->phase = start_phase;
 }
 
 ServerGameState::ServerGameState(GamePhase start_phase, const GameConfig& config)
@@ -739,7 +732,7 @@ void ServerGameState::update(const EventList& events) {
 	handleDeaths();
 	handleRespawns();
 	deleteEntities();
-    if (!this->config.game.disable_enemies) {
+    if (!this->config.server.disable_enemies) {
         spawnEnemies();
     }
 	handleTickVelocity();

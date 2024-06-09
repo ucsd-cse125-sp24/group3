@@ -102,21 +102,16 @@ AudioManager* Client::getAudioManager() {
 }
 
 bool Client::connect(std::string ip_addr) {
-    this->endpoints = resolver.resolve(ip_addr, std::to_string(config.network.server_port));
+    this->endpoints = resolver.resolve(ip_addr, std::to_string(config.server.port));
     this->session = std::make_shared<Session>(std::move(this->socket),
-        SessionInfo(this->config.client.default_name, {}, {}));
+        SessionInfo("name", {}, {}));
 
     if (!this->session->connectTo(this->endpoints)) {
         return false;
     }
 
-    auto name = this->gui.getCapturedKeyboardInput();
-    if (name == "") {
-        name = config.client.default_name;
-    } 
-
     auto packet = PackagedPacket::make_shared(PacketType::ClientDeclareInfo,
-        ClientDeclareInfoPacket { .player_name = name });
+        ClientDeclareInfoPacket { .player_name = "name" });
 
     this->session->sendPacket(packet);
 
@@ -1518,20 +1513,23 @@ void Client::lightingPass() {
 }
 
 void Client::drawBbox(boost::optional<SharedObject> object) {
-    if (this->config.client.draw_bboxes) {
-        auto bbox_pos = object->physics.corner; 
-        // for some reason the y axis of the bbox is off by half  
-        // the dimension of the object. when trying getCenterPosition
-        // it was off on the x axis. 
-        bbox_pos.y += object->physics.dimensions.y / 2.0f; 
+    // disabled because it doesn't really render the bboxes in the right location
+    // so no real reason to users to want to turn this on
 
-        item_model->setDimensions(object->physics.dimensions);
-        item_model->translateAbsolute(bbox_pos);
-        item_model->rotateAbsolute(glm::normalize(object->physics.facing), true);
-        item_model->draw(this->deferred_geometry_shader.get(),
-            this->cam->getPos(),
-            true);
-    }
+    // if (this->config.client.draw_bboxes) {
+    //     auto bbox_pos = object->physics.corner; 
+    //     // for some reason the y axis of the bbox is off by half  
+    //     // the dimension of the object. when trying getCenterPosition
+    //     // it was off on the x axis. 
+    //     bbox_pos.y += object->physics.dimensions.y / 2.0f; 
+
+    //     item_model->setDimensions(object->physics.dimensions);
+    //     item_model->translateAbsolute(bbox_pos);
+    //     item_model->rotateAbsolute(glm::normalize(object->physics.facing), true);
+    //     item_model->draw(this->deferred_geometry_shader.get(),
+    //         this->cam->getPos(),
+    //         true);
+    // }
 }
 
 // callbacks - for Interaction

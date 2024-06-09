@@ -10,9 +10,10 @@
 
 
 GameConfig getCutsceneConfig() {
-    GameConfig config = getDefaultConfig();
-    config.game.maze.maze_file = "cutscene/intro.maze";
-    config.game.maze.procedural = false;
+    GameConfig config = GameConfig {};
+    config.server.maze.directory = "maps";
+    config.server.maze.maze_file = "cutscene/intro.maze";
+    config.server.maze.procedural = false;
     return config;
 }
 

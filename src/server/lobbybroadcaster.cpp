@@ -64,7 +64,7 @@ void LobbyBroadcaster::_lobbyBroadcastWorker() {
     this->socket.set_option(udp::socket::reuse_address(true));
     this->socket.set_option(boost::asio::socket_base::broadcast(true));
 
-    udp::endpoint endpt(address_v4::broadcast(), this->config.network.server_port);
+    udp::endpoint endpt(address_v4::broadcast(), this->config.server.port);
 
     // Don't bother with packet headers here, because there is only one packet being sent over UDP
     // so we don't need to distinguish them.

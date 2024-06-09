@@ -9,3 +9,8 @@ docs/*
 
 maps/generated/**
 !maps/generated/.gitkeep
+
+client
+server
+client.exe
+server.exe

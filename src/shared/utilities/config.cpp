@@ -16,7 +16,7 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
         exit(1);
     }
 
-    boost::filesystem::path filepath = getRepoRoot() / "config.json";
+    boost::filesystem::path filepath = "config.json";
     if (argc == 2) {
         filepath = argv[1];
     }
@@ -36,30 +36,23 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
 
     try {
         return GameConfig {
-            .game = {
-                .maze = {
-                    .directory = json.at("game").at("maze").at("directory"),
-                    .procedural = json.at("game").at("maze").at("procedural"),
-                    .maze_file = json.at("game").at("maze").at("maze_file")
-                },
-                .disable_enemies = json.at("game").at("disable_enemies") 
-            },
-            .network = {
-                .server_ip = json.at("network").at("server_ip"),
-                .server_port = json.at("network").at("server_port")
-            },
             .server = {
+                .port = json.at("server").at("port"),
                 .lobby_name = json.at("server").at("lobby_name"),
                 .lobby_broadcast = json.at("server").at("lobby_broadcast"),
                 .max_players = json.at("server").at("max_players"),
                 .disable_dm = json.at("server").at("disable_dm"),
-                .skip_intro = json.at("server").at("skip_intro")
+                .skip_intro = json.at("server").at("skip_intro"),
+                .maze = {
+                    .directory = json.at("server").at("maze").at("directory"),
+                    .procedural = json.at("server").at("maze").at("procedural"),
+                    .maze_file = json.at("server").at("maze").at("maze_file")
+                },
+                .disable_enemies = json.at("server").at("disable_enemies") 
             },
             .client = {
-                .default_name = json.at("client").at("default_name"),
                 .lobby_discovery = json.at("client").at("lobby_discovery"),
                 .fullscreen = json.at("client").at("fullscreen"),
-                .draw_bboxes = json.at("client").at("draw_bboxes"),
                 .fps_counter = json.at("client").at("fps_counter"),
                 .presentation = json.at("client").at("presentation"),
                 .render = json.at("client").at("render")
@@ -69,36 +62,4 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
         std::cerr << "Error parsing config file: " << ex.what() << std::endl;
         std::exit(1);
     }
-}
-
-GameConfig getDefaultConfig() {
-    return GameConfig{
-        .game = {
-            .maze = {
-                .directory = "maps",
-                .procedural = true,
-                .maze_file = "default_maze.maze"
-            },
-            .disable_enemies = false 
-        },
-        .network = {
-            .server_ip = "localhost",
-            .server_port = 2355
-        },
-        .server = {
-            .lobby_name = "My Test Lobby",
-            .lobby_broadcast = false,
-            .max_players = 1,
-            .disable_dm = false,
-            .skip_intro = false
-        },
-        .client = {
-            .default_name = "Player",
-            .lobby_discovery = false,
-            .fullscreen = false,
-            .draw_bboxes = false,
-            .fps_counter = false,
-            .presentation = false
-        }
-    };
 }
