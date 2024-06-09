@@ -19,7 +19,7 @@ Made by
 - David Min
 - Ted Park
 - Anthony Tarbinian
-- Jiawen (Coco) Wang
+- Coco Wang
 
 ## Download
 
