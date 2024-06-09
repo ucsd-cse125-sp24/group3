@@ -45,7 +45,7 @@ Made by
 
 ### Config Options Explanations
 
-```json
+```
 {
     "port"------------------> port that the server runs on and the client connects to
     "server": {
