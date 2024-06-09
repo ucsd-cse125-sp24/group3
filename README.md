@@ -21,6 +21,10 @@ Made by
 - Anthony Tarbinian
 - Jiawen (Coco) Wang
 
+## Download
+
+Click [here](https://cse125.ucsd.edu/2024/cse125g3/wrath-of-zeus/download.html)
+
 ## Screenshots
 
 ![Entrance to the maze](./screenshots/entrance.png)
