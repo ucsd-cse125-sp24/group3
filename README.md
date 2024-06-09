@@ -2,19 +2,35 @@
 
 ![Docs](https://github.com/ucsd-cse125-sp24/group3/actions/workflows/docs.yml/badge.svg)
 
-Wrath of Zeus is a 3v1 asymmetric maze escape game where 3 players attempt to escape a maze while Zeus tries to stop them from above, and it was all developed through the course
-of 10 weeks as a project for UCSD's CSE 125 course.
+![Title Logo](./assets/imgs/title.png)
+
+[Wrath of Zeus](https://cse125.ucsd.edu/2024/cse125g3/wrath-of-zeus/) is a 3v1 asymmetric maze escape game where 3 players attempt to escape a maze while Zeus tries to stop them from above. It was entirely developed through the course of 10 weeks as a project for UCSD's [CSE 125 course](https://cse125.ucsd.edu/), run by Professor [Geoffrey Voelker](https://cseweb.ucsd.edu/~voelker/).
 
 The players have to find a magical orb and escape within a time limit, while Zeus can use lightning bolts, dim the lights, and place various traps in order to stop them.
 
-The players win when one player escapes with the orb. However, picking up the orb for the first time starts a 5 minute timer. If after 5 minutes the players have not escaped
-the maze, then Zeus wins. In addition, Zeus can prematurely start the timer before the players pick up the orb if the players die 3 times.
+The players win when one player escapes with the orb. However, picking up the orb for the first time starts a 5 minute timer. If after 5 minutes the players have not escaped the maze, then Zeus wins. In addition, Zeus can prematurely start the timer before the players pick up the orb if the players die 3 times.
 
-An important thing to keep in mind while playing is that the color of the torchlights is your guide through the maze. If you see the torches start to turn more blue, then
-you are getting closer to the orb, and if they start to turn more white, then you are getting closer to the exit. This is crucial for both the players and Zeus as they
-navigate around the maze and try to find their way out / smite those pesky mortals.
+An important thing to keep in mind while playing is that the color of the torchlights is your guide through the maze. If you see the torches start to turn more blue, then you are getting closer to the orb, and if they start to turn more white, then you are getting closer to the exit. This is crucial for both the players and Zeus as they navigate around the maze and try to find their way out / smite those pesky mortals.
+
+Made by
+- Tyler Lentz
+- Anthony Tarbinian
+- Edward Jin
+- David Min
+- Ted Park
+- Anthony Tarbinian
+- Jiawen (Coco) Wang
 
 ## Screenshots
+
+![Entrance to the maze](./screenshots/entrance.png)
+![A hallway in the maze](./screenshots/hallway.png)
+![The Orb](./screenshots/orb.png)
+![A lightning strike](./screenshots/lightning.png)
+![A player walking up to the exit](./screenshots/exit.png)
+![Entrance to the maze, from Zeus's view](./screenshots/entrance_zeus.png)
+![Zeus smiting a player](./screenshots/zeus_attack.png)
+![The view from above](./screenshots/god_view.png)
 
 ## Important Notes Before Playing
 
@@ -29,6 +45,7 @@ navigate around the maze and try to find their way out / smite those pesky morta
 
 ### Config Options Explanations
 
+```json
 {
     "port"------------------> port that the server runs on and the client connects to
     "server": {
@@ -49,16 +66,14 @@ navigate around the maze and try to find their way out / smite those pesky morta
         "fullscreen"--------> whether or not the window should be fullscreen, or a 1920x1080p window
         "fps_counter"-------> whether or not to display the current FPS in the top left of the screen
         "presentation"------> shifts the hotbar UI up slightly, for use during the CSE 125 demo to make sure the UI could be seen by audience members in the auditorium
-        "render": 80--------> beyond this distance, for players no objects will be rendered, and for Zeus certain traps will not be rendered
+        "render"------------> beyond this distance, for players no objects will be rendered, and for Zeus certain traps will not be rendered
     }
 }
+```
 
 ### Custom Map Generation
 
-If you would like to try your hand at creating some custom mazes or rooms which will be used in the procedural generation algorithm, you can create appropriate maze
-files in the "maps" directory. If you just want to load in an entirely custom maze then it doesn't matter where it is placed (as long as you put the appropriate path
-in your configuration file), but if you want the procedural algorithm to use your rooms then you should place them in the directories called "10x10" and "20x20".
-There is also a directory called "40x40" and the game will attempt to use these 40x40 rooms in the game, but I cannot promise that they will totally work as they are very much untested as we found it was too much effort to make engaging 40x40 rooms and you did not gain much from it. But maybe you will have better luck with it!
+If you would like to try your hand at creating some custom mazes or rooms which will be used in the procedural generation algorithm, you can create appropriate maze files in the "maps" directory. If you just want to load in an entirely custom maze then it doesn't matter where it is placed (as long as you put the appropriate path in your configuration file), but if you want the procedural algorithm to use your rooms then you should place them in the directories called "10x10" and "20x20". There is also a directory called "40x40" and the game will attempt to use these 40x40 rooms in the game, but I cannot promise that they will totally work as they are very much untested as we found it was too much effort to make engaging 40x40 rooms and you did not gain much from it. But maybe you will have better luck with it!
 
 Rules When Designing Rooms:
 1. A room must be fully connected, which means that entering from any entryway you should be able to exit from any other entryway in that room.
