@@ -12,7 +12,7 @@
 
 LobbyFinder::LobbyFinder(boost::asio::io_context& io_context, const GameConfig& config):
     lobby_discovery_socket(io_context,
-        udp::endpoint(address_v4::any(), config.server.port)),
+        udp::endpoint(address_v4::any(), config.port)),
     keep_searching(false),
     lobby_info_buf()
 {

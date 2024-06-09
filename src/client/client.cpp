@@ -102,7 +102,7 @@ AudioManager* Client::getAudioManager() {
 }
 
 bool Client::connect(std::string ip_addr) {
-    this->endpoints = resolver.resolve(ip_addr, std::to_string(config.server.port));
+    this->endpoints = resolver.resolve(ip_addr, std::to_string(config.port));
     this->session = std::make_shared<Session>(std::move(this->socket),
         SessionInfo("name", {}, {}));
 

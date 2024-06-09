@@ -1,10 +1,10 @@
 {
+    "port": 2355,
     "server": {
-        "port": 2355,
         "lobby_name": "Funny Lobby Name Here",
         "lobby_broadcast": true,
-        "max_players": 1,
-        "disable_dm": false,
+        "max_players": 4,
+        "disable_zeus": false,
         "skip_intro": false,
         "disable_enemies": false,
         "maze": {

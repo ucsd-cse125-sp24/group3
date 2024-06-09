@@ -10,10 +10,10 @@
  * to know the exact string indices to use to index into the nlohmann::json object.
  */
 struct GameConfig {
+    /// @brief port the server should run on & client should connect to
+    int port;
     /// @brief Config settings for the server
     struct {
-        /// @brief port the server should run on
-        int port;
         /// @brief Name of the server's lobby
         std::string lobby_name;
         /// @brief Whether or not the server should broadcast that the server is 

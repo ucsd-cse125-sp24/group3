@@ -36,12 +36,12 @@ GameConfig GameConfig::parse(int argc, char** argv) { // cppcheck-suppress const
 
     try {
         return GameConfig {
+            .port = json.at("port"),
             .server = {
-                .port = json.at("server").at("port"),
                 .lobby_name = json.at("server").at("lobby_name"),
                 .lobby_broadcast = json.at("server").at("lobby_broadcast"),
                 .max_players = json.at("server").at("max_players"),
-                .disable_dm = json.at("server").at("disable_dm"),
+                .disable_dm = json.at("server").at("disable_zeus"),
                 .skip_intro = json.at("server").at("skip_intro"),
                 .maze = {
                     .directory = json.at("server").at("maze").at("directory"),
