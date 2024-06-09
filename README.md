@@ -13,9 +13,9 @@ The players win when one player escapes with the orb. However, picking up the or
 An important thing to keep in mind while playing is that the color of the torchlights is your guide through the maze. If you see the torches start to turn more blue, then you are getting closer to the orb, and if they start to turn more white, then you are getting closer to the exit. This is crucial for both the players and Zeus as they navigate around the maze and try to find their way out / smite those pesky mortals.
 
 Made by
-- Tyler Lentz
-- Anthony Tarbinian
 - Edward Jin
+- Gil Keidar
+- Tyler Lentz
 - David Min
 - Ted Park
 - Anthony Tarbinian
