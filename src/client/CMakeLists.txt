@@ -29,6 +29,7 @@ set(FILES
     bone.cpp
 )
 
+
 # OpenGL
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)

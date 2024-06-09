@@ -1,4 +1,4 @@
-  include(FetchContent)
+include(FetchContent)
 
   # orignally used the snippet from here
   # https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
@@ -6,4 +6,4 @@
   # https://github.com/owodzeg/V4Hero/issues/91
 FetchContent_Declare(json GIT_REPOSITORY https://github.com/nlohmann/json GIT_TAG v3.11.2)
 
-  FetchContent_MakeAvailable(json)
+FetchContent_MakeAvailable(json)

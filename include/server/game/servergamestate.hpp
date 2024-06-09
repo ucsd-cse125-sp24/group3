@@ -53,20 +53,6 @@ public:
 	 */
 	std::unique_ptr<Spawner> spawner;
 
-	/**
-	 * @brief Creates a ServerGameState instance. The intial GamePhase is set to
-	 * Lobby.
-	 */
-	ServerGameState();
-
-	/**
-	 * @brief Creats a ServerGameState instance and sets the initial game phase
-	 * to the given GamePhase.
-	 * @param start_phase GamePhase that the new ServerGameState instance will
-	 * start in.
-	 */
-	explicit ServerGameState(GamePhase start_phase);
-
 	ServerGameState(GamePhase start_phase, const GameConfig& config);
 
 	/**

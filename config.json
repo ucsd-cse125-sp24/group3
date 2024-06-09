@@ -1,30 +1,23 @@
 {
-  "game": {
-    "maze": {
-      "directory": "maps",
-      "procedural": false,
-      "maze_file": "demo/game1_player_pov.maze"
+    "port": 2355,
+    "server": {
+        "lobby_name": "Funny Lobby Name Here",
+        "lobby_broadcast": true,
+        "max_players": 4,
+        "disable_zeus": false,
+        "skip_intro": false,
+        "disable_enemies": false,
+        "maze": {
+            "directory": "maps",
+            "procedural": true,
+            "maze_file": "demo/game1_player_pov.maze"
+        }
     },
-    "disable_enemies": false
-  },
-  "network": {
-    "server_ip": "localhost",
-    "server_port": 2355
-  },
-  "server": {
-    "lobby_name": "Funny Lobby Name Here",
-    "lobby_broadcast": true,
-    "max_players": 4,
-    "disable_dm": false,
-    "skip_intro": false 
-  },
-  "client": {
-    "default_name": "Conan O'Brien",
-    "lobby_discovery": true,
-    "fullscreen": true,
-    "draw_bboxes": false,
-    "fps_counter": true,
-    "presentation": false,
-    "render": 80
-  }
+    "client": {
+        "lobby_discovery": true,
+        "fullscreen": true,
+        "fps_counter": true,
+        "presentation": false,
+        "render": 80
+    }
 }

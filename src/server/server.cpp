@@ -46,7 +46,7 @@ using namespace boost::asio::ip;
 
 Server::Server(boost::asio::io_context& io_context, GameConfig config)
     :lobby_broadcaster(io_context, config),
-     acceptor(io_context, tcp::endpoint(tcp::v4(), config.network.server_port)),
+     acceptor(io_context, tcp::endpoint(tcp::v4(), config.port)),
      socket(io_context),
      world_eid(0),
      state(ServerGameState(GamePhase::LOBBY, config)),
